@@ -1,0 +1,81 @@
+// Spanish (Spain): NOT TRANSLATED YET — a copy of the English catalog (architecture §14).
+// The namespace owner translates it and removes `pending`; catalogs.test.ts skips the
+// "identical to English" check while `pending` is exported, and fails with TRAMADO_RELEASE=1.
+import type { Messages } from '../en';
+
+export const pending = true;
+
+export const sync: Messages['sync'] = {
+  pill: {
+    local: 'Only on this computer',
+    starting: 'Starting sharing…',
+    error: 'Sharing isn’t running',
+    paused: 'Sharing paused',
+    attention: { one: '{n} needs attention', other: '{n} need attention' },
+    offline: 'Offline',
+    syncing: { one: 'Syncing {n} file', other: 'Syncing {n} files' },
+    syncingUnknown: 'Syncing…',
+    waiting: 'Waiting for classmates',
+    upToDate: 'Up to date · {n} online',
+    upToDateNone: 'Up to date',
+    waitingTooltip: 'No one from your classes is online. Changes are saved here and will sync later.',
+  },
+  popover: {
+    title: 'Sharing',
+    pause: 'Pause sharing',
+    pauseHint: 'Nothing is sent or received until you resume.',
+    settings: 'Sharing settings',
+    diagnostics: 'Diagnostics',
+    classUpToDate: 'Up to date · {n} online',
+    classSyncing: 'Syncing {files} · {size} left',
+    classWaiting: 'Waiting for classmates',
+    classRelay: 'Connected through a relay (slow)',
+    classPaused: 'Paused',
+    classMissing: 'Can’t find the folder',
+    windowsName: { one: '{n} file can’t be saved on Windows computers', other: '{n} files can’t be saved on Windows computers' },
+  },
+  error: {
+    notRunning: 'Sharing isn’t running, so your classes aren’t syncing. Everything still works on this computer.',
+    locked: 'Another copy of Tramado is using the sharing data. Close it and try again.',
+    port: 'Another program is using the port Tramado needs. Tramado will try a different one.',
+    retry: 'Try again',
+    details: 'Details',
+  },
+  firstShare: {
+    title: 'Keep sharing when you close the window?',
+    body: 'Your classmates get recordings and transcripts from you faster when Tramado keeps running in the background. It uses very little power.',
+    tray: 'Keep sharing in the background',
+    trayMac: 'Keep sharing in the background (in the Dock)',
+    autostart: 'Start Tramado when I log in',
+  },
+  massDelete: {
+    title: 'Did you mean to delete {n} files from {class} for everyone?',
+    body: 'Files were deleted in the {class} folder outside Tramado. Sharing for this class is paused, so nothing has been sent yet.',
+    restore: 'Restore the files',
+    confirm: 'Yes, delete them for everyone',
+    restored: 'Files restored. Sharing resumed.',
+  },
+  folderMissing: {
+    title: 'Tramado can’t find the folder for {class}.',
+    body: 'Was it moved or deleted?',
+    find: 'Find it…',
+    freshCopy: 'Get a fresh copy from classmates',
+    remove: 'Remove from Tramado',
+  },
+  recentlyDeleted: {
+    title: 'Recently deleted in {class}',
+    intro: 'Files deleted in the last 30 days. Restoring a file brings it back for everyone.',
+    file: 'File', deleted: 'Deleted', size: 'Size',
+    restore: 'Restore',
+    restored: 'Restored “{file}” for everyone.',
+    empty: 'Nothing deleted in the last 30 days.',
+  },
+  windowsName: {
+    notice: '“{name}” can’t be saved on Windows computers. Rename it.',
+    rename: 'Rename…',
+  },
+  deleteForEveryone: {
+    undoToast: 'Deleted “{name}” for everyone.',
+    undone: 'Restored “{name}”.',
+  },
+};

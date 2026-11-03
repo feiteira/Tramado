@@ -1,0 +1,13 @@
+# The speech engine (whisper.cpp, built by whisper-rs-sys) is compiled for the computers Tramado
+# runs on, not for the build machine: no -march=native. On x86-64 it needs AVX2, FMA and F16C
+# (Intel since 2013, AMD since 2015); the shell checks for them before offering transcription.
+# whisper-rs-sys passes these variables to whisper.cpp's CMake as definitions.
+[env]
+# Recording what the computer plays uses Core Audio process taps (macOS 14.2); Tramado's minimum
+# macOS is set to match in tauri.conf.json.
+MACOSX_DEPLOYMENT_TARGET = "14.2"
+GGML_NATIVE = "OFF"
+GGML_AVX = "ON"
+GGML_AVX2 = "ON"
+GGML_FMA = "ON"
+GGML_F16C = "ON"

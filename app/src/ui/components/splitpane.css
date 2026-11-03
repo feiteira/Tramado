@@ -1,0 +1,83 @@
+.split {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.split--vertical {
+  flex-direction: column;
+}
+
+.split__pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.split__pane--first {
+  flex: none;
+}
+
+.split__pane--second {
+  flex: 1;
+}
+
+/* The second pane holds the size; the first takes the rest. */
+.split--sized-second > .split__pane--first {
+  flex: 1;
+}
+
+.split--sized-second > .split__pane--second {
+  flex: none;
+}
+
+.split__handle {
+  position: relative;
+  flex: none;
+  background: var(--rule);
+  touch-action: none;
+}
+
+.split--horizontal > .split__handle {
+  width: 1px;
+  cursor: col-resize;
+}
+
+.split--vertical > .split__handle {
+  height: 1px;
+  cursor: row-resize;
+}
+
+/* A wider invisible grip than the hairline it draws. */
+.split__handle::before {
+  content: '';
+  position: absolute;
+  inset: 0 -4px;
+}
+.split--vertical > .split__handle::before {
+  inset: -4px 0;
+}
+
+.split__handle:hover,
+.split__handle:focus-visible {
+  background: var(--focus);
+  outline: none;
+}
+
+.split--horizontal > .split__handle:hover,
+.split--horizontal > .split__handle:focus-visible {
+  box-shadow: 0 0 0 1px var(--focus);
+}
+
+body.is-resizing-x,
+body.is-resizing-x * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.is-resizing-y,
+body.is-resizing-y * {
+  cursor: row-resize !important;
+  user-select: none;
+}

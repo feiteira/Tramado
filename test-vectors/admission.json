@@ -1,0 +1,114 @@
+{
+  "format": "tramado.test-vectors.admission",
+  "version": 1,
+  "decide": "decide(policies, global, offer, nowMs) -> share | queue | ban | skip | unknown",
+  "defaults": "class tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa exists with askBeforeAdmit false and empty lists; global {ownDevices: [], pairingOpenUntil: null}; now 0; offer {folderId: tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa, deviceId: D1, inFolder: false}; D1 stands for a canonical device ID (see devices)",
+  "devices": {
+    "D1": "5QDNN46-YHG4AH2-3NWSGYW-RYXVGJP-JORVLZ4-3VGOMPY-S5KL2O6-AXZBAQE",
+    "D2": "Z46L5BQ-GJG7OWZ-P5LVPPJ-P3KQOBQ-JH5GPI7-2FJQ25U-CWVVI7Y-DDEGEAT"
+  },
+  "cases": [
+    {
+      "name": "proof shares",
+      "offer": {
+        "folderId": "tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "deviceId": "D1",
+        "inFolder": false
+      },
+      "expect": "share"
+    },
+    {
+      "name": "already in folder",
+      "offer": {
+        "inFolder": true
+      },
+      "expect": "skip"
+    },
+    {
+      "name": "banned device",
+      "policy": {
+        "bannedDevices": [
+          "D1"
+        ]
+      },
+      "expect": "ban"
+    },
+    {
+      "name": "banned beats known",
+      "policy": {
+        "bannedDevices": [
+          "D1"
+        ],
+        "knownDevices": [
+          "D1"
+        ]
+      },
+      "expect": "ban"
+    },
+    {
+      "name": "ask, unknown device",
+      "policy": {
+        "askBeforeAdmit": true
+      },
+      "expect": "queue"
+    },
+    {
+      "name": "ask, known member",
+      "policy": {
+        "askBeforeAdmit": true,
+        "knownDevices": [
+          "D1"
+        ]
+      },
+      "expect": "share"
+    },
+    {
+      "name": "ask, pairing open",
+      "policy": {
+        "askBeforeAdmit": true
+      },
+      "global": {
+        "pairingOpenUntil": 2000
+      },
+      "now": 1000,
+      "expect": "share"
+    },
+    {
+      "name": "ask, pairing expired",
+      "policy": {
+        "askBeforeAdmit": true
+      },
+      "global": {
+        "pairingOpenUntil": 500
+      },
+      "now": 1000,
+      "expect": "queue"
+    },
+    {
+      "name": "ask, own device",
+      "policy": {
+        "askBeforeAdmit": true
+      },
+      "global": {
+        "ownDevices": [
+          "D1"
+        ]
+      },
+      "expect": "share"
+    },
+    {
+      "name": "unknown class",
+      "offer": {
+        "folderId": "tramado-bbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "expect": "unknown"
+    },
+    {
+      "name": "not a tramado folder",
+      "offer": {
+        "folderId": "photos"
+      },
+      "expect": "unknown"
+    }
+  ]
+}

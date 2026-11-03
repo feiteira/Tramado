@@ -1,0 +1,129 @@
+{
+  "format": "tramado.test-vectors.class-paths",
+  "version": 1,
+  "source": "folder spec §1, §4.5, §5.4; architecture §5.1 confine",
+  "rules": "non-empty, ≤ 200 UTF-16 units, \"/\"-separated, NFC, no leading \"/\", no \"\\\", no NUL or control characters, no \".\" or \"..\" or empty segment, no segment starting with \".st\", no \"*.tmp\"/\"*.part\" segment unless under \".tramado/tmp/\"",
+  "valid": [
+    "Aulas/2026-10-14 1015 Aula 6/lecture.json",
+    ".tramado/chat/TKBNV23-6HQ5HVU-DM667CH-DELE5MV-VW4HTSN-27PQJFW-FVGLDA3-4XDXLAT/2026-11.jsonl",
+    "Documentos/Código Civil.pdf",
+    ".tramado/tmp/x1y2.part",
+    "Notas/a b.md",
+    ".tramado/class.json",
+    ".tramado/members/WSGDTBE-PYLFPIJ-JSGOJZC-CJC6O2N-ARA52TT-HKVPG6S-UVZH2AZ-RUULKAI.json",
+    "Exames/Frequência 2025-26 (simulada)/exam.json",
+    "Documents/Readings/Cell Biology Primer (fictional).pdf",
+    "a",
+    "Notas/Resumo — Semana 8.md",
+    "a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/bc",
+    "Docs/.hidden.md",
+    "Docs/x.tmpl",
+    "Docs/st.md",
+    ".tramado/tmp/a.tmp",
+    "Documentos/日本語.pdf",
+    "Docs/a..b.pdf",
+    "Notas/shared.sync-conflict-20261103-155644-TKBNV23.md",
+    "Docs/emoji 😀.pdf"
+  ],
+  "invalid": [
+    {
+      "path": "",
+      "why": "empty"
+    },
+    {
+      "path": "/abs",
+      "why": "leading slash"
+    },
+    {
+      "path": "a//b",
+      "why": "empty segment"
+    },
+    {
+      "path": "a/./b",
+      "why": "\".\" segment"
+    },
+    {
+      "path": "../x",
+      "why": "\"..\" segment"
+    },
+    {
+      "path": "a/../b",
+      "why": "\"..\" segment"
+    },
+    {
+      "path": "a\\b",
+      "why": "backslash"
+    },
+    {
+      "path": "a\u0000b",
+      "why": "NUL"
+    },
+    {
+      "path": ".stfolder/x",
+      "why": ".st* segment"
+    },
+    {
+      "path": "x/.stignore",
+      "why": ".st* segment"
+    },
+    {
+      "path": ".stversions/a",
+      "why": ".st* segment"
+    },
+    {
+      "path": "Docs/a.tmp",
+      "why": "*.tmp outside .tramado/tmp/"
+    },
+    {
+      "path": "Docs/a.part",
+      "why": "*.part outside .tramado/tmp/"
+    },
+    {
+      "path": "a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/b",
+      "why": "201 UTF-16 units"
+    },
+    {
+      "path": "a/",
+      "why": "trailing slash"
+    },
+    {
+      "path": "a\u0007b",
+      "why": "control character"
+    },
+    {
+      "path": ".",
+      "why": "\".\" segment"
+    },
+    {
+      "path": "..",
+      "why": "\"..\" segment"
+    },
+    {
+      "path": "a/.",
+      "why": "\".\" segment"
+    },
+    {
+      "path": "Docs/A.TMP",
+      "why": "*.tmp is case-insensitive"
+    },
+    {
+      "path": ".tramado/tmpx/a.part",
+      "why": "only .tramado/tmp/ may hold *.part"
+    },
+    {
+      "path": "ab",
+      "why": "DEL control character"
+    },
+    {
+      "path": "/",
+      "why": "root"
+    }
+  ],
+  "tsOnly": [
+    {
+      "path": "Documentos/Código.pdf",
+      "normalised": "Documentos/Código.pdf",
+      "why": "NFD is normalised to NFC by TS"
+    }
+  ]
+}

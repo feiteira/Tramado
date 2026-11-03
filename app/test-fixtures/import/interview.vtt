@@ -1,0 +1,23 @@
+WEBVTT
+Kind: captions
+Language: pt
+
+NOTE Ficheiro fictício para testes.
+
+STYLE
+::cue { color: yellow }
+
+1
+00:00:01.000 --> 00:00:04.500 align:start
+<v Entrevistadora>Bom dia. Pode apresentar-se?</v>
+
+2
+00:00:05.000 --> 00:00:08.000
+<v Rui Lopes>Claro. Chamo-me Rui</v>
+
+3
+00:00:08.000 --> 00:00:10.250
+<v Rui Lopes>e trabalho numa escola &amp; numa associação.</v>
+
+00:01:02.500 --> 00:01:05.000
+<v.loud Entrevistadora>Obrigada!</v>

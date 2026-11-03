@@ -1,0 +1,15 @@
+{
+  "name": "@tramado/desktop",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MPL-2.0",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev --config src-tauri/tauri.sidecar.conf.json",
+    "dev:lite": "tauri dev --config src-tauri/tauri.sidecar.conf.json -- --no-default-features",
+    "build": "tauri build --config src-tauri/tauri.sidecar.conf.json",
+    "build:linux": "tauri build --config src-tauri/tauri.sidecar.conf.json --bundles appimage,deb",
+    "build:debug": "tauri build --debug --config src-tauri/tauri.sidecar.conf.json"
+  },
+  "devDependencies": { "@tauri-apps/cli": "2.12.3" }
+}

@@ -1,0 +1,27 @@
+Tramado
+Copyright (c) 2026 the Tramado contributors
+
+Tramado is licensed under the Mozilla Public License, version 2.0 (see LICENSE).
+
+This product includes software from the following projects:
+
+- Trama (https://github.com/feiteira/Trama), by the same author, licensed under the
+  Mozilla Public License 2.0. Tramado starts from Trama's interface kit, shell, router,
+  command palette, i18n, import and search code, desktop crates and tools; files copied
+  or adapted from Trama keep the MPL-2.0 terms.
+
+- Syncthing (https://syncthing.net), licensed under the Mozilla Public License 2.0. Tramado
+  runs an unmodified Syncthing binary as a sidecar process; its LICENSE and AUTHORS files
+  are shipped beside it.
+
+- whisper.cpp (https://github.com/ggml-org/whisper.cpp), licensed under the MIT License.
+
+- libopus (https://opus-codec.org), licensed under the BSD 3-Clause License.
+
+- Fonts, licensed under the SIL Open Font License 1.1:
+  Figtree, Bricolage Grotesque, Source Serif 4, Atkinson Hyperlegible Next, OpenDyslexic
+  (self-hosted through the @fontsource packages).
+
+- Icons from Lucide (https://lucide.dev), licensed under the ISC License.
+
+Third-party npm and Cargo dependencies keep their own licenses, listed in their packages.

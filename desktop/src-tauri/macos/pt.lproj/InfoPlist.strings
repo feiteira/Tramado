@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "O Tramado grava a aula que escolher gravar com o microfone deste computador. A gravação fica neste computador, a não ser que a partilhe com a sua turma.";
+"NSAudioCaptureUsageDescription" = "O Tramado grava uma aula online que escolher gravar, a partir do que este computador reproduz. A gravação fica neste computador, a não ser que a partilhe com a sua turma.";

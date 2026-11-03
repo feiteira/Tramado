@@ -1,0 +1,239 @@
+/* Tramado design tokens (proposal). A sibling of Trama's tokens.css: same token NAMES and
+   structure (paper / ink / rule / accent / states / type / space / shape / motion / z), so
+   Trama's components port with their CSS unchanged — but a different material:
+
+   Trama is iron-gall ink on cream paper (a researcher's manuscript).
+   Tramado is a student's exercise book: bright cool paper, graphite ink, a ballpoint-blue
+   accent, highlighter marks for what the AI cites, and one colour per class, like the
+   coloured dividers of a binder. AI-written text always carries the violet "spark" colour,
+   so a student can tell at a glance what they wrote, what a source says and what a model drafted.
+
+   Theme: data-theme="light" | "dark" on <html>; no attribute follows the system. */
+
+:root {
+  color-scheme: light;
+
+  /* Paper: an exercise book, cool and bright */
+  --paper: #f3f5f8;          /* the window */
+  --paper-raised: #ffffff;   /* cards, dialogs, fields */
+  --paper-sunk: #e8ecf2;     /* navigation rail, wells */
+  --paper-hover: #e1e6ee;
+  --paper-active: #d7dde8;
+  --paper-reading: #fdfdfc;  /* a document page / transcript */
+  --grid: #d9dfe8;           /* squared-paper lines (quadriculado) on empty states and welcome */
+
+  /* Ink: graphite */
+  --ink: #181d29;
+  --ink-2: #434a5b;
+  --ink-3: #545b6c;          /* muted text: AA on every paper and soft tint (see contrast check) */
+  --ink-4: #8f96a5;          /* placeholders, disabled (non-text) */
+
+  /* Rules */
+  --rule: #dce1e9;
+  --rule-strong: #c3cad6;
+  --rule-faint: #e9ecf1;
+
+  /* Accent: ballpoint blue (a saturated cousin of Trama's ink navy) */
+  --accent: #2f4fd6;
+  --accent-hover: #2440b8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6ebff;
+  --accent-text: #2a47c2;
+  --focus: #3d5cf0;
+  --selection: #cfd9ff;
+
+  /* Highlighter: search hits and the passages an AI answer cites */
+  --mark: #fff1a8;
+  --mark-strong: #f5c518;    /* the highlighter underline of a cited passage (decorative) */
+  --mark-edge: #a37800;      /* its margin bar: 3:1 on paper (WCAG 1.4.11) */
+  --mark-ink: #181d29;
+
+  /* AI: everything a model wrote (drafts, summaries, answers) */
+  --ai: #6b46d9;
+  --ai-soft: #efeaff;
+  --ai-text: #5b3bc4;
+
+  /* Live recording */
+  --rec: #e03a3e;
+  --rec-soft: #fde8e8;
+
+  /* States */
+  --danger: #c0352b;
+  --danger-hover: #a12a21;
+  --danger-ink: #ffffff;     /* text on --danger (Trama hard-codes this per theme in button.css) */
+  --danger-soft: #fce9e6;
+  --danger-text: #a3271e;
+  --warning-soft: #fdf1d3;
+  --warning-text: #7a5208;
+  --success-soft: #e0f3e7;
+  --success-text: #1f6a3f;
+  --info-soft: #e4ecfb;
+  --info-text: #2a4a8a;
+
+  /* Shadows: cool, crisp */
+  --shadow-1: 0 1px 0 rgba(20, 30, 60, 0.04), 0 1px 2px rgba(20, 30, 60, 0.07);
+  --shadow-2: 0 2px 4px rgba(20, 30, 60, 0.06), 0 10px 28px rgba(20, 30, 60, 0.12);
+  --shadow-3: 0 4px 12px rgba(20, 30, 60, 0.1), 0 24px 56px rgba(20, 30, 60, 0.2);
+  --scrim: rgba(16, 20, 32, 0.4);
+
+  /* Type */
+  --font-ui: 'Figtree Variable', 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+  --font-text: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'DejaVu Sans Mono', Menlo, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;     /* body: a touch roomier than Trama's 13.5 */
+  --fs-lg: 16px;
+  --fs-xl: 19px;
+  --fs-2xl: 24px;
+  --fs-3xl: 32px;
+  --fs-display: 44px;
+  --fs-reading: 17px;
+  --lh-tight: 1.2;
+  --lh-ui: 1.45;
+  --lh-reading: 1.65;
+  --measure: 70ch;
+
+  /* Space: the same 4 px grid as Trama */
+  --s-0: 2px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 48px;
+  --s-9: 64px;
+
+  /* Shape: rounder than Trama (3/5/7/11) */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 9px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+  --control-h: 34px;
+  --control-h-sm: 28px;
+  --control-h-lg: 42px;
+
+  /* Layout */
+  --rail-w: 248px;
+  --rail-w-collapsed: 64px;
+  --header-h: 56px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-1: 90ms;
+  --dur-2: 160ms;
+  --dur-3: 240ms;
+
+  --z-popover: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+  --z-curtain: 90;
+}
+
+/* Dark: slate, like a school blackboard at night — cool, never pure black. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --paper: #14171d;
+    --paper-raised: #1c2028;
+    --paper-sunk: #101318;
+    --paper-hover: #252a34;
+    --paper-active: #2e3441;
+    --paper-reading: #181b22;
+    --grid: #1f242d;
+    --ink: #e8ebf1;
+    --ink-2: #c3c8d2;
+    --ink-3: #a1a8b5;
+    --ink-4: #646b79;
+    --rule: #2b303b;
+    --rule-strong: #3c4350;
+    --rule-faint: #21252d;
+    --accent: #8ea5ff;
+    --accent-hover: #a8baff;
+    --accent-ink: #0f1430;
+    --accent-soft: #232b48;
+    --accent-text: #a3b6ff;
+    --focus: #8ea5ff;
+    --selection: #2e3c6e;
+    --mark: #3f3a1c;
+    --mark-strong: #e6c33c;
+    --mark-edge: #e6c33c;
+    --mark-ink: #f4efd8;
+    --ai: #b7a2ff;
+    --ai-soft: #2a2444;
+    --ai-text: #c4b3ff;
+    --rec: #ff6b6e;
+    --rec-soft: #3d2023;
+    --danger: #f08a80;
+    --danger-hover: #f6a59d;
+    --danger-ink: #14171d;
+    --danger-soft: #3d2320;
+    --danger-text: #f59a90;
+    --warning-soft: #3a311a;
+    --warning-text: #e8c66f;
+    --success-soft: #1b3326;
+    --success-text: #86d2a2;
+    --info-soft: #1f2a40;
+    --info-text: #a3b8e8;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.4);
+    --shadow-3: 0 6px 14px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.55);
+    --scrim: rgba(4, 6, 10, 0.62);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #14171d;
+  --paper-raised: #1c2028;
+  --paper-sunk: #101318;
+  --paper-hover: #252a34;
+  --paper-active: #2e3441;
+  --paper-reading: #181b22;
+  --grid: #1f242d;
+  --ink: #e8ebf1;
+  --ink-2: #c3c8d2;
+  --ink-3: #a1a8b5;
+  --ink-4: #646b79;
+  --rule: #2b303b;
+  --rule-strong: #3c4350;
+  --rule-faint: #21252d;
+  --accent: #8ea5ff;
+  --accent-hover: #a8baff;
+  --accent-ink: #0f1430;
+  --accent-soft: #232b48;
+  --accent-text: #a3b6ff;
+  --focus: #8ea5ff;
+  --selection: #2e3c6e;
+  --mark: #3f3a1c;
+  --mark-strong: #e6c33c;
+  --mark-edge: #e6c33c;
+  --mark-ink: #f4efd8;
+  --ai: #b7a2ff;
+  --ai-soft: #2a2444;
+  --ai-text: #c4b3ff;
+  --rec: #ff6b6e;
+  --rec-soft: #3d2023;
+  --danger: #f08a80;
+  --danger-hover: #f6a59d;
+  --danger-ink: #14171d;
+  --danger-soft: #3d2320;
+  --danger-text: #f59a90;
+  --warning-soft: #3a311a;
+  --warning-text: #e8c66f;
+  --success-soft: #1b3326;
+  --success-text: #86d2a2;
+  --info-soft: #1f2a40;
+  --info-text: #a3b8e8;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 6px 14px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.55);
+  --scrim: rgba(4, 6, 10, 0.62);
+}

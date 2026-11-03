@@ -1,0 +1,70 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Tramado",
+  "version": "0.1.0",
+  "identifier": "eu.thehumanloop.tramado",
+  "build": {
+    "frontendDist": "../../app/dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev --workspace @tramado/app",
+    "beforeBuildCommand": "npm run build --workspace @tramado/app"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Tramado",
+        "width": 1360,
+        "height": 860,
+        "minWidth": 1000,
+        "minHeight": 660,
+        "center": true,
+        "visible": false,
+        "backgroundThrottling": "disabled"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: tramado-media: http://tramado-media.localhost; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost blob: data: tramado-media: http://tramado-media.localhost; media-src 'self' blob: tramado-media: http://tramado-media.localhost; object-src 'none'; base-uri 'self'; form-action 'none'",
+      "freezePrototype": false,
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage", "deb", "nsis", "dmg"],
+    "fileAssociations": [
+      {
+        "ext": ["tramado-invite"],
+        "name": "Tramado invite",
+        "description": "Tramado class invite",
+        "mimeType": "text/x-tramado-invite",
+        "role": "Viewer"
+      }
+    ],
+    "category": "Education",
+    "shortDescription": "Organise your classes: lectures, documents, exams and class groups",
+    "longDescription": "Tramado keeps each class in a plain folder: record and transcribe lectures on your own computer, add documents, keep notes, practise past exams with AI answers that cite your materials, and share a class with classmates through Syncthing, with no server and no account.",
+    "copyright": "© Tramado contributors",
+    "license": "MPL-2.0",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "linux": {
+      "deb": { "depends": ["libasound2t64 | libasound2", "libpulse0"] },
+      "appimage": { "bundleMediaFramework": true }
+    },
+    "macOS": {
+      "minimumSystemVersion": "14.2",
+      "entitlements": "macos/Entitlements.plist",
+      "files": {
+        "Resources/en.lproj/InfoPlist.strings": "macos/en.lproj/InfoPlist.strings",
+        "Resources/pt.lproj/InfoPlist.strings": "macos/pt.lproj/InfoPlist.strings",
+        "Resources/es.lproj/InfoPlist.strings": "macos/es.lproj/InfoPlist.strings"
+      }
+    },
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": { "languages": ["English", "Portuguese", "Spanish"], "displayLanguageSelector": true }
+    }
+  },
+  "plugins": { "deep-link": { "desktop": { "schemes": ["tramado"] } } }
+}

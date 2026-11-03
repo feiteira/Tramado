@@ -1,0 +1,58 @@
+// English source catalog `onboarding`: UX spec §5.4 verbatim (docs/design/ux-mvp.md).
+// English is the source of truth; pt/ and es/ are typed Messages['onboarding'].
+
+export const onboarding = {
+  step: 'Step {n} of 4',
+  welcome: {
+    headline: 'Your classes, [m]all in one place[/m]',
+    lead: 'Record and transcribe lectures, keep every handout and law text together, share them with your class, and practise for exams with an AI that shows where each answer comes from.',
+    start: 'Get started',
+    example: 'Try the example',
+    promise: {
+      accountTitle: 'No account', account: 'Nothing to sign up for.',
+      foldersTitle: 'Plain folders', folders: 'Your classes are ordinary folders on your computer.',
+      aiTitle: 'Your AI key, or none', ai: 'Bring a free OpenRouter key, or skip AI.',
+    },
+    language: 'Language',
+    footnote: 'No account. Nothing leaves this computer until you share a class or turn on AI.',
+  },
+  name: {
+    title: 'What should classmates call you?',
+    label: 'Name',
+    placeholder: 'e.g. Ana Ribeiro',
+    hint: 'Shown next to your messages and recordings in classes you share. You can change it later.',
+    device: 'This computer will appear as “{device}”.',
+    deviceLabel: 'This computer’s name',
+    deviceLaptop: '{name}’s laptop',
+    deviceComputer: '{name}’s computer',
+    folder: 'Your classes are kept in {path}',
+    folderChange: 'Change…',
+    cloudWarning: 'This folder is synced by {service}. Two sync tools on the same files cause conflicts. Choose a folder outside it.',
+    cloudChoose: 'Choose another folder',
+    required: 'Enter a name classmates will recognise.',
+  },
+  ai: {
+    title: 'AI help (optional)',
+    body: 'Tramado can answer exam questions from your own classes, explain a passage, summarise a lecture and find things in your documents. It uses OpenRouter with your own key, and free models work.',
+    keyLabel: 'OpenRouter key',
+    getKey: 'Get a free key at openrouter.ai/keys',
+    age: 'OpenRouter is for people aged 18 or over. If you are younger, skip this: everything else in Tramado works without AI. You can also connect a local AI later in Settings.',
+    privacy: 'When you ask the AI something, your question and the passages it needs go to OpenRouter and the company running the model. Tramado asks only for providers that don’t train on what you send.',
+    test: 'Test and save',
+    skip: 'Skip for now',
+    checking: 'Checking your key…',
+    ok: 'Works. {model} is your model, and you have {n} free requests left today.',
+    okBusy: 'Your key works. The free model is busy right now (that’s common). Tramado will try {fallback} when that happens.',
+    bad: 'OpenRouter didn’t accept this key. Check that you copied all of it (it starts with “sk-or-”).',
+    offline: 'You seem to be offline. The key is saved; Tramado will check it when you’re online.',
+  },
+  ready: {
+    title: 'You’re set, {name}.',
+    createTitle: 'Create a class',
+    create: 'Start a class for a subject you’re taking.',
+    joinTitle: 'Join a class',
+    join: 'Paste an invite a classmate sent you.',
+    model: 'The speech model for transcribing lectures ({size}) downloads the first time you need it.',
+    finish: 'Go to Today',
+  },
+};

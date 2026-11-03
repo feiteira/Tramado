@@ -1,0 +1,13 @@
+# Fake class corpus (written for the lab; fictional "study" articles, not official text).
+PASSAGES = [
+ {"id": "doc:constituicao-apontamentos.pdf#p4", "source": "Constituição — apontamentos.pdf", "loc": "p. 4, art. 13.º",
+  "text": "Artigo 13.º (Princípio da igualdade). 1. Todos os cidadãos têm a mesma dignidade social e são iguais perante a lei. 2. Ninguém pode ser privilegiado, beneficiado ou prejudicado, nem privado de qualquer direito, em razão do sexo, da origem, da língua, da religião, das convicções políticas ou ideológicas ou da situação económica."},
+ {"id": "doc:constituicao-apontamentos.pdf#p9", "source": "Constituição — apontamentos.pdf", "loc": "p. 9, art. 37.º",
+  "text": "Artigo 37.º (Liberdade de expressão e informação). 1. Todos têm o direito de exprimir e divulgar livremente o seu pensamento pela palavra, pela imagem ou por qualquer outro meio. 2. O exercício destes direitos não pode ser impedido ou limitado por qualquer tipo ou forma de censura."},
+ {"id": "doc:constituicao-apontamentos.pdf#p6", "source": "Constituição — apontamentos.pdf", "loc": "p. 6, art. 18.º",
+  "text": "Artigo 18.º (Força jurídica). 1. Os preceitos relativos aos direitos, liberdades e garantias são diretamente aplicáveis e vinculam as entidades públicas e privadas. 2. A lei só pode restringir os direitos, liberdades e garantias nos casos expressamente previstos na Constituição, devendo as restrições limitar-se ao necessário para salvaguardar outros direitos ou interesses constitucionalmente protegidos. 3. As leis restritivas têm de revestir caráter geral e abstrato e não podem diminuir a extensão e o alcance do conteúdo essencial dos preceitos."},
+ {"id": "doc:constituicao-apontamentos.pdf#p20", "source": "Constituição — apontamentos.pdf", "loc": "p. 20, art. 64.º",
+  "text": "Artigo 64.º (Saúde). 1. Todos têm direito à proteção da saúde e o dever de a defender e promover. 2. O direito à proteção da saúde é realizado através de um serviço nacional de saúde universal e geral."},
+ {"id": "rec:aula-05-direitos-fundamentais#t=00:12:05", "source": "Aula 5 — Direitos fundamentais (gravação, 2026-10-14)", "loc": "00:12:05–00:14:10",
+  "text": "[00:12:05] Professora: Atenção que isto sai sempre no exame. O artigo 18 é a chave: qualquer restrição tem de passar o teste da proporcionalidade, com três degraus — adequação, necessidade e proporcionalidade em sentido estrito. [00:13:02] Aluno: E um regulamento municipal pode restringir? [00:13:20] Professora: Não sozinho. A restrição tem de vir de lei, geral e abstrata, nunca de um ato dirigido a um grupo concreto. [00:13:58] E nunca pode tocar no conteúdo essencial do direito."},
+]

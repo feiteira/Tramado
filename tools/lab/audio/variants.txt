@@ -1,0 +1,8 @@
+base rc=0 time=3.5s size=395768
+libopus rc=0 time=10.6s size=692544
+opusrs rc=0 time=9.9s size=873336
+rusty rc=0 time=11.0s size=952328
+opusdec rc=0 time=7.8s size=552312
+mousiki rc=0 time=13.0s size=938688
+all rc=0 time=21.9s size=2374696
+DONE

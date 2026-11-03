@@ -1,0 +1,107 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  height: var(--control-h);
+  padding: 0 var(--s-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  font-size: var(--fs-md);
+  font-weight: 540;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+
+.btn--sm {
+  height: var(--control-h-sm);
+  padding: 0 var(--s-2);
+  gap: 6px;
+  font-size: var(--fs-sm);
+  border-radius: var(--r-sm);
+}
+
+.btn--lg {
+  height: var(--control-h-lg);
+  padding: 0 var(--s-5);
+  font-size: var(--fs-lg);
+}
+
+.btn--icon-only {
+  padding: 0;
+  width: var(--control-h);
+}
+.btn--icon-only.btn--sm {
+  width: var(--control-h-sm);
+}
+.btn--icon-only.btn--lg {
+  width: var(--control-h-lg);
+}
+
+.btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn__end {
+  margin-left: -2px;
+  opacity: 0.7;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn--secondary {
+  background: var(--paper-raised);
+  border-color: var(--rule-strong);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--paper-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink-2);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+.btn--ghost:active:not(:disabled),
+.btn--pressed {
+  background: var(--paper-active);
+  color: var(--ink);
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: var(--paper-raised);
+}
+.btn--danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+:root[data-theme='dark'] .btn--danger {
+  color: #1e1d1b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .btn--danger {
+    color: #1e1d1b;
+  }
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+.btn--busy {
+  cursor: progress;
+}

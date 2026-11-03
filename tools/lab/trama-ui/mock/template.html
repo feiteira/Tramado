@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Tramado — mock</title>
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/figtree/wght.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/figtree/wght-italic.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/bricolage-grotesque/index.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/source-serif-4/opsz.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/source-serif-4/opsz-italic.css" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: var(--fs-md); line-height: var(--lh-ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+h1, h2, h3, p { margin: 0; }
+svg.i { width: 16px; height: 16px; flex: none; stroke-width: 1.75; }
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); height: 100%; }
+
+/* Rail */
+.rail { display: flex; flex-direction: column; background: var(--paper-sunk); border-right: 1px solid var(--rule); min-height: 0; }
+.rail__top { padding: var(--s-3) var(--s-3) var(--s-2); display: flex; flex-direction: column; gap: var(--s-3); }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px var(--s-1); }
+.brand__name { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: -0.02em; font-variation-settings: 'opsz' 32; }
+.brand-mark__ground { fill: var(--accent); }
+.brand-mark__warp, .brand-mark__weft { fill: none; stroke: var(--accent-ink); stroke-width: 2.4; stroke-linecap: round; }
+.brand-mark__warp { opacity: .55; }
+.brand-mark__hl { fill: none; stroke: #f5c518; stroke-width: 2.4; stroke-linecap: round; }
+.search { display: flex; align-items: center; gap: var(--s-2); height: 32px; padding: 0 var(--s-2) 0 10px; border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--paper-raised); color: var(--ink-3); font-size: var(--fs-sm); }
+.search span { flex: 1; }
+kbd { font-family: var(--font-ui); font-size: var(--fs-xs); color: var(--ink-3); }
+.rail__scroll { flex: 1; overflow: auto; padding: var(--s-1) var(--s-2); }
+.rail__label { padding: var(--s-3) var(--s-2) var(--s-1); font-size: var(--fs-xs); font-weight: 650; color: var(--ink-3); letter-spacing: .04em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+.rail__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.item { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 var(--s-2); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--ink-2); font-weight: 520; text-align: left; }
+.item svg { color: var(--ink-3); }
+.item:hover { background: var(--paper-hover); }
+.item--current { background: var(--paper-raised); color: var(--ink); font-weight: 650; box-shadow: var(--shadow-1); }
+.item__name { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* A class in the rail: its divider tab */
+[style*='--c:'] { --c-text: color-mix(in oklab, var(--c) 50%, var(--ink)); --c-soft: color-mix(in oklab, var(--c) 16%, var(--paper-raised)); --c-bar: color-mix(in oklab, var(--c) 75%, var(--ink)); }
+.cls__tab { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background: var(--c-soft); color: var(--c-text); box-shadow: inset 3px 0 0 var(--c-bar); }
+.cls__tab svg { width: 13px; height: 13px; stroke-width: 2; color: var(--c-text) !important; }
+.item--current .cls__tab { background: var(--c); color: var(--c-on); box-shadow: none; }
+.item--current .cls__tab svg { color: var(--c-on) !important; }
+.count { min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.sync { width: 8px; height: 8px; border-radius: 50%; background: var(--success-text); }
+.sync--busy { background: var(--accent-text); }
+.rail__foot { padding: var(--s-2); border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px; }
+.status { display: flex; align-items: center; gap: var(--s-2); padding: 6px var(--s-2); font-size: var(--fs-xs); color: var(--ink-3); }
+.pill-ai { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: var(--r-pill); background: var(--ai-soft); color: var(--ai-text); font-size: 11.5px; font-weight: 650; }
+.pill-ai svg { width: 13px; height: 13px; }
+
+/* Main */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.header { display: flex; align-items: center; gap: var(--s-3); min-height: 64px; padding: var(--s-3) var(--s-4) var(--s-2) var(--s-6); }
+.header__mark { width: 40px; height: 40px; border-radius: 11px; background: var(--c); color: var(--c-on); display: inline-flex; align-items: center; justify-content: center; }
+.header__mark svg { width: 22px; height: 22px; stroke-width: 1.75; }
+.header__titles { flex: 1; min-width: 0; }
+.header__title { font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 680; letter-spacing: -0.02em; font-variation-settings: 'opsz' 28; line-height: 1.15; }
+.header__sub { color: var(--ink-3); font-size: var(--fs-sm); display: flex; gap: var(--s-2); align-items: center; }
+.avatars { display: inline-flex; }
+.avatar { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--paper); margin-left: -6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.avatar:first-child { margin-left: 0; }
+.btn { display: inline-flex; align-items: center; gap: var(--s-2); height: var(--control-h); padding: 0 14px; border: 1px solid transparent; border-radius: var(--r-md); font-weight: 600; white-space: nowrap; }
+.btn--primary { background: var(--accent); color: var(--accent-ink); }
+.btn--secondary { background: var(--paper-raised); border-color: var(--rule-strong); box-shadow: var(--shadow-1); }
+.btn--ghost { background: transparent; color: var(--ink-2); }
+.btn--rec { background: var(--paper-raised); border-color: var(--rule-strong); box-shadow: var(--shadow-1); }
+.btn--rec .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rec); }
+.btn--danger { background: var(--danger); color: var(--danger-ink); }
+.btn--sm { height: var(--control-h-sm); padding: 0 10px; font-size: var(--fs-sm); border-radius: var(--r-sm); }
+.icon-btn { width: var(--control-h); padding: 0; justify-content: center; }
+.tabs { display: flex; gap: var(--s-5); padding: 0 var(--s-6); border-bottom: 1px solid var(--rule); }
+.tab { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 40px; border: 0; background: none; color: var(--ink-3); font-weight: 560; padding: 0 2px; }
+.tab svg { width: 15px; height: 15px; }
+.tab--on { color: var(--ink); font-weight: 650; }
+.tab--on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--c); }
+.tab .n { font-size: var(--fs-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tab .count { background: var(--c); color: var(--c-on); }
+
+.body { flex: 1; min-height: 0; display: grid; grid-template-columns: 270px minmax(0, 1fr) 400px; }
+.qlist { border-right: 1px solid var(--rule); padding: var(--s-3); overflow: auto; display: flex; flex-direction: column; gap: var(--s-2); }
+.exam { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-1) var(--s-1); font-weight: 650; }
+.exam small { margin-left: auto; color: var(--ink-3); font-weight: 500; font-size: var(--fs-xs); }
+.q { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: var(--r-md); border: 1px solid transparent; background: transparent; text-align: left; width: 100%; }
+.q--on { background: var(--paper-raised); border-color: var(--rule); box-shadow: var(--shadow-1); }
+.q__n { flex: none; width: 24px; height: 24px; border-radius: 7px; background: var(--paper-hover); font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.q--on .q__n { background: var(--c); color: var(--c-on); }
+.q__text { font-size: var(--fs-sm); color: var(--ink-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.q--on .q__text { color: var(--ink); }
+.q__state { margin-top: 4px; display: flex; gap: 6px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: var(--r-pill); font-size: 11.5px; font-weight: 600; background: var(--paper-sunk); color: var(--ink-2); border: 1px solid var(--rule); }
+.badge svg { width: 12px; height: 12px; }
+.badge--ai { background: var(--ai-soft); color: var(--ai-text); border-color: transparent; }
+.badge--ok { background: var(--success-soft); color: var(--success-text); border-color: transparent; }
+.badge--warn { background: var(--warning-soft); color: var(--warning-text); border-color: transparent; }
+
+.centre { overflow: auto; padding: var(--s-6) var(--s-7); display: flex; flex-direction: column; gap: var(--s-5); }
+.qhead { display: flex; flex-direction: column; gap: var(--s-2); }
+.eyebrow { font-size: var(--fs-xs); font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--c-text); }
+.qtext { font-family: var(--font-text); font-size: 20px; line-height: 1.45; font-variation-settings: 'opsz' 24; }
+.answer { position: relative; background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--r-lg); box-shadow: var(--shadow-1); padding: var(--s-5) var(--s-5) var(--s-4) calc(var(--s-5) + 4px); }
+.answer::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 4px 4px 0; background: var(--ai); }
+.answer__head { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-3); }
+.answer__head .model { color: var(--ink-3); font-size: var(--fs-xs); }
+.answer__text { font-family: var(--font-text); font-size: var(--fs-reading); line-height: var(--lh-reading); max-width: var(--measure); }
+.answer__text p + p { margin-top: .6em; }
+.cite { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 5px; margin: 0 1px; border-radius: 5px; background: var(--mark); color: var(--mark-ink); font-family: var(--font-ui); font-size: 11px; font-weight: 750; vertical-align: 2px; box-shadow: inset 0 -2px 0 var(--mark-strong); }
+.cite--on { outline: 2px solid var(--focus); outline-offset: 1px; }
+.answer__foot { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--rule-faint); }
+.answer__foot .sp { flex: 1; }
+.conf { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--ink-3); }
+.conf__bar { width: 64px; height: 5px; border-radius: 3px; background: var(--paper-active); overflow: hidden; }
+.conf__bar span { display: block; height: 100%; width: 78%; background: var(--success-text); }
+.sources { display: flex; flex-direction: column; gap: var(--s-2); }
+.sources h3 { font-size: var(--fs-sm); color: var(--ink-2); font-weight: 650; }
+.src { display: flex; align-items: center; gap: var(--s-3); padding: 10px var(--s-3); border-radius: var(--r-md); background: var(--paper-raised); border: 1px solid var(--rule); }
+.src__icon { width: 30px; height: 30px; border-radius: 8px; background: var(--paper-sunk); display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.src__main { flex: 1; min-width: 0; }
+.src__title { font-weight: 620; }
+.src__where { font-size: var(--fs-xs); color: var(--ink-3); }
+.mine { border: 1.5px dashed var(--rule-strong); border-radius: var(--r-lg); padding: var(--s-4); color: var(--ink-3); display: flex; gap: var(--s-2); align-items: center; }
+
+.side { border-left: 1px solid var(--rule); background: var(--paper-reading); display: flex; flex-direction: column; min-height: 0; }
+.side__head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--rule); }
+.side__head b { font-weight: 650; }
+.side__head small { color: var(--ink-3); font-size: var(--fs-xs); display: block; }
+.player { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-4); border-bottom: 1px solid var(--rule-faint); }
+.play { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: 0; display: inline-flex; align-items: center; justify-content: center; }
+.play svg { width: 14px; height: 14px; }
+.wave { flex: 1; height: 28px; display: flex; align-items: center; gap: 2px; }
+.wave span { flex: 1; border-radius: 2px; background: var(--rule-strong); }
+.wave span.p { background: var(--accent); }
+.time { font-size: var(--fs-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.transcript { flex: 1; overflow: auto; padding: var(--s-4) var(--s-4) var(--s-4) var(--s-3); font-family: var(--font-text); font-size: 15.5px; line-height: 1.6; }
+.turn { display: grid; grid-template-columns: 44px 1fr 6px; gap: var(--s-2); margin-bottom: var(--s-3); }
+.ts { font-family: var(--font-ui); font-size: 11.5px; color: var(--ink-3); padding-top: 4px; font-variant-numeric: tabular-nums; text-align: right; }
+.spk { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+mark.hl { background: var(--mark); color: var(--mark-ink); box-shadow: inset 0 -2px 0 var(--mark-strong); padding: 1px 0; border-radius: 2px; }
+.bar { width: 4px; border-radius: 2px; }
+.bar--on { background: var(--mark-edge); }
+.note { font-family: var(--font-ui); display: flex; gap: 6px; align-items: flex-start; margin: 4px 0 var(--s-3) 52px; padding: 8px 10px; border-radius: var(--r-md); background: var(--accent-soft); color: var(--ink); font-size: var(--fs-sm); }
+.note svg { color: var(--accent-text); width: 14px; height: 14px; margin-top: 2px; }
+
+.dock { display: flex; align-items: center; gap: var(--s-3); min-height: 48px; padding: var(--s-1) var(--s-3) var(--s-1) var(--s-4); border-top: 1px solid var(--rule); background: var(--paper-raised); font-size: var(--fs-sm); }
+.live { width: 10px; height: 10px; border-radius: 50%; background: var(--rec); box-shadow: 0 0 0 4px color-mix(in srgb, var(--rec) 22%, transparent); }
+.dock b { font-weight: 650; }
+.dock .name { color: var(--ink-2); }
+.dock .t { font-variant-numeric: tabular-nums; font-weight: 600; }
+.meter { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: var(--fs-xs); }
+.meter__bar { width: 70px; height: 6px; border-radius: 3px; background: var(--paper-active); overflow: hidden; }
+.meter__bar span { display: block; height: 100%; background: var(--success-text); }
+.dock .sp { flex: 1; }
+.dock .tx { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-3); }
+.toast { position: fixed; left: 50%; bottom: 66px; transform: translateX(-50%); display: flex; align-items: center; gap: var(--s-3); padding: 6px 6px 6px 16px; border-radius: var(--r-md); background: var(--ink); color: var(--paper); box-shadow: var(--shadow-3); font-size: var(--fs-md); }
+.toast button { height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: color-mix(in srgb, var(--paper) 14%, transparent); color: var(--paper); font-weight: 650; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Classes">
+    <div class="rail__top">
+      <div class="brand">
+        <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true">
+          <rect x="0.5" y="0.5" width="27" height="27" rx="8" class="brand-mark__ground" />
+          <path d="M10 5v.6M10 10.4v7.2M10 22.4v.6M18 5v6.6M18 16.4V23" class="brand-mark__warp" />
+          <path d="M5 8h10.6M20.4 8H23M5 14h2.6M12.4 14H23" class="brand-mark__weft" />
+          <path d="M5 20h10.6M20.4 20H23" class="brand-mark__hl" />
+        </svg>
+        <span class="brand__name">Tramado</span>
+      </div>
+      <button class="search">{{search}}<span>Search everything</span><kbd>Ctrl+K</kbd></button>
+    </div>
+    <div class="rail__scroll">
+      <ul class="rail__list">
+        <li><button class="item">{{calendar-days}}<span class="item__name">This week</span></button></li>
+        <li><button class="item">{{clipboard-check}}<span class="item__name">Exams &amp; tests</span><span class="count" style="background:var(--paper-active);color:var(--ink-2)">2</span></button></li>
+      </ul>
+      <div class="rail__label"><span>My classes</span>{{plus}}</div>
+      <ul class="rail__list">
+        <li><button class="item item--current" style="{{c:6}}"><span class="cls__tab">{{scale}}</span><span class="item__name">Constitutional Law I</span><span class="sync"></span></button></li>
+        <li><button class="item" style="{{c:5}}"><span class="cls__tab">{{flask-conical}}</span><span class="item__name">Organic Chemistry</span><span class="count">4</span></button></li>
+        <li><button class="item" style="{{c:1}}"><span class="cls__tab">{{chart-line}}</span><span class="item__name">Microeconomics</span><span class="sync sync--busy"></span></button></li>
+        <li><button class="item" style="{{c:10}}"><span class="cls__tab">{{palette}}</span><span class="item__name">History of Art</span></button></li>
+        <li><button class="item" style="{{c:2}}"><span class="cls__tab">{{sigma}}</span><span class="item__name">Statistics II</span></button></li>
+        <li><button class="item" style="{{c:8}}"><span class="cls__tab">{{languages}}</span><span class="item__name">Academic English</span></button></li>
+      </ul>
+    </div>
+    <div class="rail__foot">
+      <button class="item">{{settings}}<span class="item__name">Settings</span></button>
+      <button class="item">{{circle-help}}<span class="item__name">Help</span></button>
+      <div class="status">{{folder-sync}}<span style="flex:1">Synced · 3 classmates online</span><span class="pill-ai">{{sparkles}}AI</span></div>
+    </div>
+  </nav>
+
+  <main class="main" style="{{c:6}}">
+    <header class="header">
+      <span class="header__mark">{{scale}}</span>
+      <div class="header__titles">
+        <h1 class="header__title">Constitutional Law I</h1>
+        <div class="header__sub"><span>Prof. Marta Reis · Tue &amp; Thu 10:00 · Room 2.14</span><span class="avatars">
+          <span class="avatar" style="background:#e5484d">A</span><span class="avatar" style="background:#30a46c">B</span><span class="avatar" style="background:#6e56cf">C</span><span class="avatar" style="background:#0090c8">+9</span></span><span>12 classmates</span></div>
+      </div>
+      <button class="btn btn--secondary">{{user-plus}}Invite</button>
+      <button class="btn btn--rec"><span class="dot"></span>Record class</button>
+      <button class="btn btn--primary">{{plus}}Add</button>
+    </header>
+    <div class="tabs" role="tablist">
+      <button class="tab">{{layout-dashboard}}Overview</button>
+      <button class="tab">{{audio-lines}}Lectures <span class="n">14</span></button>
+      <button class="tab">{{files}}Documents <span class="n">38</span></button>
+      <button class="tab tab--on">{{clipboard-check}}Exams <span class="n">3</span></button>
+      <button class="tab">{{notebook-pen}}Notes</button>
+      <button class="tab">{{messages-square}}Chat <span class="count">3</span></button>
+    </div>
+    <div class="body">
+      <aside class="qlist">
+        <div class="exam">{{file-text}}Mock exam — 2025/26 <small>6 questions</small></div>
+        <button class="q"><span class="q__n">1</span><span><span class="q__text">Distinguish the formal and material senses of the Constitution.</span><span class="q__state"><span class="badge badge--ok">{{check}}Reviewed</span></span></span></button>
+        <button class="q q--on"><span class="q__n">2</span><span><span class="q__text">Under what conditions may the law restrict rights, freedoms and guarantees? Comment with reference to Article 18.</span><span class="q__state"><span class="badge badge--ai">{{sparkles}}AI draft</span><span class="badge">3 sources</span></span></span></button>
+        <button class="q"><span class="q__n">3</span><span><span class="q__text">What is the role of the Constitutional Court in abstract review?</span><span class="q__state"><span class="badge badge--ai">{{sparkles}}AI draft</span></span></span></button>
+        <button class="q"><span class="q__n">4</span><span><span class="q__text">Explain the principle of proportionality and its three sub-principles.</span><span class="q__state"><span class="badge badge--warn">{{triangle-alert}}No source found</span></span></span></button>
+        <button class="q"><span class="q__n">5</span><span><span class="q__text">May a state of emergency suspend the right to life? Justify.</span></span></button>
+      </aside>
+      <section class="centre">
+        <div class="qhead">
+          <span class="eyebrow">Question 2 · 4 marks</span>
+          <p class="qtext">Under what conditions may the law restrict rights, freedoms and guarantees? Comment with reference to Article 18 of the Constitution.</p>
+        </div>
+        <article class="answer">
+          <div class="answer__head"><span class="badge badge--ai">{{sparkles}}AI draft</span><span class="model">nvidia/nemotron-3.5-super-vl:free · from 3 of your sources</span></div>
+          <div class="answer__text">
+            <p>Restrictions are only admissible where the Constitution expressly allows them, and must be limited to what is necessary to safeguard other constitutionally protected rights or interests <span class="cite">1</span>.</p>
+            <p>Restrictive laws must be general and abstract, may not have retroactive effect, and may never reduce the essential content of the right <span class="cite cite--on">2</span>. Prof. Reis stressed this last point as “the core no law can touch” <span class="cite">3</span>.</p>
+          </div>
+          <div class="answer__foot">
+            <span class="conf">Grounded <span class="conf__bar"><span></span></span></span>
+            <span class="sp"></span>
+            <button class="btn btn--ghost btn--sm">{{refresh-cw}}Try again</button>
+            <button class="btn btn--secondary btn--sm">{{copy-plus}}Copy to my answer</button>
+          </div>
+        </article>
+        <div class="sources">
+          <h3>Sources</h3>
+          <div class="src"><span class="cite">1</span><span class="src__icon">{{book-open}}</span><span class="src__main"><span class="src__title">Constitution of the Portuguese Republic.pdf</span><br/><span class="src__where">Article 18(2) · page 12</span></span>{{chevron-right}}</div>
+          <div class="src"><span class="cite">2</span><span class="src__icon">{{book-open}}</span><span class="src__main"><span class="src__title">Constitution of the Portuguese Republic.pdf</span><br/><span class="src__where">Article 18(3) · page 12</span></span>{{chevron-right}}</div>
+          <div class="src"><span class="cite">3</span><span class="src__icon">{{audio-lines}}</span><span class="src__main"><span class="src__title">Lecture 7 — Restrictions on rights</span><br/><span class="src__where">Transcript · 34:12 · transcribed by Beatriz</span></span>{{chevron-right}}</div>
+        </div>
+        <div class="mine">{{pencil-line}}Write your own answer — the AI draft stays beside it.</div>
+      </section>
+      <aside class="side">
+        <div class="side__head">{{audio-lines}}<span style="flex:1"><b>Lecture 7 — Restrictions on rights</b><small>Thu 16 Oct · 1 h 22 min · transcribed by Beatriz</small></span><button class="btn btn--ghost icon-btn">{{x}}</button></div>
+        <div class="player"><button class="play">{{play}}</button><span class="wave">{{wave}}</span><span class="time">34:12 / 1:22:05</span></div>
+        <div class="transcript">
+          <div class="turn"><span class="ts">33:40</span><span><span class="spk">Prof. Reis</span>So the second requirement is generality. A restrictive law cannot be aimed at one person, one case.</span><span class="bar"></span></div>
+          <div class="turn"><span class="ts">34:02</span><span><span class="spk">Student</span>And can it apply to the past?</span><span class="bar"></span></div>
+          <div class="turn"><span class="ts">34:12</span><span><span class="spk">Prof. Reis</span>No — it cannot be retroactive. And then the third limit, the one you must never forget in the exam: <mark class="hl">the essential content of the right is the core no law can touch</mark>.</span><span class="bar bar--on"></span></div>
+          <div class="note">{{sticky-note}}<span>My note: compare with art. 19 — suspension in a state of emergency.</span></div>
+          <div class="turn"><span class="ts">35:01</span><span><span class="spk">Prof. Reis</span>Proportionality comes next week, so read the handout before Thursday.</span><span class="bar"></span></div>
+        </div>
+      </aside>
+    </div>
+    <div class="dock">
+      <span class="live"></span><b>Recording</b><span class="name">Lecture 8 — Fundamental rights II</span><span class="t">00:41:07</span>
+      <span class="meter">Mic <span class="meter__bar"><span style="width:62%"></span></span></span>
+      <span class="meter">Computer <span class="meter__bar"><span style="width:8%"></span></span></span>
+      <span class="sp"></span>
+      <span class="tx">{{users}}Beatriz will transcribe it</span>
+      <button class="btn btn--danger btn--sm">{{square}}Stop</button>
+    </div>
+  </main>
+</div>
+<div class="toast">Copied to your answer.<button>Undo</button></div>
+</body>
+</html>

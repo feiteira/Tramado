@@ -1,0 +1,12 @@
+﻿1
+00:00:00,000 --> 00:00:02,000
+Carmen Ruiz: Hola, ¿me oye bien?
+
+2
+00:00:02,500 --> 00:00:04,000
+Carmen Ruiz: Perfecto.
+
+3
+00:00:04,100 --> 00:00:07,900
+Javier Ortega: Sí, la oigo. <i>Empezamos</i> cuando quiera.
+

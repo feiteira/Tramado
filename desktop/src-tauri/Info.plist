@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Merged into the app's Info.plist by Tauri. Recording a lecture asks for the microphone and,
+       for an online lecture, for the computer's sound (Core Audio process tap); the reasons are
+       translated in macos/<lang>.lproj/InfoPlist.strings. -->
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>pt</string>
+    <string>es</string>
+  </array>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Tramado records the lecture you choose to record with this computer's microphone. The recording stays on this computer unless you share it with your class.</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Tramado records an online lecture you choose to record from what this computer plays. The recording stays on this computer unless you share it with your class.</string>
+</dict>
+</plist>

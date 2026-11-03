@@ -1,0 +1,205 @@
+{
+  "format": "tramado.test-vectors.hlc",
+  "version": 1,
+  "source": "folder spec §3",
+  "formatCases": [
+    {
+      "ms": 1793721438157,
+      "counter": 0,
+      "node": "wsgdtbe",
+      "hlc": "001793721438157-00000-wsgdtbe"
+    },
+    {
+      "ms": 5,
+      "counter": 36,
+      "node": "tkbnv23",
+      "hlc": "000000000000005-00010-tkbnv23"
+    },
+    {
+      "ms": 999999999999999,
+      "counter": 60466175,
+      "node": "wsgdtbe",
+      "hlc": "999999999999999-zzzzz-wsgdtbe"
+    }
+  ],
+  "invalid": [
+    "",
+    "1793721438157-00000-wsgdtbe",
+    "000000000000001-00000-ABCDEFG",
+    "000000000000001-00000-wsgdtbex",
+    "001793721438157-0000-wsgdtbe",
+    "001793721438157-00000-ab4z761"
+  ],
+  "compare": [
+    {
+      "a": "000000000000001-00000-wsgdtbe",
+      "b": "000000000000002-00000-wsgdtbe",
+      "cmp": -1
+    },
+    {
+      "a": "000000000000002-00000-wsgdtbe",
+      "b": "000000000000002-00001-wsgdtbe",
+      "cmp": -1
+    },
+    {
+      "a": "000000000000002-0000z-wsgdtbe",
+      "b": "000000000000002-00010-wsgdtbe",
+      "cmp": -1
+    },
+    {
+      "a": "000000000000002-00001-tkbnv23",
+      "b": "000000000000002-00001-wsgdtbe",
+      "cmp": -1
+    },
+    {
+      "a": "000000000000007-00007-wsgdtbe",
+      "b": "000000000000007-00007-wsgdtbe",
+      "cmp": 0
+    }
+  ],
+  "sequences": [
+    {
+      "name": "tick with a stalled clock",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "tick": "000000000000100-00000-wsgdtbe"
+        },
+        {
+          "now": 100,
+          "tick": "000000000000100-00001-wsgdtbe"
+        },
+        {
+          "now": 99,
+          "tick": "000000000000100-00002-wsgdtbe"
+        },
+        {
+          "now": 101,
+          "tick": "000000000000101-00000-wsgdtbe"
+        }
+      ]
+    },
+    {
+      "name": "observe ahead within the hour",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "tick": "000000000000100-00000-wsgdtbe"
+        },
+        {
+          "now": 100,
+          "observe": "000000000005000-00003-tkbnv23",
+          "result": "ok"
+        },
+        {
+          "now": 100,
+          "tick": "000000000005000-00005-wsgdtbe"
+        }
+      ]
+    },
+    {
+      "name": "observe equal ms takes the max counter",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "tick": "000000000000100-00000-wsgdtbe"
+        },
+        {
+          "now": 100,
+          "observe": "000000000000100-00007-tkbnv23",
+          "result": "ok"
+        },
+        {
+          "now": 100,
+          "tick": "000000000000100-00009-wsgdtbe"
+        }
+      ]
+    },
+    {
+      "name": "observe older stamp still advances the counter",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "tick": "000000000000100-00000-wsgdtbe"
+        },
+        {
+          "now": 100,
+          "observe": "000000000000050-00009-tkbnv23",
+          "result": "ok"
+        },
+        {
+          "now": 100,
+          "tick": "000000000000100-00002-wsgdtbe"
+        }
+      ]
+    },
+    {
+      "name": "far ahead is not observed (folder spec §3.4)",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "tick": "000000000000100-00000-wsgdtbe"
+        },
+        {
+          "now": 100,
+          "observe": "000000003600101-00000-tkbnv23",
+          "result": "ahead"
+        },
+        {
+          "now": 100,
+          "tick": "000000000000100-00001-wsgdtbe"
+        }
+      ]
+    },
+    {
+      "name": "exactly one hour ahead is observed",
+      "node": "wsgdtbe",
+      "steps": [
+        {
+          "now": 100,
+          "observe": "000000003600100-00000-tkbnv23",
+          "result": "ok"
+        },
+        {
+          "now": 100,
+          "tick": "000000003600100-00002-wsgdtbe"
+        }
+      ]
+    }
+  ],
+  "override": [
+    {
+      "name": "own clock ahead of the register",
+      "node": "wsgdtbe",
+      "now": 500,
+      "current": "000000000000100-00003-tkbnv23",
+      "result": "000000000000500-00001-wsgdtbe",
+      "note": "fresh device clock started at `now` with ceiling 0: lastMs = max(now, ceilingMs) = now, counter 0, so its first tick() has counter 1"
+    },
+    {
+      "name": "register far in the future",
+      "node": "wsgdtbe",
+      "now": 500,
+      "current": "009000000000000-00007-tkbnv23",
+      "result": "009000000000000-00008-wsgdtbe",
+      "note": "fresh device clock started at `now` with ceiling 0: lastMs = max(now, ceilingMs) = now, counter 0, so its first tick() has counter 1"
+    },
+    {
+      "name": "no current value",
+      "node": "wsgdtbe",
+      "now": 500,
+      "current": null,
+      "result": "000000000000500-00001-wsgdtbe",
+      "note": "fresh device clock started at `now` with ceiling 0: lastMs = max(now, ceilingMs) = now, counter 0, so its first tick() has counter 1"
+    }
+  ],
+  "ceiling": {
+    "rule": "persist ceilingMs = lastMs + 10000 before using a stamp whose ms passes the persisted ceiling; at start lastMs = max(now, ceilingMs), counter = 0",
+    "stepMs": 10000
+  }
+}

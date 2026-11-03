@@ -1,0 +1,731 @@
+[
+  {
+    "name": "today",
+    "route": "today",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "rail-class:3"
+      },
+      {
+        "expect-attr": "nav-today:aria-current=page"
+      },
+      {
+        "expect": "placeholder-data"
+      },
+      {
+        "expect": "sync-pill"
+      },
+      {
+        "expect": "ai-pill"
+      },
+      {
+        "expect": "example-ribbon"
+      },
+      {
+        "expect-text": "screen-today=Ana"
+      }
+    ]
+  },
+  {
+    "name": "welcome",
+    "query": "demo=empty",
+    "ready": "onboarding-welcome",
+    "axe": true,
+    "steps": [
+      {
+        "expect-not": "rail"
+      },
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana Ribeiro"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "expect": "screen-today"
+      },
+      {
+        "expect": "rail"
+      }
+    ]
+  },
+  {
+    "name": "rail-archive",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect-attr": "rail-archive:aria-expanded=false"
+      },
+      {
+        "click": "rail-archive"
+      },
+      {
+        "expect": "rail-class:4"
+      },
+      {
+        "expect": "rail-archive-list"
+      }
+    ]
+  },
+  {
+    "name": "rail-nav",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "rail-class"
+      },
+      {
+        "expect": "screen-class"
+      },
+      {
+        "expect-attr": "rail-class:aria-current=page"
+      },
+      {
+        "click": "nav-settings"
+      },
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "click": "header-back"
+      },
+      {
+        "expect": "screen-class"
+      },
+      {
+        "click": "nav-today"
+      },
+      {
+        "expect": "screen-today"
+      }
+    ]
+  },
+  {
+    "name": "rail-collapse",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "rail-collapse"
+      },
+      {
+        "expect-attr": "shell:class=shell shell--collapsed"
+      },
+      {
+        "click": "rail-collapse"
+      },
+      {
+        "expect-attr": "shell:class=shell"
+      }
+    ]
+  },
+  {
+    "name": "palette",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "press": "Control+K"
+      },
+      {
+        "expect": "palette"
+      },
+      {
+        "type": "palette-input=Biology"
+      },
+      {
+        "expect-text": "palette=Biology 101"
+      },
+      {
+        "press": "Escape"
+      },
+      {
+        "expect-not": "palette"
+      }
+    ]
+  },
+  {
+    "name": "narrow",
+    "route": "today",
+    "ready": "screen-today",
+    "size": "860x700",
+    "steps": [
+      {
+        "expect": "rail-class:3"
+      }
+    ]
+  },
+  {
+    "name": "class-law-lectures",
+    "route": "class",
+    "query": "class=law&tab=lectures",
+    "ready": "lecture-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "class-lectures"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-documents",
+    "route": "class",
+    "query": "class=law&tab=documents",
+    "ready": "doc-list",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-documents"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-notes",
+    "route": "class",
+    "query": "class=law&tab=notes",
+    "ready": "note-list",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-notes"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-exams",
+    "route": "class",
+    "query": "class=law&tab=exams",
+    "ready": "exam-list",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-exams"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-chat",
+    "route": "class",
+    "query": "class=law&tab=chat",
+    "ready": "chat-list",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-chat"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-ask",
+    "route": "class",
+    "query": "class=law&tab=ask",
+    "ready": "ask-thread",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-ask"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-law-members",
+    "route": "class",
+    "query": "class=law&tab=members",
+    "ready": "member-list",
+    "axe": false,
+    "steps": [
+      {
+        "expect": "class-members"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect-not": "class-share-open"
+      }
+    ]
+  },
+  {
+    "name": "class-stats-share",
+    "route": "class",
+    "query": "class=stats&tab=share",
+    "ready": "class-share-tab",
+    "steps": [
+      {
+        "expect": "class-share-open"
+      },
+      {
+        "expect-not": "class-invite"
+      }
+    ]
+  },
+  {
+    "name": "class-stats-default",
+    "route": "class",
+    "query": "class=stats",
+    "ready": "class-lectures"
+  },
+  {
+    "name": "class-hist",
+    "route": "class",
+    "query": "class=hist",
+    "ready": "class-lectures"
+  },
+  {
+    "name": "class-pt-dark",
+    "route": "class",
+    "query": "class=law&tab=lectures",
+    "ready": "class-lectures",
+    "lang": "pt",
+    "theme": "dark",
+    "axe": true
+  },
+  {
+    "name": "class-missing",
+    "route": "class",
+    "query": "class=nope",
+    "ready": "missing-item",
+    "steps": [
+      {
+        "expect-attr": "missing:data-missing=class"
+      }
+    ]
+  },
+  {
+    "name": "lecture-missing",
+    "route": "lecture",
+    "query": "class=law&lecture=l6",
+    "ready": "missing-item",
+    "steps": [
+      {
+        "expect-attr": "missing:data-missing=lecture"
+      }
+    ]
+  },
+  {
+    "name": "document-missing",
+    "route": "document",
+    "query": "doc=lf",
+    "ready": "missing-item"
+  },
+  {
+    "name": "note-missing",
+    "route": "note",
+    "query": "note=mine6",
+    "ready": "missing-item"
+  },
+  {
+    "name": "exam-missing",
+    "route": "exam",
+    "query": "exam=freq",
+    "ready": "missing-item",
+    "steps": [
+      {
+        "expect-attr": "missing:data-missing=exam"
+      }
+    ]
+  },
+  {
+    "name": "practice",
+    "route": "practice",
+    "query": "class=law",
+    "ready": "exam-practice"
+  },
+  {
+    "name": "ask",
+    "route": "ask",
+    "ready": "screen-ask"
+  },
+  {
+    "name": "settings-profile",
+    "route": "settings",
+    "query": "section=profile",
+    "ready": "settings-profile",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-profile:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-appearance",
+    "route": "settings",
+    "query": "section=appearance",
+    "ready": "settings-appearance",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-appearance:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai",
+    "route": "settings",
+    "query": "section=ai",
+    "ready": "settings-ai",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-ai:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-transcription",
+    "route": "settings",
+    "query": "section=transcription",
+    "ready": "settings-transcription",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-transcription:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing",
+    "route": "settings",
+    "query": "section=sharing",
+    "ready": "settings-sharing",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-sharing:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-notifications",
+    "route": "settings",
+    "query": "section=notifications",
+    "ready": "settings-notifications",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-notifications:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-storage",
+    "route": "settings",
+    "query": "section=storage",
+    "ready": "settings-storage",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-storage:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-privacy",
+    "route": "settings",
+    "query": "section=privacy",
+    "ready": "settings-privacy",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-privacy:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-about",
+    "route": "settings",
+    "query": "section=about",
+    "ready": "settings-about",
+    "steps": [
+      {
+        "expect": "screen-settings"
+      },
+      {
+        "expect-attr": "settings-nav-about:aria-current=page"
+      }
+    ]
+  },
+  {
+    "name": "settings-es",
+    "route": "settings",
+    "query": "section=ai",
+    "ready": "settings-ai",
+    "lang": "es",
+    "scale": 1.25,
+    "axe": true
+  },
+  {
+    "name": "dialog-new-class",
+    "route": "class",
+    "query": "class=law&dialog=new-class",
+    "ready": "class-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-class-settings",
+    "route": "class",
+    "query": "class=law&dialog=class-settings",
+    "ready": "class-settings",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-leave",
+    "route": "class",
+    "query": "class=law&dialog=leave",
+    "ready": "confirm-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-invite",
+    "route": "class",
+    "query": "class=law&dialog=invite",
+    "ready": "invite-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-join",
+    "route": "class",
+    "query": "class=law&dialog=join",
+    "ready": "join-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-record",
+    "route": "class",
+    "query": "class=law&dialog=record",
+    "ready": "record-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-save",
+    "route": "class",
+    "query": "class=law&dialog=save",
+    "ready": "record-save",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-recover",
+    "route": "class",
+    "query": "class=law&dialog=recover",
+    "ready": "record-recover",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-import",
+    "route": "class",
+    "query": "class=law&dialog=import",
+    "ready": "import-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-model",
+    "route": "class",
+    "query": "class=law&dialog=model",
+    "ready": "model-prompt",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-exam-date",
+    "route": "class",
+    "query": "class=law&dialog=exam-date",
+    "ready": "exam-date-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-exam-paper",
+    "route": "class",
+    "query": "class=law&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-answer-settings",
+    "route": "class",
+    "query": "class=law&dialog=answer-settings",
+    "ready": "answer-settings",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-shortcuts",
+    "route": "class",
+    "query": "class=law&dialog=shortcuts",
+    "ready": "shortcuts-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-first-share",
+    "route": "class",
+    "query": "class=law&dialog=first-share",
+    "ready": "first-share-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-mass-delete",
+    "route": "class",
+    "query": "class=law&dialog=mass-delete",
+    "ready": "mass-delete-dialog",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "dialog-recently-deleted",
+    "route": "class",
+    "query": "class=law&dialog=recently-deleted",
+    "ready": "recently-deleted",
+    "steps": [
+      {
+        "expect": "placeholder-data"
+      }
+    ]
+  },
+  {
+    "name": "record-from-header",
+    "route": "class",
+    "query": "class=law",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "click": "record-class"
+      },
+      {
+        "expect": "record-dialog"
+      }
+    ]
+  },
+  {
+    "name": "shortcuts-from-header",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "header-help"
+      },
+      {
+        "expect": "shortcuts-dialog"
+      }
+    ]
+  }
+]

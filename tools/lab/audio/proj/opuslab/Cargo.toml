@@ -1,0 +1,32 @@
+[package]
+name = "opuslab"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+libopus = ["dep:opusic-c"]   # libopus 1.6.1 via cmake (opusic-sys, bundled)
+opusrs = ["dep:opus-rs"]     # pure Rust encoder+decoder (restsend/opus-rs)
+rusty = ["dep:rusty-opus"]   # pure Rust encoder+decoder (Remade-With-Rust)
+opusdec = ["dep:opus-decoder"] # pure Rust, decoder only, forbid(unsafe)
+mousiki = ["dep:mousiki"]    # pure Rust port of libopus (MIT)
+symph = ["dep:symphonia"]    # symphonia 0.6 demux (ogg + mkv/webm) for the transcription path
+
+[dependencies]
+ogg = "0.9.2"
+hound = "3.5.1"
+opusic-c = { version = "1.6.1", optional = true }
+opus-rs = { version = "0.1.40", optional = true }
+rusty-opus = { version = "1.0.2", optional = true }
+opus-decoder = { version = "0.1.1", optional = true }
+mousiki = { version = "0.2.1", optional = true }
+symphonia = { version = "0.6.1", default-features = false, features = ["ogg", "mkv"], optional = true }
+
+# Same release profile as Trama's desktop shell.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

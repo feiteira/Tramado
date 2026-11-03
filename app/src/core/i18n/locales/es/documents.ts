@@ -1,0 +1,100 @@
+// Spanish (Spain): NOT TRANSLATED YET — a copy of the English catalog (architecture §14).
+// The namespace owner translates it and removes `pending`; catalogs.test.ts skips the
+// "identical to English" check while `pending` is exported, and fails with TRAMADO_RELEASE=1.
+import type { Messages } from '../en';
+
+export const pending = true;
+
+export const documents: Messages['documents'] = {
+  tab: {
+    add: 'Add documents…',
+    newFolder: 'New folder',
+    newFolderName: 'Folder name',
+    filter: 'Filter documents',
+    view: { folders: 'Folders', recent: 'Recent' },
+    columns: { name: 'Name', pages: 'Pages', addedBy: 'Added by', date: 'Date', text: 'Text for search & AI' },
+    privateSection: 'Only on this computer',
+    emptyFolder: 'This folder is empty.',
+    empty: {
+      title: 'Drop slides, readings and legislation here.',
+      body: 'PDF, Word, PowerPoint, text and images. Tramado reads them so you can search and ask about them.',
+      action: 'Add documents',
+    },
+  },
+  text: {
+    searchable: 'Searchable',
+    reading: 'Reading text… {percent} %',
+    scan: 'Scan — no text',
+    somePages: { one: '{n} page without text', other: '{n} pages without text' },
+    failed: 'Can’t read this file',
+  },
+  adding: {
+    progress: { one: 'Adding {n} file… Reading text for search and AI ({i} of {n})', other: 'Adding {n} files… Reading text for search and AI ({i} of {n})' },
+    done: { one: 'Added {n} file to {class}.', other: 'Added {n} files to {class}.' },
+    duplicate: '{name} already added “{file}” on {date}.',
+    duplicateSelf: 'You already added “{file}” on {date}.',
+    openTheirs: 'Open theirs',
+    addAnyway: 'Add anyway',
+  },
+  folders: {
+    suggest: 'Organise with folders?',
+    create: 'Create these',
+    noThanks: 'No thanks',
+    slides: 'Slides', readings: 'Readings', legislation: 'Legislation', pastExams: 'Past exams', other: 'Other',
+    fromChat: 'From chat',
+    lectures: 'Lectures', documents: 'Documents', exams: 'Exams', notes: 'Notes',
+  },
+  menu: {
+    open: 'Open', openSystem: 'Open with the system app', showInFolder: 'Show in folder', rename: 'Rename…', moveTo: 'Move to',
+    makePrivate: 'Keep private (only you)…', ocr: 'Read the text with AI…', removeLocal: 'Remove from this computer only…',
+    delete: 'Delete for everyone…',
+  },
+  makePrivate: {
+    title: 'Make “{file}” private?',
+    body: 'It moves out of the class folder into Tramado’s private storage on this computer, so it is removed for everyone else in {class}.',
+    confirm: 'Make private',
+    done: '“{file}” is now only on this computer.',
+  },
+  deleteConfirm: {
+    title: 'Delete “{file}” for everyone in {class}?',
+    body: 'It’s removed from every classmate’s computer. You can restore it for 30 days from Recently deleted.',
+    confirm: 'Delete for everyone',
+    local: 'Remove from this computer only',
+  },
+  removeLocal: {
+    title: 'Remove “{file}” from this computer only?',
+    body: 'Classmates keep it. It won’t come back to this computer unless you undo this in the class settings.',
+    confirm: 'Remove from this computer',
+  },
+  view: {
+    subtitle: '{type} · {count} · added by {name} · {date}',
+    ask: 'Ask about this document',
+    openWith: 'Open with…',
+    articles: 'Articles',
+    outline: 'Contents',
+    page: 'Page',
+    pageOf: '{n} / {total}',
+    prev: 'Previous page', next: 'Next page',
+    zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit width',
+    find: 'Find in document',
+    side: { highlights: 'Highlights', ask: 'Ask', info: 'Info' },
+    highlightsEmpty: 'Select text to highlight it. Highlights are only on this computer.',
+    info: { type: 'Type', size: 'Size', location: 'Location', hash: 'Fingerprint', text: 'Text for search', addedBy: 'Added by' },
+    quoteMissing: 'The exact passage wasn’t found on this page.',
+    moved: 'This file was moved to {path}.',
+    changed: 'This file changed after the answer that cites it was written. The passage was found again by its text.',
+    changedLost: 'This file changed after the answer that cites it was written, and the passage couldn’t be found again.',
+    arriving: 'This file is still arriving from {name}… {percent} %',
+    error: 'This PDF couldn’t be opened: {reason}.',
+    unsupported: 'Tramado can’t show this file.',
+    slide: 'Slide {n}',
+    describe: 'Describe with AI',
+    scan: 'This PDF is a scanned image, so search and AI can’t read it yet.',
+    ocr: { one: 'Read the text with AI ({n} request)', other: 'Read the text with AI ({n} requests)' },
+    ocrTooLong: 'It’s too long to read with AI (more than 20 pages). Reading scans on this computer is coming in a later version.',
+    ocrProgress: 'Reading page {i} of {n} with AI…',
+    ocrDone: 'The text of “{file}” can now be searched.',
+    copySource: '“{text}” — {file}, p. {page}',
+    copySourceArticle: '“{text}” — {file}, art. {article}, p. {page}',
+  },
+};

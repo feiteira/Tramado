@@ -1,0 +1,542 @@
+{
+  "format": "tramado.test-vectors.ipc-samples",
+  "version": 1,
+  "source": "architecture §5 (tagged IPC types), §6, §7; each sample must survive a serde round trip in Rust and parse as the TS type",
+  "types": {
+    "PrivacyLevel": [
+      "standard",
+      "no-training",
+      "zdr"
+    ],
+    "Method": [
+      "GET",
+      "POST"
+    ],
+    "AiBase": [
+      {
+        "type": "openrouter"
+      },
+      {
+        "type": "host",
+        "hostId": "h-1"
+      }
+    ],
+    "AudioSource": [
+      {
+        "kind": "class",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "path": "Aulas/2026-11-03 1000 Aula 8/audio.webm"
+      },
+      {
+        "kind": "private",
+        "recordingId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K"
+      }
+    ],
+    "TranscribeEngine": [
+      {
+        "kind": "local",
+        "model": "turbo"
+      },
+      {
+        "kind": "cloud",
+        "model": "openai/whisper-large-v3-turbo"
+      }
+    ],
+    "ShareMode": [
+      "audio+transcript",
+      "transcript-only",
+      "none"
+    ],
+    "Code": [
+      "INVALID",
+      "NOT_IMPLEMENTED",
+      "AI_FREE_LIMIT",
+      "SYNC_IDENTITY_COPIED"
+    ],
+    "ErrorPayload": [
+      {
+        "code": "NOT_IMPLEMENTED",
+        "message": "class_read is not implemented yet"
+      },
+      {
+        "code": "AI_FREE_LIMIT",
+        "message": "free limit",
+        "data": {
+          "resetAt": 1793750400000,
+          "used": 50,
+          "limit": 50
+        }
+      }
+    ],
+    "AiWireEvent": [
+      {
+        "type": "head",
+        "status": 200,
+        "headers": {
+          "content-type": "text/event-stream"
+        }
+      },
+      {
+        "type": "line",
+        "line": "data: {\"choices\":[]}"
+      },
+      {
+        "type": "body",
+        "text": "{\"data\":[]}"
+      },
+      {
+        "type": "end"
+      },
+      {
+        "type": "fail",
+        "code": "AI_BUSY",
+        "message": "429",
+        "data": {
+          "model": "google/gemma-4-31b-it:free"
+        }
+      }
+    ],
+    "ModelEvent": [
+      {
+        "type": "started",
+        "total": 574041195,
+        "resumedFrom": 0
+      },
+      {
+        "type": "progress",
+        "done": 212000000,
+        "total": 574041195,
+        "bytesPerSec": 2400000
+      },
+      {
+        "type": "verifying"
+      },
+      {
+        "type": "done",
+        "model": {
+          "id": "turbo",
+          "file": "ggml-large-v3-turbo-q5_0.bin",
+          "size": 574041195,
+          "sha256": "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2",
+          "tier": "default",
+          "recommended": true,
+          "state": "ready",
+          "bytes": 574041195,
+          "error": null,
+          "speedRT": 2.7
+        }
+      },
+      {
+        "type": "failed",
+        "code": "MODEL_INTEGRITY",
+        "message": "sha mismatch"
+      },
+      {
+        "type": "cancelled"
+      }
+    ],
+    "RecorderEvent": [
+      {
+        "type": "status",
+        "status": {
+          "recordingId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+          "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+          "state": "recording",
+          "ms": 2472000,
+          "tracks": {
+            "mic": {
+              "peak": 0.5,
+              "rmsDb": -23.5,
+              "clipping": false,
+              "device": "Built-in microphone",
+              "error": null,
+              "silentForMs": 0
+            },
+            "system": null
+          },
+          "bytesWritten": 7340032,
+          "diskFree": 52000000000,
+          "markers": 3
+        }
+      },
+      {
+        "type": "warning",
+        "code": "silentMic"
+      },
+      {
+        "type": "marker",
+        "marker": {
+          "id": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+          "atMs": 2469000,
+          "rawMs": 2472000,
+          "kind": "exam",
+          "note": "rever"
+        }
+      },
+      {
+        "type": "stopped",
+        "reason": "user"
+      },
+      {
+        "type": "stopped",
+        "reason": "error",
+        "code": "SPEECH_NO_DEVICE"
+      }
+    ],
+    "TranscribeEvent": [
+      {
+        "type": "phase",
+        "phase": "transcribing"
+      },
+      {
+        "type": "progress",
+        "progress": 0.4,
+        "etaMs": 1500000
+      },
+      {
+        "type": "progress",
+        "progress": 0.1,
+        "etaMs": null
+      },
+      {
+        "type": "done",
+        "summary": {
+          "jobId": "job-1",
+          "lectureId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+          "state": "done",
+          "progress": 1,
+          "etaMs": 1500000,
+          "startedAt": "2026-11-03T10:15:02.123Z",
+          "error": null,
+          "resultReady": true
+        }
+      },
+      {
+        "type": "failed",
+        "code": "MODEL_UNREADABLE",
+        "message": "bad"
+      },
+      {
+        "type": "cancelled"
+      }
+    ],
+    "ImportEvent": [
+      {
+        "type": "progress",
+        "done": 0.5
+      },
+      {
+        "type": "done",
+        "audio": {
+          "source": {
+            "kind": "class",
+            "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+            "path": "Aulas/2026-11-03 1000 Aula 8/audio.webm"
+          },
+          "size": 7340032,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+          "durationMs": 4680000,
+          "channels": 1,
+          "bitrate": 24000,
+          "sampleRate": 16000
+        }
+      },
+      {
+        "type": "failed",
+        "code": "SPEECH_UNSUPPORTED_AUDIO",
+        "message": "no decoder"
+      }
+    ],
+    "MeterEvent": [
+      {
+        "type": "level",
+        "mic": {
+          "peak": 0.5,
+          "rmsDb": -23.5,
+          "clipping": false,
+          "device": "Built-in microphone",
+          "error": null,
+          "silentForMs": 0
+        },
+        "system": null
+      }
+    ],
+    "SyncEvent": [
+      {
+        "type": "status",
+        "status": {
+          "state": "running",
+          "deviceId": "OFJWCB5-D4RXT7P-MCNIFIR-V7L576T-ZM6G5DI-HDVSG4E-E4W5L5R-CSNPNQS",
+          "version": "v2.1.7",
+          "syncPort": 22117,
+          "localOnly": false,
+          "paused": false,
+          "startedAt": "2026-11-03T10:15:02.123Z",
+          "restarts": 0,
+          "error": null
+        }
+      },
+      {
+        "type": "gap"
+      },
+      {
+        "type": "remoteChange",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "path": ".tramado/chat/DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK/2026-11.jsonl",
+        "action": "modified",
+        "modifiedBy": "DO3BFKY"
+      },
+      {
+        "type": "folder",
+        "folder": {
+          "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+          "label": "Direito Constitucional I",
+          "path": "/home/demo/Tramado/Direito Constitucional I",
+          "paused": false,
+          "state": "idle",
+          "globalFiles": 12,
+          "inSyncFiles": 12,
+          "needFiles": 0,
+          "needBytes": 0,
+          "pullErrors": 0,
+          "error": null,
+          "devices": [
+            "OFJWCB5-D4RXT7P-MCNIFIR-V7L576T-ZM6G5DI-HDVSG4E-E4W5L5R-CSNPNQS",
+            "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK"
+          ],
+          "completion": {
+            "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK": {
+              "completion": 100,
+              "needItems": 0,
+              "remoteState": "valid"
+            }
+          }
+        }
+      },
+      {
+        "type": "completion",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "deviceId": "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK",
+        "completion": 97.5,
+        "needItems": 2,
+        "remoteState": "valid"
+      },
+      {
+        "type": "indexUpdated",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "remote": true
+      },
+      {
+        "type": "connection",
+        "deviceId": "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK",
+        "connected": true,
+        "relay": false,
+        "address": "tcp://192.168.1.31:22100"
+      },
+      {
+        "type": "joinRequest",
+        "request": {
+          "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+          "deviceId": "TIKIMOS-OETENCC-RZUBPVL-BNQSR75-J4HZOYZ-5PZ7ZC3-Y3SBXUT-L2ZKWAQ",
+          "name": "Diogo Santos (Diogo's laptop)",
+          "address": "tcp://192.168.1.40:22100",
+          "at": "2026-11-03T10:15:02.123Z"
+        }
+      },
+      {
+        "type": "joinRequestGone",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "deviceId": "TIKIMOS-OETENCC-RZUBPVL-BNQSR75-J4HZOYZ-5PZ7ZC3-Y3SBXUT-L2ZKWAQ"
+      },
+      {
+        "type": "admitted",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "deviceId": "TIKIMOS-OETENCC-RZUBPVL-BNQSR75-J4HZOYZ-5PZ7ZC3-Y3SBXUT-L2ZKWAQ",
+        "name": "Diogo Santos"
+      },
+      {
+        "type": "admittedMe",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "byDevice": "OFJWCB5-D4RXT7P-MCNIFIR-V7L576T-ZM6G5DI-HDVSG4E-E4W5L5R-CSNPNQS"
+      },
+      {
+        "type": "folderOffer",
+        "offer": {
+          "folderId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+          "label": "Direito Constitucional I",
+          "offeredBy": "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK",
+          "offeredByName": "Bruno Costa",
+          "at": "2026-11-03T10:15:02.123Z"
+        }
+      },
+      {
+        "type": "foreignWrite",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "path": ".tramado/chat/OFJWCB5-D4RXT7P-MCNIFIR-V7L576T-ZM6G5DI-HDVSG4E-E4W5L5R-CSNPNQS/2026-11.jsonl",
+        "modifiedBy": "DO3BFKY",
+        "healed": true
+      },
+      {
+        "type": "massDelete",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "count": 120,
+        "sample": [
+          "Documentos/a.pdf"
+        ]
+      },
+      {
+        "type": "massDeleteRemote",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "by": "DO3BFKY",
+        "count": 80,
+        "sample": [
+          "Documentos/b.pdf"
+        ]
+      },
+      {
+        "type": "folderErrors",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "errors": [
+          {
+            "path": "Documentos/a:b.pdf",
+            "error": "invalid filename on Windows"
+          }
+        ]
+      },
+      {
+        "type": "markerMissing",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242"
+      },
+      {
+        "type": "listenAddresses",
+        "addresses": [
+          "tcp://0.0.0.0:22117"
+        ]
+      }
+    ],
+    "ClassChangedEvent": [
+      {
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "paths": [
+          "Documentos/a.pdf"
+        ],
+        "selfWrite": false,
+        "rescan": false
+      }
+    ],
+    "ClassEntry": [
+      {
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "path": "/home/demo/Tramado/Direito Constitucional I",
+        "dirName": "Direito Constitucional I",
+        "shared": true,
+        "joining": false,
+        "archived": false,
+        "skipAudio": false,
+        "aliases": [],
+        "localIgnores": [],
+        "addedAt": "2026-11-03T10:15:02.123Z",
+        "leaving": null,
+        "available": true
+      },
+      {
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "path": "/home/demo/Tramado/X",
+        "dirName": "X",
+        "shared": false,
+        "joining": true,
+        "archived": true,
+        "skipAudio": true,
+        "aliases": [
+          "tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "localIgnores": [
+          "Aulas/x/audio.webm"
+        ],
+        "addedAt": "2026-11-03T10:15:02.123Z",
+        "leaving": {
+          "since": "2026-11-03T10:15:02.123Z",
+          "afterwards": "keepLocal"
+        },
+        "available": false
+      }
+    ],
+    "PublishRequest": [
+      {
+        "recordingId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "lectureDir": "Aulas/2026-11-03 1000 Aula 8",
+        "share": "audio+transcript"
+      },
+      {
+        "recordingId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+        "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+        "lectureDir": "Aulas/x",
+        "share": "transcript-only"
+      }
+    ],
+    "TranscribeRequest": [
+      {
+        "jobId": "job-1",
+        "lectureId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+        "source": {
+          "kind": "private",
+          "recordingId": "01JBX4Q7Z5W8M2E3C9R6T0YH2K"
+        },
+        "expectSha256": "0000000000000000000000000000000000000000000000000000000000000001",
+        "engine": {
+          "kind": "local",
+          "model": "turbo"
+        },
+        "language": "pt-PT",
+        "channels": "mix",
+        "initialPrompt": null,
+        "claim": null,
+        "resume": false
+      }
+    ],
+    "AiPipeRequest": [
+      {
+        "requestId": "0b8e6a52-1d4e-4c3a-9a51-6c1f6f0c2d11",
+        "base": {
+          "type": "openrouter"
+        },
+        "method": "POST",
+        "path": "chat/completions",
+        "body": {
+          "model": "google/gemma-4-31b-it:free",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Olá"
+            }
+          ]
+        },
+        "stream": true,
+        "activity": {
+          "classId": "tramado-mde5jfv46prdf2fjxvmbjr4242",
+          "action": "ask",
+          "passages": 9
+        }
+      },
+      {
+        "requestId": "0b8e6a52-1d4e-4c3a-9a51-6c1f6f0c2d12",
+        "base": {
+          "type": "host",
+          "hostId": "h-1"
+        },
+        "method": "GET",
+        "path": "models",
+        "stream": false,
+        "privacyOverride": "standard",
+        "overrideText": {
+          "title": "t",
+          "message": "m {host}",
+          "confirm": "OK",
+          "cancel": "Cancel"
+        },
+        "busyFallback": true
+      }
+    ]
+  }
+}

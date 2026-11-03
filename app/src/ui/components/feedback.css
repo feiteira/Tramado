@@ -1,0 +1,274 @@
+.spinner {
+  flex: none;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* A spinner that cannot spin still says "working" by pulsing gently. */
+  .spinner {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.progress {
+  position: relative;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--paper-active);
+  overflow: hidden;
+}
+
+.progress__bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--dur-3) var(--ease);
+}
+
+.progress--indeterminate .progress__bar {
+  width: 35%;
+  animation: progress-slide 1.3s var(--ease) infinite;
+}
+
+@keyframes progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  max-width: 440px;
+  margin: 0 auto;
+  padding: var(--s-8) var(--s-4);
+}
+
+.empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--s-2);
+  border-radius: var(--r-lg);
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+
+.empty__title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.empty__body {
+  color: var(--ink-2);
+}
+
+.empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--rule-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+  background: var(--paper-raised);
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+  font-weight: 540;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 560;
+  white-space: nowrap;
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+}
+
+.badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.badge--info {
+  background: var(--info-soft);
+  color: var(--info-text);
+  border-color: transparent;
+}
+.badge--success {
+  background: var(--success-soft);
+  color: var(--success-text);
+  border-color: transparent;
+}
+.badge--warning {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  border-color: transparent;
+}
+.badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  border-color: transparent;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+
+.notice__icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.notice__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice__title {
+  font-weight: 600;
+}
+
+.notice__body {
+  color: var(--ink);
+}
+
+.notice__actions {
+  flex: none;
+  display: flex;
+  gap: var(--s-2);
+}
+
+.notice--neutral {
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.notice--success {
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+.notice--warning {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+}
+.notice--danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.card--padded {
+  padding: var(--s-5);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.section__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.section__title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.section__description {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.section__actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.toolbar__divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--s-1);
+  background: var(--rule);
+}
+
+/* Tramado tones (UX §2.11): AI (violet, always with the word "AI"), source mark (highlighter), live (red). */
+.badge--ai {
+  background: var(--ai-soft);
+  color: var(--ai-text);
+}
+.badge--mark {
+  background: var(--mark);
+  color: var(--mark-ink);
+}
+.badge--rec {
+  background: var(--rec-soft);
+  color: var(--rec-text);
+}
+/* EmptyState sits on squared paper (UX §1.1, §2.11). */
+.empty.paper-grid {
+  border-radius: var(--r-lg);
+}

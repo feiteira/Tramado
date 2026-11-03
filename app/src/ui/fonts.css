@@ -1,0 +1,6 @@
+/* Self-hosted fonts (UX §1.4); never a CDN. Accessibility fonts load lazily (ui/fonts.ts). */
+@import '@fontsource-variable/figtree/wght.css';
+@import '@fontsource-variable/figtree/wght-italic.css';
+@import '@fontsource-variable/bricolage-grotesque/index.css';
+@import '@fontsource-variable/source-serif-4/opsz.css';
+@import '@fontsource-variable/source-serif-4/opsz-italic.css';

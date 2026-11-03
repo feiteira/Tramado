@@ -1,0 +1,15 @@
+import { readFileSync } from 'node:fs';
+import * as pdfjs from '/tmp/claude-1000/-home-feiteira-Tramado/b5f09de1-3d54-4f8a-b9ef-589b61ef04d2/scratchpad/lab/trama-ts/subset/node_modules/pdfjs-dist/legacy/build/pdf.mjs';
+import { extractPdfText } from '/tmp/claude-1000/-home-feiteira-Tramado/b5f09de1-3d54-4f8a-b9ef-589b61ef04d2/scratchpad/lab/trama-ts/subset/src/core/import/pdf';
+import { PassageIndex } from '/tmp/claude-1000/-home-feiteira-Tramado/b5f09de1-3d54-4f8a-b9ef-589b61ef04d2/scratchpad/lab/trama-ts/subset/src/core/qda/passageIndex';
+import { stopwordsFor } from '/tmp/claude-1000/-home-feiteira-Tramado/b5f09de1-3d54-4f8a-b9ef-589b61ef04d2/scratchpad/lab/trama-ts/subset/src/core/qda/stopwords';
+const bytes = new Uint8Array(readFileSync(process.argv[2]!));
+const m0 = process.memoryUsage().rss;
+const t0 = performance.now();
+const r = await extractPdfText(bytes, pdfjs as never);
+const t1 = performance.now();
+console.log(JSON.stringify({ pages: r.pages, chars: r.text.length, extract_ms: Math.round(t1 - t0), ms_per_page: +((t1 - t0) / r.pages).toFixed(1), rss_mb: Math.round(process.memoryUsage().rss / 1e6), rss_delta_mb: Math.round((process.memoryUsage().rss - m0) / 1e6), headerLines: (r.text.match(/Diário da República/g) ?? []).length }));
+const idx = new PassageIndex(new Set([...stopwordsFor('pt'), ...stopwordsFor('en'), ...stopwordsFor('es')]));
+const t2 = performance.now(); idx.add('code', r.text); const t3 = performance.now();
+const hits = idx.search('anulabilidade do negócio celebrado por menor', { limit: 10 }); const t4 = performance.now();
+console.log(JSON.stringify({ index_build_ms: Math.round(t3 - t2), query_ms: Math.round(t4 - t3), top: hits[0]?.text.slice(0, 60) }));

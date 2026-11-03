@@ -1,0 +1,104 @@
+{
+  "format": "tramado.test-vectors.check-words",
+  "version": 1,
+  "source": "sync spec §25 Q1",
+  "rule": "ADJ[h[0]]-NOUN[h[1]], h = SHA-256(UTF-8(\"tramado-check-v1|\" + dashed deviceId))",
+  "cases": [
+    {
+      "deviceId": "WSGDTBE-PYLFPIJ-JSGOJZC-CJC6O2N-ARA52TT-HKVPG6S-UVZH2AZ-RUULKAI",
+      "words": "twinkly-emu"
+    },
+    {
+      "deviceId": "TKBNV23-6HQ5HVU-DM667CH-DELE5MV-VW4HTSN-27PQJFW-FVGLDA3-4XDXLAT",
+      "words": "formal-curlew"
+    },
+    {
+      "deviceId": "OFJWCB5-D4RXT7P-MCNIFIR-V7L576T-ZM6G5DI-HDVSG4E-E4W5L5R-CSNPNQS",
+      "words": "violet-impala"
+    },
+    {
+      "deviceId": "DO3BFKY-DTMZRDD-F46ZNGR-XNPYB7U-BWL6TFS-UKVTU6D-ZD7PDVF-ASNZBAK",
+      "words": "fresh-tanager"
+    },
+    {
+      "deviceId": "VXMIFG2-C5FMJFH-MQ5C363-5OFG3U3-24ZUUZR-3KL4DBZ-DOIFS6N-N7PR4QC",
+      "words": "ample-grebe"
+    },
+    {
+      "deviceId": "IWPXJMS-D4M77E6-WDAPDVT-Z54HGQZ-EAIHHVK-NBC3ISO-ISOZDNF-UU6HGAD",
+      "words": "jovial-elk"
+    },
+    {
+      "deviceId": "MWNFPBN-CINYYVO-GADBRZH-KWVSLO7-NDMIURO-VI2M34F-PPPCOTR-SGJRPQ6",
+      "words": "fond-fox"
+    },
+    {
+      "deviceId": "TIKIMOS-OETENCC-RZUBPVL-BNQSR75-J4HZOYZ-5PZ7ZC3-Y3SBXUT-L2ZKWAQ",
+      "words": "zesty-bongo"
+    },
+    {
+      "deviceId": "JVD6L54-25UG222-VZCDIVS-H5RZDHX-7MCE55C-QZORR2B-7FC6XEW-K2I5VQN",
+      "words": "jolly-warbler"
+    },
+    {
+      "deviceId": "5QDNN46-YHG4AH2-3NWSGYW-RYXVGJP-JORVLZ4-3VGOMPY-S5KL2O6-AXZBAQE",
+      "words": "wintry-jay"
+    },
+    {
+      "deviceId": "Z46L5BQ-GJG7OWZ-P5LVPPJ-P3KQOBQ-JH5GPI7-2FJQ25U-CWVVI7Y-DDEGEAT",
+      "words": "lucid-raven"
+    },
+    {
+      "deviceId": "MZBKEGT-SWCSB5Z-LCIJU6V-XRFESA6-LXNI5WC-37GMZMQ-SZUJG6K-NNQFEAT",
+      "words": "agile-kiwi"
+    },
+    {
+      "deviceId": "YFRQ7RB-ECETNFF-EBIUJAQ-4FKA63G-X36RN3X-KIYHJ3V-5VCW3QM-ONKGTQH",
+      "words": "fluffy-giraffe"
+    },
+    {
+      "deviceId": "LCIJWC5-GLBANCL-6D3IARM-MC5UQ26-CXNXR6N-FSUWXZV-TZ3J5DU-LGY7GQO",
+      "words": "serene-minnow"
+    },
+    {
+      "deviceId": "U22DDVQ-VPGKK5Y-S3IEDA4-FMLRZLN-GFJQQMR-T42Z3H6-JUVXDII-LTG4KQ2",
+      "words": "hushed-gecko"
+    },
+    {
+      "deviceId": "UXSOJNC-OMLWDGK-F325RXZ-ZUULYAK-U2LO7JK-NDKUJA6-RDPQZH3-4SYCJQX",
+      "words": "genuine-orca"
+    },
+    {
+      "deviceId": "AL7FEIU-W7IKF5M-7L7QLTR-QEMFP7J-Q2MMR4L-HTDDJ7H-QK7GK6F-LY23SQS",
+      "words": "lunar-dog"
+    },
+    {
+      "deviceId": "I5235MI-XIYGDQL-XXYNV2Q-LU4WOFU-BSQTFDF-IF2ANBO-MI3UP7O-L2REFAD",
+      "words": "scarlet-lynx"
+    },
+    {
+      "deviceId": "ITL3W5L-UGSZ7AH-VGIYEUV-T6IFMY2-POYALIL-GJCUOT3-2FXGMUW-ZWIXQA5",
+      "words": "foggy-jerboa"
+    },
+    {
+      "deviceId": "L3FPBS2-3FW3XHB-ECHUBAA-7R7IQ2V-UXH56R4-XH6PYTY-B5LDFL3-OKJIJQ3",
+      "words": "sonic-cuckoo"
+    },
+    {
+      "deviceId": "BWAWHLL-VN6GXBS-I77KPCS-4K2GXAU-AJZRAO2-YM7YHVF-WSTW4LY-BFNPFAB",
+      "words": "misty-zebu"
+    },
+    {
+      "deviceId": "JY4V7CT-S5WOPIG-VGNEUPK-JPX4CVJ-LURLAVB-7222FOZ-27DGV6Q-43JP5AG",
+      "words": "sincere-python"
+    },
+    {
+      "deviceId": "HLROAZX-4OINLIK-UUYZ5KH-XZUFP6O-IQCNXCL-ONNTFZ4-RUL4B5A-6NCAGQ4",
+      "words": "limber-cobra"
+    },
+    {
+      "deviceId": "WIATSCT-IFBQASR-PWHLXM5-LBRBNOY-5OHNWXK-26DNRGI-NM4MS3R-TV453QU",
+      "words": "honest-gecko"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+[package]
+name = "tramado-net"
+description = "Tramado: HTTP agents, AI pipe, hosts, secrets, person key, AI activity log"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+testutil = []          # exposes tramado_net::testutil::MockServer to other crates' tests
+
+[dependencies]
+tramado-base.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+log.workspace = true
+ureq.workspace = true
+keyring.workspace = true          # default features "v1": macOS keychain, Windows, zbus Secret Service
+getrandom.workspace = true
+base64.workspace = true
+sha2.workspace = true
+ed25519-dalek.workspace = true    # person key (person.rs)
+
+[dev-dependencies]
+tempfile.workspace = true

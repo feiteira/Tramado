@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "externalBin": ["binaries/tramado-syncthing"],
+    "resources": {
+      "resources/speech/ggml-silero-v5.1.2.bin": "speech/ggml-silero-v5.1.2.bin",
+      "resources/media/selftest.webm": "media/selftest.webm",
+      "resources/syncthing/LICENSE.txt": "licenses/syncthing/LICENSE.txt",
+      "resources/syncthing/AUTHORS": "licenses/syncthing/AUTHORS"
+    }
+  }
+}

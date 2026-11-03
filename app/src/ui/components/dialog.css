@@ -1,0 +1,117 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(6vh, var(--s-6)) var(--s-4) var(--s-6);
+  background: var(--scrim);
+  overflow-y: auto;
+  animation: backdrop-in var(--dur-2) var(--ease);
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - 12vh);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  animation: dialog-in var(--dur-3) var(--ease);
+}
+
+/* The box takes the focus only when it holds nothing focusable; it is not a control. */
+.dialog:focus,
+.dialog:focus-visible {
+  outline: none;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+}
+
+.dialog--sm {
+  max-width: 420px;
+}
+.dialog--md {
+  max-width: 540px;
+}
+.dialog--lg {
+  max-width: 720px;
+}
+.dialog--xl {
+  max-width: 960px;
+}
+
+.dialog__form {
+  display: contents;
+}
+
+.dialog__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-5) var(--s-5) var(--s-3);
+}
+
+.dialog__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog__title {
+  font-size: var(--fs-xl);
+  font-weight: 620;
+}
+
+.dialog__description {
+  margin-top: var(--s-1);
+  color: var(--ink-2);
+}
+
+.dialog__close {
+  margin: -4px -6px 0 0;
+}
+
+.dialog__body {
+  padding: var(--s-2) var(--s-5) var(--s-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* Focusable only when it scrolls (Dialog.tsx). */
+.dialog__body:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  border-top: 1px solid var(--rule-faint);
+  background: color-mix(in srgb, var(--paper-sunk) 40%, var(--paper-raised));
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+.dialog__footer-start {
+  margin-right: auto;
+}

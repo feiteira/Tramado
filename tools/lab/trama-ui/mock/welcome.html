@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Tramado — welcome mock</title>
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/figtree/wght.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/bricolage-grotesque/index.css" />
+<link rel="stylesheet" href="../dl/node_modules/@fontsource-variable/source-serif-4/opsz.css" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: var(--fs-md); line-height: var(--lh-ui); -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; color: inherit; }
+h1, p { margin: 0; }
+svg.i { width: 16px; height: 16px; flex: none; stroke-width: 1.75; }
+[style*='--c:'] { --c-text: color-mix(in oklab, var(--c) 50%, var(--ink)); --c-soft: color-mix(in oklab, var(--c) 16%, var(--paper-raised)); --c-bar: color-mix(in oklab, var(--c) 75%, var(--ink)); }
+.welcome { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); height: 100%; }
+.intro { display: flex; flex-direction: column; justify-content: center; gap: var(--s-6); max-width: 620px; margin-left: auto; padding: var(--s-8); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand__name { font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: -0.02em; }
+.brand-mark__ground { fill: var(--accent); }
+.brand-mark__warp, .brand-mark__weft { fill: none; stroke: var(--accent-ink); stroke-width: 2.4; stroke-linecap: round; }
+.brand-mark__warp { opacity: .55; }
+.brand-mark__hl { fill: none; stroke: #f5c518; stroke-width: 2.4; stroke-linecap: round; }
+.title { font-family: var(--font-display); font-size: var(--fs-display); font-weight: 720; line-height: 1.04; letter-spacing: -0.03em; max-width: 14ch; font-variation-settings: 'opsz' 72; }
+.title em { font-style: normal; background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding: 0 2px; }
+.lead { font-size: var(--fs-lg); line-height: 1.55; color: var(--ink-2); max-width: 50ch; }
+.actions { display: flex; gap: var(--s-3); flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: var(--s-2); height: var(--control-h-lg); padding: 0 18px; border: 1px solid transparent; border-radius: var(--r-md); font-weight: 650; font-size: var(--fs-lg); }
+.btn--primary { background: var(--accent); color: var(--accent-ink); }
+.btn--secondary { background: var(--paper-raised); border-color: var(--rule-strong); box-shadow: var(--shadow-1); }
+.join { display: flex; flex-direction: column; gap: 6px; padding: var(--s-4); border-radius: var(--r-lg); background: var(--paper-raised); border: 1px solid var(--rule); box-shadow: var(--shadow-1); max-width: 460px; }
+.join label { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-2); }
+.join__row { display: flex; gap: var(--s-2); }
+.code { flex: 1; height: var(--control-h); padding: 0 12px; border: 1px solid var(--focus); border-radius: var(--r-md); background: var(--paper-raised); font-family: var(--font-mono); font-size: 15px; letter-spacing: .08em; box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent); }
+.join small { color: var(--ink-3); font-size: var(--fs-sm); }
+.promise { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); padding-top: var(--s-5); border-top: 1px solid var(--rule); }
+.promise div { display: flex; gap: var(--s-2); color: var(--ink-3); font-size: var(--fs-sm); line-height: 1.4; }
+.promise b { display: block; color: var(--ink); font-size: var(--fs-md); }
+.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--r-md); background: var(--paper-sunk); border: 1px solid var(--rule); }
+.seg span { padding: 4px 12px; border-radius: var(--r-sm); font-size: var(--fs-sm); font-weight: 560; color: var(--ink-2); }
+.seg .on { background: var(--paper-raised); color: var(--ink); box-shadow: var(--shadow-1); }
+.lang { display: flex; align-items: center; gap: var(--s-3); font-size: var(--fs-sm); font-weight: 560; color: var(--ink-2); }
+/* Squared paper */
+.picture { position: relative; display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--rule); background-color: var(--paper-sunk);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; background-position: -1px -1px; }
+
+.stack { position: relative; width: 520px; height: 560px; }
+.card { position: absolute; width: 300px; padding: var(--s-4); border-radius: var(--r-lg); background: var(--paper-raised); border: 1px solid var(--rule); box-shadow: var(--shadow-2); }
+.card__tab { position: absolute; top: -12px; left: 18px; height: 24px; padding: 0 10px; border-radius: 7px 7px 0 0; background: var(--c); color: var(--c-on); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+.card__tab svg { width: 13px; height: 13px; stroke-width: 2; }
+.card h3 { margin: 6px 0 6px; font-family: var(--font-display); font-size: 18px; font-weight: 680; letter-spacing: -0.01em; }
+.card p { color: var(--ink-3); font-size: var(--fs-sm); }
+.meta { display: flex; gap: var(--s-3); margin-top: var(--s-3); color: var(--ink-3); font-size: var(--fs-xs); }
+.meta span { display: inline-flex; gap: 4px; align-items: center; }
+.meta svg { width: 13px; height: 13px; }
+.ai { position: absolute; left: 150px; top: 330px; width: 360px; padding: var(--s-4) var(--s-4) var(--s-4) calc(var(--s-4) + 4px); border-radius: var(--r-lg); background: var(--paper-raised); border: 1px solid var(--rule); box-shadow: var(--shadow-3); }
+.ai::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--ai); }
+.badge { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: var(--r-pill); font-size: 11.5px; font-weight: 600; background: var(--ai-soft); color: var(--ai-text); }
+.badge svg { width: 12px; height: 12px; }
+.ai__q { margin: 8px 0 6px; font-weight: 650; }
+.ai__a { font-family: var(--font-text); font-size: 15.5px; line-height: 1.55; }
+.cite { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 5px; background: var(--mark); color: var(--mark-ink); font-family: var(--font-ui); font-size: 11px; font-weight: 750; vertical-align: 2px; box-shadow: inset 0 -2px 0 var(--mark-strong); }
+.swatches { position: absolute; left: 20px; bottom: 6px; display: flex; gap: 8px; padding: 10px 12px; border-radius: var(--r-pill); background: var(--paper-raised); border: 1px solid var(--rule); box-shadow: var(--shadow-1); }
+.swatches span { width: 18px; height: 18px; border-radius: 50%; background: var(--c); }
+</style>
+</head>
+<body>
+<div class="welcome">
+  <div class="intro">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 28 28" aria-hidden="true">
+        <rect x="0.5" y="0.5" width="27" height="27" rx="8" class="brand-mark__ground" />
+        <path d="M10 5v.6M10 10.4v7.2M10 22.4v.6M18 5v6.6M18 16.4V23" class="brand-mark__warp" />
+        <path d="M5 8h10.6M20.4 8H23M5 14h2.6M12.4 14H23" class="brand-mark__weft" />
+        <path d="M5 20h10.6M20.4 20H23" class="brand-mark__hl" />
+      </svg>
+      <span class="brand__name">Tramado</span>
+    </div>
+    <h1 class="title">Your classes, <em>all in one place</em></h1>
+    <p class="lead">Record and transcribe lectures, keep every handout and law text together, share them with your class — and practise for exams with an AI that shows you where each answer comes from.</p>
+    <div class="actions">
+      <button class="btn btn--primary">{{plus}}Create a class</button>
+      <button class="btn btn--secondary">{{sparkles}}Try the example</button>
+    </div>
+    <div class="join">
+      <label>Joining a classmate’s class? Paste the invite code</label>
+      <div class="join__row"><input class="code" value="TRMD-7KQ4-PX9A-W2" /><button class="btn btn--secondary" style="height:var(--control-h);font-size:var(--fs-md)">Join</button></div>
+      <small>Shared through Syncthing, straight between your computers — no server, no account.</small>
+    </div>
+    <div class="promise">
+      <div>{{user-x}}<span><b>No account</b>Nothing to sign up for.</span></div>
+      <div>{{folder-sync}}<span><b>Plain folders</b>Your files stay yours, on disk.</span></div>
+      <div>{{key-round}}<span><b>Your AI key</b>Bring an OpenRouter key, or none.</span></div>
+    </div>
+    <div class="lang">Language <span class="seg"><span class="on">English</span><span>Português</span><span>Español</span></span></div>
+  </div>
+  <div class="picture">
+    <div class="stack">
+      <div class="card" style="left:10px;top:40px;--c:#12a594;--c-on:#181d29"><span class="card__tab">{{scale}}LAW</span><h3>Constitutional Law I</h3><p>Prof. Marta Reis · Tue &amp; Thu 10:00</p><div class="meta"><span>{{audio-lines}}14 lectures</span><span>{{files}}38 docs</span><span>{{users}}12</span></div></div>
+      <div class="card" style="left:200px;top:120px;--c:#f76b15;--c-on:#181d29"><span class="card__tab">{{flask-conical}}CHEM</span><h3>Organic Chemistry</h3><p>Lab on Fridays · exam 14 Jan</p><div class="meta"><span>{{audio-lines}}9 lectures</span><span>{{files}}21 docs</span><span>{{users}}31</span></div></div>
+      <div class="card" style="left:40px;top:205px;--c:#6e56cf;--c-on:#ffffff"><span class="card__tab">{{palette}}ART</span><h3>History of Art</h3><p>Renaissance to Baroque</p><div class="meta"><span>{{audio-lines}}6 lectures</span><span>{{files}}54 docs</span></div></div>
+      <div class="ai"><span class="badge">{{sparkles}}AI draft · from your sources</span><p class="ai__q">May the law restrict fundamental rights?</p><p class="ai__a">Only where the Constitution allows it, limited to what is necessary <span class="cite">1</span>, and never reaching the essential content of the right <span class="cite">2</span>.</p></div>
+      <div class="swatches"><span style="--c:#e5484d"></span><span style="--c:#f76b15"></span><span style="--c:#f5a524"></span><span style="--c:#8db600"></span><span style="--c:#30a46c"></span><span style="--c:#12a594"></span><span style="--c:#0090c8"></span><span style="--c:#3e63dd"></span><span style="--c:#6e56cf"></span><span style="--c:#ab4aba"></span><span style="--c:#d6409f"></span><span style="--c:#8d8d86"></span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

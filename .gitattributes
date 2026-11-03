@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.webm binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.bin binary
+*.docx binary
+*.pptx binary
+# Import fixtures are byte-exact (CRLF, BOM and cp1252 cases): never normalised.
+app/test-fixtures/** -text

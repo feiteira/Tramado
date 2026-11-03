@@ -1,0 +1,52 @@
+{
+  "name": "@tramado/app",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:property": "node scripts/env-run.mjs TRAMADO_PROPERTY_RUNS=2000 -- vitest run property",
+    "gen:privacy": "vite-node scripts/gen-privacy.ts",
+    "check:privacy": "vite-node scripts/gen-privacy.ts -- --check",
+    "screenshots": "node ../tools/screenshots/capture.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
+    "@fontsource-variable/bricolage-grotesque": "5.3.0",
+    "@fontsource-variable/figtree": "5.3.0",
+    "@fontsource-variable/source-serif-4": "5.3.1",
+    "@fontsource/opendyslexic": "5.3.0",
+    "@tauri-apps/api": "2.12.4",
+    "@xmldom/xmldom": "0.9.12",
+    "fflate": "0.8.3",
+    "lucide-react": "1.60.0",
+    "luxon": "3.7.2",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "6.3.289",
+    "qrcode": "1.5.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.5",
+    "@types/node": "26.6.3",
+    "@types/qrcode": "1.5.6",
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "axe-core": "4.14.0",
+    "fast-check": "4.10.2",
+    "jszip": "3.10.1",
+    "pdf-lib": "1.17.1",
+    "playwright-core": "1.62.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.1",
+    "vite-node": "6.0.0",
+    "vitest": "5.0.2"
+  }
+}

@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "Tramado records the lecture you choose to record with this computer's microphone. The recording stays on this computer unless you share it with your class.";
+"NSAudioCaptureUsageDescription" = "Tramado records an online lecture you choose to record from what this computer plays. The recording stays on this computer unless you share it with your class.";

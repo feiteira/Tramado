@@ -1,0 +1,118 @@
+.colorpicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.colorpicker legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.colorpicker__swatches {
+  display: grid;
+  grid-template-columns: repeat(12, 26px);
+  gap: 6px;
+}
+
+@media (max-width: 560px) {
+  .colorpicker__swatches {
+    grid-template-columns: repeat(6, 26px);
+  }
+}
+
+.colorpicker__swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: transform var(--dur-1) var(--ease);
+}
+
+.colorpicker__swatch:hover {
+  transform: scale(1.08);
+}
+
+.colorpicker__swatch:has(input:checked) {
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 4px var(--ink-2);
+}
+
+.colorpicker__swatch:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.colorpicker__custom {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.colorpicker__native {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.colorpicker__native--none {
+  background: repeating-linear-gradient(-45deg, var(--paper-sunk) 0 4px, var(--paper-raised) 4px 8px);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+
+.colorpicker__native--on {
+  box-shadow: 0 0 0 2px var(--paper-raised), 0 0 0 4px var(--ink-2);
+}
+
+.colorpicker__native input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.colorpicker__native:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.colorpicker__hex {
+  width: 96px;
+  height: var(--control-h-sm);
+  padding: 0 var(--s-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper-raised);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.colorpicker__hex[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.colorpicker__hex:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
+}
+
+.colorpicker__swatch .choice__input {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}

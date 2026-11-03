@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Same policy as tauri.conf.json (architecture §18.3) plus https://openrouter.ai for the browser
+         demo's ?ai=real. Inside Tauri both policies apply, so the webview still cannot reach the network. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: tramado-media: http://tramado-media.localhost; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost blob: data: tramado-media: http://tramado-media.localhost https://openrouter.ai; media-src 'self' blob: tramado-media: http://tramado-media.localhost; object-src 'none'; base-uri 'self'; form-action 'none'" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Tramado</title>
+    <!-- The paper colour before the styles load, so the window never flashes white or black (UX §1.2). -->
+    <style>html{background:#f3f5f8}@media (prefers-color-scheme:dark){html{background:#14171d}}</style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
