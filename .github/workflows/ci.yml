@@ -1,7 +1,8 @@
 name: CI
 
 # Linux checks run on every push to main and every pull request; Windows and macOS are built only when asked.
-#   web           leak check, typecheck, Vitest, the privacy files, the web build (property tests at 2000 runs nightly)
+#   web           leak and link checks, typecheck, Vitest, the privacy files, the web build (property tests at 2000
+#                 runs nightly)
 #   rust-light    fmt + clippy of the light crates, the whole workspace checked without whisper.cpp, the Rust unit
 #                 tests, the Syncthing contract and two-instance tests with the pinned binary, cargo-deny (bans,
 #                 licences, sources)
@@ -82,6 +83,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: No secrets or account ids in the repository
         run: node tools/check-leaks.mjs
+      - name: Every relative link and picture of the README, manual and release notes resolves
+        run: node .github/scripts/check-links.mjs
       - uses: actions/setup-node@v7
         with:
           node-version: 22

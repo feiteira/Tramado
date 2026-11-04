@@ -14,9 +14,31 @@ This product includes software from the following projects:
   runs an unmodified Syncthing binary as a sidecar process; its LICENSE and AUTHORS files
   are shipped beside it.
 
-- whisper.cpp (https://github.com/ggml-org/whisper.cpp), licensed under the MIT License.
+- whisper.cpp (https://github.com/ggml-org/whisper.cpp), licensed under the MIT License,
+  through whisper-rs (https://codeberg.org/tazz4843/whisper-rs), released under the Unlicense.
+
+- The Whisper speech models by OpenAI (https://github.com/openai/whisper), licensed under the
+  MIT License. Tramado does not ship them: it downloads them, in whisper.cpp's format, from
+  Hugging Face when a person first transcribes.
+
+- Silero VAD (https://github.com/snakers4/silero-vad), licensed under the MIT License, in
+  whisper.cpp's format; shipped with the app.
 
 - libopus (https://opus-codec.org), licensed under the BSD 3-Clause License.
+
+- Symphonia (https://github.com/pdeljanov/Symphonia), licensed under the Mozilla Public
+  License 2.0, and cpal (https://github.com/RustAudio/cpal), licensed under the Apache License
+  2.0.
+
+- Tauri (https://tauri.app), licensed under the MIT License or the Apache License 2.0.
+
+- React (https://react.dev), licensed under the MIT License.
+
+- pdf.js (https://mozilla.github.io/pdf.js/), licensed under the Apache License 2.0.
+
+- mammoth (https://github.com/mwilliamson/mammoth.js), licensed under the BSD 2-Clause License.
+
+- qrcode (https://github.com/soldair/node-qrcode), licensed under the MIT License.
 
 - Fonts, licensed under the SIL Open Font License 1.1:
   Figtree, Bricolage Grotesque, Source Serif 4, Atkinson Hyperlegible Next, OpenDyslexic
@@ -24,4 +46,5 @@ This product includes software from the following projects:
 
 - Icons from Lucide (https://lucide.dev), licensed under the ISC License.
 
-Third-party npm and Cargo dependencies keep their own licenses, listed in their packages.
+Third-party npm and Cargo dependencies keep their own licenses, listed in their packages;
+`cargo deny check` (deny.toml) lists the licences of every Rust dependency.
