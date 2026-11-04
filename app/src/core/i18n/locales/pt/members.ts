@@ -125,6 +125,7 @@ export const members: Messages['members'] = {
   more: {
     askBeforeReadOnly: 'Só os organizadores podem mudar isto.',
     laterDone: '{name} continua à espera. Pode deixá-lo entrar mais tarde.',
+    deviceQuoted: '“{device}”',
     menuLabel: 'Ações para {name}',
     syncingFiles: { one: 'A sincronizar · falta {n} ficheiro', other: 'A sincronizar · faltam {n} ficheiros' },
     helperCloud: 'transcrição na nuvem',

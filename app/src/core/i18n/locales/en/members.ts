@@ -126,6 +126,7 @@ export const members = {
   more: {
     askBeforeReadOnly: 'Only organisers can change this.',
     laterDone: '{name} is still waiting. You can let them in later.',
+    deviceQuoted: '“{device}”',
     menuLabel: 'Actions for {name}',
     syncingFiles: { one: 'Syncing · {n} file left', other: 'Syncing · {n} files left' },
     helperCloud: 'cloud transcription',

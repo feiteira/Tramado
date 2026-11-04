@@ -128,7 +128,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
                     <div className="member__who">
                       <span className="member__name">{person}</span>
                       <span className="member__sub">
-                        {device ? <span>“{device}”</span> : null}
+                        {device ? <span>{t('members.more.deviceQuoted', { device })}</span> : null}
                         <span className="member__words">{t('members.checkWords.label')}: <CheckWords deviceId={r.deviceId} /></span>
                       </span>
                     </div>

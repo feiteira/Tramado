@@ -11,6 +11,7 @@ import type { ChatAiLocal } from '../../services/types/chat';
 import type { ChatMessageView, LectureView, ModelLabel, ViewCitation } from '../../services/types/viewModels';
 import { Button, IconButton } from '../../ui/components/Button';
 import { Notice, Toolbar } from '../../ui/components/Feedback';
+import { ContextMenu, type MenuEntry } from '../../ui/components/Menu';
 import { TextArea } from '../../ui/components/Field';
 import { Tooltip } from '../../ui/components/Tooltip';
 import { AiCard } from '../../ui/tramado/AiCard';
@@ -195,7 +196,15 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
     </Toolbar>
   ) : null;
 
+  const menu = (): MenuEntry[] => m.deleted ? [] : [
+    { id: 'reply', label: t('chat.actions.reply'), icon: CornerUpLeft, onSelect: () => ctx.reply(m), testId: 'chat-menu-reply' },
+    { id: 'copy', label: t('chat.actions.copy'), icon: Copy, onSelect: () => void ctx.copy(m), testId: 'chat-menu-copy' },
+    ...(mine && m.kind === 'message' ? [{ id: 'edit', label: t('chat.actions.edit'), icon: Pencil, onSelect: () => ctx.edit(m), testId: 'chat-menu-edit' }] : []),
+    ...(mine ? [{ id: 'delete', label: t('chat.actions.delete'), icon: Trash2, danger: true, onSelect: () => void ctx.remove(m), testId: 'chat-menu-delete' }] : []),
+  ];
+
   return (
+    <ContextMenu items={menu} label={t('chat.actions.label')} disabled={m.deleted || !!editing}>
     <article
       className={cx('chat-msg', row.first && 'chat-msg--first', row.last && 'chat-msg--last', mention && 'chat-msg--mention', ctx.flash === m.id && 'chat-msg--flash',
         ctx.match === m.id && 'chat-msg--match', ctx.matches.has(m.id) && 'chat-msg--hit', m.unverified && 'chat-msg--unverified', m.kind === 'ai' && 'chat-msg--ai')}
@@ -262,6 +271,7 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
       </div>
       {actions}
     </article>
+    </ContextMenu>
   );
 }
 
