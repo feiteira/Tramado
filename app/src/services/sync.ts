@@ -88,6 +88,29 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
   const notify = (kind: Parameters<AppServices['notifications']['notify']>[0], key: string, vars: Record<string, string | number>, tag?: string) =>
     void app().notifications.notify(kind, key, vars, tag).catch(() => undefined);
 
+  /** Distinct classmates online across the shared classes (UX §2.4 "n = distinct members online, me excluded"). */
+  function recomputeOnline() {
+    const mine = ctx.identity.get()?.memberId ?? null;
+    const online = new Set<string>();
+    const conn = connections.get();
+    let classes: ReturnType<AppServices['library']['classes']['get']> = [];
+    try {
+      classes = app().library.classes.get();
+    } catch {
+      return;
+    }
+    for (const c of classes) {
+      if (!c.shared || c.archived) continue;
+      try {
+        const m = info(c.id).model.get();
+        for (const [d, who] of m.bindings.bound) if (who !== mine && conn[d]?.connected) online.add(who);
+      } catch {
+        // a class that left
+      }
+    }
+    if (state.get().onlineMembers !== online.size) patch({ onlineMembers: online.size });
+  }
+
   function setConnection(deviceId: DeviceId, c: Partial<ConnectionState>) {
     const cur = connections.get()[deviceId] ?? { connected: false, relay: false, lastSeen: null };
     const next = { ...cur, ...c };
@@ -99,7 +122,9 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       const s = await platform.sync.snapshot();
       const folders: Record<ClassId, FolderView> = {};
       for (const f of s.folders) folders[f.classId] = f;
-      patch({ status: s.status, folders, joinRequests: s.joinRequests, offers: s.folderOffers });
+      // A folder whose marker is missing at start-up (sync spec §22.3) shows the folder-missing card too.
+      const lost = s.folders.filter((f) => f.error && /marker/i.test(f.error)).map((f) => f.classId);
+      patch({ status: s.status, folders, joinRequests: s.joinRequests, offers: s.folderOffers, ...(lost.length ? { markerMissing: [...new Set([...state.get().markerMissing, ...lost])] } : {}) });
       const conn: Record<DeviceId, ConnectionState> = {};
       for (const d of s.devices) conn[d.deviceId] = { connected: d.connected, relay: d.relay, lastSeen: d.lastSeen };
       connections.set(conn);
@@ -271,6 +296,12 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       if (booted) return;
       booted = true;
       platform.events.onSync(route);
+      connections.subscribe(recomputeOnline);
+      try {
+        app().library.classes.subscribe(recomputeOnline);
+      } catch {
+        // no library (tests)
+      }
       await snapshot();
       try {
         const stats = await platform.sync.deviceStats();
@@ -280,6 +311,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       }
       await service.completeForks();
       await startClasses();
+      recomputeOnline();
     },
     async ensureStarted() {
       patch({ status: await platform.sync.start() });

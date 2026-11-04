@@ -15,6 +15,9 @@ export interface SyncUiState {
   massDeleteRemote: Array<{ classId: ClassId; by: ShortId; byName: string; count: number; sample: ClassPath[] }>;
   foreignWrites: number; markerMissing: ClassId[]; identityCopied: boolean;
   joinStalled: ClassId[];                                  // not admitted 90 s after connecting (sync spec §8)
+  /** G2 (UI-GROUP, additive): distinct classmates (me excluded) with a connected device in any shared class — the
+   * sync pill's "Up to date · {n} online" (UX §2.4). */
+  onlineMembers?: number;
 }
 
 export interface SyncService {

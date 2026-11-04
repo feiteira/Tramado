@@ -47,6 +47,8 @@ export interface LocalSyncInternals {
   writeAs: ((classId: ClassId, deviceId: DeviceId, path: ClassPath, bytes: Uint8Array) => void) | null;
   /** Kept versions of deleted files ("Recently deleted", the mass-delete dialog), per class. */
   versions: Map<ClassId, VersionEntry[]>;
+  /** Classes whose folder marker is missing (`missing=1`, sync spec §22.3). */
+  missing: Set<ClassId>;
 }
 
 /** The demo join (UX §3.12.3 in the browser demo): an invite whose class ID is derived from its first device and this
@@ -67,12 +69,12 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
   const startedAt = instant(Date.now());
   const internals: LocalSyncInternals = {
     deps, online: new Set(), peers: new Map(), policies: new Map(), joinRequests: new Map(), files: null, emit: null, now: () => Date.now(),
-    writeAs: null, versions: new Map(),
+    writeAs: null, versions: new Map(), missing: new Set(),
   };
   const anyShared = () => [...deps.registry.entries.values()].some((e) => e.shared);
   const status = (): SyncStatus => ({
     state: mode === 'error' ? 'error' : (mode === 'fake' || mode === 'offline') && anyShared() ? 'running' : 'stopped',
-    deviceId: deps.deviceId, version: mode === 'fake' || mode === 'offline' ? 'v2.1.7' : null, syncPort: null,
+    deviceId: deps.deviceId, version: mode === 'fake' || mode === 'offline' ? 'v2.1.7' : null, syncPort: mode === 'fake' || mode === 'offline' ? 22117 : null,
     localOnly: false, paused: false, startedAt: mode === 'fake' || mode === 'offline' ? startedAt : null, restarts: 0,
     error: mode === 'error' ? 'SYNC_UNAVAILABLE' : null,
   });
@@ -85,7 +87,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     const peers = [...internals.peers.keys()].filter((d) => d !== deps.deviceId);
     return {
       classId, label: e.dirName, path: e.path, paused: false, state: 'idle', globalFiles: files?.size ?? 0, inSyncFiles: files?.size ?? 0,
-      needFiles: 0, needBytes: 0, pullErrors: 0, error: null, devices: [deps.deviceId, ...peers],
+      needFiles: 0, needBytes: 0, pullErrors: 0, error: internals.missing.has(classId) ? 'folder marker missing' : null, devices: [deps.deviceId, ...peers],
       completion: Object.fromEntries(peers.map((d) => [d, { completion: internals.online.has(d) ? 100 : 0, needItems: 0, remoteState: internals.online.has(d) ? 'valid' : 'unknown' }])),
     };
   };
@@ -172,7 +174,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
       return { cert: toBase64(deps.cert), value: toBase64(await deps.sign(signedMessageFromCanonical(classId, path, canonical))) };
     },
     async shareClass(classId: ClassId, _label: string) {
-      if (mode === 'error') throw new PlatformError('SYNC_UNAVAILABLE', 'sharing is not available in this demo mode');
+      // `error` mode: the classes stay shared (the demo seeds them so), only starting Syncthing fails.
       const e = deps.registry.get(classId);
       if (e.shared) throw new PlatformError('CONFLICT', 'already shared');
       deps.registry.insert({ ...e, shared: true });
@@ -269,7 +271,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     pauseClass: async () => undefined,
     scan: async () => undefined,
     diagnostics: async () => ({
-      status: status(), ports: { sync: null, guiOpen: false }, listeners: {}, connections: internals.online.size, relayed: 0, lastErrors: [],
+      status: status(), ports: { sync: status().syncPort, guiOpen: mode === 'fake' || mode === 'offline' }, listeners: {}, connections: internals.online.size, relayed: 0, lastErrors: [],
       logTail: [`memory platform sync (${mode})`],
     }),
     existing: async () => ({ running: false, configFound: false }),
@@ -341,7 +343,10 @@ export function createDemoSyncControls(
     // (default law) cannot be found (sync spec §22.3).
     const missing = opts.missing !== undefined ? opts.missing : missingFromAddress();
     const lost = missing ? keys.classes[missing] : undefined;
-    if (lost) queueMicrotask(() => emit({ type: 'markerMissing', classId: lost }));
+    if (lost) {
+      internals.missing.add(lost);
+      queueMicrotask(() => emit({ type: 'markerMissing', classId: lost }));
+    }
     if (opts.join === 'ask') {
       const diogo = keys.members.diogo?.deviceIds[0];
       const law = keys.classes.law;

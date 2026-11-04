@@ -46,6 +46,8 @@ export interface LineContext {
   saveEdit(): Promise<void>;
   flash: string | null;
   focusId: string | null;
+  /** The message that takes the list's single Tab stop until one was focused (the newest). */
+  defaultFocus: string | null;
   setFocusId(id: string): void;
   match: string | null;
   matches: Set<string>;
@@ -197,7 +199,7 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
     <article
       className={cx('chat-msg', row.first && 'chat-msg--first', row.last && 'chat-msg--last', mention && 'chat-msg--mention', ctx.flash === m.id && 'chat-msg--flash',
         ctx.match === m.id && 'chat-msg--match', ctx.matches.has(m.id) && 'chat-msg--hit', m.unverified && 'chat-msg--unverified', m.kind === 'ai' && 'chat-msg--ai')}
-      tabIndex={ctx.focusId === m.id ? 0 : -1}
+      tabIndex={(ctx.focusId ?? ctx.defaultFocus) === m.id ? 0 : -1}
       onFocus={(e) => {
         if (e.target === e.currentTarget) ctx.setFocusId(m.id);
       }}

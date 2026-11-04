@@ -30,7 +30,7 @@ export default function MassDeleteDialog({ props, services, close }: { props: Di
       if (!live) return;
       const now = services.ctx.clock.now();
       const recent = [...new Set(v.filter((x) => now - Date.parse(x.versionTime) < RECENT_MS).map((x) => x.path))];
-      const list = recent.length ? recent : [...new Set(v.map((x) => x.path))];
+      const list = recent.length > 1 ? recent : [...new Set(v.map((x) => x.path))];
       setFallback({ count: list.length, sample: list.slice(0, 10) });
     }, () => live && setFallback({ count: 0, sample: [] }));
     return () => {

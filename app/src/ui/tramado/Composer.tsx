@@ -93,6 +93,8 @@ export function Composer({ placeholder, onSend, mentions, disabled, onAttach, re
   const input = useRef<HTMLTextAreaElement>(null);
   const listId = useId();
   const id = rest['data-testid'] ?? 'composer';
+  // Child ids: `chat-composer` → `chat-input`, `chat-send`, `chat-attach` (UX §3.10.2); other roots keep `${id}-input`.
+  const child = (part: string) => (id.endsWith('-composer') ? `${id.slice(0, -'-composer'.length)}-${part}` : `${id}-${part}`);
   const q = mentions.length ? mentionQuery(text, caret) : null;
   const options = useMemo(() => (q ? filterMentions(mentions, q.query).slice(0, 8) : []), [q?.query, mentions]); // eslint-disable-line react-hooks/exhaustive-deps
   const open = !!q && options.length > 0 && dismissed !== q.start && !disabled;
@@ -127,18 +129,18 @@ export function Composer({ placeholder, onSend, mentions, disabled, onAttach, re
   return (
     <div className={cx('composer', disabled && 'composer--disabled', className)} data-testid={id}>
       {files.length ? (
-        <div className="composer__files" data-testid={`${id}-files`}>
+        <div className="composer__files" data-testid={child('files')}>
           {files.map((f, i) => (
             <span key={`${f.token}-${i}`} className="composer__file" title={f.name}>
               <FileText size={14} aria-hidden strokeWidth={1.75} />
               <span>{f.name}</span>
-              <IconButton icon={X} size="sm" label={t('common.remove')} onClick={() => setFiles((all) => all.filter((_, j) => j !== i))} data-testid={`${id}-file-remove`} />
+              <IconButton icon={X} size="sm" label={t('common.remove')} onClick={() => setFiles((all) => all.filter((_, j) => j !== i))} data-testid={child('file-remove')} />
             </span>
           ))}
         </div>
       ) : null}
       {onAttach ? (
-        <IconButton icon={Paperclip} label={t('chat.attach')} disabled={!!disabled} onClick={() => void onAttach().then((p) => setFiles((f) => [...f, ...p]))} data-testid={`${id}-attach`} />
+        <IconButton icon={Paperclip} label={t('chat.attach')} disabled={!!disabled} onClick={() => void onAttach().then((p) => setFiles((f) => [...f, ...p]))} data-testid={child('attach')} />
       ) : null}
       <TextArea
         ref={input}
@@ -147,6 +149,7 @@ export function Composer({ placeholder, onSend, mentions, disabled, onAttach, re
         value={text}
         onChange={(v) => {
           setText(v);
+          setCaret(input.current?.selectionStart ?? v.length);
           setDismissed(null);
         }}
         onSelect={track}
@@ -157,8 +160,6 @@ export function Composer({ placeholder, onSend, mentions, disabled, onAttach, re
         autoGrow
         minHeight={36}
         maxHeight={200}
-        role={mentions.length ? 'combobox' : undefined}
-        aria-expanded={mentions.length ? open : undefined}
         aria-controls={open ? listId : undefined}
         aria-autocomplete={mentions.length ? 'list' : undefined}
         aria-activedescendant={open ? `${listId}-${sel}` : undefined}
@@ -186,10 +187,10 @@ export function Composer({ placeholder, onSend, mentions, disabled, onAttach, re
             send();
           }
         }}
-        data-testid={`${id}-input`}
+        data-testid={child('input')}
       />
-      <IconButton icon={SendHorizontal} variant="secondary" label={t('chat.send')} disabled={!!disabled || (!text.trim() && !files.length)} onClick={send} data-testid={`${id}-send`} />
-      {aiOff ? <p className="composer__hint" data-testid={`${id}-ai-off`}>{t('chat.ai.off')}</p> : null}
+      <IconButton icon={SendHorizontal} variant="secondary" label={t('chat.send')} disabled={!!disabled || (!text.trim() && !files.length)} onClick={send} data-testid={child('send')} />
+      {aiOff ? <p className="composer__hint" data-testid={child('ai-off')}>{t('chat.ai.off')}</p> : null}
       {open ? (
         <ul className="composer__mentions" role="listbox" id={listId} aria-label={t('chat.mention.label')} data-testid="chat-mention-popover">
           {options.map((o, i) => (

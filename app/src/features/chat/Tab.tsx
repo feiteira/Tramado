@@ -123,6 +123,11 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     seen.current = ids;
   }, [view.items, view.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A local @AI notice under my last message keeps the end in view.
+  useLayoutEffect(() => {
+    if (atBottom.current) scrollToBottom();
+  }, [aiLocal]);
+
   // Read while the chat is open and the end is in view.
   useEffect(() => {
     if (view.loaded && atBottom.current && view.unread > 0) cls.chat.markRead();
@@ -305,10 +310,11 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     mine: (m) => m.author.self && !m.unverified,
     mentionsMe: (m) => mentionsMe(m, me.memberId),
     lastMine: [...shown].reverse().find((m) => m.author.self && (m.kind === 'message' || m.kind === 'ai'))?.id ?? null,
-    editing, setEditing, saveEdit, flash, focusId, setFocusId, match: currentHit, matches: new Set(matches),
+    editing, setEditing, saveEdit, flash, focusId, setFocusId,
+    defaultFocus: [...shown].reverse().find((m) => m.kind === 'message' || m.kind === 'ai')?.id ?? null, match: currentHit, matches: new Set(matches),
     reply: (m) => {
       setReplyTo(m);
-      requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[data-testid="chat-composer-input"]')?.focus());
+      requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')?.focus());
     },
     copy, edit: startEdit, remove, reveal,
     retryAi: (m) => void cls.chat.retryAi(parseRef(m.id)).catch((e: unknown) => toast.error(e)),
