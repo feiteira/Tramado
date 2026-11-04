@@ -1,0 +1,297 @@
+/* Notes tab and note editor (UX §3.8). Tokens only. */
+.notes-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+}
+.notes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+}
+.notes-toolbar__start {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.notes-filter {
+  width: 220px;
+  max-width: 100%;
+}
+.notes-empty {
+  flex: 1;
+  min-height: 260px;
+}
+.notes-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  padding-bottom: var(--s-4);
+}
+.notes-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.notes-section__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+.notes-section__list li + li .note-row {
+  border-top: 1px solid var(--rule-faint);
+}
+.notes-section__empty {
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-lg);
+}
+.note-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding: var(--s-2) var(--s-4);
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+.note-row:hover {
+  background: var(--paper-hover);
+}
+.note-row:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+.note-row--focused {
+  background: var(--accent-soft);
+}
+.note-row__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.note-row__icon--mine {
+  color: var(--accent-text);
+}
+.note-row__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-row .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+.note-row__meta {
+  flex: none;
+  max-width: 45%;
+  color: var(--ink-3);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-row__editing {
+  color: var(--accent-text);
+}
+
+.note-subtitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+}
+.note-status {
+  color: var(--ink-3);
+}
+.note-status--failed {
+  color: var(--danger-text);
+}
+.note-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-6) var(--s-4);
+}
+.note-toolbar {
+  padding: var(--s-1);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+}
+.note-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--paper-sunk);
+  overflow: hidden;
+}
+.note-editor-field {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.note-editor-field .note-editor,
+textarea.note-editor {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  padding: var(--s-6) max(var(--s-6), calc((100% - var(--measure)) / 2));
+  border: 0;
+  border-radius: 0;
+  background: var(--paper-reading);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: var(--fs-reading);
+  line-height: var(--lh-reading);
+  resize: none;
+  box-shadow: none;
+}
+textarea.note-editor:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.note-preview {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-6);
+  background: var(--paper-reading);
+}
+.note-preview__md {
+  margin: 0 auto;
+}
+.note-preview__md h2,
+.note-preview__md h3,
+.note-preview__md h4 {
+  font-family: var(--font-display);
+  margin-top: 1em;
+}
+.note-preview__md .md-link {
+  font-family: inherit;
+}
+.note-pop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  width: 300px;
+  max-width: calc(100vw - 32px);
+}
+.note-pop__title {
+  font-size: var(--fs-md);
+}
+
+.conflict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.conflict__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  color: var(--ink-2);
+}
+.conflict__key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 4px;
+  vertical-align: -1px;
+  border-radius: 3px;
+}
+.conflict__key--del { background: var(--danger-soft); box-shadow: inset 3px 0 0 var(--danger-text); }
+.conflict__key--add { background: var(--success-soft); box-shadow: inset 3px 0 0 var(--success-text); }
+.conflict__grid {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.conflict__head,
+.conflict__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.conflict__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule-strong);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.conflict__head > span {
+  padding: var(--s-2) var(--s-3);
+}
+.conflict__head > span + span,
+.conflict__cell + .conflict__cell {
+  border-inline-start: 1px solid var(--rule);
+}
+.conflict__cell {
+  min-height: 1.6em;
+  padding: 1px var(--s-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+.conflict__cell--del {
+  background: var(--danger-soft);
+  box-shadow: inset 3px 0 0 var(--danger-text);
+}
+.conflict__cell--add {
+  background: var(--success-soft);
+  box-shadow: inset 3px 0 0 var(--success-text);
+}
+.conflict__cell--gap {
+  background: var(--paper-sunk);
+}
+.markdown .md-task {
+  margin-inline-start: -1.2em;
+}
+.conflict__grid:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

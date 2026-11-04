@@ -1,0 +1,495 @@
+[
+  {
+    "name": "documents",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-folder:4"
+      },
+      {
+        "expect": "doc-private-section"
+      }
+    ]
+  },
+  {
+    "name": "documents-pt-dark",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-item"
+      }
+    ]
+  },
+  {
+    "name": "documents-es-125",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-item"
+      }
+    ]
+  },
+  {
+    "name": "documents-min-window",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "size": "1000x660",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-item"
+      }
+    ]
+  },
+  {
+    "name": "documents-recent",
+    "query": "route=class&class=law&tab=documents",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-view-recent"
+      },
+      {
+        "expect": "doc-item:6"
+      }
+    ]
+  },
+  {
+    "name": "documents-folder",
+    "query": "route=class&class=law&tab=documents",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-folder"
+      },
+      {
+        "press": "ArrowDown,ArrowDown,Enter"
+      },
+      {
+        "expect": "doc-crumb"
+      },
+      {
+        "expect": "doc-item:2"
+      }
+    ]
+  },
+  {
+    "name": "documents-menu",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-view-recent"
+      },
+      {
+        "click": "doc-more"
+      },
+      {
+        "expect": "doc-menu"
+      },
+      {
+        "expect": "doc-menu-private"
+      }
+    ]
+  },
+  {
+    "name": "documents-delete",
+    "query": "route=class&class=law&tab=documents&sync=fake",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-view-recent"
+      },
+      {
+        "click": "doc-more"
+      },
+      {
+        "click": "doc-menu-delete"
+      },
+      {
+        "expect": "doc-delete-dialog"
+      },
+      {
+        "expect": "doc-delete-local"
+      }
+    ]
+  },
+  {
+    "name": "documents-new-folder",
+    "query": "route=class&class=law&tab=documents",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-new-folder"
+      },
+      {
+        "expect": "doc-folder-dialog"
+      }
+    ]
+  },
+  {
+    "name": "documents-stats",
+    "query": "route=class&class=stats&tab=documents",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-item:1"
+      },
+      {
+        "expect-not": "doc-private-section"
+      }
+    ]
+  },
+  {
+    "name": "documents-empty",
+    "query": "route=class&class=hist&tab=documents",
+    "ready": "documents-empty",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "documents-offline",
+    "query": "route=class&class=law&tab=documents&sync=offline",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-item"
+      }
+    ]
+  },
+  {
+    "name": "document-pdf",
+    "query": "route=document&class=law&doc=lf&page=9&quote=nunca%20podem%20atingir",
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-articles"
+      },
+      {
+        "expect-not": "doc-quote-missing"
+      }
+    ]
+  },
+  {
+    "name": "document-pdf-dark-pt",
+    "query": "route=document&class=law&doc=lf&page=9&quote=nunca%20podem%20atingir",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-side-toggle"
+      },
+      {
+        "click": "doc-side-info"
+      },
+      {
+        "expect": "doc-info"
+      }
+    ]
+  },
+  {
+    "name": "document-pdf-es-125",
+    "query": "route=document&class=law&doc=lf&page=12",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-toolbar"
+      }
+    ]
+  },
+  {
+    "name": "document-quote-missing",
+    "query": "route=document&class=law&doc=lf&page=9&quote=texto%20que%20n%C3%A3o%20existe%20aqui",
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-quote-missing"
+      }
+    ]
+  },
+  {
+    "name": "document-find",
+    "query": "route=document&class=law&doc=lf&page=9",
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-find"
+      },
+      {
+        "type": "doc-find-input=direitos"
+      },
+      {
+        "expect": "doc-find-count"
+      }
+    ]
+  },
+  {
+    "name": "document-pptx",
+    "query": "route=document&doc=slides6",
+    "ready": "doc-slide",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-slide:8"
+      }
+    ]
+  },
+  {
+    "name": "document-docx",
+    "query": "route=document&doc=resumo&ai=fake",
+    "ready": "doc-text",
+    "axe": true,
+    "steps": [
+      {
+        "click": "doc-side-toggle"
+      },
+      {
+        "click": "doc-side-ask"
+      },
+      {
+        "expect": "doc-ask-panel"
+      }
+    ]
+  },
+  {
+    "name": "document-scan",
+    "query": "route=document&doc=acordao&ai=fake",
+    "ready": "doc-scan-banner",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-ocr"
+      }
+    ]
+  },
+  {
+    "name": "document-scan-ai-off",
+    "query": "route=document&doc=acordao&ai=off",
+    "ready": "doc-scan-banner",
+    "axe": true,
+    "steps": [
+      {
+        "expect-not": "doc-ocr"
+      }
+    ]
+  },
+  {
+    "name": "document-image",
+    "query": "route=document&doc=cell&ai=fake",
+    "ready": "doc-image",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-image-describe"
+      }
+    ]
+  },
+  {
+    "name": "document-private",
+    "query": "route=document&doc=esquemas",
+    "ready": "doc-pdf-page",
+    "axe": true,
+    "steps": [
+      {
+        "expect-text": "doc-subtitle=Only on this computer"
+      }
+    ]
+  },
+  {
+    "name": "document-missing",
+    "query": "route=document&doc=zz",
+    "ready": "missing-item",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "notes",
+    "query": "route=class&class=law&tab=notes&sync=fake",
+    "ready": "note-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "note-item:2"
+      }
+    ]
+  },
+  {
+    "name": "notes-pt-dark",
+    "query": "route=class&class=law&tab=notes&sync=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "note-list",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "notes-empty",
+    "query": "route=class&class=stats&tab=notes",
+    "ready": "notes-empty",
+    "axe": true,
+    "steps": [
+      {
+        "expect-not": "notes-empty-new-class"
+      }
+    ]
+  },
+  {
+    "name": "note",
+    "query": "route=note&note=class8&sync=fake",
+    "ready": "note-editor",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "note-presence"
+      },
+      {
+        "expect-text": "note-status=Saved"
+      }
+    ]
+  },
+  {
+    "name": "note-es-125",
+    "query": "route=note&note=class8&sync=fake",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "note-editor",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "note-min-window",
+    "query": "route=note&note=mine6",
+    "size": "1000x660",
+    "ready": "note-editor",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "note-conflict",
+    "query": "route=note&note=class8&conflict=1",
+    "ready": "note-conflict",
+    "axe": true,
+    "steps": [
+      {
+        "click": "note-compare"
+      },
+      {
+        "expect": "conflict-dialog"
+      },
+      {
+        "expect": "conflict-keep-both"
+      }
+    ]
+  },
+  {
+    "name": "note-preview",
+    "query": "route=note&note=mine6",
+    "ready": "note-editor",
+    "axe": true,
+    "steps": [
+      {
+        "click": "note-preview"
+      },
+      {
+        "expect": "note-preview-view"
+      }
+    ]
+  },
+  {
+    "name": "note-insert-time",
+    "query": "route=note&note=mine6",
+    "ready": "note-editor",
+    "axe": true,
+    "steps": [
+      {
+        "click": "note-insert-time"
+      },
+      {
+        "expect": "note-insert-time-popover"
+      }
+    ]
+  },
+  {
+    "name": "palette",
+    "query": "route=class&class=law",
+    "ready": "screen-class",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Control+K"
+      },
+      {
+        "type": "palette-input=conteúdo essencial"
+      },
+      {
+        "expect": "palette-result"
+      },
+      {
+        "expect-text": "palette=Lei Fundamental"
+      }
+    ]
+  },
+  {
+    "name": "palette-all-pt",
+    "query": "route=today",
+    "lang": "pt",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Control+K"
+      },
+      {
+        "type": "palette-input=membrane"
+      },
+      {
+        "expect": "palette-result"
+      }
+    ]
+  },
+  {
+    "name": "palette-none",
+    "query": "route=class&class=law",
+    "ready": "screen-class",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Control+K"
+      },
+      {
+        "type": "palette-input=xyzzyqw"
+      },
+      {
+        "expect": "palette-result:1"
+      },
+      {
+        "expect-text": "palette=xyzzyqw"
+      }
+    ]
+  }
+]

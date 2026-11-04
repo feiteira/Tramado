@@ -1,23 +1,20 @@
-// Spanish (Spain): NOT TRANSLATED YET — a copy of the English catalog (architecture §14).
-// The namespace owner translates it and removes `pending`; catalogs.test.ts skips the
-// "identical to English" check while `pending` is exported, and fails with TRAMADO_RELEASE=1.
+// Spanish (Spain) catalog `search` (UI-DOCS). Register: "usted"; asignatura, clase, apunte.
 import type { Messages } from '../en';
 
-export const pending = true;
-
 export const search: Messages['search'] = {
-  placeholder: 'Search your classes, or type a command…',
-  label: 'Search and commands',
-  scopeClass: 'In {class}',
-  scopeAll: 'All classes',
-  includeArchived: 'Include archived classes',
-  groups: { lectures: 'Lectures', documents: 'Documents', notes: 'Notes', exams: 'Exams', chat: 'Chat', commands: 'Commands', recent: 'Recent', recentSearches: 'Recent searches' },
-  showAll: 'Show all {n}',
-  askAi: 'Ask AI: “{q}” in {scope}',
-  askAiOff: 'Ask AI (set up AI first)',
-  indexing: { one: 'Still reading {n} file; results may be incomplete.', other: 'Still reading {n} files; results may be incomplete.' },
-  none: { title: 'Nothing found for “{q}”.', body: 'Try fewer words, or search all classes.', all: 'Search all classes', ask: 'Ask AI' },
+  placeholder: 'Busque en sus asignaturas o escriba un comando…',
+  label: 'Búsqueda y comandos',
+  scopeClass: 'En {class}',
+  scopeAll: 'Todas las asignaturas',
+  includeArchived: 'Incluir asignaturas archivadas',
+  groups: { lectures: 'Clases', documents: 'Documentos', notes: 'Apuntes', exams: 'Exámenes', chat: 'Chat', commands: 'Comandos', recent: 'Recientes', recentSearches: 'Búsquedas recientes' },
+  showAll: 'Mostrar todos ({n})',
+  askAi: 'Preguntar a la IA: «{q}» en {scope}',
+  askAiAll: 'Preguntar a la IA: «{q}» en todas las asignaturas',
+  askAiOff: 'Preguntar a la IA (configure la IA primero)',
+  indexing: { one: 'Aún se está leyendo {n} archivo; los resultados pueden estar incompletos.', other: 'Aún se están leyendo {n} archivos; los resultados pueden estar incompletos.' },
+  none: { title: 'No se encontró nada para «{q}».', body: 'Pruebe con menos palabras o busque en todas las asignaturas.', all: 'Buscar en todas las asignaturas', ask: 'Preguntar a la IA' },
   result: '{kind}: {title}, {where}. {snippet}',
-  kinds: { lecture: 'Lecture', document: 'Document', note: 'Note', exam: 'Exam question', chat: 'Message', command: 'Command' },
+  kinds: { lecture: 'Clase', document: 'Documento', note: 'Apunte', exam: 'Pregunta de examen', chat: 'Mensaje', command: 'Comando' },
   chatWhere: '{name}, {date}',
 };

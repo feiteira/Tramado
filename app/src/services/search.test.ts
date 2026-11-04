@@ -185,3 +185,21 @@ describe('SearchService (inline host)', () => {
     env.s.dispose();
   });
 });
+
+describe('SearchService and transcript corrections (UI-DOCS)', () => {
+  it('indexes the effective transcript (pending corrections applied) without the lecture being opened', async () => {
+    const env = await setup();
+    const id = await addLecture(env);
+    await env.search.settled(env.classId);
+    expect((await env.search.passages(env.classId, 'Bom dia a todos')).some((p) => p.source.kind === 'lecture')).toBe(true);
+    const lectures = env.cls.lectures as unknown as { refresh(): Promise<void>; idle(): Promise<void> } & typeof env.cls.lectures;
+    await lectures.refresh();
+    await lectures.edit.setText(id, 's_l6a00', 'Boa tarde, turma de Direito.');
+    await env.idle();
+    await lectures.idle();
+    await env.search.settled(env.classId);
+    const hits = await env.search.passages(env.classId, 'boa tarde turma');
+    expect(hits.find((p) => p.source.kind === 'lecture')?.text).toContain('Boa tarde, turma de Direito.');
+    env.s.dispose();
+  });
+});

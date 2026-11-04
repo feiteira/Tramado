@@ -47,6 +47,11 @@ function inline(nodes: Inline[], props: MarkdownViewProps, key = ''): ReactNode[
   });
 }
 
+const TASK_BOX: React.CSSProperties = {
+  display: 'inline-grid', placeItems: 'center', width: '1em', height: '1em', marginInlineEnd: '0.5em', verticalAlign: '-0.1em',
+  border: '1.5px solid var(--ink-3)', borderRadius: 3, fontSize: '0.8em', lineHeight: 1, color: 'var(--accent-text)',
+};
+
 function block(b: Block, i: number, props: MarkdownViewProps): ReactNode {
   switch (b.t) {
     case 'heading': {
@@ -56,7 +61,24 @@ function block(b: Block, i: number, props: MarkdownViewProps): ReactNode {
     case 'para': return <p key={i}>{inline(b.c, props)}</p>;
     case 'list': {
       const L = b.ordered ? 'ol' : 'ul';
-      return <L key={i}>{b.items.map((it, j) => <li key={j} style={{ marginInlineStart: it.depth * 16 }}>{inline(it.c, props)}</li>)}</L>;
+      return (
+        <L key={i}>
+          {b.items.map((it, j) => {
+            // "- [ ] task" / "- [x] done": a checklist item (read-only box; the note editor changes the text).
+            const first = it.c[0];
+            const m = first?.t === 'text' ? /^\[([ xX])\]\s+/.exec(first.v) : null;
+            if (!m || first?.t !== 'text') return <li key={j} style={{ marginInlineStart: it.depth * 16 }}>{inline(it.c, props)}</li>;
+            const done = m[1] !== ' ';
+            const rest: Inline[] = [{ t: 'text', v: first.v.slice(m[0].length) }, ...it.c.slice(1)];
+            return (
+              <li key={j} className="md-task" data-done={done ? 'true' : 'false'} style={{ marginInlineStart: it.depth * 16, listStyle: 'none' }}>
+                <span className="md-task__box" role="img" aria-label={done ? '☑' : '☐'} style={TASK_BOX}>{done ? '✓' : ''}</span>
+                <span className="md-task__text" style={done ? { color: 'var(--ink-3)', textDecoration: 'line-through' } : undefined}>{inline(rest, props)}</span>
+              </li>
+            );
+          })}
+        </L>
+      );
     }
     case 'table':
       return (

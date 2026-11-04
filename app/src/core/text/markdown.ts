@@ -113,7 +113,8 @@ export function parseInline(s: string, options: MarkdownOptions = {}): Inline[] 
     } else if ((m = /^`([^`]+)`/.exec(rest))) {
       flush();
       out.push({ t: 'code', v: m[1]! });
-    } else if ((m = /^\[([^\]]+)\]\(([^)\s]+)\)/.exec(rest))) {
+    } else if ((m = /^\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/.exec(rest))) {
+      // The target may hold balanced parentheses, one level (CommonMark): "…/Lei (texto fictício).pdf?page=9".
       flush();
       const href = safeHref(m[2]!) ?? (options.relative ? safeRelativeHref(m[2]!) : null);
       // An unsafe target keeps only its label, as text: there is nothing to click.

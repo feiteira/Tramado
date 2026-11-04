@@ -22,4 +22,6 @@ export interface SearchService {
   settled?(classId: ClassId): Promise<IndexStatus>;
   // T-DOCS (additive): re-read the class's sources now (private notes have no file events).
   refresh?(classId: ClassId): void;
+  // UI-DOCS (additive): index one document again although its file did not change (its text cache did: AI OCR).
+  reindex?(classId: ClassId, path: ClassPath): void;
 }

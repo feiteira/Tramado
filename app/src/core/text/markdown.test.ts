@@ -44,6 +44,18 @@ describe('markdown', () => {
     ]);
   });
 
+  it('keeps balanced parentheses inside a link target', () => {
+    expect(parseInline('ver [Lei, p. 9](tramado:doc/Lei%20(texto).pdf?page=9).')).toEqual([
+      { t: 'text', v: 'ver ' },
+      { t: 'link', href: 'tramado:doc/Lei%20(texto).pdf?page=9', c: [{ t: 'text', v: 'Lei, p. 9' }] },
+      { t: 'text', v: '.' },
+    ]);
+    expect(parseInline('[a](https://x.org/b) (c)')).toEqual([
+      { t: 'link', href: 'https://x.org/b', c: [{ t: 'text', v: 'a' }] },
+      { t: 'text', v: ' (c)' },
+    ]);
+  });
+
   it('leaves lone and spaced asterisks alone', () => {
     expect(inlineText(parseInline('2 * 3 = 6 and 4 * 5'))).toBe('2 * 3 = 6 and 4 * 5');
     expect(parseInline('rated 5* overall')).toEqual([{ t: 'text', v: 'rated 5* overall' }]);
