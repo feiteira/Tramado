@@ -14,7 +14,7 @@ import { dashed, isClassId, shortIdOf, type ClassId, type ClassPath, type Device
 import { deviceIdChecks, signedMessageFromCanonical } from '../../core/model/sig';
 import { decide } from '../../core/sync/admission';
 import { decodeInvite } from '../../core/sync/invite';
-import { blocksHash } from '../../core/sync/trust';
+import { blocksHash, writerOf } from '../../core/sync/trust';
 import type {
   CaughtUp, ClassEntry, ClassPolicy, DeviceView, FileSyncInfo, FolderOfferView, FolderView, JoinRequestView, Platform, SyncEvent, SyncStatus,
   VersionEntry,
@@ -54,6 +54,10 @@ export interface MemoryMesh {
   policy(name: string, classId: ClassId): ClassPolicy | null;
   /** Lets the wall clock of one device jump (a wrong clock). */
   setSkew(name: string, ms: number): void;
+  /** A foreign write by `by` whose `modifiedBy` claims device `as` (a modified Syncthing, folder spec §6.5). */
+  forgeAs(by: string, as: string, classId: ClassId, path: ClassPath, bytes: Uint8Array): void;
+  /** Turns the simulated Rust self-heal (§12.3) of a device off or on (default on). */
+  setSelfHeal(name: string, on: boolean): void;
 }
 
 type VV = Record<ShortId, number>;
@@ -97,6 +101,9 @@ interface Device {
   paused: boolean;
   startedAt: number;
   applying: boolean;
+  /** Rust's private mirror of my own machine files ≤ 1 MiB except transcript.* (sync spec §12.3). */
+  mirror: Map<string, Uint8Array | null>;
+  healOff: boolean;
 }
 
 const enc = new TextEncoder();
@@ -193,6 +200,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       f.files.set(p, m);
       f.db.set(p, m);
       f.global.set(p, m);
+      if (isOwn(d, f.classId, p, file.bytes)) d.mirror.set(`${f.classId}|${p}`, file.bytes.slice());
     }
   }
   function localChange(d: Device, classId: ClassId, path: ClassPath, bytes: Uint8Array | null, by: ShortId = d.short) {
@@ -208,7 +216,44 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
     f.files.set(path, m);
     f.db.set(path, m);
     f.global.set(path, m);
+    if (by === d.short && isOwn(d, classId, path, full)) d.mirror.set(`${classId}|${path}`, full ? full.slice() : null);
     scheduleAuto();
+  }
+
+  /** Whether a machine file is this device's own (its writer), for the self-heal mirror. */
+  function isOwn(d: Device, classId: ClassId, path: ClassPath, bytes: Uint8Array | null): boolean {
+    const kind = classifyPath(path).kind;
+    if (kind === 'transcriptJson' || kind === 'transcriptMd' || kind === 'transcriptVtt' || kind === 'audio' || kind === 'content' || kind === 'conflictCopy' || kind === 'skipped') return false;
+    if (bytes && bytes.length > 1024 * 1024) return false;
+    let parsed: unknown = null;
+    const b = bytes ?? d.platform.mem.list(classId).get(path)?.bytes ?? null;
+    if (b && path.endsWith('.json')) {
+      try {
+        parsed = JSON.parse(new TextDecoder().decode(b));
+      } catch {
+        parsed = null;
+      }
+    }
+    const w = writerOf(path, parsed) ?? classifyPath(path).deviceId ?? null;
+    return w === d.deviceId || (w === null && d.mirror.has(`${classId}|${path}`));
+  }
+
+  /** §12.3: a foreign write to (or deletion of) one of my files is rewritten from the mirror. */
+  function selfHeal(d: Device, f: Folder, path: ClassPath, m: Meta) {
+    if (m.modifiedBy === d.short) return;
+    const key = `${f.classId}|${path}`;
+    if (!d.mirror.has(key)) return;
+    const mine = d.mirror.get(key)!;
+    const cur = bytesOf(d, f.classId, path);
+    if (mine === null || (cur && toBase64(cur) === toBase64(mine))) return;
+    d.applying = true;
+    try {
+      d.platform.mem.applyRemote(f.classId, path, mine, { modifiedBy: d.short, mtimeMs: wall(d) });
+    } finally {
+      d.applying = false;
+    }
+    localChange(d, f.classId, path, mine);
+    emit(d, { type: 'foreignWrite', classId: f.classId, path, modifiedBy: m.modifiedBy, healed: true });
   }
 
   // ── exchange ──────────────────────────────────────────────────────────────────────────────────
@@ -244,6 +289,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       f.db.set(path, meta);
       emit(to, e);
     }
+    if (to.up && !to.healOff) selfHeal(to, f, path, meta);
   }
   /** Concurrent versions: the older modification (equal: the larger device ID) becomes the conflict copy (Syncthing). */
   function resolveConflict(a: Device, b: Device, fa: Folder, fb: Folder, path: ClassPath, ma: Meta, mb: Meta, ca: Changed, cb: Changed) {
@@ -699,7 +745,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       }
       if (index >= DEVICE_KEYS) throw new Error('mesh: at most 32 devices');
       const d = { name, index, up: true, group: 0, skew: opts.clockSkewMs?.[name] ?? 0, seq: 0, folders: new Map(), policies: new Map(), leftClasses: new Set(),
-        offers: new Map(), lastSeen: new Map(), pendingEvents: [], waiters: new Set(), paused: false, startedAt: startMs, applying: false } as unknown as Device;
+        offers: new Map(), lastSeen: new Map(), pendingEvents: [], waiters: new Set(), paused: false, startedAt: startMs, applying: false, mirror: new Map(), healOff: false } as unknown as Device;
       devices.set(name, d);
       const platform = createMemoryPlatform({ kind: 'test', deviceIndex: index, clock: { now: () => wall(d) }, rand: mulberry32(opts.seed * 31 + index), root: `/home/${name}/Tramado` });
       const internals = localSyncInternals(platform.sync);
@@ -818,6 +864,17 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       }
       localChange(d, classId, path, bytes.length ? bytes : null);
     },
+    forgeAs(by, as, classId, path, bytes) {
+      const d = dev(by);
+      const claimed = dev(as).short;
+      d.applying = true;
+      try {
+        d.platform.mem.applyRemote(classId, path, bytes.length ? bytes : null, { modifiedBy: claimed, mtimeMs: wall(d) });
+      } finally {
+        d.applying = false;
+      }
+      localChange(d, classId, path, bytes.length ? bytes : null, claimed);
+    },
     files(name, classId) {
       return new Map([...dev(name).platform.mem.list(classId)].map(([p, f]) => [p, f.bytes]));
     },
@@ -832,6 +889,9 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
     policy: (name, classId) => dev(name).policies.get(classId) ?? null,
     setSkew(name, ms) {
       dev(name).skew = ms;
+    },
+    setSelfHeal(name, on) {
+      dev(name).healOff = !on;
     },
   };
 

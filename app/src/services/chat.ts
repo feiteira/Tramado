@@ -17,6 +17,7 @@ import {
 } from '../core/sync/chat';
 import { jsonlLine } from '../core/json';
 import type { ClassServiceImpl } from './class';
+import type { ClassEntry } from '../platform/types';
 import type { AppContext } from './context';
 import { Store } from './store';
 import type { SyncServiceImpl } from './sync';
@@ -76,6 +77,7 @@ export function viewCitations(classId: ClassId, text: string, cites: StorageCita
 export function createChatService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ChatService {
   const { platform, clock } = ctx;
   const { store, classId } = cls;
+  const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
   const view = new Store<ChatView>({ items: [], pins: [], unread: 0, mentions: 0, olderAvailable: false, newerFormatLines: 0 });
   const files = new Map<ClassPath, FileState>();
   const loadedMonths = new Map<DeviceId, Set<string>>();
@@ -240,7 +242,7 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
   const hasUnsent = () => folded.some((x) => x.ref.deviceId === me() && !sent.has(x.key));
 
   function schedulePoll(delay: number) {
-    if (!store.state.get().entry.shared || pollTimer) return;
+    if (!liveEntry().shared || pollTimer) return;
     const wait = Math.max(delay, lastPoll + POLL_MIN_MS - clock.mono());
     pollTimer = clock.setTimeout(() => {
       pollTimer = null;

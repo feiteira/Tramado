@@ -17,6 +17,7 @@ import {
 } from '../core/sync/claims';
 import { sha256Hex } from '../core/util/sha256';
 import type { ClassServiceImpl } from './class';
+import type { ClassEntry } from '../platform/types';
 import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { SyncServiceImpl } from './sync';
@@ -46,6 +47,7 @@ const dec = new TextDecoder();
 export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ClaimEngineImpl {
   const { platform, clock } = ctx;
   const { store, classId } = cls;
+  const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
   const obs = new Map<ClassPath, Obs>();
   const transcripts = new Map<Ulid, { round: number; writer: DeviceId } | null>();
   const missingSince = new Map<ClassPath, number>();
@@ -124,7 +126,7 @@ export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: 
       }
       if (!missingSince.has(path)) missingSince.set(path, clock.mono());
       const item = store.state.get().index.lectures.get(o.lectureId);
-      if (!item || !store.state.get().entry.shared) continue;
+      if (!item || !liveEntry().shared) continue;
       try {
         const [fi] = await platform.sync.fileInfo(classId, [`${item.dir}/transcript.json`]);
         inCluster.set(path, !!fi && !fi.globalDeleted && fi.globalModifiedBy === shortIdOf(o.claim.deviceId));
@@ -280,7 +282,7 @@ export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: 
 
   /** §14.5 "on app start": wait until caught up (≤ 60 s), then yield to another live claim or heartbeat at once. */
   async function resume(list: Obs[]) {
-    if (store.state.get().entry.shared) await platform.sync.waitCaughtUp(classId, 60_000).catch(() => undefined);
+    if (liveEntry().shared) await platform.sync.waitCaughtUp(classId, 60_000).catch(() => undefined);
     await reload(null);
     for (const o of list) {
       const input = rankInput(o.lectureId, o.kind);
@@ -338,7 +340,7 @@ export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: 
       try {
         await writeMine(lectureId, kind, claim);
         recompute();
-        if (store.state.get().entry.shared) {
+        if (liveEntry().shared) {
           await sleep(SETTLE_MS);
           const connected = Object.entries((app().sync as SyncServiceImpl).connections?.get() ?? {}).filter(([d, c]) => c.connected && d !== deviceId).length;
           if (connected > 0) {

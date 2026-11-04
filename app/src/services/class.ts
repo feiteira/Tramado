@@ -24,6 +24,7 @@ import { signRecord } from '../core/sync/sign';
 import { effectiveVolunteer } from '../core/sync/claims';
 import { sha256Hex } from '../core/util/sha256';
 import type { ClassPolicy } from '../platform/types';
+import type { ClassEntry } from '../platform/types';
 import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { TrustServiceImpl } from './trust';
@@ -58,6 +59,8 @@ export interface ClassModel {
   me: { deviceId: DeviceId; memberId: MemberId };
   /** Records of a newer format seen (G14). */
   newer: number;
+  /** Devices that left, with the names of their last member file (attribution of their older records). */
+  former: ReadonlyMap<DeviceId, { memberId: MemberId; name: string; deviceName: string }>;
 }
 
 /** What the other services of the class reach behind ClassService (additive, T-SYNC). */
@@ -102,9 +105,10 @@ function defaultMeta(classFile: ClassFile | null, dirName: string): EffectiveMet
 export function createClassService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ClassServiceImpl {
   const { platform, clock } = ctx;
   const { store, classId } = cls;
+  const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
   const me = () => ({ deviceId: ctx.device.get()?.deviceId ?? '', memberId: ctx.identity.get()?.memberId ?? '' });
   const trust = () => app().forClass(classId).trust as TrustServiceImpl;
-  const entry = () => store.state.get().entry;
+  const entry = liveEntry;
 
   const emptyModel = (): ClassModel => {
     const bindings = computeBindings([]);
@@ -112,7 +116,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       revision: 0, loaded: false, classFile: null, folded: { values: {}, hlcs: {}, writers: {} }, meta: defaultMeta(null, entry().dirName),
       organisers: replayOrganisers(null, [], () => null, new Set()), bindings,
       bans: effectiveBans([], () => null, () => false, new Map()), members: new Map(), consents: [],
-      mod: { pins: [], hidden: [], hideSuggestions: [], audioRemoved: new Set(), rotations: [] }, me: me(), newer: 0,
+      mod: { pins: [], hidden: [], hideSuggestions: [], audioRemoved: new Set(), rotations: [] }, me: me(), newer: 0, former: new Map(),
     };
   };
   const model = new Store<ClassModel>(emptyModel());
@@ -147,6 +151,8 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
     }
   }
 
+  /** A JSONL line signed under the previous ID of a rotation chain is valid too (folder spec §6.6; rotation is v1.1). */
+  let rotatedFrom: ClassId | null = null;
   async function readSignedLines<T extends { sig?: unknown }>(path: ClassPath, format: 'tramado.consent' | 'tramado.mod', ok: (l: unknown) => l is T): Promise<T[]> {
     const loaded = await store.readJsonl(path, parserFor(format) as (raw: unknown) => { ok: boolean; value: T | null; newer: boolean; unknown: string[] });
     const writer = classifyPath(path).deviceId!;
@@ -156,7 +162,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       const key = `${path}|${sha256Hex(JSON.stringify(value))}`;
       let good = lineSigs.get(key);
       if (good === undefined) {
-        good = await verifySig(value as unknown as Record<string, unknown>, [classId, ...(entry().aliases ?? [])], path, writer);
+        good = await verifySig(value as unknown as Record<string, unknown>, [classId, ...(rotatedFrom ? [rotatedFrom] : [])], path, writer);
         lineSigs.set(key, good);
       }
       if (good) out.push(value);
@@ -176,6 +182,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       return [...set].sort();
     };
     const classFile = await readSigned<ClassFile>('.tramado/class.json', 'tramado.class');
+    rotatedFrom = typeof classFile?.rotatedFrom === 'string' ? classFile.rotatedFrom : null;
     let newer = 0;
     if (classFile && classFile.version > FORMATS['tramado.class']) newer++;
 
@@ -189,7 +196,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
         if (kept) {
           try {
             const f = JSON.parse(dec.decode(kept)) as MemberFile;
-            if (memberShapeOk(f, deviceId)) t.noteLeft(deviceId, f.memberId, ctx.hlc.tick());
+            if (memberShapeOk(f, deviceId)) t.noteLeft(deviceId, f.memberId, ctx.hlc.tick(), { name: f.name, deviceName: f.deviceName });
           } catch {
             // a broken kept copy is simply forgotten
           }
@@ -203,7 +210,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       const key = `${path}|${sha256Hex(JSON.stringify(f))}`;
       let check = memberChecks.get(key);
       if (!check) {
-        check = await checkMemberFile(f, [classId, ...(entry().aliases ?? [])], path);
+        check = await checkMemberFile(f, classId, path);
         memberChecks.set(key, check);
       }
       members.set(deviceId, { file: f, check });
@@ -264,6 +271,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
 
     const next: ClassModel = {
       revision: model.get().revision + 1, loaded: true, classFile, folded, meta, organisers, bindings, bans, members, consents, mod, me: me(), newer,
+      former: new Map(t ? [...t.left()].filter(([d]) => !members.has(d)).map(([d, v]) => [d, { memberId: v.memberId, name: v.name, deviceName: v.deviceName }]) : []),
     };
     model.set(next);
     const dirsKey = JSON.stringify(meta.dirs);
@@ -547,7 +555,9 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       const m = model.get();
       const who = m.bindings.bound.get(d);
       const person = who ? m.bindings.people.find((p) => p.memberId === who) : undefined;
-      return person?.name ?? m.members.get(d)?.file.deviceName ?? (d === me().deviceId ? ctx.identity.get()?.name ?? '' : d.slice(0, 7));
+      const gone = m.former.get(d);
+      const sameNow = gone ? m.bindings.people.find((p) => p.memberId === gone.memberId) : undefined;
+      return person?.name ?? sameNow?.name ?? (gone?.name || undefined) ?? m.members.get(d)?.file.deviceName ?? (d === me().deviceId ? ctx.identity.get()?.name ?? '' : d.slice(0, 7));
     },
     deviceRef(d) {
       const m = model.get();
@@ -556,7 +566,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       const mine = me();
       const self = d === mine.deviceId;
       return {
-        deviceId: d, deviceName: f?.deviceName ?? (self ? ctx.identity.get()?.deviceName ?? '' : d.slice(0, 7)),
+        deviceId: d, deviceName: f?.deviceName ?? m.former.get(d)?.deviceName ?? (self ? ctx.identity.get()?.deviceName ?? '' : d.slice(0, 7)),
         memberId: bound || (self ? mine.memberId : ''), memberName: service.nameOf(d), self,
       };
     },

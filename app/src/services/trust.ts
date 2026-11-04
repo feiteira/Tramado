@@ -27,7 +27,7 @@ const REMOTE_MEMORY_MS = 10 * 60_000;
 const KEEP_DELETED_MS = 31 * 86_400_000;
 const KEPT_MAX_BYTES = 64 * 1024;
 
-export interface FormerEntry { memberId: MemberId; leftHlc: Hlc }
+export interface FormerEntry { memberId: MemberId; leftHlc: Hlc; name: string; deviceName: string }
 
 /** What other services of the class reach behind the TrustGate (additive, T-SYNC). */
 export interface TrustServiceImpl extends TrustService {
@@ -43,7 +43,7 @@ export interface TrustServiceImpl extends TrustService {
   dropKept(path: ClassPath): Promise<void>;
   /** Devices that left (sync spec §10 `left()`), with their last binding (folder spec §8.3.1). */
   left(): ReadonlyMap<DeviceId, FormerEntry>;
-  noteLeft(deviceId: DeviceId, memberId: MemberId, hlc: Hlc): void;
+  noteLeft(deviceId: DeviceId, memberId: MemberId, hlc: Hlc, names?: { name: string; deviceName: string }): void;
   /** The monotonic set of vacated memberIds (folder spec §8.2). */
   vacated(): ReadonlySet<MemberId>;
   addVacated(ids: Iterable<MemberId>): void;
@@ -71,6 +71,7 @@ export function createTrustService(ctx: AppContext, app: () => AppServices, cls:
   const remote = new Map<ClassPath, { by: ShortId; mono: number }>();
   const retries = new Map<ClassPath, { since: number; cancel: () => void }>();
   const sigCache = new Map<string, boolean>();
+  const counted = new Set<string>();
 
   const load = () => (loaded ??= (async () => {
     try {
@@ -115,10 +116,9 @@ export function createTrustService(ctx: AppContext, app: () => AppServices, cls:
   const asLocal = (i: FileSyncInfo | null): LocalVersionInfo | null =>
     i ? { localModifiedBy: i.localModifiedBy, localBlocksHash: i.localBlocksHash, localDeleted: i.localDeleted } : null;
 
-  const classIds = (): ClassId[] => {
-    const entry = cls.store.state.get().entry;
-    return [classId, ...(entry.aliases ?? [])];
-  };
+  // Whole-file records verify under this class ID only (a fork is a new class, sync spec §17); lines of a
+  // rotation chain (v1.1) are checked by their readers.
+  const classIds = (): ClassId[] => [classId];
 
   async function sigOk(path: ClassPath, parsed: unknown, writer: DeviceId | null): Promise<boolean> {
     if (!writer || typeof parsed !== 'object' || parsed === null) return false;
@@ -146,6 +146,13 @@ export function createTrustService(ctx: AppContext, app: () => AppServices, cls:
     if (round > pinned.round) {
       const c = await claims.trustedClaim?.(lectureId, 'transcribe', writer);
       if (c && c.round === round) return true;
+    }
+    // Same round, both sides of a partition finished (sync spec §14.5 owner duties): the writer whose done claim
+    // wins the round replaces the other one. (Requested addition to folder spec §6.2 rule 3.)
+    if (round === pinned.round) {
+      const w = (app().forClass(classId).claims as unknown as { winner(l: Ulid, k: 'transcribe'): { deviceId: DeviceId; status: string } | null }).winner(lectureId, 'transcribe');
+      const c = await claims.trustedClaim?.(lectureId, 'transcribe', writer);
+      if (w && w.deviceId === writer && w.status === 'done' && c && c.round === round) return true;
     }
     const foldWinner = await claims.foldWinner?.(lectureId);
     if (foldWinner === writer && (await claims.foldTrigger?.(lectureId))) return true;
@@ -230,6 +237,10 @@ export function createTrustService(ctx: AppContext, app: () => AppServices, cls:
         scheduleRecheck(path);
         return { kind: 'untrusted', reason: 'pending' };
       case 'untrusted': {
+        if (result.reason === 'writer-changed') scheduleRecheck(path);   // the claims that allow it may arrive just after
+        const seen = `${path}|${sha256Hex(bytes)}`;
+        if (counted.has(seen)) return { kind: 'untrusted', reason: result.reason === 'writer-changed' ? 'writer-changed' : 'foreign-write' };
+        counted.add(seen);
         foreign++;
         const sync = app().sync as unknown as { noteForeignWrite?(classId: ClassId, path: ClassPath): void };
         sync.noteForeignWrite?.(classId, path);
@@ -294,10 +305,15 @@ export function createTrustService(ctx: AppContext, app: () => AppServices, cls:
       persist();
       await platform.privateFiles.remove(classId, `trusted/${path}`).catch(() => undefined);
     },
-    left: () => new Map(Object.entries(cache.left).map(([d, v]) => [d, { memberId: (v as { memberId?: string }).memberId ?? '', leftHlc: v.hlc }])),
-    noteLeft(deviceId, memberId, hlc) {
+    left: () => new Map(Object.entries(cache.left).map(([d, v]) => {
+      const x = v as { memberId?: string; name?: string; deviceName?: string; hlc: Hlc };
+      return [d, { memberId: x.memberId ?? '', leftHlc: x.hlc, name: x.name ?? '', deviceName: x.deviceName ?? '' }];
+    })),
+    noteLeft(deviceId, memberId, hlc, names) {
       if (cache.left[deviceId]) return;
-      (cache.left as Record<string, { at: string; hlc: Hlc; memberId?: MemberId }>)[deviceId] = { at: instant(clock.now()), hlc, memberId };
+      (cache.left as Record<string, { at: string; hlc: Hlc; memberId?: MemberId; name?: string; deviceName?: string }>)[deviceId] = {
+        at: instant(clock.now()), hlc, memberId, ...(names ? { name: names.name, deviceName: names.deviceName } : {}),
+      };
       persist();
     },
     vacated: () => new Set(cache.vacated),

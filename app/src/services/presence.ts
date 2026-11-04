@@ -7,6 +7,7 @@ import { classifyPath } from '../core/model/paths';
 import { instant, parseRfc3339 } from '../core/model/time';
 import type { ClassId, DeviceId } from '../core/model/ids';
 import type { PresenceFile } from '../core/model/files';
+import type { ClassEntry } from '../platform/types';
 import type { AppContext } from './context';
 import { Store } from './store';
 import type { SyncServiceImpl } from './sync';
@@ -25,6 +26,7 @@ export interface PresenceServiceImpl extends PresenceService {
 export function createPresenceService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): PresenceServiceImpl {
   const { platform, clock } = ctx;
   const { store, classId } = cls;
+  const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
   const tracker = new PresenceTracker();
   const others = new Store<Others>({});
   let activity: PresenceFile['activity'] = {};
@@ -78,7 +80,8 @@ export function createPresenceService(ctx: AppContext, app: () => AppServices, c
   async function write() {
     const deviceId = me();
     const identity = ctx.identity.get();
-    if (!deviceId || !identity || !store.state.get().entry.shared || store.state.get().entry.leaving) return;
+    const e = liveEntry();
+    if (!deviceId || !identity || !e.shared || e.leaving) return;
     const power = await platform.system.power().catch(() => ({ source: 'unknown' as const, percent: null }));
     const file: PresenceFile = {
       format: 'tramado.presence', version: 1, deviceId, memberId: identity.memberId, seq: ++seq, hlc: ctx.hlc.tick(), updatedAt: instant(clock.now()),
