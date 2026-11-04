@@ -68,6 +68,7 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
   let started = false;
   let disposed = false;
   let noticeRaised = false;
+  let lastCaps: string | null = null;
   let speechInfo: SpeechInfo | null = null;
 
   const track = <T>(p: Promise<T>): Promise<T> => {
@@ -495,6 +496,10 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     }
     for (const k of [...timers.keys()]) if (!seen.has(k)) cancelTimer(k);
     state.update((s) => ({ ...s, lectures: views, volunteer: pref, volunteerEffective: effective, cloud, volunteerNotice: notice }));
+    // The member files report caps (local model, cloud, effective volunteering): refresh them when these change.
+    const caps = JSON.stringify([model?.id ?? null, cloud.on, effective]);
+    if (lastCaps !== null && caps !== lastCaps) void refreshMemberFiles();
+    lastCaps = caps;
     if (notice && !noticeRaised) {
       // Also as a system notification, once per session, for when the window is hidden (UX §5.22 `volunteerOn`).
       noticeRaised = true;
