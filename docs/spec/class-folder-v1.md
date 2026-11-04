@@ -659,17 +659,24 @@ Readers apply this filter before taking the maximum.
 ```
 S = { class.json.createdBy.memberId }
 vacated = memberIds all of whose bound devices have left()   # observed by this reader; never shrinks (kept in the trust cache)
+departed(m) = the greatest `hlc` of the trusted meta files of the devices bound to m      # the departure stamp (below)
 for op in all organiserOps sorted by hlc:
   author = person bound to the device whose file holds op      # §8.3.1; a device that left keeps its last binding for ops
                                                                #   stamped before it left
   valid  = author ∈ S
-        or (op.op == "add" and op.memberId == author and S ⊆ vacated)   # "Become an organiser"
+        or (op.op == "add" and op.memberId == author and S ⊆ vacated
+            and op.hlc > departed(m) for every m ∈ S)          # "Become an organiser", only after they left
   if valid and op.op == "add" and author ∉ S: S = S − vacated  # the vacancy clause also drops the departed organisers
   if valid: op.op == "add" ? S.add(op.memberId) : S.remove(op.memberId)
 organisers = S
 ```
 
-The vacancy clause lets anyone "Become an organiser" once every organiser has left (`critique G6`). Vacancy is
+The vacancy clause lets anyone "Become an organiser" once every organiser has left (`critique G6`). **Departure
+stamp** (G2 decision, 2026-11-04): a leaving device rewrites its meta file once more (same fields and ops, a fresh
+`hlc`, signed) immediately before it deletes its member file (sync spec §17), so `departed(m)` is at or after the moment
+m left, and is the same on every reader. A self-add stamped before that moment stays invalid forever, even after the
+departure is seen (without the stamp, a self-add written while the organisers were still present became valid
+retroactively, together with every organiser-only value its author stamped after it). Vacancy is
 monotonic: an organiser who leaves and later rejoins is not an organiser again until a current organiser adds them,
 and the ops of whoever stepped in stay valid. `vacated` can differ briefly between devices while departures sync.
 
@@ -836,6 +843,8 @@ interface LectureFile {
   idNonce: Nonce;
   title: string;                                   // 1–200 chars
   startedAt: Instant;
+  utcOffsetMin?: number;            // the recorder's UTC offset at startedAt, in minutes (+60 = UTC+1); written since
+                                    //   0.1 (G2); the local date of transcript.md and of the directory name. Absent: UTC
   durationMs: number;
   mode: "room" | "online" | "import";
   language: Lang | "auto";
@@ -921,7 +930,8 @@ interface TranscriptFile {
     modelSha256?: Hex64;
     vad?: string;                    // "silero-v5.1.2"
   };
-  speakers: Array<{ id: string; label: string }>;        // ids: "lecture" | "me" | "class" | "spk_<n>"
+  speakers: Array<{ id: string; label: string; labelHlc?: Hlc }>;   // ids: "lecture" | "me" | "class" | "spk_<n>";
+                                     //   labelHlc = HLC of the last folded label_speaker line (LWW, §8.9)
   segments: Segment[];               // sorted by startMs
   folded: Record<DeviceId, Hlc>;     // per device: HLC of the last edit line folded into this file (§8.9)
   updatedAt: Instant;
@@ -942,7 +952,7 @@ interface Segment {
 Rules:
 
 - Writer: the **transcript owner** = the device in `writer.deviceId`. It is first the winner of the
-  transcription claim, later possibly (v1.1) the winner of a fold claim (§8.10, sync spec §14.8). It is also
+  transcription claim, later possibly the winner of a fold claim (§8.10, sync spec §14.8). It is also
   the only writer of `transcript.md` and `transcript.vtt`, which it regenerates (debounced 5 s) whenever
   `transcript.json` changes. A device that is not the winner of the current round never writes `transcript.*`
   for that round, even when its own job finished (sync spec §14.5).
@@ -966,6 +976,9 @@ when it matches `es`, otherwise in English; §2 `Lang` matching):
 **[00:01:05] Professor:** …
 ```
 
+The date on the third line is the recorder's local date of `startedAt` (`lecture.json` `utcOffsetMin`; the UTC date
+when it is absent, G2). A `merge` joins the two texts with exactly one space, as written above.
+
 A paragraph joins consecutive segments of the same speaker until there is a gap of 2 s or more, or the
 paragraph reaches 60 s. The timestamp is the first segment's `startMs` as `HH:MM:SS`. The speaker
 label is the `speakers[].label`.
@@ -984,8 +997,8 @@ s_8k2Lq
 ### 8.9 `.tramado/edits/<lectureId>/<deviceId>.jsonl` (transcript corrections)
 
 Any member may correct a transcript. Corrections are operations in the editor's own log; the transcript
-owner folds them into `transcript.json`. Tramado 0.1 shows transcripts read-only and writes no edit lines
-(architecture §1.1); readers still apply lines written by newer apps exactly as below.
+owner folds them into `transcript.json`. Tramado 0.1 writes, applies and folds them (architecture §1.1, scope change
+of 2026-11-04).
 
 ```ts
 interface TranscriptEditLine {
@@ -1035,7 +1048,9 @@ effective(transcript, logs):
       merge:         w = find(op.with); if w exists and w != seg:
                        seg.text = seg.text + " " + w.text; seg.endMs = max(seg.endMs, w.endMs)
                        seg.merged += [w.id] + (w.merged ?? []); remove w
-      label_speaker: speakers[op.speakerId].label = op.label   (LWW by hlc per speaker)
+      label_speaker: sp = speakers[op.speakerId]
+                     if op.hlc > (sp.labelHlc ?? ""): sp.label = op.label; sp.labelHlc = op.hlc
+                     (LWW per speaker; the stored labelHlc keeps a late, older line from undoing a folded label)
   return transcript
 ```
 

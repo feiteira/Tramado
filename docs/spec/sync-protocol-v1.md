@@ -1274,6 +1274,7 @@ member before my folder goes away, and often nobody is online when I leave.
 ```
 leave(cls, afterwards: "keepLocal" | "trash", deleteMyNotes):          # the app, then Rust (sync_leave_class)
   for each of my claims in cls with status claimed/working: abort the job; set status "released"; scan
+  rewrite .tramado/meta/<me>.json with a fresh hlc (the departure stamp, folder spec §8.2); scan
   delete .tramado/presence/<me>.json and .tramado/members/<me>.json; scan .tramado
   classes.json: leaving = {since: now, afterwards}; the class leaves the UI at once (it is listed only under
                 Settings › Storage as "Leaving — waiting for a classmate to receive it")
@@ -1304,7 +1305,7 @@ finish_leaving(cls):    # Rust: at start, on FolderCompletion / RemoteIndexUpdat
   Mesh test: leave with keepLocal → share → no file of the original class changes on the other members.
 - My chat logs, edits, answers and meta values stay in the class as history. Other members remove my devices when
   they see my member file deleted by me (`left()` in §10), and fold claims take over any transcript I owned
-  (§14.8, v1.1). Leaving propagated in about 1.5 s in the lab when a member was online.
+  (§14.8). Leaving propagated in about 1.5 s in the lab when a member was online.
 
 ---
 

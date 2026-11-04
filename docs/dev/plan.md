@@ -1603,3 +1603,20 @@ run: `check:rust`, `lint:rust` (full workspace with whisper), `cargo test -p tra
 fold (UI-LECTURES, who owns `services/{lectures,transcription}.ts` from G1); `joinStalled` counts from `join()`, not from
 the first connection (UI-GROUP); chat is not in the search index, so the palette's Chat group needs another source
 (UI-DOCS); `features/search/provider.ts` is a G1 stand-in whose rows do not navigate yet (UI-DOCS).
+
+## 16. Lead decisions before wave 2 (2026-11-04)
+
+1. **§15 item 16 (organiser vacancy) — decided: departure stamp.** Folder spec §8.2 now requires a "Become an
+   organiser" self-add to be stamped after `departed(m)` (the greatest meta `hlc` of m's bound devices) for every
+   remaining organiser m; sync spec §17 `leave()` rewrites the leaving device's meta with a fresh `hlc` right before
+   deleting its member file. Deterministic on every reader (no observation times). A member with no meta file has no
+   stamp (the condition holds). Owner: UI-GROUP (`core/sync` replay + the leave path, with property/mesh tests).
+2. **§15 item 17 (transcript wording) — decided.** `speakers[]` gain `labelHlc?` (folded `label_speaker` LWW compares
+   against it); `lecture.json` gains `utcOffsetMin?` (written by 0.1 recordings and imports), and the `.md` date is
+   the recorder's local date (UTC when absent); `merge` joins with exactly one space (unchanged). Folder spec §8.6,
+   §8.8, §8.9 updated; §8.9 no longer says 0.1 writes no edit lines. Owner: UI-LECTURES (`core/transcript`,
+   `services/recording.ts`); the demo seed change is requested from the integrator.
+3. **§15 item 15 (`left` sync event)** — UI-GROUP implements the TS side (type in its report as a contract change,
+   handling in `SyncService`); the Rust emission is applied by the G2 integrator.
+4. **R-SPEECH** was merged at G1, so wave 2 has no R-SPEECH package; its G1 gaps (§15 item 18) go to INT.
+
