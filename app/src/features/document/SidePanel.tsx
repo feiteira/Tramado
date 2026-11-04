@@ -21,7 +21,6 @@ import { AiCard } from '../../ui/tramado/AiCard';
 import { CitationChip } from '../../ui/tramado/CitationChip';
 import { Composer } from '../../ui/tramado/Composer';
 import { MarkdownView } from '../../ui/tramado/MarkdownView';
-import { MarkerIcon } from '../../ui/tramado/MarkerIcon';
 import type { ViewCitation } from '../../services/types/viewModels';
 
 export type SideTab = 'highlights' | 'ask' | 'info';
@@ -54,7 +53,7 @@ export function SidePanel({ services, classId, doc, tab, onTab, highlights, onJu
   textLabel: string;
   onOpenCitation(c: ViewCitation): void;
 }) {
-  const { t, tp } = useI18n();
+  const { t } = useI18n();
   return (
     <aside className="docside" aria-label={t('documents.view.sideToggle')} data-testid="doc-side">
       <Tabs
@@ -75,7 +74,6 @@ export function SidePanel({ services, classId, doc, tab, onTab, highlights, onJu
           {tab === 'info' ? <Info services={services} classId={classId} doc={doc} onOcr={onOcr} ocrOffer={ocrOffer} textLabel={textLabel} /> : null}
         </div>
       </Tabs>
-      <span className="visually-hidden">{tp('common.count.documents', 1)}</span>
     </aside>
   );
 }

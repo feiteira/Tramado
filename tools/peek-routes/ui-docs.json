@@ -414,6 +414,9 @@
       },
       {
         "expect": "palette-result"
+      },
+      {
+        "expect-text": "palette=Lei Fundamental"
       }
     ]
   },
