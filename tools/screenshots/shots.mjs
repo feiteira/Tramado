@@ -1,6 +1,7 @@
 // The manual's screenshots (UX §7.4). Each is taken from the browser demo (fictional, app/src/demo) in en, pt and
 // es (unless `langs` says otherwise), with a fixed clock and seeded randomness, so the same code gives the same
-// pictures. `npm run screenshots` (tools/screenshots/capture.mjs) runs them.
+// pictures. `npm run screenshots` (tools/screenshots/capture.mjs) runs them and writes PNGs to docs/manual/img/<lang>/
+// (git-ignored there); the manual commits lossless WebP copies of the ones it uses (AGENTS.md, "Manual screenshots").
 //
 // A shot is { name, query, ready?, steps?, keepFocus?, theme?, langs? }:
 //   query      demo URL parameters (UX §7.2) besides lang, theme and clock
