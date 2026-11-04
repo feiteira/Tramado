@@ -254,7 +254,7 @@ describe('LectureService: corrections (folder spec §8.9, in 0.1)', () => {
     await settle();
     const t = d.get()!.transcript!;
     expect(t.segments.map((s) => s.text)).toEqual(['Bom dia, turma.', 'Hoje vamos ver', 'o artigo 18.º, n.º 3, da Constituição.', 'Isto costuma sair no exame, tomem nota.']);
-    expect(t.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Marta Reis' }]);
+    expect(t.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Marta Reis', labelHlc: expect.stringMatching(/-tkbnv23$/) }]);
     expect(t.unfolded).toBe(3);
     expect(t.correctedBy).toEqual({ s_aaaaa: ['TKBNV23'], s_bbbbb: ['TKBNV23'], s_ddddd: ['TKBNV23'] });
     expect(lectures.list.get()[0]!.transcription).toMatchObject({ kind: 'done', pendingEdits: 3 });
@@ -294,7 +294,7 @@ describe('LectureService: corrections (folder spec §8.9, in 0.1)', () => {
     expect(folded.revision).toBe(2);
     expect(folded.folded[me.deviceId]).toBe(log.length ? JSON.parse(dec.decode(await platform.fs.read(classId, `.tramado/edits/${id}/${me.deviceId}.jsonl`)).trim().split('\n').pop()!).hlc : '');
     expect(folded.segments.map((s) => s.id)).toEqual(['s_aaaaa', 's_bbbbb', newId, 's_ccccc']);
-    expect(folded.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis' }, { id: 'spk_1', label: 'Orador 1' }]);
+    expect(folded.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis', labelHlc: expect.any(String) }, { id: 'spk_1', label: 'Orador 1' }]);
     const md = dec.decode(await platform.fs.read(classId, 'Aulas/x/transcript.md'));
     expect(md).toContain('(revision 2)');
     expect(md).toContain('**[00:00:00] Prof.ª Reis:** Bom dia, turma.');

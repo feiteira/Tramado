@@ -346,5 +346,26 @@ describe('TranscriptionQueue: volunteering (sync spec §14.3)', () => {
     const priv = JSON.parse(dec.decode((await s.platform.privateFiles.read(s.classId, `lectures/${id}.json`))!));
     expect(typeof priv.nudgedAt).toBe('string');
   });
+
+  it('the hourly check raises the 24 h reminder while nothing else changes (UI-LECTURES)', async () => {
+    const s = await setup({ shared: true, speech: createFakeSpeech({ now: () => START, model: 'missing' }) });
+    const { id } = await addLecture(s.platform, s.classId, s.me, { dir: 'Aulas/a', startMs: START, durationMs: HOUR });
+    await s.queue.start();
+    await s.settle();
+    const nudged = async () => {
+      const bytes = await s.platform.privateFiles.read(s.classId, `lectures/${id}.json`);
+      return bytes ? JSON.parse(dec.decode(bytes)).nudgedAt ?? null : null;
+    };
+    // The recording ended at START + 1 h; the app started at START + 2 h. No file changes from here on.
+    for (let h = 1; h <= 22; h++) {
+      s.clock.advance(HOUR);
+      await s.queue.idle();
+    }
+    expect(await nudged()).toBeNull();
+    s.clock.advance(HOUR);   // START + 25 h: 24 h after the end
+    await s.queue.idle();
+    await s.settle();
+    expect(typeof (await nudged())).toBe('string');
+  });
 });
 
