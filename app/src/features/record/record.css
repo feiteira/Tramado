@@ -1,0 +1,449 @@
+/* Recording flow (UX §3.6), the dock rows (UX §2.7) and Settings › Transcription (UX §3.14.4). Tokens only. */
+
+/* ── Dock rows ── */
+.dock-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--dock-h);
+  padding: 0 var(--s-4);
+  border-top: 1px solid var(--rule);
+  background: var(--paper-raised);
+  min-width: 0;
+}
+.dock-row--rec {
+  box-shadow: inset 3px 0 0 var(--rec);
+}
+.dock-row--paused {
+  box-shadow: inset 3px 0 0 var(--ink-4);
+}
+.dock-row--failed {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+.dock-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.dock-rec {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+.dock-rec__label {
+  color: var(--rec-text);
+  font-size: var(--fs-xs);
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+.dock-row--paused .dock-rec__label {
+  color: var(--ink-3);
+}
+.dock-row__class {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 280px;
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+}
+.dock-row__class:hover {
+  background: var(--paper-hover);
+}
+.dock-row__classname {
+  flex: none;
+  font-weight: 650;
+}
+.dock-row__title {
+  overflow: hidden;
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dock-row__time {
+  flex: none;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+.dock-meters {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-3);
+}
+.dock-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dock-meter__label {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.dock-row__divider {
+  flex: none;
+  width: 1px;
+  height: 28px;
+  background: var(--rule);
+}
+.dock-strip {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.dock-note {
+  width: min(360px, 40vw);
+}
+.dock-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: 2px 4px 2px var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+}
+.dock-warning__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dock-row__spacer {
+  flex: 1;
+}
+.dock-row__lead {
+  flex: none;
+  font-weight: 650;
+}
+.dock-row__text {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dock-row--failed .dock-row__text {
+  color: var(--danger-text);
+  font-weight: 600;
+}
+.dock-row__link {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+.dock-row__link:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+.dock-row__progress {
+  flex: none;
+  width: 160px;
+}
+.dock-row__icon {
+  flex: none;
+  color: var(--accent-text);
+}
+.dock-row--job .tr-ring {
+  flex: none;
+  color: var(--accent-text);
+}
+.dock-row__more {
+  flex: none;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.dock-check__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 240px;
+}
+.dock-check__device {
+  font-weight: 600;
+}
+.dock-check__hint {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* ── Record, save, import, model dialogs ── */
+.record-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+}
+.record-title__class {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: 4px;
+}
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.record-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+.record-section__title {
+  margin-bottom: var(--s-1);
+  padding: 0;
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.record-permission {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+}
+.record-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.record-online {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-inline-start: var(--s-6);
+}
+.record-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.record-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-3) var(--s-4);
+}
+.record-row__field {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.record-device {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+.record-device > .field {
+  flex: 1;
+  min-width: 0;
+}
+.record-device__meter {
+  margin-bottom: 9px;
+}
+.record-onrecord {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+.record-onrecord p {
+  flex: 1 1 260px;
+}
+.record-law {
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+.record-law__icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-3);
+}
+.record-why__text {
+  max-width: 360px;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-ui);
+}
+.record-footer-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.record-discard {
+  color: var(--danger-text);
+}
+.dialog-footer-spacer {
+  flex: 1;
+}
+.pick-class {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pick-class__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-2) var(--s-3);
+  border: none;
+  border-radius: var(--r-md);
+  background: transparent;
+  text-align: start;
+}
+.pick-class__item:hover {
+  background: var(--paper-hover);
+}
+.pick-class__name {
+  flex: 1;
+  font-weight: 600;
+}
+.pick-class__hint {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.import-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.import-file__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.import-file__name {
+  display: inline-flex;
+  flex: 1 1 200px;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.import-file__name--empty,
+.import-file__size {
+  color: var(--ink-3);
+}
+.model-choice {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.model-choice__label {
+  font-weight: 600;
+}
+.model-choice__size {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* ── Settings › Transcription ── */
+.settings-transcription {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+.settings-hint {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.settings-hint--ok {
+  color: var(--success-text);
+}
+.model-rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+}
+.model-row {
+  display: grid;
+  grid-template-columns: minmax(150px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+.model-row + .model-row {
+  border-top: 1px solid var(--rule-faint);
+}
+.model-row--active {
+  background: var(--accent-soft);
+}
+.model-row__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  cursor: pointer;
+}
+.model-row__name {
+  font-weight: 650;
+}
+.model-row__hint {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.model-row__status {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.model-row__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--success-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.model-row__progress {
+  width: 160px;
+}
+.model-row__text {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+.model-row__text--bad {
+  color: var(--danger-text);
+}
+.mic-test {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+}

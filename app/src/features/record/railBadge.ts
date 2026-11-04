@@ -1,9 +1,13 @@
-// PLACEHOLDER (M0) → UI-LECTURES (recording now): a rail badge store; null = no badge.
-import { constant } from '../../services/store';
+// The rail's recording dot (UX §2.3, §3.6.3): tone 'danger' while this computer records the class. The rail
+// shows the rec dot for it (and for classmates recording, from ClassView.recordingBy).
+import { derived } from '../../services/store';
 import type { ClassId } from '../../core/model/ids';
 import type { AppServices } from '../../services/types/common';
 
 export default function railBadge(services: AppServices, classId: ClassId) {
-  void services; void classId;
-  return constant<{ count: number; tone: 'neutral' | 'info' | 'danger' } | null>(null);
+  return derived(
+    services.recording.state,
+    (s): { count: number; tone: 'neutral' | 'info' | 'danger' } | null => (s && s.classId === classId ? { count: 0, tone: 'danger' } : null),
+    (a, b) => (a === null) === (b === null),
+  );
 }

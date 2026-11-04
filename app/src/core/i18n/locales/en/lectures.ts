@@ -1,5 +1,5 @@
-// English source catalog `lectures`: UX spec §5.7 verbatim (docs/design/ux-mvp.md).
-// English is the source of truth; pt/ and es/ are typed Messages['lectures'].
+// English source catalog `lectures`: UX spec §5.7 verbatim (docs/design/ux-mvp.md), plus the keys UI-LECTURES
+// added in wave 2 (marked "UI-LECTURES"). English is the source of truth; pt/ and es/ are typed Messages['lectures'].
 
 export const lectures = {
   list: {
@@ -13,6 +13,14 @@ export const lectures = {
     transcriptOnly: 'Recording only on {name}’s computer',
     duplicateOf: 'Duplicate of {title}',
     noMatch: 'No lectures match “{q}”.',
+    // UI-LECTURES
+    pendingMeta: '{date} · {duration} · kept on this computer, not saved as a lecture yet',
+    pendingSave: 'Save…',
+    renameTitle: 'Rename lecture',
+    duplicateTitle: 'Mark “{title}” as a duplicate',
+    duplicateHint: 'A duplicate is never transcribed automatically. Choose the lecture it repeats.',
+    duplicateOfLabel: 'Same lecture as',
+    duplicateClear: 'Not a duplicate',
     empty: {
       title: 'No lectures yet.',
       body: 'Record the next one, or add a recording you already have (an audio or video file).',
@@ -35,7 +43,9 @@ export const lectures = {
     more: {
       copyLink: 'Copy link to this moment', linkCopied: 'Link copied.',
       speakers: 'Speakers…', export: 'Export transcript', exportMd: 'Markdown (.md)', exportVtt: 'Subtitles (.vtt)', exportTxt: 'Plain text (.txt)',
+      exported: 'Transcript exported.',   // UI-LECTURES
     },
+    askPrefill: 'About the lecture “{title}”: ',   // UI-LECTURES
     newer: 'Made with a newer Tramado — update to edit it.',
     stale: 'The recording changed after this transcript was made. Times may be off.',
     titleSuggestion: 'Suggested title: “{title}”',
@@ -83,7 +93,24 @@ export const lectures = {
     clash: 'Two corrections met here; check this line.',
     keepThis: 'Keep this one',
     speakerLecture: 'Lecturer', speakerMe: 'Me', speakerClass: 'Class',
+    // UI-LECTURES
+    findPrev: 'Previous match', findNext: 'Next match',
+    editHow: 'Click a line to correct it: Enter saves, Esc cancels, Alt+↑/↓ moves to the line before or after.',
+    editSegment: 'Correct the line at {time}',
+    newSpeaker: 'New speaker',
+    pending: { one: '{n} correction not merged yet', other: '{n} corrections not merged yet' },
+    pendingHint: 'Corrections are merged into the transcript by the computer that owns it, a few minutes after the last one.',
+    refMissing: 'No document in this class has this article.',
+    empty: 'This transcript has no text.',
   },
+  speakers: {   // UI-LECTURES ("Speakers…", in 0.1 with corrections)
+    title: 'Speakers',
+    body: 'Name the voices in this transcript. Everyone in the class sees the new names.',
+    label: 'Speaker {n}',
+    hint: 'Up to {n} characters.',
+  },
+  annotation: { aiBy: 'AI · {model}' },   // UI-LECTURES
+  keys: { space: 'Space' },               // UI-LECTURES
   selection: {
     label: 'Selected text',
     highlight: 'Highlight',
@@ -93,6 +120,10 @@ export const lectures = {
     ask: 'Ask…',
     copy: 'Copy with source',
     copied: 'Copied with its source.',
+    // UI-LECTURES
+    copyFormat: '“{text}” — {class}, {title}, {time}',
+    askPrefill: '“{text}” — ',
+    highlightKind: 'Highlight colour',
     highlightKinds: { important: 'Important', confused: 'Didn’t get it', exam: 'Exam', todo: 'To do', other: 'Other' },
   },
   side: {
@@ -106,6 +137,10 @@ export const lectures = {
     found: 'Found in the transcript',
     foundHint: 'Moments where the lecturer said something like “this will be on the exam”.',
     removeAuto: 'Remove',
+    // UI-LECTURES
+    notesTitle: 'Notes — {title}',
+    noteAt: 'Note at {time}',
+    resize: 'Resize the side panel',
   },
   ai: {
     summary: 'Summary',
@@ -119,6 +154,19 @@ export const lectures = {
     explainChips: { simpler: 'Simpler', detail: 'More detail', example: 'Give an example', inLanguage: 'Explain in {language}', exam: 'How could this come up in an exam?' },
     off: 'AI isn’t set up.',
     setUp: 'Set up AI',
+    // UI-LECTURES (UX §3.5.4 tool cards)
+    summaryNoteTitle: 'Summary — {title}',
+    termsNoteTitle: 'Key terms — {title}',
+    needsTranscript: 'These tools work once the lecture has a transcript.',
+    annotate: 'Annotate with AI',
+    annotateHint: 'Adds the key terms and the lecturer’s definitions to the transcript as private AI notes.',
+    annotateRun: 'Annotate the transcript',
+    annotated: { one: 'Added {n} AI note to the transcript.', other: 'Added {n} AI notes to the transcript.' },
+    studyNotes: 'Study notes',
+    studyNotesHint: 'Writes a private note with headings, a time link per point and links to the documents cited.',
+    studyNotesRun: 'Make study notes',
+    sentTo: 'Sent to {provider}: this passage and {n} related passages.',
+    seeSent: 'See what was sent',
   },
   transcription: {
     waitingAudio: 'The recording is still arriving ({percent} %). Transcription can start when it’s complete.',
@@ -151,7 +199,16 @@ export const lectures = {
     thanked: 'Thanked',
     tryHere: 'Try on this computer',
     ready: 'The transcript of “{lecture}” is ready.',
-    chip: { none: 'Waiting', waitingAudio: 'Arriving', claimed: '{percent} %', local: '{percent} % here', done: 'Transcript', failed: 'Failed', stale: 'Stopped' },
+    chip: { none: 'Waiting', waitingAudio: 'Arriving', claimed: '{percent} %', local: '{percent} % here', done: 'Transcript', failed: 'Failed', stale: 'Stopped', unavailable: 'No recording' },
+    // UI-LECTURES
+    leftUnknown: 'working on it',
+    lostRound: 'Another computer started first and is transcribing it now.',
+    ineligible: 'This computer can’t transcribe this lecture right now.',
+    cloudConfirm: {
+      title: 'Transcribe with OpenRouter?',
+      body: 'The recording is sent to OpenRouter in short pieces. It costs about 2 cents from your OpenRouter credit.',
+      confirm: 'Transcribe with OpenRouter',
+    },
     left: {
       underMinute: 'less than a minute left',
       minutes: { one: 'about {n} minute left', other: 'about {n} minutes left' },

@@ -1,0 +1,32 @@
+.level-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 64px;
+  height: 16px;
+  flex: none;
+}
+.level-meter__bar {
+  flex: 1;
+  border-radius: 1.5px;
+  background: var(--rule-strong);
+  transition: background-color var(--dur-1) linear;
+}
+.level-meter__bar--on {
+  background: var(--success-text);
+}
+.level-meter__bar--on:nth-child(5) {
+  background: var(--warning-text);
+}
+.level-meter__clip {
+  width: 3px;
+  height: 100%;
+  border-radius: 1.5px;
+  background: transparent;
+}
+.level-meter__clip--on {
+  background: var(--danger);
+}
+.level-meter--off .level-meter__bar {
+  background: var(--rule);
+}
