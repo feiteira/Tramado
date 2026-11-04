@@ -109,7 +109,7 @@ const IPC_SCRIPT = String.raw`(async () => {
   const C2 = 'tramado-wp4vuizadsrm5cjkgpv2ewpwuv';
   const changes = [];
   let info;
-  await step('app_info', async () => { info = await call('app_info'); must(info.devIsolated && info.e2e, 'dev isolated e2e'); must(info.mediaBase.startsWith('tramado-media://') || info.mediaBase.startsWith('http://tramado-media'), 'mediaBase'); return { webview: info.webview, mediaAudio: info.mediaAudio }; });
+  await step('app_info', async () => { info = await call('app_info'); must(info.devIsolated && info.e2e, 'dev isolated e2e'); must(info.mediaBase.startsWith('tramado-media://') || info.mediaBase.startsWith('http://tramado-media'), 'mediaBase'); must(typeof info.traySupported === 'boolean', 'traySupported'); return { webview: info.webview, mediaAudio: info.mediaAudio, tray: info.traySupported }; });
   await step('listen class:changed', async () => { await call('plugin:event|listen', { event: 'class:changed', target: { kind: 'Any' }, handler: T.transformCallback((e) => changes.push(e.payload)) }); });
   await step('app_take_pending_links', async () => must(Array.isArray(await call('app_take_pending_links')), 'array'));
   await step('person_init', async () => { const p = await call('person_init'); must(/^[a-z2-7]{26}$/.test(p.memberId) && p.pub.length === 43, 'person'); const again = await call('person_init'); must(again.memberId === p.memberId, 'same person'); });

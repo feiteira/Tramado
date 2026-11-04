@@ -57,6 +57,10 @@ pub struct AppInfo {
     /// the Blob-URL fallback of architecture §8; measured by the media self-test, critique R3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_audio: Option<String>,
+    /// Whether this desktop can show the tray icon (Linux needs an AppIndicator library). When
+    /// false, "close to tray" must quit instead of hiding: nothing could bring the window back.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tray_supported: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -239,6 +243,7 @@ pub async fn app_info(
             cache: p.cache.to_string_lossy().into_owned(),
         },
         media_audio: Some(media_audio().to_string()),
+        tray_supported: Some(crate::tray::tray_supported()),
     })
 }
 
