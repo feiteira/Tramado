@@ -261,7 +261,10 @@ mod tests {
             names: vec!["Lei.pdf".into()],
         })
         .unwrap();
-        assert_eq!(ev, serde_json::json!({"state": "enter", "names": ["Lei.pdf"]}));
+        assert_eq!(
+            ev,
+            serde_json::json!({"state": "enter", "names": ["Lei.pdf"]})
+        );
     }
 
     #[test]

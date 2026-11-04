@@ -6,7 +6,7 @@
 // AI off shows `[ask-off]`; errors render in the answer slot, AI_BUSY as the busy chooser (§3.15.6).
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DateTime } from 'luxon';
-import { ChevronDown, ChevronRight, Copy, Lock, MessageSquarePlus, MoreHorizontal, MessagesSquare, NotebookPen, RefreshCw, Search, SendHorizontal, Settings2, Sparkles, Telescope } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Lock, MessageSquarePlus, MoreHorizontal, MessagesSquare, NotebookPen, PanelLeftClose, PanelLeftOpen, RefreshCw, Search, SendHorizontal, Settings2, Sparkles, Telescope } from 'lucide-react';
 import { detectLang, promptLang } from '../../core/ai/prompts';
 import type { ClassId, ClassPath, Ulid } from '../../core/model/ids';
 import type { SourceRef } from '../../core/model/files';
@@ -63,6 +63,9 @@ export interface AskViewProps {
   onThread(threadId: string | null): void;
 }
 
+/** INT: whether the conversations column is open (localStorage, per device). */
+const THREADS_KEY = 'tramado.ask.threadsOpen';
+
 export function AskView({ services, classId, threadId: routeThread, query, focus, onThread }: AskViewProps) {
   const i18n = useI18n();
   const { t, tp } = i18n;
@@ -88,6 +91,17 @@ export function AskView({ services, classId, threadId: routeThread, query, focus
   useQuota(services, aiOnEarly);
   const turns = useStore(current ? source.thread(current) : EMPTY_TURNS);
   const [draft, setDraft] = useState(query ?? '');
+  // INT: the conversations column folds away (remembered per device), so a small window gives the thread the room;
+  // folded by default below 1180 px wide or 760 px high.
+  const [threadsOpen, setThreadsOpen] = useState(() => {
+    try {
+      const v = localStorage.getItem(THREADS_KEY);
+      if (v === '1' || v === '0') return v === '1';
+    } catch {
+      // storage refused
+    }
+    return typeof window === 'undefined' || (window.innerWidth >= 1180 && window.innerHeight >= 760);
+  });
   const [scope, setScope] = useState<Scope>({ all: true, kinds: [], mine: false, classes: [] });
   const focusKey = focus ? (focus.kind === 'lecture' ? `l:${focus.id}` : `d:${focus.path}`) : '';
   const [focusOn, setFocusOn] = useState(!!focus);
@@ -197,6 +211,15 @@ export function AskView({ services, classId, threadId: routeThread, query, focus
   ];
 
   const header = cls ? t('ask.empty.title', { class: cls.name }) : t('ask.empty.titleAll');
+  const toggleThreads = () => {
+    const next = !threadsOpen;
+    setThreadsOpen(next);
+    try {
+      localStorage.setItem(THREADS_KEY, next ? '1' : '0');
+    } catch {
+      // a per-device convenience
+    }
+  };
   // Enter or leaving the field keeps the new title (an empty or unchanged one changes nothing); Escape cancels.
   const commitRename = (id: string, title: string, before: string) => {
     setRenaming(null);
@@ -205,8 +228,8 @@ export function AskView({ services, classId, threadId: routeThread, query, focus
   };
 
   return (
-    <div className={cx('ask', !aiOn && 'ask--off')}>
-      <aside className="ask__threads" aria-label={t('ask.threads')} data-testid="ask-threads">
+    <div className={cx('ask', !aiOn && 'ask--off', !threadsOpen && 'ask--threads-closed')} data-threads={threadsOpen ? 'open' : 'closed'}>
+      <aside className="ask__threads" aria-label={t('ask.threads')} data-testid="ask-threads" hidden={!threadsOpen}>
         <div className="ask__threads-head">
           <h2 className="ask__threads-title">{t('ask.threads')}</h2>
           <Button size="sm" icon={MessageSquarePlus} onClick={() => select(null)} data-testid="ask-new">{t('ask.new')}</Button>
@@ -355,6 +378,17 @@ export function AskView({ services, classId, threadId: routeThread, query, focus
               <IconButton type="submit" icon={SendHorizontal} label={t('ask.send')} variant="secondary" disabled={!draft.trim() || blocked} className="ask__send" data-testid="ask-send" />
             </form>
             <div className="ask__cost">
+              <IconButton
+                size="sm"
+                variant="ghost"
+                icon={threadsOpen ? PanelLeftClose : PanelLeftOpen}
+                label={threadsOpen ? t('ask.threadsHide') : t('ask.threadsShow')}
+                aria-expanded={threadsOpen}
+                onClick={toggleThreads}
+                className="ask__threads-toggle"
+                data-testid="ask-threads-toggle"
+              />
+              {!threadsOpen ? <IconButton size="sm" variant="ghost" icon={MessageSquarePlus} label={t('ask.new')} onClick={() => select(null)} data-testid="ask-new-compact" /> : null}
               {blocked ? (
                 <CostLine requests={requests} quota={settings.quota} model={modelLabel} data-testid="ask-cost" />
               ) : (

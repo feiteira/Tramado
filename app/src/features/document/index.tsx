@@ -139,9 +139,10 @@ function DocArriving({ name, from }: { name: string; from: string }) {
     <>
       <ScreenHeader title={name} />
       <div className="docview" data-testid="screen-document">
-        {/* No per-file progress is known, so no "0 %" (UX §3.7.2 shows one when there is). */}
+        {/* No per-file progress is known, so no "0 %" (UX §3.7.2 shows one when there is) and no endless bar either:
+            the screen updates by itself when the file arrives. */}
         <EmptyState icon={CloudDownload} title={t('documents.view.arrivingSoon', { name: from || t('documents.view.unknownAuthor') })} data-testid="doc-arriving">
-          <ProgressBar value={null} label={t('common.arriving')} />
+          {t('common.arriving')}
         </EmptyState>
       </div>
     </>

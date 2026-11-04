@@ -29,6 +29,7 @@ import { deviceIdentity, poolKey } from '../platform/memory/signer';
 import { emptyDemoKeys, type DemoKeys } from './keys';
 import { CLASSES, demoTranscript } from './example';
 import { demoPeaks } from './example/fill';
+import { SOLO } from './example/solo';
 import { docSourceText } from './example/sources';
 import { PEOPLE, UNVERIFIED_DEVICE } from './example/people';
 import { clockLabel, clockMs, lisbon, lisbonDateTime } from './example/time';
@@ -55,7 +56,25 @@ export interface SeedOptions {
   ai?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'ratelimit' | 'cut';
   /** Reads a committed binary of demo/assets/ (default: fetched next to this module, or read from disk in Node). */
   assets?: (name: string) => Promise<Uint8Array>;
+  // ── INT additions (wave 3; optional, so the default library and its screenshots stay as they are) ──
+  /** `doc=broken`: a damaged PDF in `law` (the document view's `doc-error`). */
+  brokenDoc?: boolean;
+  /** `winname=1`: a document of `law` whose name Windows can't save (UX §3.15.9). */
+  windowsName?: boolean;
+  /** `skipaudio=1`: `law` skips audio files on this computer and `l7`'s recording is not here ("Get the recording"). */
+  skipAudio?: boolean;
+  /** `class=solo`: a fifth class, shared, with nobody else in it yet. */
+  solo?: boolean;
+  /** `chat=many`: this many extra messages in `law`'s chat (the 5 000-message list). */
+  chatMany?: number;
+  /** `tray=ask`: the first share still asks about the tray (`app.trayAsked` 0), so the first-share dialog shows. */
+  trayAsk?: boolean;
 }
+
+/** INT: a PDF that stops after its header: pdf.js and the extractor both refuse it (`doc=broken`). */
+const BROKEN_PDF = new TextEncoder().encode('%PDF-1.7\n%\u00e2\u00e3\u00cf\u00d3\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R');
+/** INT: the class path of the slides still on their way from Bruno (`doc=arriving`), inside `law`'s documents. */
+export const ARRIVING_DOC = 'Slides/Aula 8 — Estado de exceção (slides).pptx';
 
 const enc = new TextEncoder();
 const MIN = 60_000;
@@ -134,7 +153,7 @@ interface Dev { deviceId: DeviceId; memberId: MemberId; member: MemberKey; name:
 
 export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Promise<DemoKeys> {
   const keys = emptyDemoKeys();
-  const prefs: Record<string, string> = { 'ui.locale': opts.lang, 'ui.theme': opts.theme, 'app.trayAsked': '1' };
+  const prefs: Record<string, string> = { 'ui.locale': opts.lang, 'ui.theme': opts.theme, 'app.trayAsked': opts.trayAsk ? '0' : '1' };
   if (opts.empty) {
     await platform.appFiles.write('prefs.json', JSON.stringify(prefs, null, 2) + '\n');
     return keys;
@@ -203,7 +222,8 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
 
   // Deterministic class nonces (the class ids are the same on every run).
   const classRand = mulberry32(0x5eed);
-  for (const def of DEMO_CLASSES) {
+  const classDefs: readonly DemoClass[] = opts.solo ? [...DEMO_CLASSES, SOLO] : DEMO_CLASSES;
+  for (const def of classDefs) {
     const createdMs = lisbon(def.createdAt);
     const ana = devOf('ana');
     const nonce = newNonce(classRand);
@@ -292,6 +312,20 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
       keys.docs[doc.key] = { classKey: def.key, relPath: path };
       if (doc.localOnly) localIgnores.push(path);
     }
+    if (def.key === 'law') {
+      // INT fixtures (opt-in): a damaged PDF, a name Windows refuses, and the slides still arriving (key only).
+      if (opts.brokenDoc) {
+        const path = `${dirs.documents}/Leituras/Apontamentos (danificado).pdf`;
+        put(classId, path, BROKEN_PDF, devOf('carla'), lisbon('2026-11-02T18:00'));
+        keys.docs.broken = { classKey: def.key, relPath: path };
+      }
+      if (opts.windowsName) {
+        const path = `${dirs.documents}/Leituras/Resumo: aula 6?.pdf`;
+        put(classId, path, await asset('calendario.pdf'), devOf('bruno'), lisbon('2026-11-03T09:40'));
+        keys.docs.winname = { classKey: def.key, relPath: path };
+      }
+      keys.docs.arriving = { classKey: def.key, relPath: `${dirs.documents}/${ARRIVING_DOC}` };
+    }
 
     // Lectures (folder spec §8.6–§8.10).
     const lectures = new Map<string, { id: Ulid; dir: string; audioSha256: Hex64; segments: DemoSegment[]; lecture: DemoLecture }>();
@@ -313,7 +347,8 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
         channels: l.channels, pauses: [], consent: consentIds.get(l.recordedBy) ?? [], updatedAt: instant(publishedMs),
       };
       put(classId, `${dir}/lecture.json`, pretty(lectureFile), rec, publishedMs);
-      put(classId, `${dir}/audio.webm`, audio, rec, publishedMs);
+      // INT `skipaudio=1`: this computer skips audio files in `law`, and `l7`'s recording never came.
+      if (!(opts.skipAudio && def.key === 'law' && l.key === 'l7')) put(classId, `${dir}/audio.webm`, audio, rec, publishedMs);
       await platform.cache.write(`peaks/${audioSha256}-1200.json`, compact({ format: 'tramado.peaks', version: 1, buckets: demoPeaks(1200) }));
 
       let segments: DemoSegment[] = [];
@@ -492,6 +527,26 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
     const msgRefs = new Map<number, { deviceId: DeviceId; id: Ulid }>();
     let readHlc: string | null = null;
     const mentionToken = (k: MemberKey | 'ai' | 'everyone') => (k === 'ai' || k === 'everyone' ? k : devOf(k).memberId);
+    if (def.key === 'law' && opts.chatMany) {
+      // INT `chat=many`: a long, older conversation (October), read already, so the list holds thousands of lines.
+      const who: MemberKey[] = ['bruno', 'carla', 'ana'];
+      const POOL = ['Alguém já leu o resumo?', 'Eu fico com a parte da proporcionalidade.', 'A aula de hoje foi difícil.', 'Partilho os meus apontamentos à noite.',
+        'Qual é a matéria da frequência?', 'Obrigado!', 'Vemo-nos na biblioteca às 15h?', 'O artigo 18.º é o mais importante.'];
+      const from = lisbon('2026-10-01T08:00');
+      for (let i = 0; i < opts.chatMany; i++) {
+        const dev = devOf(who[i % who.length]!);
+        const ms = from + i * 7 * MIN;
+        const line: ChatLine = {
+          format: 'tramado.chat', version: 1, type: 'message', id: ulidOf(ms, `chatmany|${i}`), hlc: stamp(dev, ms), ms, memberId: dev.memberId,
+          text: `${POOL[(i * 7) % POOL.length]} (${i + 1})`,
+        };
+        const path = `.tramado/chat/${dev.deviceId}/${new Date(ms).toISOString().slice(0, 7)}.jsonl`;
+        const f = chatFiles.get(path) ?? { dev, lines: [], last: 0 };
+        f.lines.push(line);
+        f.last = Math.max(f.last, ms);
+        chatFiles.set(path, f);
+      }
+    }
     for (const m of def.chat) {
       const dev = devOf(m.by);
       const ms = lisbon(m.at);
@@ -654,10 +709,11 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
 
     if (def.shared) await platform.sync.shareClass(classId, def.name);
     if (localIgnores.length) await platform.classes.update(classId, { localIgnores });
+    if (opts.skipAudio && def.key === 'law') await platform.classes.update(classId, { skipAudio: true });
     if (def.archived) await platform.classes.update(classId, { archived: true });
   }
 
-  prefs['ui.classOrder'] = JSON.stringify(DEMO_CLASSES.map((d) => keys.classes[d.key]));
+  prefs['ui.classOrder'] = JSON.stringify(classDefs.map((d) => keys.classes[d.key]));
   prefs['speech.volunteerAsked'] = '1';
   await platform.appFiles.write('prefs.json', JSON.stringify(prefs, null, 2) + '\n');
   return keys;

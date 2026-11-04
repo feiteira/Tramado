@@ -26,6 +26,8 @@ export interface Toasts {
   /** A failure, in the reader's language, with the technical message appended. */
   error: (e: unknown) => number;
   dismiss: (id?: number) => void;
+  /** INT: a new message for a toast still showing (a progress count), keeping its timer and place. */
+  update: (id: number, message: string) => void;
 }
 
 interface Current extends ToastOptions {
@@ -60,6 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         return id;
       },
       dismiss: (id) => setToast((cur) => (id === undefined || cur?.id === id ? null : cur)),
+      update: (id, message) => setToast((cur) => (cur?.id === id ? { ...cur, message } : cur)),
     }),
     [t],
   );

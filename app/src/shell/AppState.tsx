@@ -257,12 +257,21 @@ export function AppStateProvider({ platform: basePlatform, options: baseOptions 
       window.location.assign(`${window.location.pathname}?${q.toString()}`);
       return;
     }
-    // The desktop: the same fictional library, in memory, beside the real (still empty) one. Leaving reloads the window.
-    const { bootDemo } = await import('../demo/boot');
+    // The desktop: the same fictional library, in memory, beside the real (still empty) one. Leaving gives the real
+    // platform back without reloading the window (INT): the demo's frozen clock and seeded randomness are undone.
+    const [{ bootDemo }, { unfreeze }] = await Promise.all([import('../demo/boot'), import('../demo/freeze')]);
     const props = await bootDemo(`?lang=${lang}&theme=${theme}`);
     setExampleSession({
       platform: props.platform,
-      options: { ...props.options, example: { leave: () => window.location.reload() } },
+      options: {
+        ...props.options,
+        example: {
+          leave: () => {
+            unfreeze();
+            setExampleSession(null);
+          },
+        },
+      },
     });
   }, [basePlatform, prefsStore]);
 

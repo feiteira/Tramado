@@ -106,7 +106,7 @@ describe('AiService (architecture §11.2, UX §3.14.3)', () => {
   it('the answering model becomes lastAnswerModel', async () => {
     const b = await bed();
     await b.s.ai.client.run({ task: 'chat', messages: [{ role: 'user', content: 'Olá' }], activity: { classId: null, action: 'ask', passages: 0 } });
-    expect(b.s.ai.settings.get().lastAnswerModel).toEqual({ id: 'google/gemma-4-31b-it:free', label: 'gemma-4-31b-it (free)', free: true });
+    expect(b.s.ai.settings.get().lastAnswerModel).toEqual({ id: 'google/gemma-4-31b-it:free', label: 'Gemma 4 31B (free)', free: true });
     b.s.dispose();
   });
 });

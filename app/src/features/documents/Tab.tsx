@@ -112,6 +112,11 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     };
     take();
     const offQueue = onQueuedImport(take);
+    // INT: the desktop window reports the drag itself (`app:drag`); invite files open the Join dialog instead.
+    const offDrag = services.ctx.platform.events.onDrag((e) => {
+      const files = e.names.filter((n) => !/\.tramado-invite$/i.test(n));
+      setDragging(e.state === 'enter' && files.length > 0 && !modalOpen());
+    });
     const offDrop = services.ctx.platform.events.onDrop((e) => {
       setDragging(false);
       if (modalOpen()) return;   // a dialog that takes drops itself (the exam-paper dialog) is open
@@ -119,6 +124,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     });
     return () => {
       offQueue();
+      offDrag();
       offDrop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -93,7 +93,10 @@ describe('chains per privacy level', () => {
 describe('catalog (openrouter-lab §10, UX OQ13, critique G21)', () => {
   it('labels models', () => {
     expect(modelLabel(GEMMA, 'Google: Gemma 4 31B (free)')).toBe('Gemma 4 31B (free)');
-    expect(modelLabel('dots-studio/dots-3-note-preview:free')).toBe('dots-3-note-preview (free)');
+    // INT: the models of the bundled chains have their names even without a catalog (OQ13); others fall back to the id.
+    expect(modelLabel('dots-studio/dots-3-note-preview:free')).toBe('Dots 3 Note Preview (free)');
+    expect(modelLabel(GEMMA)).toBe('Gemma 4 31B (free)');
+    expect(modelLabel('acme/tiny-7b:free')).toBe('tiny-7b (free)');
     expect(catalog.get(GEMMA)?.label).toMatch(/Gemma 4 31B/);
   });
   it('reads capabilities', () => {

@@ -29,6 +29,8 @@ export interface LocalSyncDeps {
   sign(message: Uint8Array): Promise<Uint8Array>;
   registry: MemoryClassRegistry;
   mode?: 'fake' | 'offline' | 'error' | 'local';
+  /** INT demo fixture (`identity=copied`): this computer's sharing identity looks copied from another (sync spec §2.5). */
+  copiedIdentity?: boolean;
 }
 
 /** What the demo controls (and the mesh) reach behind a sync object created here. */
@@ -153,19 +155,33 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     }, 4000);
   }
 
+  let copied = !!deps.copiedIdentity;
+  const notCopied = () => {
+    if (copied) throw new PlatformError('SYNC_IDENTITY_COPIED', 'this sharing identity was copied from another computer (demo)');
+  };
   const sync: Platform['sync'] = {
     identity: async () => identity,
-    resolveCopiedIdentity: async () => identity,
+    resolveCopiedIdentity: async () => {
+      copied = false;
+      return identity;
+    },
     start: async () => {
       if (mode === 'error') throw new PlatformError('SYNC_UNAVAILABLE', 'sharing is not available in this demo mode');
+      notCopied();
       return status();
     },
-    restart: async () => status(),
+    restart: async () => {
+      notCopied();
+      return status();
+    },
     status: async () => status(),
-    snapshot: async () => ({
-      status: status(), folders: mode === 'fake' || mode === 'offline' ? sharedIds().map(folderView) : [], devices: deviceViews(),
-      joinRequests: [...internals.joinRequests.values()], folderOffers: [], existing: { running: false, configFound: false },
-    }),
+    snapshot: async () => {
+      notCopied();
+      return {
+        status: status(), folders: mode === 'fake' || mode === 'offline' ? sharedIds().map(folderView) : [], devices: deviceViews(),
+        joinRequests: [...internals.joinRequests.values()], folderOffers: [], existing: { running: false, configFound: false },
+      };
+    },
     applySettings: async () => undefined,
     setPolicy: async (p) => {
       internals.policies.set(p.classId, p);

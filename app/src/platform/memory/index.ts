@@ -63,6 +63,8 @@ export interface MemoryPlatformOptions {
   ai?: Platform['ai'];
   speech?: Platform['speech'];
   syncMode?: 'fake' | 'offline' | 'error' | 'local';
+  /** INT: the sharing identity looks copied from another computer (`identity=copied`). */
+  copiedIdentity?: boolean;
   selftestUrl?: string;
   pendingLinks?: string[];
   /** INT: bytes free on the disk (`storage.diskFree()`); default 41 GB. */
@@ -103,6 +105,7 @@ export function createMemoryPlatform(opts: MemoryPlatformOptions = {}): MemoryPl
   const system = createSystem({ power: opts.power ?? { source: 'unknown', percent: null }, version, pendingLinks: opts.pendingLinks ?? [] });
   let sync: Platform['sync'] = createLocalSync({
     deviceId: device.deviceId, cert: device.cert, sign: (m) => device.key.sign(m), registry, ...(opts.syncMode ? { mode: opts.syncMode } : {}),
+    ...(opts.copiedIdentity ? { copiedIdentity: true } : {}),
   });
 
   const platform: MemoryPlatform = {

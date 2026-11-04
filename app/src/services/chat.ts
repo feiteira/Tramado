@@ -4,6 +4,7 @@
 // UX ChatMessageView, and writes my lines (message, edit, delete + redaction under a per-path lock, thanks). Delivery
 // ticks come from `fileInfo` availability (≤ 1 poll / 2 s while unsent lines exist, on indexUpdated); unread and
 // mentions from `private/<classId>/chat-state.json`; notifications for mentions and @everyone from organisers.
+import { modelLabel as catalogModelLabel } from '../core/ai/catalog';
 import { PlatformError } from '../core/errors';
 import { newUlid } from '../core/ids';
 import { parserFor } from '../core/model/parse';
@@ -37,11 +38,9 @@ const mimeOf = (name: string) => MIME[name.slice(name.lastIndexOf('.') + 1).toLo
 
 interface FileState { lines: ChatSourceLine[]; size: number; skipped: number; newer: number }
 
-/** The view-side model label of a model id ("google/gemma-4-31b-it:free" → "gemma-4-31b-it (free)"). */
+/** The view-side model label of a model id ("google/gemma-4-31b-it:free" → "Gemma 4 31B (free)", the bundled name without a catalog). */
 export function modelLabel(id: string): ModelLabel {
-  const free = id.endsWith(':free');
-  const base = id.replace(/:free$/, '');
-  return { id, label: `${base.slice(base.indexOf('/') + 1)}${free ? ' (free)' : ''}`, free };
+  return { id, label: catalogModelLabel(id), free: id.endsWith(':free') };
 }
 
 function viewLocator(l: StorageLocator): Locator {

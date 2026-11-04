@@ -38,4 +38,7 @@ export const ask = {
     setUp: 'Set up AI',
     search: 'Search instead',
   },
+  // INT (wave 3)
+  threadsShow: 'Show conversations',
+  threadsHide: 'Hide conversations',
 };

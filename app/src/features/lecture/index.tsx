@@ -39,7 +39,7 @@ import { TranscriptView, type TvDecoration, type TvRef, type TvSegment } from '.
 import { useLectureActions } from '../lectures/actions';
 import { cardModel, TranscriptionCard } from '../lectures/TranscriptionCard';
 import { duration, findAll, firstName, longClock, rowDate, shortClock, spokenTime } from '../lectures/format';
-import { usePlayback } from './playback';
+import { lastPlayback, usePlayback } from './playback';
 import { SidePanel, type ExplainRequest, type SideTab } from './SidePanel';
 import { SpeakersDialog } from './SpeakersDialog';
 import './lecture.css';
@@ -128,8 +128,9 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
   const [followPaused, setFollowPaused] = useState(false);
   const onTime = useCallback((t: number, p: boolean) => {
     setMs(t);
+    lastPlayback.set({ classId, lectureId, ms: t });
     setPlaying(p);
-  }, []);
+  }, [classId, lectureId]);
   const seek = useCallback((target: number, play = false) => {
     const h = player.current;
     if (h) {

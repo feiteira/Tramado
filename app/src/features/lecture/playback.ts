@@ -10,6 +10,13 @@ import type { AppInfo } from '../../platform/types';
 import type { AppServices } from '../../services/types/common';
 import type { LectureDetail } from '../../services/types/lectures';
 import { createFakeMedia, type FakeMedia } from '../../demo/fakeMedia';
+import { Store } from '../../services/store';
+
+/**
+ * INT: where the last lecture played was (the lecture view writes it as it plays): a note's "Insert timestamp"
+ * starts from there (UX §3.8) instead of 0:00 of the first lecture.
+ */
+export const lastPlayback = new Store<{ classId: ClassId; lectureId: string; ms: number } | null>(null);
 
 export interface Playback {
   /** The URL for <audio> (null while it is being prepared, or with `media`). */

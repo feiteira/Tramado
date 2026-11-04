@@ -25,9 +25,25 @@ export interface CatalogModelView {
 /** Models that are never offered: classifiers, routers to paid models, app-gated free models (AI_MODEL_GATED). */
 const HIDDEN = [/content-safety/i, /guard/i, /^thinkingmachines\/inkling/i];
 
-/** UX §8 OQ13: the catalog name without "Vendor: "; without a catalog the id after `/`, `:free` → " (free)". */
+/**
+ * INT (UX §8 OQ13): the names of the models Tramado ships in its chains (ai-defaults.json), for when the catalog is
+ * unavailable (offline, a fresh install, a custom host): as OpenRouter names them, without "Vendor: ".
+ */
+export const BUNDLED_LABELS: Readonly<Record<string, string>> = {
+  'google/gemma-4-31b-it:free': 'Gemma 4 31B (free)',
+  'google/gemma-4-26b-a4b-it:free': 'Gemma 4 26B A4B (free)',
+  'dots-studio/dots-3-note-preview:free': 'Dots 3 Note Preview (free)',
+  'nvidia/nemotron-3.5-super-vl:free': 'Nemotron 3.5 Super VL (free)',
+  'nvidia/nemotron-3-ultra-550b-a55b:free': 'Nemotron 3 Ultra (free)',
+  'openai/whisper-large-v3-turbo': 'Whisper Large v3 Turbo',
+  'openrouter/free': 'Free models router',
+};
+
+/** UX §8 OQ13: the catalog name without "Vendor: "; without a catalog the bundled name, else the id after `/`, `:free` → " (free)". */
 export function modelLabel(id: string, name?: string | null): string {
   if (name && name.trim()) return name.replace(/^[^:]{1,40}:\s+/, '').trim();
+  const bundled = BUNDLED_LABELS[id];
+  if (bundled) return bundled;
   const tail = id.includes('/') ? id.slice(id.indexOf('/') + 1) : id;
   return tail.endsWith(':free') ? `${tail.slice(0, -5)} (free)` : tail;
 }

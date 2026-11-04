@@ -119,7 +119,7 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
   const openDiagnostics = () => {
     close();
     requestDiagnostics();
-    go({ name: 'settings', section: 'sharing' });
+    go({ name: 'settings', section: 'sharing', diagnostics: true });
   };
   const goClass = (classId: string, tab?: 'members' | 'notes' | 'documents') => {
     close();

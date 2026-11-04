@@ -1,0 +1,945 @@
+[
+  {
+    "name": "record-no-disk",
+    "query": "route=class&class=stats&speech=fake&dialog=record&disk=low",
+    "ready": "record-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "record-no-disk"
+      },
+      {
+        "expect-attr": "record-start:disabled=true"
+      }
+    ]
+  },
+  {
+    "name": "record-no-disk-pt-dark",
+    "query": "route=class&class=stats&speech=fake&dialog=record&disk=low",
+    "ready": "record-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "record-no-disk"
+      },
+      {
+        "expect-attr": "record-start:disabled=true"
+      }
+    ]
+  },
+  {
+    "name": "record-no-disk-es-125",
+    "query": "route=class&class=stats&speech=fake&dialog=record&disk=low",
+    "ready": "record-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "record-no-disk"
+      },
+      {
+        "expect-attr": "record-start:disabled=true"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt-free",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "model-prompt-free"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt-free-pt-dark",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "model-prompt-free"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt-free-es-125",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "model-prompt-free"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt-no-room",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model&disk=low",
+    "ready": "model-prompt",
+    "axe": true,
+    "steps": [
+      {
+        "click": "model-prompt-download"
+      },
+      {
+        "expect": "model-prompt-disk"
+      }
+    ]
+  },
+  {
+    "name": "storage-disk-low",
+    "query": "route=settings&section=storage&disk=low",
+    "ready": "settings-storage",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "storage-disk-low"
+      }
+    ]
+  },
+  {
+    "name": "storage-disk-low-pt-dark",
+    "query": "route=settings&section=storage&disk=low",
+    "ready": "settings-storage",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "storage-disk-low"
+      }
+    ]
+  },
+  {
+    "name": "storage-disk-low-es-125",
+    "query": "route=settings&section=storage&disk=low",
+    "ready": "settings-storage",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "storage-disk-low"
+      }
+    ]
+  },
+  {
+    "name": "record-mark-undo",
+    "query": "route=lecture&class=law&lecture=l7&speech=fake&recording=1",
+    "ready": "record-dock",
+    "axe": true,
+    "steps": [
+      {
+        "click": "record-mark"
+      },
+      {
+        "expect": "toast-undo"
+      },
+      {
+        "click": "toast-undo"
+      }
+    ]
+  },
+  {
+    "name": "import-vtt",
+    "query": "route=class&class=law&tab=lectures&speech=fake&dialog=import&picked=vtt",
+    "ready": "import-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "import-use-vtt"
+      },
+      {
+        "expect-not": "import-transcribe"
+      }
+    ]
+  },
+  {
+    "name": "import-vtt-pt-dark",
+    "query": "route=class&class=law&tab=lectures&speech=fake&dialog=import&picked=vtt",
+    "ready": "import-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "import-use-vtt"
+      },
+      {
+        "expect-not": "import-transcribe"
+      }
+    ]
+  },
+  {
+    "name": "import-vtt-es-125",
+    "query": "route=class&class=law&tab=lectures&speech=fake&dialog=import&picked=vtt",
+    "ready": "import-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "import-use-vtt"
+      },
+      {
+        "expect-not": "import-transcribe"
+      }
+    ]
+  },
+  {
+    "name": "get-recording",
+    "query": "route=lecture&class=law&lecture=l7&skipaudio=1",
+    "ready": "player-no-audio",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "player-get-audio"
+      }
+    ]
+  },
+  {
+    "name": "get-recording-pt-dark",
+    "query": "route=lecture&class=law&lecture=l7&skipaudio=1",
+    "ready": "player-no-audio",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "player-get-audio"
+      }
+    ]
+  },
+  {
+    "name": "get-recording-es-125",
+    "query": "route=lecture&class=law&lecture=l7&skipaudio=1",
+    "ready": "player-no-audio",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "player-get-audio"
+      }
+    ]
+  },
+  {
+    "name": "get-recording-clicked",
+    "query": "route=lecture&class=law&lecture=l7&skipaudio=1",
+    "ready": "player-no-audio",
+    "axe": true,
+    "steps": [
+      {
+        "click": "player-get-audio"
+      },
+      {
+        "expect-not": "player-get-audio"
+      },
+      {
+        "expect-text": "player-no-audio=arriving"
+      }
+    ]
+  },
+  {
+    "name": "doc-error",
+    "query": "route=document&doc=broken",
+    "ready": "doc-error",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "doc-error-open"
+      }
+    ]
+  },
+  {
+    "name": "doc-error-pt-dark",
+    "query": "route=document&doc=broken",
+    "ready": "doc-error",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "doc-error-open"
+      }
+    ]
+  },
+  {
+    "name": "doc-error-es-125",
+    "query": "route=document&doc=broken",
+    "ready": "doc-error",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "doc-error-open"
+      }
+    ]
+  },
+  {
+    "name": "doc-arriving",
+    "query": "route=document&doc=arriving&sync=fake",
+    "ready": "doc-arriving",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "doc-arriving-pt-dark",
+    "query": "route=document&doc=arriving&sync=fake",
+    "ready": "doc-arriving",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": []
+  },
+  {
+    "name": "doc-arriving-es-125",
+    "query": "route=document&doc=arriving&sync=fake",
+    "ready": "doc-arriving",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": []
+  },
+  {
+    "name": "exam-extracting",
+    "query": "route=exam&exam=final&mode=extracting",
+    "ready": "exam-steps",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-extracting-cancel"
+      },
+      {
+        "expect-not": "exam-extracting-nopaper"
+      },
+      {
+        "expect-not": "exam-extracting-check"
+      }
+    ]
+  },
+  {
+    "name": "exam-extracting-pt-dark",
+    "query": "route=exam&exam=final&mode=extracting",
+    "ready": "exam-steps",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "exam-extracting-cancel"
+      },
+      {
+        "expect-not": "exam-extracting-nopaper"
+      },
+      {
+        "expect-not": "exam-extracting-check"
+      }
+    ]
+  },
+  {
+    "name": "exam-extracting-es-125",
+    "query": "route=exam&exam=final&mode=extracting",
+    "ready": "exam-steps",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "exam-extracting-cancel"
+      },
+      {
+        "expect-not": "exam-extracting-nopaper"
+      },
+      {
+        "expect-not": "exam-extracting-check"
+      }
+    ]
+  },
+  {
+    "name": "solo-chat",
+    "query": "route=class&class=solo&tab=chat&sync=fake",
+    "ready": "chat-empty",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "chat-invite"
+      }
+    ]
+  },
+  {
+    "name": "solo-chat-pt-dark",
+    "query": "route=class&class=solo&tab=chat&sync=fake",
+    "ready": "chat-empty",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "chat-invite"
+      }
+    ]
+  },
+  {
+    "name": "solo-chat-es-125",
+    "query": "route=class&class=solo&tab=chat&sync=fake",
+    "ready": "chat-empty",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "chat-invite"
+      }
+    ]
+  },
+  {
+    "name": "solo-members",
+    "query": "route=class&class=solo&tab=members&sync=fake",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "members-empty"
+      }
+    ]
+  },
+  {
+    "name": "solo-members-pt-dark",
+    "query": "route=class&class=solo&tab=members&sync=fake",
+    "ready": "member-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "members-empty"
+      }
+    ]
+  },
+  {
+    "name": "solo-members-es-125",
+    "query": "route=class&class=solo&tab=members&sync=fake",
+    "ready": "member-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "members-empty"
+      }
+    ]
+  },
+  {
+    "name": "identity-copied",
+    "query": "route=settings&section=sharing&sync=fake&identity=copied",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "identity-copied"
+      }
+    ]
+  },
+  {
+    "name": "identity-copied-pt-dark",
+    "query": "route=settings&section=sharing&sync=fake&identity=copied",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "identity-copied"
+      }
+    ]
+  },
+  {
+    "name": "identity-copied-es-125",
+    "query": "route=settings&section=sharing&sync=fake&identity=copied",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "identity-copied"
+      }
+    ]
+  },
+  {
+    "name": "identity-copied-popover",
+    "query": "route=today&sync=fake&identity=copied",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "click": "sync-pill"
+      },
+      {
+        "expect": "identity-copied"
+      }
+    ]
+  },
+  {
+    "name": "first-share",
+    "query": "route=class&class=stats&tab=share&sync=fake&tray=ask",
+    "ready": "class-share-tab",
+    "axe": true,
+    "steps": [
+      {
+        "click": "class-share-start"
+      },
+      {
+        "expect": "first-share-dialog"
+      }
+    ]
+  },
+  {
+    "name": "first-share-pt-dark",
+    "query": "route=class&class=stats&tab=share&sync=fake&tray=ask",
+    "ready": "class-share-tab",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "click": "class-share-start"
+      },
+      {
+        "expect": "first-share-dialog"
+      }
+    ]
+  },
+  {
+    "name": "first-share-es-125",
+    "query": "route=class&class=stats&tab=share&sync=fake&tray=ask",
+    "ready": "class-share-tab",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "click": "class-share-start"
+      },
+      {
+        "expect": "first-share-dialog"
+      }
+    ]
+  },
+  {
+    "name": "sync-error-members",
+    "query": "route=class&class=law&tab=members&sync=error",
+    "ready": "member-list",
+    "axe": true,
+    "steps": []
+  },
+  {
+    "name": "windows-name",
+    "query": "route=class&class=law&tab=documents&sync=fake&winname=1",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "windows-name"
+      },
+      {
+        "expect": "windows-name-rename"
+      }
+    ]
+  },
+  {
+    "name": "windows-name-pt-dark",
+    "query": "route=class&class=law&tab=documents&sync=fake&winname=1",
+    "ready": "doc-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "windows-name"
+      },
+      {
+        "expect": "windows-name-rename"
+      }
+    ]
+  },
+  {
+    "name": "windows-name-es-125",
+    "query": "route=class&class=law&tab=documents&sync=fake&winname=1",
+    "ready": "doc-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "windows-name"
+      },
+      {
+        "expect": "windows-name-rename"
+      }
+    ]
+  },
+  {
+    "name": "windows-name-popover",
+    "query": "route=today&sync=fake&winname=1",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "click": "sync-pill"
+      },
+      {
+        "expect": "sync-problem-windows-name"
+      }
+    ]
+  },
+  {
+    "name": "ask-rate-limited",
+    "query": "route=class&class=law&tab=ask&ai=ratelimit",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ask-new"
+      },
+      {
+        "type": "ask-input=O que diz o artigo 18?"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect-attr": "ai-recover-retry:disabled="
+      },
+      {
+        "expect-text": "ai-error=Too many"
+      }
+    ]
+  },
+  {
+    "name": "ask-rate-limited-pt-dark",
+    "query": "route=class&class=law&tab=ask&ai=ratelimit",
+    "ready": "ask-thread",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "click": "ask-new"
+      },
+      {
+        "type": "ask-input=O que diz o artigo 18?"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect": "ai-recover-retry"
+      }
+    ]
+  },
+  {
+    "name": "ask-cut",
+    "query": "route=class&class=law&tab=ask&ai=cut",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ask-new"
+      },
+      {
+        "type": "ask-input=O que diz o artigo 18?"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect": "ask-cut"
+      },
+      {
+        "expect": "ask-more-room"
+      }
+    ]
+  },
+  {
+    "name": "ask-cut-es-125",
+    "query": "route=class&class=law&tab=ask&ai=cut",
+    "ready": "ask-thread",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "click": "ask-new"
+      },
+      {
+        "type": "ask-input=O que diz o artigo 18?"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect": "ask-cut"
+      }
+    ]
+  },
+  {
+    "name": "key-busy",
+    "query": "route=settings&section=ai&ai=busy",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ai-key-test"
+      },
+      {
+        "expect-attr": "ai-check-result:data-state=okBusy"
+      }
+    ]
+  },
+  {
+    "name": "key-busy-pt-dark",
+    "query": "route=settings&section=ai&ai=busy",
+    "ready": "settings-ai",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "click": "ai-key-test"
+      },
+      {
+        "expect-attr": "ai-check-result:data-state=okBusy"
+      }
+    ]
+  },
+  {
+    "name": "key-busy-es-125",
+    "query": "route=settings&section=ai&ai=busy",
+    "ready": "settings-ai",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "click": "ai-key-test"
+      },
+      {
+        "expect-attr": "ai-check-result:data-state=okBusy"
+      }
+    ]
+  },
+  {
+    "name": "ask-min-window-min-window",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect-attr": "ask-threads:hidden="
+      },
+      {
+        "expect": "ask-threads-toggle"
+      }
+    ]
+  },
+  {
+    "name": "ask-min-window-open-min-window",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "click": "ask-threads-toggle"
+      },
+      {
+        "expect-attr": "ask-threads:hidden=null"
+      }
+    ]
+  },
+  {
+    "name": "ask-min-window-pt-dark",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "size": "1000x660",
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "ask-threads-toggle"
+      }
+    ]
+  },
+  {
+    "name": "settings-diagnostics",
+    "query": "route=settings&diagnostics=1&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "sharing-diag-version"
+      }
+    ]
+  },
+  {
+    "name": "settings-diagnostics-pt-dark",
+    "query": "route=settings&diagnostics=1&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "sharing-diag-version"
+      }
+    ]
+  },
+  {
+    "name": "settings-diagnostics-es-125",
+    "query": "route=settings&diagnostics=1&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "sharing-diag-version"
+      }
+    ]
+  },
+  {
+    "name": "drag-lecture",
+    "query": "route=class&class=law&tab=lectures&drag=aula-9.m4a",
+    "ready": "lecture-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "drop-overlay"
+      },
+      {
+        "expect-text": "drop-overlay=recording"
+      }
+    ]
+  },
+  {
+    "name": "drag-documents",
+    "query": "route=class&class=law&tab=documents&drag=Resumo.pdf",
+    "ready": "doc-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "drop-overlay"
+      }
+    ]
+  },
+  {
+    "name": "drag-documents-pt-dark",
+    "query": "route=class&class=law&tab=documents&drag=Resumo.pdf",
+    "ready": "doc-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "drop-overlay"
+      }
+    ]
+  },
+  {
+    "name": "drag-documents-es-125",
+    "query": "route=class&class=law&tab=documents&drag=Resumo.pdf",
+    "ready": "doc-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "drop-overlay"
+      }
+    ]
+  },
+  {
+    "name": "chat-many",
+    "query": "route=class&class=law&tab=chat&sync=fake&chat=many",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "chat-load-earlier"
+      }
+    ]
+  },
+  {
+    "name": "chat-many-min-window",
+    "query": "route=class&class=law&tab=chat&sync=fake&chat=many",
+    "ready": "chat-list",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect": "chat-load-earlier"
+      }
+    ]
+  },
+  {
+    "name": "record-stopped-disk-full",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=diskfull",
+    "ready": "record-dock",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "record-failed-reason:data-reason=diskFull"
+      },
+      {
+        "expect": "record-save-failed"
+      }
+    ]
+  },
+  {
+    "name": "record-stopped-disk-full-pt-dark",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=diskfull",
+    "ready": "record-dock",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect-attr": "record-failed-reason:data-reason=diskFull"
+      },
+      {
+        "expect": "record-save-failed"
+      }
+    ]
+  },
+  {
+    "name": "record-stopped-disk-full-es-125",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=diskfull",
+    "ready": "record-dock",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect-attr": "record-failed-reason:data-reason=diskFull"
+      },
+      {
+        "expect": "record-save-failed"
+      }
+    ]
+  }
+]

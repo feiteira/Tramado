@@ -692,8 +692,10 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
       const entry = (await platform.classes.list()).find((e) => e.classId === classId);
       if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
       const includes = entry.localIncludes ?? [];
-      if (!includes.includes(r.audioPath)) await platform.classes.update(classId, { localIncludes: [...includes, r.audioPath] });
-      // The class store gets the new entry from the library; the view then reads "arriving".
+      if (includes.includes(r.audioPath)) return;
+      const next = await platform.classes.update(classId, { localIncludes: [...includes, r.audioPath] });
+      // The class views do not show the includes, so the library would not republish: the store takes the entry now.
+      (store as Partial<{ setEntry(e: typeof next): void }>).setEntry?.(next);
       await app().library.load();
       await schedule();
     },

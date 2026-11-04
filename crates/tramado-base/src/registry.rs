@@ -419,6 +419,17 @@ mod tests {
         assert_eq!(v["classes"][0]["leaving"], Value::Null);
         let again = ClassRegistry::load(&cfg).unwrap();
         assert!(again.get(A).unwrap().archived);
+        // INT: `localIncludes` ("Get the recording") is absent until used, then kept.
+        assert!(e.local_includes.is_empty());
+        assert!(v["classes"][0].get("localIncludes").is_none());
+        reg.update(A, |e| e.local_includes = vec!["Aulas/a/audio.webm".into()])
+            .unwrap();
+        let v: Value =
+            serde_json::from_slice(&std::fs::read(cfg.join(FILE_NAME)).unwrap()).unwrap();
+        assert_eq!(
+            v["classes"][0]["localIncludes"],
+            serde_json::json!(["Aulas/a/audio.webm"])
+        );
     }
 
     #[test]

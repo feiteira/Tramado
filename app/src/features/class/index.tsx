@@ -46,6 +46,7 @@ const TAB_ICONS: Record<ClassTabId, LucideIcon> = {
   lectures: AudioLines, documents: Files, notes: NotebookPen, exams: ClipboardCheck, chat: MessagesSquare, ask: Sparkles, members: Users, share: FolderSync,
 };
 const AUDIO_VIDEO = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|webm|mp4|m4v|mov|mkv|avi|wma|amr|3gp)$/i;
+const INVITE = /\.tramado-invite$/i;
 
 interface Counts { lectures: number; documents: number; exams: number; people: Array<{ memberId: string; name: string; colour: string | null; online: boolean }> }
 
@@ -265,6 +266,18 @@ function ClassTabs({
     if (tab === 'lectures' && (types.some((m) => m.startsWith('audio/') || m.startsWith('video/')) || names.some((n) => AUDIO_VIDEO.test(n)))) return 'lecture';
     return 'documents';
   };
+  // INT: in the desktop app the window, not the webview, sees the drag (Tauri `app:drag`): the overlay follows it.
+  // Invite files are not class files (they open the Join dialog), so they show no overlay.
+  useEffect(
+    () =>
+      services.ctx.platform.events.onDrag((e) => {
+        const names = e.names.filter((n) => !INVITE.test(n));
+        if (e.state === 'leave' || !names.length || tab === 'documents' || cls.archived || modalOpen()) setDrag(null);
+        else setDrag(targetFor(names, []));
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [services, tab, cls.archived],
+  );
   useEffect(
     () =>
       services.ctx.platform.events.onDrop((e) => {

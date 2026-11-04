@@ -23,7 +23,8 @@ export type Route =
       mode?: 'extracting' | 'review' | 'answers' | 'practice' }  // default chosen from exam state (§3.9)
   | { name: 'practice'; classId: string }                        // practise every paper of a class
   | { name: 'ask'; threadId?: string; query?: string }           // Ask across ALL classes (§3.11)
-  | { name: 'settings'; section?: SettingsSection };             // default 'profile'
+  | { name: 'settings'; section?: SettingsSection;               // default 'profile'
+      diagnostics?: boolean };                                   // INT: Sharing with the diagnostics expanded
 
 export const CLASS_TABS: readonly ClassTabId[] = ['lectures', 'documents', 'notes', 'exams', 'chat', 'ask', 'members', 'share'];
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = ['profile', 'appearance', 'ai', 'transcription', 'sharing', 'notifications', 'storage', 'privacy', 'about'];

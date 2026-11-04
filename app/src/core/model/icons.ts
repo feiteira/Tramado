@@ -51,11 +51,19 @@ export function suggestColourFor(used: readonly string[]): string {
   return CLASS_COLOURS.find((c) => !used.includes(c)) ?? CLASS_COLOURS[used.length % 12]!;
 }
 
-/** Short name: initials of the significant words plus a trailing roman numeral ("Direito Constitucional I" → "DC I"). */
+/**
+ * Short name: initials of the significant words plus a trailing roman numeral or course number ("Direito
+ * Constitucional I" → "DC I", "História do Direito Português" → "HDP"); a single significant word gives its first
+ * three letters ("Biology 101" → "BIO 101", "Estadística I" → "EST I").
+ */
 export function suggestShortName(name: string): string {
   const words = name.split(/\s+/).filter(Boolean);
-  const roman = words.length > 1 && /^[IVX]+$/.test(words[words.length - 1]!) ? words.pop()! : '';
-  const initials = words.filter((w) => w.length > 3 || /^[A-ZÁÉÍÓÚ]/.test(w)).map((w) => w[0]!.toUpperCase()).join('').slice(0, 6);
-  return (initials + (roman ? ` ${roman}` : '')).slice(0, 12) || name.slice(0, 12);
+  const tail = words.length > 1 && /^([IVX]+|\d{1,4}[A-Za-z]?)$/.test(words[words.length - 1]!) ? words.pop()! : '';
+  const significant = words.filter((w) => w.length > 3 || /^[A-ZÁÉÍÓÚ]/.test(w));
+  const plain = (w: string) => w.normalize('NFD').replace(/\p{M}+/gu, '').replace(/[^\p{L}\p{N}]/gu, '');
+  const head = significant.length === 1
+    ? plain(significant[0]!).slice(0, 3).toUpperCase()
+    : significant.map((w) => plain(w)[0] ?? '').join('').toUpperCase().slice(0, 6);
+  return (head + (tail ? ` ${tail.toUpperCase()}` : '')).trim().slice(0, 12) || name.slice(0, 12);
 }
 

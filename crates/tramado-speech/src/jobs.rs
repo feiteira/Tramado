@@ -848,7 +848,14 @@ mod tests {
         }
         assert!(beat >= 9, "the claim was not refreshed");
         let c = read(LECTURE);
-        assert_eq!((c["status"].clone(), c["progress"].clone(), c["future"].clone()), (json!("working"), json!(1.0), json!(true)));
+        assert_eq!(
+            (
+                c["status"].clone(),
+                c["progress"].clone(),
+                c["future"].clone()
+            ),
+            (json!("working"), json!(1.0), json!(true))
+        );
         // The done claim is left alone.
         assert_eq!(read(OTHER)["heartbeat"], 7);
         // Taking (or cancelling) the job stops the heartbeat.

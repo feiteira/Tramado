@@ -57,7 +57,7 @@ export function SyncErrorCard({ services, code, onRetried, onDetails, compact }:
             onClick={() => {
               if (onDetails) return onDetails();
               requestDiagnostics();
-              go({ name: 'settings', section: 'sharing' });
+              go({ name: 'settings', section: 'sharing', diagnostics: true });
             }}
             data-testid="sync-details"
           >

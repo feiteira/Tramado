@@ -199,6 +199,25 @@ describe('LectureService: list and detail', () => {
     expect(d.get()!.references).toEqual([{ segmentId: 's_bbbbb', start: 17, end: 35, article: '18.º', code: null, target: { path: 'Documentos/CRP.pdf', page: 12 } }]);
   });
 
+  it('INT: "Get the recording" fetches one recording although the class skips audio files here', async () => {
+    const { platform, services, classId, me, lectures, settle } = await setup({ shared: true });
+    await platform.classes.update(classId, { skipAudio: true });
+    await services.library.load();
+    const a = await addLecture(platform, classId, me, { by: bruno, dir: 'Aulas/a', audio: 'missing', startMs: START });
+    await settle();
+    const view = () => lectures.list.get().find((v) => v.id === a.id)!;
+    expect(view().audio).toEqual({ present: false, arriving: false, skipped: true });
+    expect(view().transcription.kind).not.toBe('waitingAudio');
+    await lectures.fetchAudio(a.id);
+    await settle();
+    expect((await platform.classes.list()).find((e) => e.classId === classId)!.localIncludes).toEqual(['Aulas/a/audio.webm']);
+    expect(view().audio).toEqual({ present: false, arriving: true, skipped: false });
+    expect(view().transcription).toMatchObject({ kind: 'waitingAudio' });
+    // Twice changes nothing.
+    await lectures.fetchAudio(a.id);
+    expect((await platform.classes.list()).find((e) => e.classId === classId)!.localIncludes).toEqual(['Aulas/a/audio.webm']);
+  });
+
   it('shows the transcription state: arriving audio, a classmate transcribing, stale, failed, transcript only elsewhere, deleted audio', async () => {
     const { platform, classId, me, lectures, settle, fakes } = await setup({ shared: true });
     const a = await addLecture(platform, classId, me, { by: bruno, dir: 'Aulas/a', audio: 'missing', startMs: START });
