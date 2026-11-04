@@ -303,7 +303,8 @@ jobs:
           dpkg-deb -R "$deb" "$work/root"
           sed -i "s/^Version: .*/Version: $dv/" "$work/root/DEBIAN/control"
           dpkg-deb --root-owner-group -Zgzip -b "$work/root" "$work/new.deb"
-          list() { dpkg-deb -c "$1" | awk '{ print $1, $3, $6 }' | sort; }
+          # Mode, size and name of every entry ("./usr/bin/" and "usr/bin" are the same entry).
+          list() { dpkg-deb -c "$1" | awk '{ n = $6; sub(/^\.\//, "", n); sub(/\/$/, "", n); if (n != "") print $1, $3, n }' | sort; }
           diff <(list "$deb") <(list "$work/new.deb")
           dpkg --compare-versions "$dv" lt "${v%%-*}"
           mv "$work/new.deb" "$deb"
