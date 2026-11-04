@@ -6,7 +6,7 @@ export {
   editLogPath, labelSpeakerOp, mergeOp, normalizeLabel, normalizeText, setSpeakerOp, setTextOp, splitOp, splitTime, textBase, validEditLine,
   MAX_LABEL_CHARS, MAX_SEGMENT_CHARS, type EditStamp,
 } from './edits';
-export { hms, paragraphs, renderMarkdown, renderText, renderVtt, vttTime, PARAGRAPH_GAP_MS, PARAGRAPH_MAX_MS, type Paragraph } from './render';
+export { hms, paragraphs, recorderDate, renderMarkdown, renderText, renderVtt, utcOffsetMinAt, vttTime, PARAGRAPH_GAP_MS, PARAGRAPH_MAX_MS, type Paragraph } from './render';
 export { engineLabel, fileLang, isSpeakerId, labelOf, recordedByLabel, speakerLabel, RE_SPEAKER_ID } from './labels';
 export { approxFind, mapOffset, quoteOf, reanchor, remapThroughEdit, segmentAt, segmentLocator, type AnchorStatus, type Reanchored, type SegmentLocator } from './anchors';
 export { examRadar, radarLang } from './radar';

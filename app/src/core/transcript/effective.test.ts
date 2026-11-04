@@ -147,7 +147,31 @@ describe('effective transcript (folder spec §8.9)', () => {
   it('label_speaker renames a speaker (last writer wins)', () => {
     const t = transcript();
     const e = effective(t, [log(BRUNO, labelSpeakerOp(stamp(12, t, 'tkbnv23'), 'lecture', 'Prof.ª Reis')), log(ANA, labelSpeakerOp(stamp(10), 'lecture', 'Marta'))]);
-    expect(e.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis' }]);
+    expect(e.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis', labelHlc: hlc(12, 'tkbnv23') }]);
+  });
+
+  it('a late, older label line does not undo a folded label (labelHlc, G2 lead decision)', () => {
+    const t = transcript();
+    // Bruno's label (HLC 12) is folded: transcript.json stores it with its labelHlc.
+    const folded = fold(t, [log(BRUNO, labelSpeakerOp(stamp(12, t, 'tkbnv23'), 'lecture', 'Prof.ª Reis'))], { at: '2026-11-03T12:10:00.000Z' })!.transcript;
+    expect(folded.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis', labelHlc: hlc(12, 'tkbnv23') }]);
+    // Ana's older line (HLC 10) arrives only now: Ana has no `folded` entry, so it is replayed, and loses.
+    const late = replay(folded, [log(ANA, labelSpeakerOp(stamp(10, folded), 'lecture', 'Marta'))]);
+    expect(late.transcript.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis', labelHlc: hlc(12, 'tkbnv23') }]);
+    expect(late.info.speakerHlc).toEqual({ lecture: hlc(12, 'tkbnv23') });
+    // Folding it again keeps the label (and records the line as folded).
+    const again = fold(folded, [log(ANA, labelSpeakerOp(stamp(10, folded), 'lecture', 'Marta'))], { at: '2026-11-03T12:20:00.000Z' })!.transcript;
+    expect(again.speakers[0]).toMatchObject({ label: 'Prof.ª Reis', labelHlc: hlc(12, 'tkbnv23') });
+    expect(again.folded[ANA]).toBe(hlc(10));
+    // A newer line still wins over the folded one.
+    const newer = effective(folded, [log(ANA, labelSpeakerOp(stamp(14, folded), 'lecture', 'Marta Reis'))]);
+    expect(newer.speakers).toEqual([{ id: 'lecture', label: 'Marta Reis', labelHlc: hlc(14) }]);
+  });
+
+  it('a label for a speaker nobody listed adds it with its labelHlc', () => {
+    const t = transcript();
+    const e = effective(t, [log(ANA, labelSpeakerOp(stamp(5), 'spk_2', 'Aluno'))]);
+    expect(e.speakers).toEqual([{ id: 'lecture', label: 'Professor' }, { id: 'spk_2', label: 'Aluno', labelHlc: hlc(5) }]);
   });
 
   it('ignores other rounds, folded lines, other lectures and malformed lines', () => {

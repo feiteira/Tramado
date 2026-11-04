@@ -9,6 +9,7 @@ import type { LectureFile, MarkersFile } from '../core/model/files';
 import type { ClassId, ClassPath, DeviceId, Lang, Nonce, Ulid } from '../core/model/ids';
 import { fitClassPath, lectureDirName, unique } from '../core/model/sanitize';
 import { instant, parseRfc3339 } from '../core/model/time';
+import { utcOffsetMinAt } from '../core/transcript/render';
 import type { FinishedRecording, ImportEvent, Marker, PublishedAudio, RecorderEvent, ShareMode } from '../platform/types';
 import type { AppContext } from './context';
 import { privateMarkersPath, readPrivateJson, updateLecturePrivate, writePrivateJson, type LectureServiceImpl } from './lectures';
@@ -154,8 +155,10 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
       ctx.log('warn', 'recording: draft did not derive the id; a new lecture id was made', { recordingId: draft.recordingId });
     }
     const channels: LectureFile['channels'] = rec.speakers.length ? rec.speakers.map((s) => ({ index: s.index, speaker: s.speaker })) : [{ index: 0, speaker: 'lecture' }];
-    const lecture: LectureFile = {
-      format: 'tramado.lecture', version: 1, id, idNonce: nonce, title: input.title, startedAt: instant(startMs), durationMs: Math.round(audio.durationMs),
+    // `utcOffsetMin` (folder spec §8.6, G2): the recorder's UTC offset at startedAt, for the local date of transcript.md.
+    // (LectureFile gains the field through the integrator; the parser keeps it as a field it does not know yet.)
+    const lecture: LectureFile & { utcOffsetMin: number } = {
+      format: 'tramado.lecture', version: 1, id, idNonce: nonce, title: input.title, startedAt: instant(startMs), utcOffsetMin: utcOffsetMinAt(startMs), durationMs: Math.round(audio.durationMs),
       mode: rec.mode, language: rec.language, recordedBy: { memberId: who.memberId, deviceId: who.deviceId, name: who.name.slice(0, 64) },
       audio: {
         file: 'audio.webm', shared: input.share === 'audio+transcript', codec: 'opus', container: 'webm', sampleRate: 16000,

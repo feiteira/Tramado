@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LectureFile, Segment, TranscriptFile } from '../model/files';
-import { hms, paragraphs, renderMarkdown, renderText, renderVtt, vttEscape, vttTime } from './render';
+import { hms, paragraphs, recorderDate, renderMarkdown, renderText, renderVtt, utcOffsetMinAt, vttEscape, vttTime } from './render';
 import { engineLabel, fileLang, recordedByLabel, speakerLabel } from './labels';
 
 const fixture = (name: string) => readFileSync(new URL(`../../../test-fixtures/tramado/transcripts/${name}`, import.meta.url), 'utf8');
@@ -41,6 +41,30 @@ describe('transcript.md and transcript.vtt are byte-exact (folder spec §8.8)', 
     const t = { segments: [{ id: 's_x1234', startMs: 0, endMs: 1000, speaker: 'lecture', text: 'one\ntwo' }], speakers: [{ id: 'lecture', label: 'Lecturer' }], language: 'en' };
     expect(renderVtt(t)).toBe('WEBVTT\n\ns_x1234\n00:00:00.000 --> 00:00:01.000\n<v Lecturer>one two\n');
     expect(renderVtt({ ...t, segments: [] })).toBe('WEBVTT\n');
+  });
+
+  it('dates transcript.md with the recorder\'s local date (utcOffsetMin), UTC when absent (G2)', () => {
+    const f = load('aula7-pt');
+    // 23:30 UTC on 2 Nov is already 3 Nov in Lisbon summer time (+60) and still 2 Nov in New York (−300).
+    const late = { ...f.lecture, startedAt: '2026-11-02T23:30:00.000Z' };
+    expect(renderMarkdown(f.transcript, late).split('\n')[3]).toMatch(/^\*2026-11-02 · /);
+    expect(renderMarkdown(f.transcript, { ...late, utcOffsetMin: 60 }).split('\n')[3]).toMatch(/^\*2026-11-03 · /);
+    expect(renderMarkdown(f.transcript, { ...late, utcOffsetMin: -300 }).split('\n')[3]).toMatch(/^\*2026-11-02 · /);
+    expect(recorderDate({ startedAt: '2026-11-03T00:10:00.000Z', utcOffsetMin: -60 })).toBe('2026-11-02');
+    expect(recorderDate({ startedAt: '2026-11-03T00:10:00.000Z', utcOffsetMin: 0 })).toBe('2026-11-03');
+    // Out of range or not an integer: treated as absent.
+    expect(recorderDate({ startedAt: '2026-11-02T23:30:00.000Z', utcOffsetMin: 15 * 60 })).toBe('2026-11-02');
+    expect(recorderDate({ startedAt: '2026-11-02T23:30:00.000Z', utcOffsetMin: 60.5 })).toBe('2026-11-02');
+    // The fixture (no offset) is unchanged.
+    expect(renderMarkdown(f.transcript, f.lecture)).toBe(f.md);
+  });
+
+  it('measures a zone\'s UTC offset at an instant', () => {
+    expect(utcOffsetMinAt(Date.parse('2026-07-01T12:00:00Z'), 'Europe/Lisbon')).toBe(60);
+    expect(utcOffsetMinAt(Date.parse('2026-11-03T12:00:00Z'), 'Europe/Lisbon')).toBe(0);
+    expect(utcOffsetMinAt(Date.parse('2026-11-03T12:00:00Z'), 'America/New_York')).toBe(-300);
+    expect(utcOffsetMinAt(Date.parse('2026-11-03T12:00:00Z'), 'Asia/Kolkata')).toBe(330);
+    expect(utcOffsetMinAt(Date.parse('2026-11-03T12:00:00Z'), 'UTC')).toBe(0);
   });
 
   it('formats times', () => {
