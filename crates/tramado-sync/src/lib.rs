@@ -7,16 +7,16 @@
 //! reconciliation, discovery, self-heal, bans, mass-delete guard, scans, signatures); TS
 //! computes the class-folder semantics and pushes them as a `ClassPolicy`.
 //!
-//! **M0**: the public handle with its exact signatures; every method that can fail returns
-//! `NOT_IMPLEMENTED`. R-SYNC implements the modules below.
+//! Threads (architecture §4.2): `tramado-syncthing` (supervisor), `tramado-sync-events-a/-b`,
+//! `tramado-sync-ticker`, `tramado-sync-work` and a short-lived `tramado-sync-ready` per spawn.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
 use tramado_base::classfs::ClassFs;
-use tramado_base::error::{AppError, AppResult};
+use tramado_base::error::{AppError, AppResult, Code};
 use tramado_base::paths::Paths;
 use tramado_base::registry::{ClassEntry, ClassRegistry};
 
@@ -25,8 +25,10 @@ pub mod appdata;
 pub mod bans;
 pub mod client;
 pub mod config_writer;
+pub mod ctx;
 pub mod diag;
 pub mod discovery;
+pub mod engine;
 pub mod events;
 pub mod existing;
 pub mod folders;
@@ -41,6 +43,9 @@ pub mod selfheal;
 pub mod sign;
 pub mod supervisor;
 pub mod types;
+
+#[cfg(test)]
+pub(crate) mod fake;
 
 pub use types::*;
 
@@ -59,170 +64,232 @@ pub struct SyncConfig {
 /// Receives every `sync:event` (the desktop crate emits them to the webview).
 pub trait SyncSink: Send + Sync {
     fn event(&self, e: SyncEvent);
+
+    /// Moves a left class's directory to the OS trash (sync spec §17, `afterwards: "trash"`).
+    /// The default leaves the files where they are.
+    fn trash(&self, path: &Path) -> AppResult<()> {
+        let _ = path;
+        Err(AppError::new(Code::IoError, "no trash available"))
+    }
 }
 
 /// The public handle. Every method blocks; the desktop layer wraps calls in `blocking`.
 pub struct SyncEngine {
-    _cfg: SyncConfig,
-    _sink: Arc<dyn SyncSink>,
-}
-
-fn todo<T>(what: &str) -> AppResult<T> {
-    Err(AppError::not_implemented(what))
+    inner: Arc<engine::Inner>,
 }
 
 impl SyncEngine {
+    /// Builds the engine, registers its `WriteObserver` on `cfg.fs` (scans after every write,
+    /// the own-change log of the mass-change guard) and subscribes to the class registry.
+    /// Nothing starts until [`identity`](Self::identity) or [`start`](Self::start).
     pub fn new(cfg: SyncConfig, sink: Arc<dyn SyncSink>) -> Self {
-        SyncEngine {
-            _cfg: cfg,
-            _sink: sink,
-        }
+        let inner = engine::Inner::new(cfg, sink);
+        inner.cfg.fs.set_observer(Arc::new(scan::ScanObserver {
+            inner: Arc::downgrade(&inner),
+        }));
+        let weak = Arc::downgrade(&inner);
+        inner.cfg.registry.subscribe(Box::new(move |before, after| {
+            if let Some(i) = weak.upgrade() {
+                i.registry_changed(before, after);
+            }
+        }));
+        SyncEngine { inner }
+    }
+
+    /// Resolves the opaque pick token of `JoinRequest.parent` / `AcceptFolderRequest.parent`
+    /// (architecture D-4); the desktop layer installs the `PickRegistry`.
+    pub fn set_pick_resolver(&self, f: engine::PickResolver) {
+        *self.inner.picks.write().unwrap_or_else(|e| e.into_inner()) = Some(f);
     }
 
     /// `init.rs` identity only: no daemon, no port probe (sync spec §2.3).
     pub fn identity(&self) -> AppResult<SyncIdentity> {
-        todo("sync_identity")
+        self.inner.identity()
     }
 
     /// Idempotent, lazy start (sync spec §2.9).
     pub fn start(&self) -> AppResult<SyncStatus> {
-        todo("sync_start")
+        self.inner.start()
     }
 
     /// API shutdown → 3 s → SIGTERM → kill at 5 s.
-    pub fn stop(&self, _deadline: Duration) {}
+    pub fn stop(&self, deadline: Duration) {
+        self.inner.stop(deadline)
+    }
 
     pub fn status(&self) -> SyncStatus {
-        SyncStatus::stopped()
+        self.inner.status()
     }
 
     pub fn snapshot(&self) -> AppResult<SyncSnapshot> {
-        todo("sync_snapshot")
+        self.inner.snapshot()
     }
 
-    pub fn apply_settings(&self, _s: SyncSettings) -> AppResult<()> {
-        todo("sync_settings_apply")
+    pub fn apply_settings(&self, s: SyncSettings) -> AppResult<()> {
+        self.inner.apply_settings(s)
     }
 
     /// Persists, then reconciles, applies bans and ignores for that class.
-    pub fn set_class_policy(&self, _p: ClassPolicy) -> AppResult<()> {
-        todo("sync_policy_set")
+    pub fn set_class_policy(&self, p: ClassPolicy) -> AppResult<()> {
+        self.inner.set_class_policy(p)
     }
 
-    pub fn share_class(&self, _class_id: &str, _label: &str) -> AppResult<ClassEntry> {
-        todo("sync_share_class")
+    pub fn share_class(&self, class_id: &str, label: &str) -> AppResult<ClassEntry> {
+        self.inner.ensure_running()?;
+        let unpause = !self.inner.paused_effective(class_id);
+        self.inner
+            .with_ctx(|ctx| folders::share_class(ctx, class_id, label, unpause))
     }
 
     /// Decodes `req.code` itself (sync spec §9.5).
-    pub fn join_class(&self, _req: JoinRequest) -> AppResult<ClassEntry> {
-        todo("sync_join_class")
+    pub fn join_class(&self, req: JoinRequest) -> AppResult<ClassEntry> {
+        self.inner.join_class(req)
     }
 
-    pub fn cancel_join(&self, _class_id: &str) -> AppResult<()> {
-        todo("sync_cancel_join")
+    pub fn cancel_join(&self, class_id: &str) -> AppResult<()> {
+        self.inner.cancel_join(class_id)
     }
 
     /// Devices `[me, offeredBy]`; the offer must be pending.
-    pub fn accept_folder(&self, _req: AcceptFolderRequest) -> AppResult<ClassEntry> {
-        todo("sync_accept_folder")
+    pub fn accept_folder(&self, req: AcceptFolderRequest) -> AppResult<ClassEntry> {
+        self.inner.accept_folder(req)
     }
 
     /// Persists `leaving`; `finish_leaving` runs later (sync spec §17).
-    pub fn leave_class(&self, _class_id: &str, _opts: LeaveOptions) -> AppResult<()> {
-        todo("sync_leave_class")
+    pub fn leave_class(&self, class_id: &str, opts: LeaveOptions) -> AppResult<()> {
+        self.inner.leave_class(class_id, opts)
     }
 
     /// `PERMISSION_DENIED` unless the offer is pending.
-    pub fn admit(&self, _class_id: &str, _device: &str) -> AppResult<()> {
-        todo("sync_admit")
+    pub fn admit(&self, class_id: &str, device: &str) -> AppResult<()> {
+        let dev = invite::normalize_device_id(device)
+            .ok_or_else(|| AppError::invalid("not a device ID"))?;
+        self.inner.with_ctx(|ctx| {
+            let mut adm = self.inner.adm.lock().unwrap_or_else(|e| e.into_inner());
+            adm.admit(ctx, class_id, &dev)
+        })
     }
 
-    pub fn decline(&self, _class_id: &str, _device: &str) -> AppResult<()> {
-        todo("sync_decline")
+    pub fn decline(&self, class_id: &str, device: &str) -> AppResult<()> {
+        let dev = invite::normalize_device_id(device)
+            .ok_or_else(|| AppError::invalid("not a device ID"))?;
+        self.inner.with_ctx(|ctx| {
+            let mut adm = self.inner.adm.lock().unwrap_or_else(|e| e.into_inner());
+            adm.decline(ctx, class_id, &dev)
+        })
     }
 
     /// Sync spec §12.4; works without the daemon.
-    pub fn sign(&self, _class_id: &str, _path: &str, _canonical: &[u8]) -> AppResult<Sig> {
-        todo("sync_sign")
+    pub fn sign(&self, class_id: &str, path: &str, canonical: &[u8]) -> AppResult<Sig> {
+        self.inner.identity()?;
+        sign::sign(&self.inner.home, class_id, path, canonical)
     }
 
     /// Stop + start (Settings › Sharing).
     pub fn restart(&self) -> AppResult<SyncStatus> {
-        todo("sync_restart")
+        self.inner.stop(Duration::from_secs(5));
+        self.inner.start()
     }
 
     /// Sync spec §22.2: restore | confirm.
-    pub fn resolve_mass_delete(&self, _class_id: &str, _action: MassDeleteAction) -> AppResult<()> {
-        todo("sync_mass_delete_resolve")
+    pub fn resolve_mass_delete(&self, class_id: &str, action: MassDeleteAction) -> AppResult<()> {
+        self.inner.resolve_mass_delete(class_id, action)
     }
 
     /// Sync spec §2.5 step 0: new | same.
-    pub fn resolve_copied_identity(
-        &self,
-        _action: CopiedIdentityAction,
-    ) -> AppResult<SyncIdentity> {
-        todo("sync_identity_resolve")
+    pub fn resolve_copied_identity(&self, action: CopiedIdentityAction) -> AppResult<SyncIdentity> {
+        self.inner.resolve_copied_identity(action)
     }
 
-    pub fn normalize_ids(&self, _ids: &[String]) -> AppResult<Vec<Option<String>>> {
-        todo("sync_normalize_ids")
+    pub fn normalize_ids(&self, ids: &[String]) -> AppResult<Vec<Option<String>>> {
+        self.inner.normalize_ids(ids)
     }
 
     pub fn own_addresses(&self) -> AppResult<Vec<String>> {
-        todo("sync_own_addresses")
+        self.inner.own_addresses()
     }
 
-    pub fn file_info(&self, _class_id: &str, _paths: &[String]) -> AppResult<Vec<FileSyncInfo>> {
-        todo("sync_file_info")
+    pub fn file_info(&self, class_id: &str, paths: &[String]) -> AppResult<Vec<FileSyncInfo>> {
+        self.inner.file_info(class_id, paths)
     }
 
     pub fn wait_available(
         &self,
-        _class_id: &str,
-        _path: &str,
-        _min_devices: usize,
-        _timeout: Duration,
+        class_id: &str,
+        path: &str,
+        min_devices: usize,
+        timeout: Duration,
     ) -> AppResult<bool> {
-        todo("sync_wait_available")
+        self.inner
+            .wait_available(class_id, path, min_devices, timeout)
     }
 
-    pub fn wait_caught_up(&self, _class_id: &str, _timeout: Duration) -> AppResult<CaughtUp> {
-        todo("sync_wait_caught_up")
+    pub fn wait_caught_up(&self, class_id: &str, timeout: Duration) -> AppResult<CaughtUp> {
+        self.inner.wait_caught_up(class_id, timeout)
     }
 
     pub fn device_stats(&self) -> AppResult<BTreeMap<String, DeviceStat>> {
-        todo("sync_device_stats")
+        self.inner.device_stats()
     }
 
-    pub fn folder_status(&self, _class_id: &str) -> AppResult<FolderView> {
-        todo("sync_folder_status")
+    pub fn folder_status(&self, class_id: &str) -> AppResult<FolderView> {
+        let c = self
+            .inner
+            .client()
+            .ok_or_else(|| AppError::new(Code::SyncUnavailable, "sharing is not running"))?;
+        self.inner.folder_view(&c, class_id, None, true)
     }
 
-    pub fn versions(&self, _class_id: &str) -> AppResult<Vec<VersionEntry>> {
-        todo("sync_versions")
+    pub fn versions(&self, class_id: &str) -> AppResult<Vec<VersionEntry>> {
+        self.inner.versions(class_id)
     }
 
-    pub fn restore(&self, _class_id: &str, _items: &[RestoreItem]) -> AppResult<()> {
-        todo("sync_restore")
+    pub fn restore(&self, class_id: &str, items: &[RestoreItem]) -> AppResult<()> {
+        self.inner.restore(class_id, items)
     }
 
-    pub fn folder_errors(&self, _class_id: &str) -> AppResult<Vec<FolderError>> {
-        todo("sync_folder_errors")
+    pub fn folder_errors(&self, class_id: &str) -> AppResult<Vec<FolderError>> {
+        let c = self
+            .inner
+            .client()
+            .ok_or_else(|| AppError::new(Code::SyncUnavailable, "sharing is not running"))?;
+        Ok(c.folder_errors(class_id)?
+            .into_iter()
+            .map(|(path, error)| FolderError { path, error })
+            .collect())
     }
 
-    pub fn pause_class(&self, _class_id: &str, _paused: bool) -> AppResult<()> {
-        todo("sync_pause_class")
+    pub fn pause_class(&self, class_id: &str, paused: bool) -> AppResult<()> {
+        self.inner.pause_class(class_id, paused)
     }
 
-    pub fn scan(&self, _class_id: &str, _path: Option<&str>) -> AppResult<()> {
-        todo("sync_scan")
+    pub fn scan(&self, class_id: &str, path: Option<&str>) -> AppResult<()> {
+        if let Some(p) = path {
+            tramado_base::confine::validate_class_path(p)?;
+        }
+        let c = self
+            .inner
+            .client()
+            .ok_or_else(|| AppError::new(Code::SyncUnavailable, "sharing is not running"))?;
+        c.scan(class_id, path)
     }
 
     pub fn diagnostics(&self) -> AppResult<SyncDiagnostics> {
-        todo("sync_diagnostics")
+        self.inner.diagnostics()
     }
 
     pub fn existing_syncthing(&self) -> ExistingSyncthing {
-        ExistingSyncthing::default()
+        existing::detect()
+    }
+
+    /// Whether any registered class is shared (the desktop starts Syncthing at launch, §2.9).
+    pub fn has_shared_class(&self) -> bool {
+        self.inner.cfg.registry.list().iter().any(|e| e.shared)
+    }
+}
+
+impl Drop for SyncEngine {
+    fn drop(&mut self) {
+        self.inner.shutdown_threads();
     }
 }

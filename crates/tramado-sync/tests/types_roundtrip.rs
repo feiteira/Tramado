@@ -102,3 +102,63 @@ fn admission_decisions_parse() {
             serde_json::from_value(c["expect"].clone()).unwrap_or_else(|e| panic!("{c}: {e}"));
     }
 }
+
+/// `decide()` (architecture §5.3) on every case of the shared vectors, through the public API
+/// (TS `core/sync/admission.ts` runs the same file).
+#[test]
+fn admission_decide_matches_every_vector() {
+    use std::collections::BTreeMap;
+    use tramado_sync::admission::decide;
+    use tramado_sync::{ClassPolicy, FolderOffer, GlobalPolicy};
+    let v = vectors("admission.json");
+    let devices = v["devices"].as_object().unwrap().clone();
+    let dev = |s: &str| {
+        devices
+            .get(s)
+            .and_then(Value::as_str)
+            .unwrap_or(s)
+            .to_string()
+    };
+    let list = |x: &Value| -> Vec<String> {
+        x.as_array()
+            .into_iter()
+            .flatten()
+            .map(|d| dev(d.as_str().unwrap()))
+            .collect()
+    };
+    let class = "tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    for c in v["cases"].as_array().unwrap() {
+        let p = &c["policy"];
+        let mut policies = BTreeMap::new();
+        policies.insert(
+            class.to_string(),
+            ClassPolicy {
+                class_id: class.into(),
+                label: "x".into(),
+                ask_before_admit: p["askBeforeAdmit"].as_bool().unwrap_or(false),
+                roster: vec![],
+                known_devices: list(&p["knownDevices"]),
+                banned_devices: list(&p["bannedDevices"]),
+                updated_at: String::new(),
+            },
+        );
+        let g = &c["global"];
+        let global = GlobalPolicy {
+            own_devices: list(&g["ownDevices"]),
+            pairing_open_until: g["pairingOpenUntil"].as_u64(),
+        };
+        let o = &c["offer"];
+        let offer = FolderOffer {
+            folder_id: o["folderId"].as_str().unwrap_or(class).into(),
+            device_id: dev(o["deviceId"].as_str().unwrap_or("D1")),
+            in_folder: o["inFolder"].as_bool().unwrap_or(false),
+        };
+        let want: Decision = serde_json::from_value(c["expect"].clone()).unwrap();
+        assert_eq!(
+            decide(&policies, &global, &offer, c["now"].as_u64().unwrap_or(0)),
+            want,
+            "{}",
+            c["name"]
+        );
+    }
+}
