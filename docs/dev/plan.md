@@ -1877,3 +1877,80 @@ deleted, the tramado-speech exports, `tauri.conf.json` deb `files`, and the demo
     `joinPage` row is in Settings › Privacy and PRIVACY*.md.
 15. Repository settings and policy: GitHub private vulnerability reporting is off (SECURITY.md has a fallback); GitHub
     Pages is not switched on; CONTRIBUTING's DCO sign-off is undecided; no GitHub release was created.
+
+## 21. G4 integration log (gate G4 integrator, 2026-11-04)
+
+Wave 4 had three packages, each built and reviewed on its own branch: REL (Windows and macOS installers from CI),
+PAGES (invites link to the live join page) and README (screenshots and installing in the README, rc.2 release notes,
+no DCO sign-off, SECURITY.md). As in §13–§20, the documents above are not rewritten; this section overrides them where
+they differ.
+
+Merged in the order REL → PAGES → README, each with `git merge --no-ff` and a quick check after it (`typecheck` and
+`npm test` after REL and PAGES; `check-links` and `check:leaks` after README, which changed documents only): REL
+(`ec7e202`, branch `14ccc6f`), PAGES (`a9088d9`, `9742b4a`), README (`3901bf7`, `23c84bb`). No conflicts
+(`architecture.md` and this file merged on their own). Tests: 1088 after REL, 1090 after PAGES, all passing. No branch touched a manifest, `Cargo.lock` or `package-lock.json`. Paths outside a package's own, each forced
+by its change and accepted: REL `features/exam/review.ts` → `reviewOps.ts` and `workers/streamIteration.ts`; PAGES
+`services/mesh/invite-join.test.ts`, `tools/peek-routes/ui-shell.json` (`privacy-flow:10`) and tests in
+`commands/system.rs`.
+
+**Applied by the integrator**
+1. REL 1: `features/exam/review.ts` is `reviewOps.ts` (merged). `Review.tsx` beside it broke the Windows and macOS
+   builds (case-insensitive file systems); the `web` job now refuses such pairs.
+2. REL 2: `workers/streamIteration.ts` (merged), imported first by `extract.worker.ts`, `image.worker.ts` and
+   `features/document/pdfjs.ts`: pdf.js 6.3 reads page text with `for await` over a `ReadableStream`, which WebKitGTK
+   2.50 (bundled in the CI AppImage) and older Safari lack. The layer test passes.
+3. PAGES: the header of `.github/workflows/pages.yml` says Pages is on (`PAGES_ENABLED` is `true`, so a push to
+   `main` that changes `site/` deploys) and that invites link there since rc.2.
+4. PAGES: the manual's "What leaves your computer" (EN/PT/ES, chapter 8) and the README's Privacy list name the join
+   page (GitHub Pages sees the visit; the code after `#` is never sent), as the `joinPage` row does. Chapter 6 was
+   already done by README.
+5. README: AGENTS.md's status line (rc.2; the Windows and macOS installers are built and started in CI only); the
+   tag lists of AGENTS.md and arch §19.8 add `v0.1.0-rc.2`.
+6. Release notes (EN/PT/ES, still one line per paragraph): the platform lines follow REL's final state. The Windows
+   and macOS installers were built and started by GitHub Actions only (on macOS the Apple-silicon half; the Intel half
+   never started); installing, updating, recording, transcribing, syncing, tray, notifications, `tramado://` links,
+   invite files and the keychain never ran there. Windows: x64 only, per-user install, WebView2 downloaded, names
+   Windows refuses do not sync to it. macOS: the ad hoc signature changes with each build, so permissions are asked
+   again after an update; no Finder "Put Back". The Downloads rows say what ran. The `.deb` limitation (apt sorting
+   `0.1.0-rc.2` after `0.1.0`) is gone: CI writes the Debian version `0.1.0~rc.2`, which the final 0.1.0 upgrades,
+   and the Linux line says so.
+7. Version `0.1.0-rc.2` in the places of §20 item 9: `tauri.conf.json`, `Cargo.toml`, the three `package.json` files,
+   `package-lock.json`, the five workspace crates in `Cargo.lock`, the memory platform's own version and
+   `tools/desktop-e2e/README.md`.
+8. Pictures: all 77 retaken after the merges (`npm run screenshots`, lossless WebP as in AGENTS.md); 71 changed: the
+   invite's QR holds the join-page link, Settings › Privacy has its tenth row, the rail shows `0.1.0-rc.2`.
+   `docs/manual/img`: 5,724,984 B.
+9. Gate fix: `core/sync/claims.property.test.ts` allows 100 ms per run (at least 60 s). `test:property` failed once on
+   the global 60 s limit (73 s beside the other property files; about 50 s alone); the property is unchanged.
+10. §20 item 15 is out of date: GitHub Pages is on, private vulnerability reporting is on (SECURITY.md points only to
+    it), CONTRIBUTING has no DCO sign-off (MPL-2.0, inbound = outbound). No GitHub release exists yet.
+
+**Not applied** (for the lead)
+11. REL 4: should class paths refuse names Windows rejects (`: * ? " < > |`, a trailing dot or space, `CON`, `NUL`,
+    `COM1`…), and should the `.st*` rule ignore case (P§13.9)? Until then such files do not reach Windows computers
+    (release notes).
+12. REL review: the Mac `CFBundleVersion` is `0.1.0-rc.2`, not purely numeric; `bundle.macOS.bundleVersion` would
+    split the one version of §18.6.
+13. PAGES review: the invite dialog draws the QR at 220 px, about 2–2.4 px per module at versions 16–22, half the
+    4 px minimum (sync spec §7.2 and UX §3.12.2 now say 356–452 px); `features/members/{InviteDialog.tsx,members.css}`.
+    UX's component table still says "size default 340 (≥ 4 px per module for version 15–17)".
+14. Dev-only npm advisories (`npm audit` without `--omit=dev`): vite 8.3.0–8.3.2, vitest and `@vitest/mocker`
+    5.0.0–5.0.2, source-map-js ≤ 1.2.1; nothing in the shipped app.
+
+**Gate G4 run (2026-11-04)**:
+- `npm ci`, `typecheck`, `npm test` (159 files, 1090 passed, 4 opt-in live skipped), `test:property` (2000 runs, after
+  item 9), `build`: pass.
+- `check:rust`, `test:rust` (172 passed, 32 ignored), `lint:rust`, Rust 1.99 `clippy --workspace --all-targets -D
+  warnings` and `fmt --all --check`, `cargo test -p tramado-desktop` (15 passed, 1 ignored): pass.
+- `check-versions`: pass, 823 locked versions, 2 reviewed exceptions (`opusic-sys 0.7.6`, `ctutils 0.4.4`; remove the
+  rows once reported stale, from 2026-11-09 and 2026-11-06). `cargo deny check`: pass. `npm audit --omit=dev`: 0.
+- `gen:privacy`: no diff; `check:privacy`: up to date. `check-links`: 35 documents, 263 relative links, 77 pictures,
+  all good. `actionlint` (ci, canary, pages): clean. `check:leaks`: clean.
+- `peek-matrix --axe`: 453/453.
+- `build:desktop`: pass; `e2e:desktop` (smoke, 19 s), `e2e:sync` (sync-two with `TRAMADO_E2E_SPEECH_DIR`, §20 item
+  12; 58 s) and the smoke on the AppImage (21 s): pass.
+
+Packages (local build): `Tramado_0.1.0-rc.2_amd64.AppImage` 115,382,776 B, `Tramado_0.1.0-rc.2_amd64.deb` 28,699,360 B
+(Version `0.1.0-rc.2`: only CI rewrites it to `0.1.0~rc.2`), binary 21,643,696 B. REL's CI run 41918906847 (rc.1 tree):
+AppImage 116,472,312 B, deb 28,040,738 B, NSIS setup 23,248,023 B, universal dmg 52,895,421 B. The worktrees of the
+three packages are removed and their branches kept; no `ci/*` branch is left on the remote.
