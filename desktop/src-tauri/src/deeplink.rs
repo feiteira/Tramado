@@ -136,6 +136,11 @@ pub fn read_invite(p: &Path) -> AppResult<String> {
     Ok(text.trim().to_string())
 }
 
+/// An invite file opened or dropped on the window: its text goes to the Join dialog.
+pub fn open_invite_file(app: &AppHandle, p: &Path) {
+    on_invite_file(app, p);
+}
+
 fn on_invite_file(app: &AppHandle, p: &Path) {
     match read_invite(p) {
         Ok(text) => deliver(

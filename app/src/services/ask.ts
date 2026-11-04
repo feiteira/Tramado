@@ -3,7 +3,7 @@
 // "Annotate with AI" (private annotation lines with `ai: {model}`), study notes (a private note with time links), `@AI`
 // in chat (an `ai` line replying to the question) and "Post to class chat" (an `ai` line with `question`; refused when
 // the answer cites a private source). One request per question; two with cross-language query expansion.
-import { PlatformError, errorCode, type ErrorCode } from '../core/errors';
+import { PlatformError, errorCode, errorData, type ErrorCode } from '../core/errors';
 import { readAnswer, retrieve } from '../core/ai/answer';
 import { citeRegex } from '../core/ai/citations';
 import { lectureParts, lectureSource, lectureTitle, noteLinks, transcriptWindows } from '../core/ai/lecture';
@@ -37,7 +37,7 @@ const TRANSCRIPT_PARSE = parserFor('tramado.transcript');
 const TITLE_MAX = 60;
 
 interface LecturePrivate { format: 'tramado.lecture-private'; version: 1; summary: AskTurn | null; terms: AskTurn | null; removedAutoMarks: number[] }
-type Stored = AskHistoryLine & Pick<AskTurn, 'sent' | 'requestedModel' | 'general' | 'mode' | 'privacy' | 'classOf'>;
+type Stored = AskHistoryLine & Pick<AskTurn, 'sent' | 'requestedModel' | 'general' | 'mode' | 'privacy' | 'classOf' | 'cut' | 'retryAfterS'>;
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -67,15 +67,26 @@ const toTurn = (l: Stored): AskTurn => ({
   error: (l.status === 'running' ? 'CANCELLED' : l.error) as ErrorCode | null, at: l.at,
   ...(l.sent ? { sent: l.sent } : {}), ...(l.requestedModel !== undefined ? { requestedModel: l.requestedModel } : {}),
   ...(l.general !== undefined ? { general: l.general } : {}), ...(l.mode ? { mode: l.mode } : {}), ...(l.privacy ? { privacy: l.privacy } : {}),
-  ...(l.classOf ? { classOf: l.classOf } : {}),
+  ...(l.classOf ? { classOf: l.classOf } : {}), ...(l.cut ? { cut: true } : {}), ...(typeof l.retryAfterS === 'number' ? { retryAfterS: l.retryAfterS } : {}),
 });
 const toLine = (t: AskTurn): Stored => ({
   format: 'tramado.ask', version: 1, id: t.id, question: t.question, scope: t.scope, answer: t.answer, citations: t.citations, model: t.model,
   status: t.status, error: t.error, at: t.at,
   ...(t.sent ? { sent: t.sent } : {}), ...(t.requestedModel !== undefined ? { requestedModel: t.requestedModel } : {}),
   ...(t.general !== undefined ? { general: t.general } : {}), ...(t.mode ? { mode: t.mode } : {}), ...(t.privacy ? { privacy: t.privacy } : {}),
-  ...(t.classOf ? { classOf: t.classOf } : {}),
+  ...(t.classOf ? { classOf: t.classOf } : {}), ...(t.cut ? { cut: true } : {}), ...(typeof t.retryAfterS === 'number' ? { retryAfterS: t.retryAfterS } : {}),
 });
+
+/**
+ * INT: what a failed turn keeps besides its code — when a rate limit said to come back (Retry-After). `retryAfterS`
+ * counts from the turn's `at` (when it was asked): `elapsedMs` is the time the request and its retries took, so the
+ * wait ends Retry-After seconds after the failure, not after the question (INT review).
+ */
+export function failedTurn(e: unknown, elapsedMs = 0): Pick<AskTurn, 'status' | 'error' | 'retryAfterS'> {
+  const after = errorData(e).retryAfterMs;
+  const since = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  return { status: 'error', error: errorCode(e), ...(typeof after === 'number' && after > 0 ? { retryAfterS: Math.ceil((since + after) / 1000) } : {}) };
+}
 
 /** Private thread titles set with Rename (`ask/titles.json`, `ask-all/titles.json`). */
 async function readTitles(platform: AppContext['platform'], classId: ClassId, dir: string): Promise<Record<string, string>> {
@@ -100,6 +111,9 @@ export function topWords(text: string, n: number): string[] {
   for (const w of text.toLowerCase().match(/[\p{L}\p{N}º]{6,}/gu) ?? []) counts.set(w, (counts.get(w) ?? 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, n).map(([w]) => w);
 }
+
+/** INT: the room of [Answer again with more room] (the `chat` profile's 4 000 tokens, doubled). */
+const MORE_ROOM_TOKENS = 8_000;
 
 export function createAskService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): AskService & { idle(): Promise<void> } {
   const { platform } = ctx;
@@ -191,10 +205,10 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
     }
   }
 
-  interface Answered { text: string; citations: Citation[]; run: Pick<RunResult, 'model' | 'requestedModel' | 'privacy'>; sent: AskTurn['sent'] }
+  interface Answered { text: string; citations: Citation[]; run: Pick<RunResult, 'model' | 'requestedModel' | 'privacy'> & { finish?: string }; sent: AskTurn['sent'] }
 
   /** Retrieval + one answer (or the tool loop for Deep), streaming into `onText`. */
-  async function answer(question: string, scope: AskTurn['scope'], o: { general: boolean; mode: 'quick' | 'deep'; model?: string; busyFallback?: boolean; sharedOnly: boolean; action: 'ask' | 'chat'; onText?: (t: string) => void }): Promise<Answered> {
+  async function answer(question: string, scope: AskTurn['scope'], o: { general: boolean; mode: 'quick' | 'deep'; model?: string; busyFallback?: boolean; sharedOnly: boolean; action: 'ask' | 'chat'; moreRoom?: boolean; onText?: (t: string) => void }): Promise<Answered> {
     const lang = langOf(question);
     let streamed = '';
     const onEvent = (e: AiEvent) => {
@@ -226,7 +240,7 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
     const r = await ai().client.run({
       task: 'chat', activity: { classId, action: o.action, passages: ret.sources.length }, onEvent,
       messages: answerMessages({ lang, answerLanguage: answerLanguage(), general: o.general, role: 'ask' }, question, ret.sources),
-      ...(o.model ? { model: o.model } : {}), ...(o.busyFallback ? { busyFallback: true } : {}),
+      ...(o.model ? { model: o.model } : {}), ...(o.busyFallback ? { busyFallback: true } : {}), ...(o.moreRoom ? { maxTokens: MORE_ROOM_TOKENS } : {}),
     });
     const a = readAnswer(r.content, ret.refs, o.general);
     return { text: a.text, citations: a.citations, run: r, sent: ret.sources.map((s) => ({ ref: s.ref, label: s.label, excerpt: s.text.slice(0, 200) })) };
@@ -394,11 +408,15 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
         try {
           const a = await answer(q, scope, {
             general, mode, sharedOnly: opts.privateNotes === false, action: 'ask', ...(opts.model ? { model: opts.model } : {}), ...(opts.busyFallback ? { busyFallback: true } : {}),
+            ...(opts.moreRoom ? { moreRoom: true } : {}),
             onText: (t) => setTurn(tid, (turn = { ...turn, answer: t })),
           });
-          turn = { ...turn, answer: a.text, citations: a.citations, model: a.run.model, requestedModel: a.run.requestedModel, privacy: a.run.privacy, status: 'ok', sent: a.sent ?? [] };
+          turn = {
+            ...turn, answer: a.text, citations: a.citations, model: a.run.model, requestedModel: a.run.requestedModel, privacy: a.run.privacy, status: 'ok', sent: a.sent ?? [],
+            ...(a.run.finish === 'length' ? { cut: true } : {}),
+          };
         } catch (e) {
-          turn = { ...turn, answer: '', status: 'error', error: errorCode(e) };
+          turn = { ...turn, answer: '', ...failedTurn(e, ctx.clock.now() - Date.parse(turn.at)) };
         }
         setTurn(tid, turn);
         await persist(tid, turn).catch((e: unknown) => ctx.log('warn', 'Ask turn not saved', { error: String(e) }));
@@ -629,7 +647,7 @@ export function createGlobalAsk(ctx: AppContext, app: () => AppServices): Global
     return out;
   }
 
-  async function answerAll(question: string, classes: ClassId[], kinds: Array<SourceRef['kind']>, o: { general: boolean; mode: 'quick' | 'deep'; model?: string; busyFallback?: boolean; privateNotes: boolean; onText(t: string): void }) {
+  async function answerAll(question: string, classes: ClassId[], kinds: Array<SourceRef['kind']>, o: { general: boolean; mode: 'quick' | 'deep'; model?: string; busyFallback?: boolean; privateNotes: boolean; moreRoom?: boolean; onText(t: string): void }) {
     const lang = detectLang(question) ?? uiLang();
     const seen = new Map<string, ClassId>();
     let streamed = '';
@@ -660,14 +678,14 @@ export function createGlobalAsk(ctx: AppContext, app: () => AppServices): Global
       });
       const a = readAnswer(r.content, r.refs, o.general);
       const classOf = Object.fromEntries(a.citations.map((c) => [c.ref, seen.get(r.refs.get(c.ref)?.id ?? '') ?? classes[0]!]));
-      return { a, run: r as Pick<RunResult, 'model' | 'requestedModel' | 'privacy'>, classOf, sent: r.refs.entries().map(([ref, p]) => ({ ref, label: prefixed(ref, p.label, p.id), excerpt: p.text.slice(0, 200) })) };
+      return { a, run: r as Pick<RunResult, 'model' | 'requestedModel' | 'privacy'> & { finish?: string }, classOf, sent: r.refs.entries().map(([ref, p]) => ({ ref, label: prefixed(ref, p.label, p.id), excerpt: p.text.slice(0, 200) })) };
     }
     const ret = retrieve(await find(question, classes, kinds, 30, seen, o.privateNotes));
     const sources = ret.sources.map((s) => ({ ...s, label: prefixed(s.ref, s.label, ret.refs.get(s.ref)?.id ?? '') }));
     const r = await app().ai.client.run({
       task: 'chat', activity: { classId: null, action: 'ask', passages: sources.length }, onEvent,
       messages: answerMessages({ lang, answerLanguage: answerLanguage(), general: o.general, role: 'ask' }, question, sources),
-      ...(o.model ? { model: o.model } : {}), ...(o.busyFallback ? { busyFallback: true } : {}),
+      ...(o.model ? { model: o.model } : {}), ...(o.busyFallback ? { busyFallback: true } : {}), ...(o.moreRoom ? { maxTokens: MORE_ROOM_TOKENS } : {}),
     });
     const a = readAnswer(r.content, ret.refs, o.general);
     const classOf = Object.fromEntries(a.citations.map((c) => [c.ref, seen.get(ret.refs.get(c.ref)?.id ?? '') ?? classes[0]!]));
@@ -701,11 +719,15 @@ export function createGlobalAsk(ctx: AppContext, app: () => AppServices): Global
         try {
           const r = await answerAll(q, classes, scope.kinds, {
             general, mode, ...(opts.model ? { model: opts.model } : {}), ...(opts.busyFallback ? { busyFallback: true } : {}), privateNotes: opts.privateNotes !== false,
+            ...(opts.moreRoom ? { moreRoom: true } : {}),
             onText: (t) => setTurn(tid, (turn = { ...turn, answer: t })),
           });
-          turn = { ...turn, answer: r.a.text, citations: r.a.citations, model: r.run.model, requestedModel: r.run.requestedModel, privacy: r.run.privacy, status: 'ok', sent: r.sent, classOf: r.classOf };
+          turn = {
+            ...turn, answer: r.a.text, citations: r.a.citations, model: r.run.model, requestedModel: r.run.requestedModel, privacy: r.run.privacy, status: 'ok', sent: r.sent, classOf: r.classOf,
+            ...(r.run.finish === 'length' ? { cut: true } : {}),
+          };
         } catch (e) {
-          turn = { ...turn, answer: '', status: 'error', error: errorCode(e) };
+          turn = { ...turn, answer: '', ...failedTurn(e, ctx.clock.now() - Date.parse(turn.at)) };
         }
         setTurn(tid, turn);
         await platform.privateFiles.append(home, `${GLOBAL_DIR}/${tid}.jsonl`, enc.encode(jsonlLine(toLine(turn)))).catch((e: unknown) => ctx.log('warn', 'Ask turn not saved', { error: String(e) }));

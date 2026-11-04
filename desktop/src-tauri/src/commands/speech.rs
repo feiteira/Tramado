@@ -14,7 +14,7 @@ use std::time::Duration;
 use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, State};
-use tramado_base::error::AppResult;
+use tramado_base::error::{AppError, AppResult, Code};
 use tramado_base::picks::{PickKind, PickRegistry};
 use tramado_net::ai::{ActivityTag, AiAction, AiBase, AiBody, AiPipe, AiRequest, Method};
 use tramado_speech::{
@@ -26,7 +26,7 @@ use tramado_speech::{
 };
 
 use crate::state::Shared;
-use crate::util::{blocking, not_implemented};
+use crate::util::blocking;
 
 pub struct SpeechState {
     pub speech: Arc<Speech>,
@@ -81,24 +81,12 @@ impl SttTransport for PipeStt {
     }
 }
 
-/// Used only when the AI domain did not manage an `Arc<AiPipe>` (it always does, since G1:
-/// `commands::ai::init` runs before `speech::init`); cloud transcription then answers
-/// `NOT_IMPLEMENTED`.
-struct PipeNotWired;
-
-impl SttTransport for PipeNotWired {
-    fn post(&self, _path: &str, _body: AiBody, _t: Duration) -> AppResult<(u16, Vec<u8>)> {
-        Err(not_implemented(
-            "cloud transcription (AiPipe wiring, gate G2)",
-        ))
-    }
-}
-
 pub fn init(app: &AppHandle, shared: &Shared) -> AppResult<()> {
-    let stt: Arc<dyn SttTransport> = match app.try_state::<Arc<AiPipe>>() {
-        Some(pipe) => Arc::new(PipeStt::new(pipe.inner().clone())),
-        None => Arc::new(PipeNotWired),
-    };
+    // `commands::ai::init` runs first and manages the pipe (G1); without it the app cannot start.
+    let pipe = app
+        .try_state::<Arc<AiPipe>>()
+        .ok_or_else(|| AppError::new(Code::IoError, "the AI pipe is not set up"))?;
+    let stt: Arc<dyn SttTransport> = Arc::new(PipeStt::new(pipe.inner().clone()));
     let speech = Arc::new(Speech::new(SpeechConfig {
         paths: shared.paths.clone(),
         fs: shared.fs.clone(),
@@ -250,7 +238,17 @@ pub async fn speech_recorder_mark(
     m: MarkRequest,
 ) -> AppResult<Marker> {
     let sp = speech(&state);
-    blocking(move || sp.recorder_mark(m.kind, m.note)).await
+    blocking(move || sp.recorder_mark_at(m.kind, m.note, m.at_ms)).await
+}
+
+/// INT (wave 3): removes a marker of the running recording (the dock toast's Undo).
+#[tauri::command]
+pub async fn speech_recorder_unmark(
+    state: State<'_, SpeechState>,
+    marker_id: String,
+) -> AppResult<()> {
+    let sp = speech(&state);
+    blocking(move || sp.recorder_unmark(&marker_id)).await
 }
 
 #[tauri::command]

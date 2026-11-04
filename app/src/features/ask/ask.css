@@ -437,6 +437,36 @@
     grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
   }
 }
+/* INT: the conversations column folded (the toggle in the composer's last row): the thread takes the width. */
+.ask.ask--threads-closed {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ask__threads[hidden] {
+  display: none;
+}
+.ask__threads-toggle.btn,
+.ask__cost > .btn--icon {
+  flex: none;
+}
+/* INT: a short window (1000×660) gives the conversation the height: a tighter tab, composer and chips. */
+@media (max-height: 760px) {
+  .ask-tab {
+    padding-top: var(--s-2);
+  }
+  .ask__composer {
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-3);
+  }
+  .ask__scope-label {
+    display: none;
+  }
+  .ask-chip {
+    height: 24px;
+  }
+  .ask-turn {
+    gap: var(--s-2);
+  }
+}
 @media (max-width: 860px) {
   .ask {
     grid-template-columns: minmax(0, 1fr);

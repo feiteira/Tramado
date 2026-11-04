@@ -16,10 +16,12 @@ export interface FakeAiControls {
   next(textOrFn: string | ((req: unknown) => string)): void;
   /** The next request (and its retries) fails with this code. */
   fail(code: ErrorCode): void;
+  /** INT: the next chat requests never answer (a step kept "in progress" for the demo and screenshots). */
+  hold(): void;
 }
 export interface FakeAiOptions {
   /** Default `off` (no key); the demo passes its `ai=` mode. */
-  mode?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real';
+  mode?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real' | 'ratelimit' | 'cut';
   /** `real`: the session-only key and the fetch to use. */
   key?: () => string | null;
   fetch?: FetchLike;
@@ -185,6 +187,7 @@ export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
   const activity: AiActivityEntry[] = [];
   const requests: AiPipeRequest[] = [];
   const queue: Array<{ kind: 'text'; value: string | ((req: unknown) => string) } | { kind: 'fail'; code: ErrorCode; left: number }> = [];
+  let holding = false;
 
   const keyBody = (remaining: number) => ({
     data: { label: 'sk-or-v1-…demo', is_free_tier: true, limit: null, limit_remaining: null, usage: 0, free_model_daily_requests: { used: 50 - remaining, limit: 50, remaining } },
@@ -196,14 +199,19 @@ export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
     if (req.method === 'GET') {
       if (req.path === 'key') return { kind: 'json', body: keyBody(mode === 'quota' ? 0 : 38) };
       if (req.path === 'models') return { kind: 'json', body: { data: DEMO_CATALOG } };
-      return { kind: 'json', body: { data: { id: req.path, endpoints: [] } } };
+      // INT: one endpoint per model; `busy` reports it failing most requests of the last minutes (the key test's "busy").
+      const uptime = mode === 'busy' ? 14 : 100;
+      return { kind: 'json', body: { data: { id: req.path, endpoints: [{ name: 'Google AI Studio', provider_name: 'Google AI Studio', status: 0, uptime_last_5m: uptime, uptime_last_30m: uptime }] } } };
     }
     if (mode === 'quota') return ERROR_REPLIES.freeLimit(nextMidnight(now()));
+    // INT demo modes: the per-minute limit with Retry-After, and answers cut off at the length limit.
+    if (mode === 'ratelimit') return ERROR_REPLIES.rateLimited(120);
     if (mode === 'busy' && !req.busyFallback) {
       const r = ERROR_REPLIES.busy();
       // The demo shows the chooser without the real 14 s of backoff: "retry now" is what Retry-After 0 means.
       return r.kind === 'error' ? { ...r, headers: { ...r.headers, 'retry-after': '0' } } : r;
     }
+    if (holding && req.path === 'chat/completions') return { kind: 'hang' };
     const q = queue[0];
     if (q?.kind === 'fail') {
       q.left--;
@@ -215,7 +223,8 @@ export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
       const text = typeof q.value === 'function' ? q.value(req.body) : q.value;
       return { kind: 'text', text, model: req.busyFallback ? NVIDIA : DEMO_MODEL };
     }
-    return fakeReply(req);
+    const reply = fakeReply(req);
+    return mode === 'cut' && reply.kind === 'text' ? { ...reply, finish: 'length' } : reply;
   }
 
   const scripted = createScriptedTransport((r) => script(r as AiPipeRequest), {
@@ -246,6 +255,9 @@ export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
       },
       fail(code) {
         queue.push({ kind: 'fail', code, left: TRANSIENT.has(code) ? 4 : 1 });
+      },
+      hold() {
+        holding = true;
       },
     },
     async send(req: AiPipeRequest, onEvent: (e: AiWireEvent) => void) {

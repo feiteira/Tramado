@@ -4,7 +4,7 @@
 // transcription card takes its place. Keys (focus not in text, no modal): Space, ←/→ (Shift: 30 s), [ and ],
 // F follow, N note, 1–4 markers, E edit, Ctrl/⌘+F find.
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, CircleCheck, PanelRight, Pencil, Search, Sparkles, TriangleAlert, X, ChevronDown, ChevronUp, Ellipsis, MessageSquare, Highlighter, Copy, Lock } from 'lucide-react';
+import { ArrowDownToLine, Download, CircleCheck, PanelRight, Pencil, Search, Sparkles, TriangleAlert, X, ChevronDown, ChevronUp, Ellipsis, MessageSquare, Highlighter, Copy, Lock } from 'lucide-react';
 import { DateTime } from 'luxon';
 import type { MarkerKind, Segment } from '../../core/model/files';
 import type { ClassId, ClassPath, SegmentId, Ulid } from '../../core/model/ids';
@@ -39,7 +39,7 @@ import { TranscriptView, type TvDecoration, type TvRef, type TvSegment } from '.
 import { useLectureActions } from '../lectures/actions';
 import { cardModel, TranscriptionCard } from '../lectures/TranscriptionCard';
 import { duration, findAll, firstName, longClock, rowDate, shortClock, spokenTime } from '../lectures/format';
-import { usePlayback } from './playback';
+import { lastPlayback, usePlayback } from './playback';
 import { SidePanel, type ExplainRequest, type SideTab } from './SidePanel';
 import { SpeakersDialog } from './SpeakersDialog';
 import './lecture.css';
@@ -128,8 +128,9 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
   const [followPaused, setFollowPaused] = useState(false);
   const onTime = useCallback((t: number, p: boolean) => {
     setMs(t);
+    lastPlayback.set({ classId, lectureId, ms: t });
     setPlaying(p);
-  }, []);
+  }, [classId, lectureId]);
   const seek = useCallback((target: number, play = false) => {
     const h = player.current;
     if (h) {
@@ -796,7 +797,18 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
       />
       <div className="lecture-player">
         {noAudio ? (
-          <Notice tone="neutral" data-testid="player-no-audio" className="lecture-player__noaudio">
+          <Notice
+            tone="neutral"
+            data-testid="player-no-audio"
+            className="lecture-player__noaudio"
+            actions={
+              detail.view.audio?.skipped ? (
+                <Button size="sm" icon={Download} onClick={() => void cls.lectures.fetchAudio(lectureId).catch((e: unknown) => toast.error(e))} data-testid="player-get-audio">
+                  {t('lectures.player.noAudio.getIt')}
+                </Button>
+              ) : undefined
+            }
+          >
             {noAudio}
           </Notice>
         ) : (

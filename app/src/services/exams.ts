@@ -29,7 +29,7 @@ import { answerView, deviceRef, isPrivateSource } from './ai';
 import { Store, derived, type ReadableStore } from './store';
 import type { AppContext } from './context';
 import type { AppServices, ClassStore } from './types/common';
-import type { AnswerOptions, ExamDraft, ExamService } from './types/exams';
+import type { AnswerOptions, ExamDraft, ExamService, LaterAnswers } from './types/exams';
 import type { AiAnswerView, DeviceRef, ExamDateView, ExamKind, ExamPaperView, QuestionView } from './types/viewModels';
 
 type Progress = { done: number; total: number; current: QuestionId | null; error: ErrorCode | null };
@@ -94,8 +94,10 @@ export function reviewProblems(questions: readonly Question[]): string[] {
   return out;
 }
 
-export function createExamService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ExamService & { idle(): Promise<void> } {
+export function createExamService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ExamService & { idle(): Promise<void>; dispose(): void } {
   const { platform } = ctx;
+  // Set by dispose() (the services' phase ended, or the class left the library): no timer may start a batch after it.
+  let disposed = false;
   const { store, classId } = cls;
   const entries = new Map<Ulid, Entry>();
   const privates = new Map<Ulid, MarksFile>();
@@ -103,6 +105,10 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   const batches = new Map<Ulid, { ac: AbortController; progress: Store<Progress> }>();
   const running = new Store<Ulid[]>([]);
   const publishRunning = () => running.set([...batches.keys()]);
+  // INT: answers scheduled for when the free requests come back (`answerLater`), with their timers.
+  const later = new Store<LaterAnswers[]>([]);
+  const laterTimers = new Map<Ulid, () => void>();
+  const LATER_PATH = 'exams-later.json';
   const sent = new Map<string, { passages: number; chars: number }>();   // per answer id, this session
   const foldTimers = new Map<Ulid, () => void>();
   const list = new Store<{ dates: ExamDateView[]; papers: ExamPaperView[] }>({ dates: [], papers: [] });
@@ -120,6 +126,48 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   const ai = () => app().ai;
   const notesDir = () => store.dir('notes');
   const now = () => ctx.clock.now();
+
+  // ── Answers for later (INT) ──────────────────────────────────────────────────────────────────────
+  async function saveLater(list: LaterAnswers[]) {
+    later.set(list);
+    const body = { format: 'tramado.exams-later', version: 1, later: list };
+    if (list.length) await platform.privateFiles.write(classId, LATER_PATH, new TextEncoder().encode(JSON.stringify(body)));
+    else await platform.privateFiles.remove(classId, LATER_PATH).catch(() => undefined);
+  }
+  function armLater(item: LaterAnswers) {
+    if (disposed) return;
+    laterTimers.get(item.examId)?.();
+    const at = Date.parse(item.at);
+    // Overdue (the app was closed at the reset): a few seconds after start, once the class is read.
+    const wait = Math.max(5_000, Math.min(Number.isFinite(at) ? at - now() : 0, 2_000_000_000));
+    laterTimers.set(item.examId, ctx.clock.setTimeout(() => {
+      laterTimers.delete(item.examId);
+      if (disposed) return;
+      void (async () => {
+        await saveLater(later.get().filter((x) => x.examId !== item.examId));
+        if (!entries.has(item.examId)) await load().catch(() => undefined);
+        if (!entries.has(item.examId)) return;
+        startBatch(item.examId, item.qids, 'quick', item.scope);
+      })().catch((e: unknown) => ctx.log('warn', 'exams: the answers for later did not start', { examId: item.examId, error: String(e) }));
+    }, wait));
+  }
+  async function cancelLater(examId: Ulid) {
+    laterTimers.get(examId)?.();
+    laterTimers.delete(examId);
+    if (later.get().some((x) => x.examId === examId)) await saveLater(later.get().filter((x) => x.examId !== examId));
+  }
+  void (async () => {
+    try {
+      const bytes = await platform.privateFiles.read(classId, LATER_PATH);
+      if (!bytes || disposed) return;
+      const j = JSON.parse(new TextDecoder().decode(bytes)) as { format?: string; later?: LaterAnswers[] };
+      const list = j.format === 'tramado.exams-later' && Array.isArray(j.later) ? j.later.filter((x) => x && typeof x.examId === 'string' && Array.isArray(x.qids) && typeof x.at === 'string') : [];
+      later.set(list);
+      list.forEach(armLater);
+    } catch (e) {
+      ctx.log('warn', 'exams: answers for later unreadable', { error: String(e) });
+    }
+  })();
 
   // ── Loading ──────────────────────────────────────────────────────────────────────────────────────
   async function readPrivate(examId: Ulid): Promise<MarksFile> {
@@ -226,7 +274,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   // ── The importer folds exam-edits (folder spec §8.13; never written by 0.1, but read and folded) ──────────
   function scheduleFold(e: Entry) {
     const mine = myDevice();
-    if (!mine || e.raw.importedBy.deviceId !== mine || foldTimers.has(e.raw.id)) return;
+    if (disposed || !mine || e.raw.importedBy.deviceId !== mine || foldTimers.has(e.raw.id)) return;
     if (!foldExamEdits(e.raw, e.edits).changed) return;
     foldTimers.set(e.raw.id, ctx.clock.setTimeout(() => {
       foldTimers.delete(e.raw.id);
@@ -671,6 +719,14 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       await Promise.resolve();
       while (loading) await loading;
     },
+    /** INT review: the timers of answers for later and of folds stop with the services (no batch from a dead instance). */
+    dispose() {
+      disposed = true;
+      for (const off of laterTimers.values()) off();
+      laterTimers.clear();
+      for (const off of foldTimers.values()) off();
+      foldTimers.clear();
+    },
     async createUpcoming(input) {
       const who = me();
       const t = now();
@@ -825,6 +881,15 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       batches.get(examId)?.ac.abort();
     },
     progress: (examId) => batches.get(examId)?.progress ?? null,
+    later,
+    async answerLater(examId, qids, scope, at) {
+      await cancelLater(examId);
+      if (!qids.length) return;
+      const item: LaterAnswers = { examId, qids: [...qids], scope, at };
+      await saveLater([...later.get().filter((x) => x.examId !== examId), item]);
+      armLater(item);
+    },
+    cancelLater,
     async setMyAnswer(examId, qid, text) {
       await updatePrivate(examId, (m) => {
         if (text) m.myAnswers[qid] = text;
@@ -886,6 +951,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       batches.get(examId)?.ac.abort();
       foldTimers.get(examId)?.();
       foldTimers.delete(examId);
+      await cancelLater(examId);
       if (e.dir && e.dir !== '.') await store.remove(e.dir, { recursive: true });
       else await store.remove(e.manifest);
       const mine = myDevice();

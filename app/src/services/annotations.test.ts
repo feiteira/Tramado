@@ -49,7 +49,7 @@ describe('AnnotationService', () => {
     expect(lines.map((l) => l.type)).toEqual(['add', 'edit']);
     expect(lines[0]).toMatchObject({ format: 'tramado.annotation', version: 1, annotationId: id, memberId: env.ctx.identity.get()!.memberId });
     expect([...platform.mem.list(classId).keys()].some((p) => p.includes('annotations'))).toBe(false);
-    await expect(ann.add({ visibility: 'class', kind: 'comment', target, body: 'x' })).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED' });
+    await expect(ann.add({ visibility: 'class', kind: 'comment', target, body: 'x' })).rejects.toMatchObject({ code: 'INVALID' });
     await expect(ann.add({ visibility: 'private', kind: 'comment', target, body: 'x'.repeat(8001) })).rejects.toMatchObject({ code: 'INVALID' });
     await ann.remove(id);
     await env.idle();

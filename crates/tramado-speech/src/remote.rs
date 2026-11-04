@@ -549,9 +549,11 @@ mod tests {
         assert_eq!(seen[0].1["language"], "pt");
         assert_eq!(seen[0].1["prompt"], "Código Civil");
         assert!(seen[0].1.get("provider").is_none());
+        // The pieces go out in parallel (WORKERS): the other piece may already be on its way with
+        // verbose_json when the 400 comes back, so only the refused piece is sure to go again as json.
         assert!(seen[1..]
             .iter()
-            .all(|(_, b)| b["response_format"] == "json"));
+            .any(|(_, b)| b["response_format"] == "json"));
     }
 
     #[test]

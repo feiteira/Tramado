@@ -134,7 +134,7 @@ describe('memory platform', () => {
     await p.ai.send({ requestId: 'r1', base: { type: 'openrouter' }, method: 'POST', path: 'chat/completions', stream: true }, (e) => events.push(e));
     await Promise.resolve();
     expect(events).toEqual([{ type: 'fail', code: 'AI_NO_KEY', message: expect.any(String) }]);
-    await expect(p.sync.joinClass({ code: 'tri1_x', dirName: 'x', includeAudio: true })).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED' });
+    await expect(p.sync.joinClass({ code: 'tri1_x', dirName: 'x', includeAudio: true })).rejects.toMatchObject({ code: 'SYNC_UNAVAILABLE' });
     expect(p.speech).toBeUndefined();
   });
 });

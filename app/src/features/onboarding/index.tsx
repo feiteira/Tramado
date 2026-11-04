@@ -336,6 +336,7 @@ function NameStep({ services, onBack, onDone }: { services?: AppServices; onBack
 type AiResult =
   | { kind: 'checking' }
   | { kind: 'ok'; model: string; n: number | null }
+  | { kind: 'okBusy'; fallback: string }
   | { kind: 'bad' }
   | { kind: 'offline' }
   | { kind: 'failed'; message: string };
@@ -348,7 +349,7 @@ function AiStep({ services, onBack, onDone }: { services: AppServices; onBack():
   const [show, setShow] = useState(false);
   const [result, setResult] = useState<AiResult | null>(null);
   const checking = result?.kind === 'checking';
-  const ok = result?.kind === 'ok';
+  const ok = result?.kind === 'ok' || result?.kind === 'okBusy';
 
   const test = async () => {
     if (!key.trim()) return;
@@ -357,7 +358,9 @@ function AiStep({ services, onBack, onDone }: { services: AppServices; onBack():
       await services.ai.setKey(key.trim());
       const r = await services.ai.testKey();
       const model = services.ai.label(services.ai.settings.get().model).label;
-      if (r.ok) setResult({ kind: 'ok', model, n: r.remaining ?? null });
+      const chain = services.ai.settings.get().chain;
+      if (r.ok && r.busy) setResult({ kind: 'okBusy', fallback: services.ai.label(chain[1] ?? chain[0] ?? '').label });
+      else if (r.ok) setResult({ kind: 'ok', model, n: r.remaining ?? null });
       else if (r.code === 'AI_AUTH') {
         await services.ai.clearKey().catch(() => undefined);
         setResult({ kind: 'bad' });
@@ -467,6 +470,12 @@ function AiResultLine({ result }: { result: AiResult }) {
       return (
         <Notice tone="success" data-testid="onboarding-ai-result" data-state="ok">
           {result.n !== null ? t('onboarding.ai.ok', { model: result.model, n: result.n }) : t('onboarding.ai.okNoQuota', { model: result.model })}
+        </Notice>
+      );
+    case 'okBusy':
+      return (
+        <Notice tone="info" data-testid="onboarding-ai-result" data-state="okBusy">
+          {t('onboarding.ai.okBusy', { fallback: result.fallback })}
         </Notice>
       );
     case 'bad':

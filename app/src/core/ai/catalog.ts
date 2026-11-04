@@ -25,9 +25,25 @@ export interface CatalogModelView {
 /** Models that are never offered: classifiers, routers to paid models, app-gated free models (AI_MODEL_GATED). */
 const HIDDEN = [/content-safety/i, /guard/i, /^thinkingmachines\/inkling/i];
 
-/** UX §8 OQ13: the catalog name without "Vendor: "; without a catalog the id after `/`, `:free` → " (free)". */
+/**
+ * INT (UX §8 OQ13): the names of the models Tramado ships in its chains (ai-defaults.json), for when the catalog is
+ * unavailable (offline, a fresh install, a custom host): as OpenRouter names them, without "Vendor: ".
+ */
+export const BUNDLED_LABELS: Readonly<Record<string, string>> = {
+  'google/gemma-4-31b-it:free': 'Gemma 4 31B (free)',
+  'google/gemma-4-26b-a4b-it:free': 'Gemma 4 26B A4B (free)',
+  'dots-studio/dots-3-note-preview:free': 'Dots 3 Note Preview (free)',
+  'nvidia/nemotron-3.5-super-vl:free': 'Nemotron 3.5 Super VL (free)',
+  'nvidia/nemotron-3-ultra-550b-a55b:free': 'Nemotron 3 Ultra (free)',
+  'openai/whisper-large-v3-turbo': 'Whisper Large v3 Turbo',
+  'openrouter/free': 'Free models router',
+};
+
+/** UX §8 OQ13: the catalog name without "Vendor: "; without a catalog the bundled name, else the id after `/`, `:free` → " (free)". */
 export function modelLabel(id: string, name?: string | null): string {
   if (name && name.trim()) return name.replace(/^[^:]{1,40}:\s+/, '').trim();
+  const bundled = BUNDLED_LABELS[id];
+  if (bundled) return bundled;
   const tail = id.includes('/') ? id.slice(id.indexOf('/') + 1) : id;
   return tail.endsWith(':free') ? `${tail.slice(0, -5)} (free)` : tail;
 }
@@ -58,6 +74,25 @@ export function parseModels(body: unknown): CatalogEntry[] {
     return e ? [e] : [];
   });
 }
+
+/**
+ * INT: whether a model is busy now, from `GET models/<id>/endpoints` (free: it uses no request of the quota). Busy =
+ * every endpoint is down (`status` < 0) or failing most requests of the last 5 minutes (rate limits count). Null when
+ * the body says nothing.
+ */
+export function modelBusy(body: unknown): boolean | null {
+  const eps = (body as { data?: { endpoints?: unknown } } | null)?.data?.endpoints;
+  if (!Array.isArray(eps) || eps.length === 0) return null;
+  const healthy = (e: unknown) => {
+    const x = (e ?? {}) as { status?: unknown; uptime_last_5m?: unknown; uptime_last_30m?: unknown };
+    if (typeof x.status === 'number' && x.status < 0) return false;
+    const up = typeof x.uptime_last_5m === 'number' ? x.uptime_last_5m : typeof x.uptime_last_30m === 'number' ? x.uptime_last_30m : null;
+    return up === null || up >= BUSY_UPTIME;
+  };
+  return !eps.some(healthy);
+}
+/** Below this uptime (percent, last 5 minutes) an endpoint counts as busy. */
+const BUSY_UPTIME = 60;
 
 export function capsOf(m: CatalogEntry): ModelCaps {
   const params = m.supported_parameters ?? [];

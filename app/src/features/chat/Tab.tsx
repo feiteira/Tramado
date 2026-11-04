@@ -21,8 +21,8 @@ import { SearchField } from '../../ui/components/Field';
 import { useToast } from '../../ui/components/Toast';
 import { Composer, decodeMentions, encodeMentions, type MentionOption } from '../../ui/tramado/Composer';
 import { useI18n } from '../../ui/i18n';
-import { chatRows, excerpt, findMatches, lastEditable, mentionsMe, visibleItems, WINDOW } from './model';
-import { ChatLine, type LineContext } from './ChatLine';
+import { chatRows, chatWindow, excerpt, findMatches, lastEditable, mentionsMe, slide, startFor, visibleItems } from './model';
+import { ChatLineMemo, type LineContext } from './ChatLine';
 import './chat.css';
 
 const parseRef = (id: string): MsgRef => {
@@ -48,7 +48,8 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   const classView = classes.find((c) => c.id === classId);
   const me = detail.me;
 
-  const [extra, setExtra] = useState(0);
+  // The rendered window (INT): null follows the end; else the id of its first message (ids survive older loads).
+  const [startId, setStartId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<ChatMessageView | null>(null);
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   const [findOpen, setFindOpen] = useState(false);
@@ -89,8 +90,12 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     const joins = joinedLines.filter((j) => !first || !view.olderAvailable || j.at >= first);
     return [...lines, ...joins].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
   }, [view.items, view.loaded, view.olderAvailable, joinedLines]);
-  const hidden = Math.max(0, all.length - (WINDOW + extra));
-  const shown = useMemo(() => all.slice(hidden), [all, hidden]);
+  const startIndex = startId === null ? null : all.findIndex((m) => m.id === startId);
+  const win = chatWindow(all.length, startIndex !== null && startIndex >= 0 ? startIndex : null);
+  const hidden = win.start;
+  const shown = useMemo(() => all.slice(win.start, win.end), [all, win.start, win.end]);
+  const allRef = useRef(all);
+  allRef.current = all;
   const rows = useMemo(() => chatRows(shown), [shown]);
 
   const nameOf = useCallback((m: ChatMessageView) => (m.unverified ? t('chat.unverifiedAuthor', { device: m.author.deviceName || m.author.deviceId.slice(0, 7) }) : m.author.memberName), [t]);
@@ -110,10 +115,48 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     if (el) el.scrollTop = el.scrollHeight;
   };
 
+  // Sliding the window keeps the first visible message where it was (WebKit has no CSS scroll anchoring).
+  const anchor = useRef<{ id: string; top: number } | null>(null);
+  const captureAnchor = () => {
+    const el = scroller.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    for (const node of el.querySelectorAll<HTMLElement>('[data-message-id]')) {
+      const r = node.getBoundingClientRect();
+      if (r.bottom > box.top) {
+        anchor.current = { id: node.dataset.messageId ?? '', top: r.top - box.top };
+        return;
+      }
+    }
+  };
+  const moveWindow = (start: number | null) => {
+    captureAnchor();
+    setStartId(start === null ? null : allRef.current[start]?.id ?? null);
+  };
+  useLayoutEffect(() => {
+    const a = anchor.current;
+    anchor.current = null;
+    const el = scroller.current;
+    if (!a || !el) return;
+    const node = el.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(a.id)}"]`);
+    if (node) el.scrollTop += node.getBoundingClientRect().top - el.getBoundingClientRect().top - a.top;
+  }, [win.start, win.end]);
+  // After older months loaded above the window, the window grows into them.
+  const pendingEarlier = useRef<string | null>(null);
+  useEffect(() => {
+    const id = pendingEarlier.current;
+    if (!id) return;
+    const i = all.findIndex((m) => m.id === id);
+    if (i > 0) {
+      pendingEarlier.current = null;
+      moveWindow(slide(all.length, i, 'earlier'));
+    }
+  }, [all]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Stick to the bottom while the reader is there; announce new messages from others (role=log, polite).
   useLayoutEffect(() => {
     if (!view.loaded) return;
-    if (atBottom.current) scrollToBottom();
+    if (atBottom.current && win.tail) scrollToBottom();
     const ids = new Set(view.items.map((m) => m.id));
     if (seen.current) {
       const fresh = view.items.filter((m) => !seen.current!.has(m.id) && !m.author.self && m.kind !== 'system');
@@ -143,7 +186,10 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   function reveal(id: string) {
     const idx = all.findIndex((m) => m.id === id);
     if (idx < 0) return;
-    if (idx < hidden) setExtra(all.length - WINDOW - idx + 20);
+    if (idx < win.start || idx >= win.end) {
+      const s = startFor(all.length, idx);
+      setStartId(s === null ? null : all[s]?.id ?? null);
+    }
     requestAnimationFrame(() => {
       const el = scroller.current?.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(id)}"]`);
       if (!el) return;
@@ -160,25 +206,26 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   }, [currentHit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadEarlier() {
-    if (hidden > 0) {
-      const el = scroller.current;
-      const before = el ? el.scrollHeight - el.scrollTop : 0;
-      setExtra((x) => x + WINDOW);
-      requestAnimationFrame(() => {
-        if (el) el.scrollTop = el.scrollHeight - before;
-      });
+    if (win.start > 0) {
+      moveWindow(slide(all.length, win.start, 'earlier'));
       return;
     }
     if (!view.olderAvailable || loadingOlder) return;
     setLoadingOlder(true);
     const el = scroller.current;
     const before = el ? el.scrollHeight - el.scrollTop : 0;
+    // The window stays on its first message; the months that load go above it, and the window then grows into them.
+    const first = all[win.start]?.id ?? null;
+    if (first) {
+      setStartId(first);
+      pendingEarlier.current = first;
+    }
     try {
       await cls.chat.loadOlder();
     } finally {
       setLoadingOlder(false);
       requestAnimationFrame(() => {
-        if (el) el.scrollTop = el.scrollHeight - before;
+        if (el && !anchor.current) el.scrollTop = el.scrollHeight - before;
       });
     }
   }
@@ -186,9 +233,12 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   const onScroll = () => {
     const el = scroller.current;
     if (!el) return;
-    atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    atBottom.current = win.tail && fromBottom < 48;
     if (atBottom.current && view.unread > 0) cls.chat.markRead();
     if (el.scrollTop < 80 && (hidden > 0 || view.olderAvailable)) void loadEarlier();
+    // Back down: the window slides towards the newest messages, and follows the end again once it holds it.
+    else if (fromBottom < 80 && (!win.tail || startId !== null)) moveWindow(win.tail ? null : slide(all.length, win.start, 'later'));
   };
 
   async function send(text: string, attachments: Picked[], reply: MsgRef | null) {
@@ -314,7 +364,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     scroller.current?.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(id)}"]`)?.focus();
   };
 
-  const ctx: LineContext = {
+  const rawCtx: LineContext = {
     classId, services, me, people, allNames, lectures, aiLocal, folder: `${detail.meta.dirs.documents} › ${detail.meta.dirs.fromChat}`, aiLabel: (id) => services.ai.label(id), nameOf,
     mine: (m) => m.author.self && !m.unverified,
     mentionsMe: (m) => mentionsMe(m, me.memberId),
@@ -332,6 +382,17 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     openDoc: (relPath) => go({ name: 'document', classId, relPath }),
     go,
   };
+  // The lines are memoised (ChatLineMemo): their callbacks go through a ref, so a line that did not change keeps
+  // working with the latest state without re-rendering.
+  const live = useRef(rawCtx);
+  live.current = rawCtx;
+  const stable = useMemo<Pick<LineContext, 'aiLabel' | 'nameOf' | 'mine' | 'mentionsMe' | 'setEditing' | 'saveEdit' | 'setFocusId' | 'reply' | 'copy' | 'edit' | 'remove' | 'reveal' | 'retryAi' | 'setUpAi' | 'openDoc' | 'go'>>(() => ({
+    aiLabel: (id) => live.current.aiLabel(id), nameOf: (m) => live.current.nameOf(m), mine: (m) => live.current.mine(m), mentionsMe: (m) => live.current.mentionsMe(m),
+    setEditing: (e) => live.current.setEditing(e), saveEdit: () => live.current.saveEdit(), setFocusId: (id) => live.current.setFocusId(id),
+    reply: (m) => live.current.reply(m), copy: (m) => live.current.copy(m), edit: (m) => live.current.edit(m), remove: (m) => live.current.remove(m),
+    reveal: (id) => live.current.reveal(id), retryAi: (m) => live.current.retryAi(m), setUpAi: () => live.current.setUpAi(), openDoc: (p) => live.current.openDoc(p), go: (r) => live.current.go(r),
+  }), []);
+  const ctx: LineContext = { ...rawCtx, ...stable };
 
   const othersExist = detail.people.some((p) => !p.isMe);
   const empty = view.loaded && all.filter((m) => m.kind !== 'system').length === 0;
@@ -410,7 +471,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
                   <span>{dayLabel(r.day, i18n)}</span>
                 </div>
               ) : (
-                <ChatLine key={r.key} row={r} ctx={ctx} />
+                <ChatLineMemo key={r.key} row={r} ctx={ctx} />
               ),
             )
           )}

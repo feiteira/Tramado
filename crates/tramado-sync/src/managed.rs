@@ -29,6 +29,7 @@ pub const PER_DEVICE_HEADER: &str = "// Tramado per-device (v1)";
 pub const SKIP_AUDIO_COMMENT: &str = "// skip audio files";
 pub const SKIP_AUDIO_LINE: &str = "(?d)/**/audio.webm";
 pub const LOCAL_COMMENT: &str = "// removed from this computer only";
+pub const INCLUDE_COMMENT: &str = "// recordings fetched although audio is skipped";
 pub const USER_MARKER: &str = "// User patterns (kept by Tramado)";
 
 /// The own device name while no class is joining (§9.4).
@@ -57,15 +58,36 @@ pub fn ignore_lines(
     local_ignores: &[String],
     existing: &[String],
 ) -> Vec<String> {
+    ignore_lines_with(skip_audio, local_ignores, &[], existing)
+}
+
+/// [`ignore_lines`] plus the recordings this device fetches although it skips audio
+/// ("Get the recording", UX §3.5.2): each `audio.webm` path is emitted as `!/` + path right
+/// before the skip-audio line, because Syncthing applies the first pattern that matches.
+pub fn ignore_lines_with(
+    skip_audio: bool,
+    local_ignores: &[String],
+    local_includes: &[String],
+    existing: &[String],
+) -> Vec<String> {
     let mut out: Vec<String> = vec![MANAGED_HEADER.to_string()];
     out.extend(MANAGED_BLOCK.iter().map(|s| s.to_string()));
-    let locals: Vec<&String> = local_ignores
+    let usable = |p: &&String| !p.is_empty() && !p.contains('\n') && !p.starts_with('/');
+    let locals: Vec<&String> = local_ignores.iter().filter(usable).collect();
+    let includes: Vec<&String> = local_includes
         .iter()
-        .filter(|p| !p.is_empty() && !p.contains('\n') && !p.starts_with('/'))
+        .filter(usable)
+        .filter(|p| p.as_str() == "audio.webm" || p.ends_with("/audio.webm"))
         .collect();
     if skip_audio || !locals.is_empty() {
         out.push(PER_DEVICE_HEADER.to_string());
         if skip_audio {
+            if !includes.is_empty() {
+                out.push(INCLUDE_COMMENT.to_string());
+                for p in includes {
+                    out.push(format!("!/{}", escape_glob(p)));
+                }
+            }
             out.push(SKIP_AUDIO_COMMENT.to_string());
             out.push(SKIP_AUDIO_LINE.to_string());
         }
@@ -84,7 +106,12 @@ pub fn ignore_lines(
 }
 
 pub fn ignore_lines_for(entry: &ClassEntry, existing: &[String]) -> Vec<String> {
-    ignore_lines(entry.skip_audio, &entry.local_ignores, existing)
+    ignore_lines_with(
+        entry.skip_audio,
+        &entry.local_ignores,
+        &entry.local_includes,
+        existing,
+    )
 }
 
 /// `PATCH /rest/config/options` (§2.7, §21). `dev_isolated` (TRAMADO_DATA_DIR): loopback only,
@@ -203,6 +230,25 @@ mod tests {
         }
         assert!(text.ends_with("// User patterns (kept by Tramado)\nRascunhos\n// mine"));
         assert!(!text.contains("old managed"));
+    }
+
+    #[test]
+    fn fetched_recordings_come_before_the_skip_audio_line() {
+        let includes = vec![
+            "Aulas/2026-10-20 Aula 6/audio.webm".to_string(),
+            "Aulas/x/notes.md".to_string(),
+            // INT review: a lecture kept at the class root has its recording there too.
+            "audio.webm".to_string(),
+        ];
+        let text = ignore_lines_with(true, &[], &includes, &[]).join("\n");
+        assert!(text.contains(
+            "// Tramado per-device (v1)\n// recordings fetched although audio is skipped\n!/Aulas/2026-10-20 Aula 6/audio.webm\n!/audio.webm\n// skip audio files\n(?d)/**/audio.webm"
+        ));
+        // Only recordings are fetched this way, and only while audio is skipped.
+        assert!(!text.contains("notes.md"));
+        let off = ignore_lines_with(false, &[], &includes, &[]).join("\n");
+        assert!(!off.contains("!/"));
+        assert!(!off.contains(PER_DEVICE_HEADER));
     }
 
     #[test]

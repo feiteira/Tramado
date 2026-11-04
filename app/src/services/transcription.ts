@@ -20,6 +20,7 @@ import type { ModelId, SpeechInfo, TranscribeEvent, TranscribeRequest, Transcrip
 import type { AppContext } from './context';
 import { inLecture, updateLecturePrivate, type LectureRecord, type LectureServiceImpl } from './lectures';
 import { Store } from './store';
+import { expiredAudio, retentionDays } from './retention';
 import type { AppServices, ClassServices } from './types/common';
 import type { TranscribePhase, TranscriptionQueue, TranscriptionQueueState } from './types/transcription';
 
@@ -39,7 +40,7 @@ const CAUGHT_UP_MS = 60_000;
 /** The owner hand-over trigger and the "nobody transcribed it" nudge are checked this often (sync spec §14.8, §14.3). */
 export const HOURLY_CHECK_MS = 3_600_000;
 /** Release (not fail) a claim when the job could not start for a reason of this computer, not of the lecture. */
-const RELEASE_CODES: readonly ErrorCode[] = ['JOB_BUSY', 'MODEL_NOT_DOWNLOADED', 'AI_NO_KEY', 'CONFLICT', 'SPEECH_UNSUPPORTED_CPU', 'NOT_IMPLEMENTED'];
+const RELEASE_CODES: readonly ErrorCode[] = ['JOB_BUSY', 'MODEL_NOT_DOWNLOADED', 'AI_NO_KEY', 'CONFLICT', 'SPEECH_UNSUPPORTED_CPU'];
 
 export interface TranscriptionQueueImpl extends TranscriptionQueue {
   /** Re-evaluates every class now: views, volunteering timers, owner duties (tests, after changes). */
@@ -633,8 +634,32 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
         }
       }
     }
+    await sweepAudio();
     await evaluate();
     return taken;
+  }
+
+  /** INT: Settings › Storage "Remove recordings I made, once transcribed" (`privacy.deleteAudioAfterDays`). */
+  async function sweepAudio() {
+    const days = retentionDays(prefs.get('privacy.deleteAudioAfterDays'));
+    if (days === 0 || disposed) return;
+    for (const c of app().library.classes.get()) {
+      let lectures: LectureServiceImpl;
+      try {
+        lectures = lecturesOf(c.id);
+      } catch {
+        continue;
+      }
+      if (typeof lectures.records !== 'function') continue;
+      for (const id of expiredAudio(lectures.records().values(), { me: me(), days, now: clock.now() })) {
+        try {
+          await lectures.deleteAudio(id);
+          ctx.log('info', 'transcription: a transcribed recording was removed (retention)', { lectureId: id, days });
+        } catch (e) {
+          log('retention failed', e, { lectureId: id });
+        }
+      }
+    }
   }
 
   function scheduleHourly() {
@@ -667,7 +692,12 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     const handled = new Set<string>();
     for (const j of running) {
       const hit = findLecture(j.lectureId);
-      if (!hit) continue;
+      if (!hit) {
+        // INT review: a finished result of a lecture no class here holds (deleted, or its class removed): Rust restarted
+        // its claim heartbeat after the restart; stop it, or it would keep writing a claim for a lecture that is gone.
+        if (j.state === 'done') await s.transcribe.cancel(j.jobId, false).catch(() => undefined);
+        continue;
+      }
       const k = key(hit.classId, j.lectureId);
       handled.add(k);
       const claims = cls(hit.classId).claims;
@@ -695,8 +725,11 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
           };
           jobs.set(k, job);
           await track(finish(k).catch((e: unknown) => log('could not publish a finished result', e)));
-        } else if (!winner?.mine) {
-          await claims.remove(j.lectureId, 'transcribe').catch(() => undefined);
+        } else {
+          // Not ours to publish (or already published): Rust restarted the claim's heartbeat for this finished
+          // result after the restart (R-SPEECH gap, INT); stop it before the claim is let go.
+          await s.transcribe.cancel(j.jobId, false).catch(() => undefined);
+          if (!winner?.mine) await claims.remove(j.lectureId, 'transcribe').catch(() => undefined);
         }
       }
     }
@@ -757,9 +790,15 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
       if (started) return evaluate();
       started = true;
       offs.push(app().library.classes.subscribe(() => void evaluate()));
+      let retention = prefs.get('privacy.deleteAudioAfterDays');
       offs.push(prefs.store.subscribe(() => {
         state.update((s) => ({ ...s, volunteer: asVolunteer(prefs.get('speech.volunteer')), cloud: cloudState() }));
         void evaluate();
+        const next = prefs.get('privacy.deleteAudioAfterDays');
+        if (next !== retention) {
+          retention = next;
+          void track(sweepAudio().catch((e: unknown) => log('retention failed', e)));
+        }
       }));
       offs.push(app().models.models.subscribe(() => {
         void info(true).then(() => evaluate());

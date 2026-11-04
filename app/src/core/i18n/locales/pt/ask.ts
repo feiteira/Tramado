@@ -37,4 +37,7 @@ export const ask: Messages['ask'] = {
     setUp: 'Configurar a IA',
     search: 'Pesquisar',
   },
+  // INT (wave 3)
+  threadsShow: 'Mostrar conversas',
+  threadsHide: 'Esconder conversas',
 };

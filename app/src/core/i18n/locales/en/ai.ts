@@ -126,4 +126,10 @@ export const ai = {
     changePrivacy: 'Change privacy level…', tryAgain: 'Try again', tryAgainIn: 'Try again in {s} s', useFallback: 'Use {model}', usePaid: 'Use a paid model', allowHost: 'Allow {host}',
   },
   hostConfirm: { title: 'Allow Tramado to send AI requests to {host}?', body: 'Your questions and the passages they need will go to this address.', confirm: 'Allow' },
+  // INT (wave 3)
+  rateLimit: { text: 'Too many AI requests in a short time. Wait a moment, then try again.' },
+  cutoff: {
+    hint: 'The answer stopped before the end: the model ran out of room.',
+    moreRoom: 'Answer again with more room',
+  },
 };

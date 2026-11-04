@@ -344,8 +344,14 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     const recorder = r.lecture.recordedBy.deviceId === me();
     if (!a.shared) return recorder ? { present: true, arriving: false, skipped: false } : null;
     const present = r.audioSize === a.size;
-    const skipped = !present && store.state.get().entry.skipAudio;
+    const skipped = !present && skipsAudio(r);
     return { present, arriving: !present && !skipped, skipped };
+  }
+
+  /** "Skip audio files" is on here and this lecture's recording was not fetched anyway ("Get the recording"). */
+  function skipsAudio(r: LectureRecord): boolean {
+    const entry = store.state.get().entry;
+    return entry.skipAudio && !(entry.localIncludes ?? []).includes(r.audioPath);
   }
 
   function transcriptionState(r: LectureRecord): TranscriptionState {
@@ -383,7 +389,7 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     const a = r.lecture.audio;
     if (!a) return r.lecture.audioDeletedAt ? { kind: 'unavailable', reason: 'audioDeleted' } : { kind: 'none' };
     if (!a.shared && r.lecture.recordedBy.deviceId !== me()) return { kind: 'unavailable', reason: 'transcriptOnlyElsewhere' };
-    if (a.shared && r.audioSize !== a.size && !store.state.get().entry.skipAudio) return { kind: 'waitingAudio', have: r.audioSize ?? 0, size: a.size };
+    if (a.shared && r.audioSize !== a.size && !skipsAudio(r)) return { kind: 'waitingAudio', have: r.audioSize ?? 0, size: a.size };
     return { kind: 'none' };
   }
 
@@ -679,6 +685,18 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
       await store.remove(editLogPath(id, me())).catch(() => undefined);
       for (const p of [privateMarkersPath(id), privateLecturePath(id)]) await platform.privateFiles.remove(classId, p).catch(() => undefined);
       manifestCache.delete(r.item.manifest);
+      await schedule();
+    },
+    async fetchAudio(id) {
+      const r = await record(id);
+      const entry = (await platform.classes.list()).find((e) => e.classId === classId);
+      if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
+      const includes = entry.localIncludes ?? [];
+      if (includes.includes(r.audioPath)) return;
+      const next = await platform.classes.update(classId, { localIncludes: [...includes, r.audioPath] });
+      // The class views do not show the includes, so the library would not republish: the store takes the entry now.
+      (store as Partial<{ setEntry(e: typeof next): void }>).setEntry?.(next);
+      await app().library.load();
       await schedule();
     },
     async removeLocal(id) {

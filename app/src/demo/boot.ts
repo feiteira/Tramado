@@ -8,11 +8,12 @@ import { DIALOG_IDS, type DialogId, type DialogPropsMap } from '../features/regi
 import { createMemoryPlatform, type MemoryPlatform } from '../platform/memory';
 import { createFakeAi } from '../platform/memory/ai';
 import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
-import { createDemoSyncControls } from '../platform/memory/sync';
+import { createDemoSyncControls, localSyncInternals } from '../platform/memory/sync';
 import type { AppProps } from '../App';
 import type { AppServicesImpl } from '../services/index';
 import { systemClock } from '../services/context';
 import type { InitialDialog } from '../shell/AppState';
+import type { Picked } from '../platform/types';
 import { CLASS_TABS, ROUTE_NAMES, SETTINGS_SECTIONS, type ClassTabId, type Route, type SettingsSection } from '../shell/routes';
 import { createWorkerExtractHost, createWorkerHost, createWorkerImagePrep, createWorkerPdfRender } from '../workers/hosts';
 import type { DemoControls } from './controls';
@@ -21,7 +22,8 @@ import { installHooks } from './hooks';
 import { demoTranscript } from './example';
 import { tickFakeMedia } from './fakeMedia';
 import { DEMO_JOIN_CODE, MISSING_ID, type DemoKeys } from './keys';
-import { seedDemo } from './seed';
+import { loadDemoAsset, seedDemo } from './seed';
+import { shortIdOf } from '../core/model/ids';
 
 export interface DemoFlags {
   /** `demo=empty`: a first run (onboarding step 1). */
@@ -46,7 +48,7 @@ export interface DemoFlags {
   mode: 'extracting' | 'review' | 'answers' | 'practice' | null;
   section: SettingsSection | null;
   /** `real` (architecture §10): OpenRouter from the browser with the key typed in Settings, kept for the session only. */
-  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real';
+  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real' | 'ratelimit' | 'cut';
   speech: 'fake' | null;
   model: 'ready' | 'missing' | 'downloading';
   sync: 'fake' | 'offline' | 'error' | 'local';
@@ -58,6 +60,27 @@ export interface DemoFlags {
   missing: boolean;
   dialog: DialogId | null;
   code: string | null;
+  // ── INT (wave 3) fixtures; each is opt-in so the default library and its screenshots stay as they are ──
+  /** `disk=low`: 150 MB free (record pre-flight, model prompt, Settings › Storage "almost full"). */
+  disk: 'low' | null;
+  /** `skipaudio=1`: `law` skips audio files here and `l7`'s recording is not on this computer. */
+  skipAudio: boolean;
+  /** `winname=1`: a document of `law` named "Resumo: aula 6?.pdf" (the Windows file-name notice). */
+  windowsName: boolean;
+  /** `chat=many`: 5 000 more messages in `law`'s chat. */
+  chatMany: boolean;
+  /** `tray=ask`: the first share still asks about the tray (the first-share dialog shows). */
+  trayAsk: boolean;
+  /** `identity=copied`: this computer's sharing identity looks copied (SYNC_IDENTITY_COPIED). */
+  identityCopied: boolean;
+  /** `diagnostics=1`: Settings › Sharing opens with the diagnostics expanded. */
+  diagnostics: boolean;
+  /** `drag=<file name>`: files are being dragged over the window (the drop overlay). */
+  drag: string | null;
+  /** `recording=diskfull` (INT): the demo recording stops on its own after a moment, the disk being full (the dock's reason). */
+  recordingEnd: boolean;
+  /** `picked=vtt` (with `dialog=import`): a recording and its subtitles were picked ("use … as the transcript"). */
+  picked: 'vtt' | null;
 }
 
 const oneOf = <T extends string>(v: string | null, all: readonly T[], dflt: T): T => (v !== null && (all as readonly string[]).includes(v) ? (v as T) : dflt);
@@ -88,17 +111,27 @@ export function parseDemoFlags(search: string): DemoFlags {
     q: str(q.get('q')),
     mode: maybe(q.get('mode'), ['extracting', 'review', 'answers', 'practice'] as const),
     section: maybe(q.get('section'), SETTINGS_SECTIONS),
-    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey', 'real'] as const, 'fake'),
+    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey', 'real', 'ratelimit', 'cut'] as const, 'fake'),
     speech: q.get('speech') === 'fake' ? 'fake' : null,
     model: oneOf(q.get('model'), ['ready', 'missing', 'downloading'] as const, 'ready'),
     sync: oneOf(q.get('sync'), ['fake', 'offline', 'error', 'local'] as const, 'fake'),
-    recording: q.get('recording') === '1',
+    recording: q.get('recording') === '1' || q.get('recording') === 'diskfull',
+    recordingEnd: q.get('recording') === 'diskfull',
     join: q.get('join') === 'ask' ? 'ask' : null,
     unverified: q.get('unverified') === '1',
     conflict: q.get('conflict') === '1',
     missing: q.get('missing') === '1',
     dialog: maybe(q.get('dialog'), DIALOG_IDS),
     code: q.get('code') === 'demo' ? DEMO_JOIN_CODE : str(q.get('code')),
+    disk: q.get('disk') === 'low' ? 'low' : null,
+    skipAudio: q.get('skipaudio') === '1',
+    windowsName: q.get('winname') === '1',
+    chatMany: q.get('chat') === 'many',
+    trayAsk: q.get('tray') === 'ask',
+    identityCopied: q.get('identity') === 'copied',
+    diagnostics: q.get('diagnostics') === '1',
+    drag: str(q.get('drag'))?.slice(0, 120) ?? null,
+    picked: q.get('picked') === 'vtt' ? 'vtt' : null,
   };
 }
 
@@ -147,7 +180,7 @@ export function demoRoute(f: DemoFlags, keys: DemoKeys): Route {
     case 'ask':
       return { name: 'ask', ...(f.quote ? { query: f.quote } : {}) };
     case 'settings':
-      return { name: 'settings', ...(f.section ? { section: f.section } : {}) };
+      return { name: 'settings', ...(f.section ? { section: f.section } : {}), ...(f.diagnostics ? { section: 'sharing' as const, diagnostics: true } : {}) };
   }
 }
 
@@ -161,7 +194,7 @@ function demoRecording(classId: string, nowMs: number, state: 'stopped' | 'recov
 }
 
 /** The props `dialog=<id>` opens with: the class of `class=` (default `law`), the other keys likewise. */
-export function demoDialog(f: DemoFlags, keys: DemoKeys, nowMs: number): InitialDialog | null {
+export function demoDialog(f: DemoFlags, keys: DemoKeys, nowMs: number, extra: { picked?: Picked[] } = {}): InitialDialog | null {
   if (!f.dialog) return null;
   const classId = keys.classes[f.class ?? 'law'] ?? MISSING_ID;
   const exam = f.exam ? keys.exams[f.exam] : undefined;
@@ -169,7 +202,7 @@ export function demoDialog(f: DemoFlags, keys: DemoKeys, nowMs: number): Initial
   const props: { [I in DialogId]: DialogPropsMap[I] } = {
     'new-class': {}, 'class-settings': { classId }, leave: { classId }, invite: { classId }, join: f.code ? { code: f.code } : {},
     record: f.class ? { classId } : {}, save: { recording: demoRecording(classId, nowMs, 'stopped') }, recover: { recording: demoRecording(classId, nowMs, 'recovered') },
-    import: { classId }, model: { classId, lectureId: lecture?.lectureId ?? MISSING_ID }, 'exam-date': { classId, ...(exam ? { examId: exam.examId } : {}) },
+    import: { classId, ...(extra.picked ? { picked: extra.picked } : {}) }, model: { classId, lectureId: lecture?.lectureId ?? MISSING_ID }, 'exam-date': { classId, ...(exam ? { examId: exam.examId } : {}) },
     'exam-paper': { classId }, 'answer-settings': { classId, examId: exam?.examId ?? MISSING_ID, qids: [] }, shortcuts: {},
     'first-share': { classId }, 'mass-delete': { classId }, 'recently-deleted': { classId },
   };
@@ -192,6 +225,24 @@ function controlsFor(platform: MemoryPlatform, keys: DemoKeys, fakes: { flags: D
     ...(fakes.speech ? { speech: fakes.speech.controls(keys) } : {}),
     media: { tick: tickFakeMedia },
   };
+}
+
+/**
+ * `exam=final&mode=extracting` (INT): imports the mock paper as the final's, with the AI's answer held, so the
+ * extraction stays in progress; then opens it (`tramado:navigate`).
+ */
+async function startDemoExtraction(platform: MemoryPlatform, services: AppServicesImpl, ai: ReturnType<typeof createFakeAi>, classId: string) {
+  try {
+    ai.controls.hold();
+    const bytes = await loadDemoAsset('mock.pdf');
+    platform.mem.queueDialog({ picks: [{ name: 'Exame — época normal 2025-26.pdf', bytes }] });
+    const picks = await platform.dialogs.pickFiles({ title: 'Exam paper', filters: [], multiple: false });
+    const exams = services.forClass(classId).exams;
+    const draftId = await exams.startImport(picks, { title: 'Exame — época normal 2025/26', type: 'final' });
+    window.dispatchEvent(new CustomEvent('tramado:navigate', { detail: { name: 'exam', classId, examId: draftId, mode: 'extracting' } }));
+  } catch (e) {
+    console.error('demo extraction', e);
+  }
 }
 
 /** The transcripts the speech fake hands back for the demo lectures that have none yet (`l8`, `b4`). */
@@ -226,12 +277,30 @@ export async function bootDemo(search: string = window.location.search): Promise
     ...(speech ? { speech } : {}),
     power: { source: 'battery', percent: 64 },
     selftestUrl: '/demo/lecture.webm',
+    ...(flags.disk === 'low' ? { diskFree: 150_000_000 } : {}),
+    ...(flags.identityCopied ? { copiedIdentity: true } : {}),
   });
   const keys = await seedDemo(platform, {
     lang: flags.lang, theme: flags.theme, name: flags.name, nowMs, empty: flags.empty,
     // `ai=real` stores no fictional key: the student types theirs.
     join: flags.join, unverified: flags.unverified, conflict: flags.conflict, ai: flags.ai === 'real' ? 'off' : flags.ai,
+    brokenDoc: flags.doc === 'broken', windowsName: flags.windowsName, skipAudio: flags.skipAudio, solo: flags.class === 'solo',
+    ...(flags.chatMany ? { chatMany: 5000 } : {}), trayAsk: flags.trayAsk,
   });
+  // INT `picked=vtt`: the import dialog opens with a recording and its subtitles (fictional bytes).
+  let picked: Picked[] | null = null;
+  if (flags.picked === 'vtt') {
+    platform.mem.queueDialog({ picks: [
+      { name: 'aula-zoom-14-out.m4a', bytes: new Uint8Array(64) },
+      { name: 'aula-zoom-14-out.vtt', bytes: new TextEncoder().encode('WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nBom dia a todos.\n') },
+    ] });
+    picked = await platform.dialogs.pickFiles({ title: 'Add a recording', filters: [], multiple: true });
+  }
+  // INT `doc=arriving`: Bruno's slides are in the class's global index but not on this computer yet (doc-arriving).
+  const arriving = keys.docs.arriving;
+  const lawId = keys.classes.law;
+  const brunoDevice = keys.members.bruno?.deviceIds[0];
+  if (flags.doc === 'arriving' && arriving && lawId && brunoDevice) localSyncInternals(platform.sync)?.arriving.set(`${lawId}|${arriving.relPath}`, shortIdOf(brunoDevice));
   if (speech) {
     speech.bind(platform, { ...(keys.classes.law ? { recordingClassId: keys.classes.law } : {}) });
     scriptDemoTranscripts(speech, keys);
@@ -249,11 +318,16 @@ export async function bootDemo(search: string = window.location.search): Promise
         imagePrep: createWorkerImagePrep(imageWorker), pdfRender: createWorkerPdfRender(imageWorker),
       },
       initialRoute: () => demoRoute(flags, keys),
-      initialDialog: () => demoDialog(flags, keys, nowMs),
+      initialDialog: () => demoDialog(flags, keys, nowMs, picked ? { picked } : {}),
       example: { leave: () => window.location.assign(`${window.location.pathname}?demo=empty&lang=${flags.lang}&theme=${flags.theme}`) },
       onReady: (services: AppServicesImpl) => {
-        void services;
         hooks.ready = true;
+        // INT `exam=final&mode=extracting`: the final's paper is being read (the AI step held), then shown.
+        if (flags.exam === 'final' && flags.mode === 'extracting' && lawId) void startDemoExtraction(platform, services, ai, lawId);
+        // INT `drag=<name>`: the window reports files dragged over it (the drop overlay), as the desktop does.
+        if (flags.drag) for (const ms of [400, 1500, 3000]) setTimeout(() => platform.mem.emitDrag({ state: 'enter', names: [flags.drag!] }), ms);
+        // INT `recording=diskfull`: Rust ends the recording itself (`stopped` with `diskFull`).
+        if (flags.recordingEnd && speech) setTimeout(() => speech.endRecording('diskFull', 'DISK_FULL'), 1500);
       },
     },
   };

@@ -5,7 +5,7 @@ import { sha256Hex } from '../core/util/sha256';
 import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
 import type { ClassStoreImpl } from './classStore';
 import { createServices } from './index';
-import type { LectureServiceImpl } from './lectures';
+import { privateMarkersPath, type LectureServiceImpl } from './lectures';
 import type { RecordingServiceImpl } from './recording';
 import { installClassFakes } from './testing/fakeClaims';
 import { createTestContext } from './testing/context';
@@ -204,6 +204,64 @@ describe('RecordingService', () => {
     expect(recording.pending.get().map((r) => r.recordingId)).toEqual([rec.recordingId]);
     await recording.discard(rec.recordingId);
     expect(recording.pending.get()).toEqual([]);
+  });
+
+  it('INT: markers can be stamped earlier and undone; an end without Stop keeps its reason', async () => {
+    const { speech, recording, classId, platform } = await setup();
+    await recording.start({ classId, title: 'Aula 9', mode: 'room', includeMic: true, inputDeviceId: null, language: 'pt-PT', consent: { record: consent('record'), share: null, remember: false } });
+    speech.tick(60_000);
+    // A note stamped when its field opened (50 s), not when Enter was pressed.
+    const note = await recording.mark('note', 'rever', 50_000);
+    const exam = await recording.mark('exam');
+    expect(recording.state.get()!.markers.map((m) => [m.kind, m.rawMs])).toEqual([['note', 50_000], ['exam', 60_000]]);
+    await recording.removeMarker(exam!.id);
+    expect(recording.state.get()!.markers.map((m) => m.id)).toEqual([note!.id]);
+    speech.tick(100);
+    expect(recording.state.get()!.status.markers).toBe(1);
+    await expect(recording.removeMarker(exam!.id)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(recording.stopReason.get()).toBeNull();
+    speech.endRecording('diskFull', 'DISK_FULL');
+    expect(recording.state.get()).toBeNull();
+    expect(recording.stopReason.get()).toMatchObject({ classId, title: 'Aula 9', reason: 'diskFull', code: 'DISK_FULL' });
+    await recording.idle();
+    const rec = recording.pending.get()[0]!;
+    expect(rec.markers.map((m) => m.id)).toEqual([note!.id]);
+    // Undo after the recording ended: the marker leaves the recording waiting to be saved, also after a reload of the
+    // pending list (Rust's journal still has it) and in what the Save dialog publishes from its older copy (INT review).
+    await recording.removeMarker(note!.id);
+    expect(recording.pending.get()[0]!.markers).toEqual([]);
+    await recording.recover();
+    expect(recording.pending.get()[0]!.markers).toEqual([]);
+    const id = await recording.publish(rec, { title: 'Aula 9', share: 'audio+transcript', transcribe: 'later' });
+    expect(await platform.privateFiles.read(classId, privateMarkersPath(id))).toBeNull();
+    // A new start forgets the reason.
+    await recording.start({ classId, title: 'Aula 10', mode: 'room', includeMic: true, inputDeviceId: null, language: 'pt-PT', consent: { record: consent('record'), share: null, remember: false } });
+    expect(recording.stopReason.get()).toBeNull();
+  });
+
+  it('INT: subtitles picked with an import become the transcript (engine import/vtt)', async () => {
+    const { speech, recording, classId, platform, settle, lectures, me } = await setup();
+    platform.mem.queueDialog({ picks: [
+      { name: 'aula-zoom.m4a', bytes: new Uint8Array([1, 2, 3]) },
+      { name: 'aula-zoom.vtt', bytes: new TextEncoder().encode('WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nBom dia a todos.\n\n00:00:05.000 --> 00:00:08.000\nHoje falamos de restrições.\n') },
+    ] });
+    const [audio, vtt] = await platform.dialogs.pickFiles({ title: 'Add a recording', filters: [], multiple: true });
+    const done = recording.importAudio(classId, audio!, { title: 'Aula 5', keepVideo: false, transcribe: 'here', subtitles: vtt! });
+    await new Promise((r) => setTimeout(r, 0));
+    speech.tick(2000);
+    const id = await done;
+    await settle();
+    const files = platform.mem.list(classId);
+    const { dir, lecture } = findLecture(files);
+    const t = JSON.parse(dec.decode(files.get(`${dir}/transcript.json`)!.bytes));
+    expect(t).toMatchObject({ lectureId: id, round: 1, revision: 1, audioSha256: lecture.audio!.sha256, engine: { kind: 'import', name: 'vtt' }, writer: { deviceId: me.deviceId } });
+    expect(t.segments.map((s: { text: string }) => s.text)).toEqual(['Bom dia a todos.', 'Hoje falamos de restrições.']);
+    expect(dec.decode(files.get(`${dir}/transcript.vtt`)!.bytes)).toContain('Bom dia a todos.');
+    expect(files.has(`${dir}/transcript.md`)).toBe(true);
+    // The temporary copy is gone, nobody was asked to transcribe, and the lecture reads as transcribed.
+    expect([...files.keys()].filter((p) => p.startsWith('.tramado/tmp/'))).toEqual([]);
+    expect(speech.requests.transcribe).toEqual([]);
+    expect(lectures.list.get()[0]!.transcription.kind).toBe('done');
   });
 
   it('runs the input meter outside a recording', async () => {

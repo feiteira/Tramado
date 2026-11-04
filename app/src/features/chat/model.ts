@@ -5,6 +5,32 @@ import type { ChatMessageView } from '../../services/types/viewModels';
 export const GROUP_MS = 5 * 60_000;
 /** The list renders a window of the last messages (UX: "virtualised with a window of the last 200"). */
 export const WINDOW = 200;
+/** INT: at most this many messages are in the DOM; scrolling slides the window by STEP (smooth with 5 000 messages). */
+export const MAX_ROWS = 400;
+export const STEP = 100;
+
+/**
+ * The slice of `total` messages the list renders: the last WINDOW while it follows the end (`start` null), else
+ * at most MAX_ROWS from `start`. `tail` = the newest message is in the window.
+ */
+export function chatWindow(total: number, start: number | null): { start: number; end: number; tail: boolean } {
+  if (start === null || start < 0) return { start: Math.max(0, total - WINDOW), end: total, tail: true };
+  const s = Math.min(start, Math.max(0, total - 1));
+  const end = Math.min(total, s + MAX_ROWS);
+  return { start: s, end, tail: end === total };
+}
+
+/** Where the window starts after sliding: `earlier` by STEP, `later` by STEP (null = follow the end again). */
+export function slide(total: number, start: number, dir: 'earlier' | 'later'): number | null {
+  if (dir === 'earlier') return Math.max(0, start - STEP);
+  const next = start + STEP;
+  return next + MAX_ROWS >= total ? null : next;
+}
+
+/** The window start that shows message `index` (null when the end-following window already shows it). */
+export function startFor(total: number, index: number): number | null {
+  return index >= total - WINDOW ? null : Math.max(0, index - 50);
+}
 
 /** A failed @AI answer line: shown to its asker as a notice under the question, to nobody as a card. */
 export const isFailedAi = (m: ChatMessageView): boolean => m.kind === 'ai' && !!m.ai?.insufficient && !m.text.trim();

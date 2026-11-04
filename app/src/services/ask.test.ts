@@ -4,7 +4,8 @@ import { createTestContext } from './testing/context';
 import { createFakeSearch, testPassage, type FakeSearch } from './testing/fakeSearch';
 import { createFakeAi, type FakeAi } from '../platform/memory/ai';
 import { bodyOf } from '../core/ai/fake';
-import { chatMonthPath, createAskService, createGlobalAsk } from './ask';
+import { chatMonthPath, createAskService, createGlobalAsk, failedTurn } from './ask';
+import { PlatformError } from '../core/errors';
 import { manifestJson } from '../core/json';
 import type { AskService, AskTurn } from './types/ask';
 import type { AnnotationLine, ChatAi, ChatMessage, LectureFile, TranscriptFile } from '../core/model/files';
@@ -24,8 +25,8 @@ const CORPUS = [
 
 interface Bed { s: AppServicesImpl; ctx: AppContext; classId: ClassId; ask: AskService & { idle(): Promise<void> }; ai: FakeAi; search: FakeSearch; platform: MemoryPlatform; idle(): Promise<void> }
 
-async function bed(language = 'pt-PT'): Promise<Bed> {
-  const ai = createFakeAi({ mode: 'fake' });
+async function bed(language = 'pt-PT', mode: 'fake' | 'ratelimit' | 'cut' = 'fake'): Promise<Bed> {
+  const ai = createFakeAi({ mode });
   const { ctx, platform } = await createTestContext({ name: 'Ana Ribeiro', ai });
   await platform.secrets.set('openrouter', 'test-key-0002');
   const s = createServices(ctx);
@@ -117,6 +118,36 @@ describe('AskService (UX §3.11)', () => {
     const tid = await b.ask.ask(null, 'Pergunta?', { kinds: [] });
     const [turn] = await settle(b, tid);
     expect(turn).toMatchObject({ status: 'error', error: 'AI_NO_KEY' });
+    b.s.dispose();
+  });
+
+  it('INT review: the Retry-After wait counts from the failure, not from the question', () => {
+    const limited = new PlatformError('AI_FREE_LIMIT', 'per minute', { retryAfterMs: 60_000 });
+    expect(failedTurn(limited, 30_000)).toEqual({ status: 'error', error: 'AI_FREE_LIMIT', retryAfterS: 90 });
+    expect(failedTurn(limited)).toEqual({ status: 'error', error: 'AI_FREE_LIMIT', retryAfterS: 60 });
+    expect(failedTurn(new PlatformError('AI_UPSTREAM', 'x'), 5_000)).toEqual({ status: 'error', error: 'AI_UPSTREAM' });
+  });
+
+  it('INT: a rate limit keeps its Retry-After; a cut-off answer is marked and can be asked again with more room', async () => {
+    const limited = await bed('pt-PT', 'ratelimit');
+    const tid = await limited.ask.ask(null, 'O que diz o artigo 18?', { kinds: [] });
+    const [turn] = await settle(limited, tid);
+    expect(turn).toMatchObject({ status: 'error', error: 'AI_FREE_LIMIT', retryAfterS: 120 });
+    // Kept in the private history too.
+    const again = createAskService(limited.ctx, () => limited.s, { store: limited.s.forClass(limited.classId).store, classId: limited.classId });
+    await again.idle();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(again.thread(tid).get()[0]).toMatchObject({ retryAfterS: 120 });
+    limited.s.dispose();
+
+    const b = await bed('pt-PT', 'cut');
+    const t2 = await b.ask.ask(null, 'O que diz o artigo 18?', { kinds: [] });
+    const [cut] = await settle(b, t2);
+    expect(cut).toMatchObject({ status: 'ok', cut: true });
+    await b.ask.ask(t2, 'O que diz o artigo 18?', { kinds: [] }, { moreRoom: true });
+    await settle(b, t2);
+    const bodies = chat(b.ai).map((r) => (r.body as { max_tokens?: number }).max_tokens);
+    expect(bodies.at(-1)).toBe(8000);
     b.s.dispose();
   });
 

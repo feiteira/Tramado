@@ -39,6 +39,11 @@ export const ERROR_REPLIES = {
   privacy: (zdr = false): FakeReply => ({ kind: 'error', status: 404, headers: { 'content-type': 'application/json', 'x-openrouter-error-origin': 'client' }, body: { error: { message: `No endpoints found matching your data policy (${zdr ? 'Zero data retention' : 'Free model training'}). Configure: https://openrouter.ai/settings/privacy`, code: 404, metadata: { routing_funnel: [{ step: 'Initial Endpoints', endpoint_count: 1 }], failed_routing_step: 'Filter by Data Policy' } } } }),
   unsupported: (): FakeReply => ({ kind: 'error', status: 404, headers: { 'content-type': 'application/json', 'x-openrouter-error-origin': 'client' }, body: { error: { message: 'No endpoints found that can handle the requested parameters. To learn more about provider routing, visit: https://openrouter.ai/docs/guides/routing/provider-selection', code: 404, metadata: { routing_funnel: [{ step: 'Initial Endpoints', endpoint_count: 1 }], failed_routing_step: 'Filter by Parameters' } } } }),
   upstream: (): FakeReply => ({ kind: 'error', status: 502, headers: { 'content-type': 'application/json' }, body: { error: { message: 'HTTP 500: {"object":"error","message":"service inference failed","type":"server_error"}', code: 502 } } }),
+  /** INT: the per-minute limit of free models, which says when to come back (429 + Retry-After, no reset header). */
+  rateLimited: (retryAfterS = 120): FakeReply => ({
+    kind: 'error', status: 429, headers: { 'content-type': 'application/json', 'retry-after': String(retryAfterS) },
+    body: { error: { code: 429, message: 'Rate limit exceeded: free-models-per-min', metadata: { error_type: 'rate_limit_exceeded' } } },
+  }),
   unavailable: (retryAfterS = 3): FakeReply => ({ kind: 'error', status: 503, headers: { 'content-type': 'application/json', 'retry-after': String(retryAfterS) }, body: { error: { message: 'No provider is available to serve this request', code: 503 } } }),
 } as const;
 

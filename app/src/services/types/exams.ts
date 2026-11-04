@@ -59,7 +59,21 @@ export interface ExamService {
    * write (importer only; INVALID with `{ problems }` when numbers repeat or a text is empty).
    */
   saveQuestions(examId: Ulid, questions: Question[], meta: Partial<Pick<ExamFile, 'title' | 'type' | 'academicYear' | 'rules' | 'durationMin' | 'extraPoints' | 'scale'>>): Promise<void>;
+  // ── Additive (INT, wave 3) ──
+  /**
+   * More questions than the free requests left today (UX §3.9.7 "Tramado will answer {left} now and the rest after
+   * {time}"): the rest is answered at `at` (the quota's reset), also after a restart (`private/<classId>/exams-later.json`).
+   * A second call for the same exam replaces the first.
+   */
+  answerLater(examId: Ulid, qids: QuestionId[], scope: Answer['scope'], at: string): Promise<void>;
+  /** Forgets the answers scheduled for an exam. */
+  cancelLater(examId: Ulid): Promise<void>;
+  /** The answers scheduled for later, per exam. */
+  later: ReadableStore<LaterAnswers[]>;
 }
+
+/** INT: answers waiting for the free requests of the next day (`ExamService.answerLater`). */
+export interface LaterAnswers { examId: Ulid; qids: QuestionId[]; scope: Answer['scope']; at: string }
 
 /** Additive options of `answer` (T-AI): the busy chooser's "Use NVIDIA free models for this request". */
 export interface AnswerOptions { busyFallback?: boolean }

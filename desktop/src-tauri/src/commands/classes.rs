@@ -83,6 +83,9 @@ pub struct ClassPatch {
     pub skip_audio: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub local_ignores: Option<Vec<String>>,
+    /// INT (wave 3): `audio.webm` paths fetched although audio is skipped ("Get the recording").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local_includes: Option<Vec<String>>,
 }
 
 /// `class_list` options.
@@ -415,10 +418,13 @@ pub async fn class_update(
     class_id: String,
     patch: ClassPatch,
 ) -> AppResult<ClassEntryView> {
-    if let Some(ignores) = &patch.local_ignores {
-        for p in ignores {
-            confine::validate_class_path(p)?;
-        }
+    for p in patch
+        .local_ignores
+        .iter()
+        .chain(patch.local_includes.iter())
+        .flatten()
+    {
+        confine::validate_class_path(p)?;
     }
     let registry = shared.registry.clone();
     blocking(move || {
@@ -431,6 +437,9 @@ pub async fn class_update(
             }
             if let Some(l) = patch.local_ignores {
                 e.local_ignores = l;
+            }
+            if let Some(l) = patch.local_includes {
+                e.local_includes = l;
             }
         })?;
         Ok(ClassEntryView::of(e))

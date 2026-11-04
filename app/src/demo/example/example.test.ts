@@ -356,7 +356,8 @@ describe('seedDemo (UX §7.3 as files)', async () => {
   it('fills every UX §7.2 key', () => {
     expect(Object.keys(keys.classes).sort()).toEqual(['bio', 'hist', 'law', 'stats']);
     expect(Object.keys(keys.lectures).sort()).toEqual(['b3', 'b4', 'l6', 'l7', 'l8']);
-    expect(Object.keys(keys.docs).sort()).toEqual(['acordao', 'apuntes', 'calendario', 'cell', 'esquemas', 'lab2', 'lf', 'primer', 'resumo', 'slides3', 'slides6']);
+    // `arriving` (INT) is a key only: the slides are in the global index, not in the class (doc-arriving).
+    expect(Object.keys(keys.docs).sort()).toEqual(['acordao', 'apuntes', 'arriving', 'calendario', 'cell', 'esquemas', 'lab2', 'lf', 'primer', 'resumo', 'slides3', 'slides6']);
     expect(Object.keys(keys.notes).sort()).toEqual(['class8', 'mine6']);
     expect(Object.keys(keys.exams).sort()).toEqual(['final', 'freq', 'mock', 'parcial', 'pquiz', 'quiz1']);
     expect(Object.keys(keys.exams.mock!.questions).sort()).toEqual(['I', 'II', 'III', 'IIa', 'IIb', 'IIc']);
@@ -683,6 +684,29 @@ describe('seedDemo flags (UX §7.2)', () => {
   it('ai=off leaves AI without a key', async () => {
     const { platform } = await seeded({ ai: 'off' });
     expect((await platform.secrets.status('openrouter')).set).toBe(false);
+  });
+
+  it('INT fixtures: a damaged PDF, a name Windows refuses, skipped audio, a class of one, many messages, the tray question', async () => {
+    const { platform, keys } = await seeded({ brokenDoc: true, windowsName: true, skipAudio: true, solo: true, chatMany: 300, trayAsk: true });
+    const law = files(platform, keys.classes.law!);
+    expect(keys.docs.broken?.relPath).toBe('Documentos/Leituras/Apontamentos (danificado).pdf');
+    expect(new TextDecoder().decode(law.get(keys.docs.broken!.relPath)!.bytes).startsWith('%PDF-1.7')).toBe(true);
+    expect(law.has('Documentos/Leituras/Resumo: aula 6?.pdf')).toBe(true);
+    expect(keys.docs.arriving?.relPath).toBe('Documentos/Slides/Aula 8 — Estado de exceção (slides).pptx');
+    expect(law.has(keys.docs.arriving!.relPath)).toBe(false);
+    const entry = (await platform.classes.list()).find((e) => e.classId === keys.classes.law)!;
+    expect(entry.skipAudio).toBe(true);
+    const audio = [...law.keys()].filter((p) => p.endsWith('/audio.webm'));
+    expect(audio).toHaveLength(2);   // l6 and l8 (l7's recording is not here)
+    expect(keys.classes.solo).toBeDefined();
+    const solo = (await platform.classes.list()).find((e) => e.classId === keys.classes.solo)!;
+    expect(solo.shared).toBe(true);
+    expect([...files(platform, keys.classes.solo!).keys()].filter((p) => p.startsWith('.tramado/members/'))).toHaveLength(1);
+    const chatLines = [...law].filter(([p]) => p.startsWith('.tramado/chat/')).reduce((n, [, f]) => n + new TextDecoder().decode(f.bytes).split('\n').filter(Boolean).length, 0);
+    expect(chatLines).toBe(300 + 12);
+    const prefs = JSON.parse((await platform.appFiles.read('prefs.json'))!) as Record<string, string>;
+    expect(prefs['app.trayAsked']).toBe('0');
+    expect(JSON.parse(prefs['ui.classOrder']!)).toHaveLength(5);
   });
 });
 

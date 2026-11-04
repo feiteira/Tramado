@@ -41,7 +41,7 @@ export default function AiSection({ services }: { services: AppServices }) {
   const [service, setService] = useState<'openrouter' | 'custom'>(s.customHost ? 'custom' : 'openrouter');
   const [replacing, setReplacing] = useState(false);
   const [key, setKey] = useState('');
-  const [check, setCheck] = useState<{ ok: boolean; code?: ErrorCode; remaining?: number } | null>(null);
+  const [check, setCheck] = useState<{ ok: boolean; code?: ErrorCode; remaining?: number; busy?: boolean } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<CatalogModel[] | null>(null);
   const [custom, setCustom] = useState({ address: s.customHost?.base ?? '', key: '', model: s.customHost ? s.model : '' });
@@ -181,8 +181,10 @@ export default function AiSection({ services }: { services: AppServices }) {
                 )}
                 {!s.key.set || replacing ? <p className="sai__hint">{t('settings.ai.age')}</p> : null}
                 {check ? (
-                  <Notice tone={check.ok ? 'success' : 'danger'} data-testid="ai-check-result">
-                    {check.ok ? (check.remaining !== undefined ? tp('settings.ai.checkOk', check.remaining, { n: check.remaining }) : t('common.done')) : errorText(check.code ?? 'AI_AUTH')}
+                  <Notice tone={check.ok ? (check.busy ? 'info' : 'success') : 'danger'} data-testid="ai-check-result" data-state={check.ok ? (check.busy ? 'okBusy' : 'ok') : 'failed'}>
+                    {check.ok && check.busy
+                      ? t('onboarding.ai.okBusy', { fallback: services.ai.label(s.chain[1] ?? s.chain[0] ?? '').label })
+                      : check.ok ? (check.remaining !== undefined ? tp('settings.ai.checkOk', check.remaining, { n: check.remaining }) : t('common.done')) : errorText(check.code ?? 'AI_AUTH')}
                   </Notice>
                 ) : null}
               </Row>

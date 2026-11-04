@@ -21,6 +21,9 @@ import { useI18n } from '../../ui/i18n';
 import { cloudServiceOf } from '../onboarding/cloud';
 import { Group, Row, SectionRoot } from './Group';
 
+/** UX §3.14.7: "Disk almost full (less than 1 GB)". */
+const DISK_LOW_BYTES = 1e9;
+
 export default function StorageSection({ services }: { services: AppServices }) {
   const i18n = useI18n();
   const { t } = i18n;
@@ -36,6 +39,7 @@ export default function StorageSection({ services }: { services: AppServices }) 
   const [root, setRoot] = useState<string | null>(null);
   const [leaving, setLeaving] = useState<ClassEntry[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [free, setFree] = useState<number | null>(null);
   const size = (n: number) => formatBytes(t, i18n.meta.bcp47, n);
 
   const live = useRef(true);
@@ -46,13 +50,15 @@ export default function StorageSection({ services }: { services: AppServices }) 
     };
   }, []);
   const load = useCallback(async () => {
-    const [u, r, list] = await Promise.all([
+    const [u, r, list, f] = await Promise.all([
       platform.storage.usage().catch(() => null),
       platform.classes.root().catch(() => null),
       platform.classes.list().catch(() => [] as ClassEntry[]),
+      platform.storage.diskFree().catch(() => null),
     ]);
     if (!live.current) return;
     setUsage(u);
+    setFree(f);
     setRoot(r?.path ?? null);
     setLeaving(list.filter((e) => e.leaving));
   }, [platform]);
@@ -95,6 +101,9 @@ export default function StorageSection({ services }: { services: AppServices }) 
 
   return (
     <SectionRoot testid="settings-storage" title={t('settings.sections.storage')}>
+      {free !== null && free < DISK_LOW_BYTES ? (
+        <Notice tone="warning" data-testid="storage-disk-low">{t('settings.storage.diskLow', { free: size(free) })}</Notice>
+      ) : null}
       <Group id="root">
         <Row label={t('settings.storage.root')} hint={t('settings.storage.rootHint')} stack testid="storage-root">
           <div className="set-path">

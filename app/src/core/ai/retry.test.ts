@@ -40,6 +40,10 @@ describe('retry policy (openrouter-lab §11.5)', () => {
     expect(decide('AI_FREE_LIMIT', { resetAt: 1_030_000, remaining: 0 }, freshRetryState(), ctx)).toEqual({ kind: 'retry', delayMs: 30_250 });
     expect(decide('AI_FREE_LIMIT', { resetAt: 50_000_000, remaining: 0 }, freshRetryState(), ctx)).toEqual({ kind: 'fail' });
     expect(decide('AI_FREE_LIMIT', {}, freshRetryState(), ctx)).toEqual({ kind: 'fail' });
+    // INT: a 429 with Retry-After (per-minute rate limit) waits once when short; a long one fails with its data.
+    expect(decide('AI_FREE_LIMIT', { retryAfterMs: 20_000 }, freshRetryState(), ctx)).toEqual({ kind: 'retry', delayMs: 20_250 });
+    expect(decide('AI_FREE_LIMIT', { retryAfterMs: 20_000 }, { ...freshRetryState(), waitedLimit: true }, ctx)).toEqual({ kind: 'fail' });
+    expect(decide('AI_FREE_LIMIT', { retryAfterMs: 3_600_000 }, freshRetryState(), ctx)).toEqual({ kind: 'fail' });
   });
 });
 

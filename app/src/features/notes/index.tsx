@@ -31,6 +31,7 @@ import { MarkdownView } from '../../ui/tramado/MarkdownView';
 import { findQuote } from '../document/locate';
 import { useNavigatorRegistration } from '../search/navigate';
 import { ConflictDialog } from './ConflictDialog';
+import { lastPlayback } from '../lecture/playback';
 import { clock, docLink, insert, link, parseClock, parseTramadoLink, timeLink, toggleLines, wrap, type Edit } from './format';
 import './notes.css';
 
@@ -409,8 +410,13 @@ function NoteEditor({ route, services, initial }: { route: NoteRoute; services: 
 function InsertTime({ services, classId, anchor, onClose, onInsert }: { services: AppServices; classId: string; anchor: React.RefObject<HTMLButtonElement | null>; onClose(): void; onInsert(s: string): void }) {
   const { t } = useI18n();
   const lectures = useStore(services.forClass(classId).lectures.list);
-  const [id, setId] = useState(lectures[0]?.id ?? '');
-  const [time, setTime] = useState(clock(0));
+  // INT: the lecture and moment last played in this class (the lecture view's player), else the first at 0:00.
+  const played = useMemo(() => {
+    const p = lastPlayback.get();
+    return p && p.classId === classId && lectures.some((l) => l.id === p.lectureId) ? p : null;
+  }, [classId, lectures]);
+  const [id, setId] = useState(played?.lectureId ?? lectures[0]?.id ?? '');
+  const [time, setTime] = useState(clock(played?.ms ?? 0));
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!id && lectures[0]) setId(lectures[0].id);

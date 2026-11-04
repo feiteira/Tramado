@@ -11,7 +11,7 @@ export type { MarkerKind };
 
 /** A member key of UX §7.3: `ana` is me (this computer). */
 export type MemberKey = 'ana' | 'bruno' | 'carla' | 'jamie' | 'diogo';
-export type ClassKey = 'law' | 'bio' | 'stats' | 'hist';
+export type ClassKey = 'law' | 'bio' | 'stats' | 'hist' | 'solo';
 /** `HH:MM`-style local wall time in Europe/Lisbon, e.g. `2026-10-20T10:00`. */
 export type LocalTime = string;
 

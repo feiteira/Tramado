@@ -19,6 +19,7 @@ import { PresenceDot } from '../../ui/tramado/PresenceDot';
 import { useI18n } from '../../ui/i18n';
 import { IdentityCopiedCard, SyncErrorCard, syncErrorOf } from '../sync/cards';
 import { takeDiagnosticsRequest } from '../sync/diagnosticsFlag';
+import { useRouter } from '../../shell/router';
 import { formatSize, shortDevice } from '../sync/format';
 import '../sync/sync.css';
 
@@ -44,7 +45,14 @@ export default function SharingSection({ services }: { services: AppServices }) 
   const [autostart, setAutostart] = useState<boolean | null>(null);
   const [existing, setExisting] = useState(false);
   const [restarting, setRestarting] = useState(false);
-  const [diagOpen, setDiagOpen] = useState(() => takeDiagnosticsRequest());
+  const { route } = useRouter();
+  // Open when asked: the route's `diagnostics` (a link, the sync popover) or the older one-shot flag.
+  const [diagOpen, setDiagOpen] = useState(() => takeDiagnosticsRequest() || (route.name === 'settings' && route.diagnostics === true));
+  // Asked again while this section is already open (the sync pill's [Details] on Settings › Sharing): open it then too.
+  const askedDiagnostics = route.name === 'settings' && route.diagnostics === true;
+  useEffect(() => {
+    if (askedDiagnostics) setDiagOpen(true);
+  }, [askedDiagnostics, route]);
   const [diag, setDiag] = useState<SyncDiagnostics | null>(null);
   const [log, setLog] = useState<string | null>(null);
   const mac = info.os === 'macos' || info.traySupported === false;

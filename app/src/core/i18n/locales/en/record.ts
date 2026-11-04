@@ -140,4 +140,6 @@ export const record = {
     unsupported: 'This file’s audio format isn’t supported. Convert it to MP3 or M4A (AAC-LC) and try again.',
     vttLater: 'Subtitles (“{file}”) can’t be used as the transcript yet: Tramado transcribes the recording itself.',
   },
+  // INT (wave 3)
+  stopReason: { diskFull: 'the disk is full', device: 'the microphone stopped working' },
 };

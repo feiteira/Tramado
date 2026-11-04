@@ -34,6 +34,13 @@ describe('library', () => {
 
   it('suggests short names, icons and colours (UX §1.3)', () => {
     expect(suggestShortName('Direito Constitucional I')).toBe('DC I');
+    // INT: a single word keeps three letters, a course number stays.
+    expect(suggestShortName('Biology 101')).toBe('BIO 101');
+    expect(suggestShortName('Estadística I')).toBe('EST I');
+    expect(suggestShortName('História do Direito Português')).toBe('HDP');
+    expect(suggestShortName('Cálculo II')).toBe('CAL II');
+    expect(suggestShortName('Introduction to Programming 2b')).toBe('IP 2B');
+    expect(suggestShortName('Física')).toBe('FIS');
     expect(suggestIconFor('Estadística I')).toBe('sigma');
     expect(suggestIconFor('História do Direito Português')).toBe('scale');
     expect(suggestIconFor('Cell biology')).toBe('dna');

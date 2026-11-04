@@ -34,6 +34,8 @@ import {
 } from './model';
 import { onQueuedImport, takeQueuedImport, useDocImport } from './useDocImport';
 import './documents.css';
+import { WindowsNameNotice } from '../sync/cards';
+import { windowsNameProblems } from '../sync/windowsNames';
 import { modalOpen } from '../../ui/focus';
 
 const KIND_ICON: Record<DocSummary['kind'], LucideIcon> = {
@@ -85,6 +87,8 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   const counts = useMemo(() => fileCounts(files), [files]);
   const ordered = useMemo(() => [...rows.folders, ...rows.shared.map((d) => d.path), ...rows.local.map((d) => d.path)], [rows]);
   const byPath = useMemo(() => new Map(files.map((d) => [d.path, d])), [files]);
+  // UX §3.15.9 (sync spec §22.4): in a shared class, names a Windows computer cannot save, with [Rename…].
+  const windowsNames = useMemo(() => (shared ? windowsNameProblems(files.map((d) => d.path)) : []), [shared, files]);
   const now = DateTime.fromMillis(services.ctx.clock.now());
 
   // The suggested folders card: once the class has files and no folders, until [No thanks] (class ui-state).
@@ -108,6 +112,11 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     };
     take();
     const offQueue = onQueuedImport(take);
+    // INT: the desktop window reports the drag itself (`app:drag`); invite files open the Join dialog instead.
+    const offDrag = services.ctx.platform.events.onDrag((e) => {
+      const files = e.names.filter((n) => !/\.tramado-invite$/i.test(n));
+      setDragging(e.state === 'enter' && files.length > 0 && !modalOpen());
+    });
     const offDrop = services.ctx.platform.events.onDrop((e) => {
       setDragging(false);
       if (modalOpen()) return;   // a dialog that takes drops itself (the exam-paper dialog) is open
@@ -115,6 +124,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     });
     return () => {
       offQueue();
+      offDrag();
       offDrop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,6 +443,16 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
             ))}
           </ol>
         </nav>
+      ) : null}
+
+      {windowsNames.length ? (
+        <WindowsNameNotice
+          names={windowsNames.map((p) => p.slice(p.lastIndexOf('/') + 1))}
+          onRename={() => {
+            const d = byPath.get(windowsNames[0]!);
+            if (d) setModal({ kind: 'rename', doc: d });
+          }}
+        />
       ) : null}
 
       {showSuggest ? (

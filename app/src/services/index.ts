@@ -77,6 +77,7 @@ export function createServices(ctx: AppContext): AppServicesImpl {
       if (!ids.has(id)) {
         s.store.stop();
         (s.lectures as { dispose?(): void }).dispose?.();
+        (s.exams as { dispose?(): void }).dispose?.();   // INT review: answers-for-later and fold timers
         perClass.delete(id);
         continue;
       }
@@ -118,6 +119,7 @@ export function createServices(ctx: AppContext): AppServicesImpl {
       for (const s of perClass.values()) {
         s.store.stop();
         (s.lectures as { dispose?(): void }).dispose?.();
+        (s.exams as { dispose?(): void }).dispose?.();
       }
       perClass.clear();
     },

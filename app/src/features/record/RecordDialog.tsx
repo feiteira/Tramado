@@ -25,7 +25,7 @@ import { useI18n } from '../../ui/i18n';
 import { renderMarks } from '../../ui/marks';
 import { ClassTab } from '../../ui/tramado/ClassTab';
 import { LevelMeter } from '../../ui/tramado/LevelMeter';
-import { defaultLectureTitle, hhmm } from '../lectures/format';
+import { defaultLectureTitle, hhmm, size } from '../lectures/format';
 import { LANGUAGE_OPTIONS, readRecordPrefs, shareKey, type ShareChoice } from './prefs';
 import { session } from './session';
 import './record.css';
@@ -84,6 +84,7 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [battery, setBattery] = useState<number | null>(null);
+  const [free, setFree] = useState<number | null>(null);
   const whyRef = useRef<HTMLButtonElement>(null);
   const startRef = useRef<HTMLButtonElement>(null);
   // The disabled Start reads disabled="true" (the plan's must-pass assertion, UX §3.6.2 consent rules).
@@ -97,6 +98,8 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
     let live = true;
     void speech?.devices().then((d) => live && setDevices(d), () => live && setDevices({ inputs: [], systemAudio: { supported: false, reason: 'SPEECH_NO_DEVICE' } }));
     void services.ctx.platform.system.power().then((p) => live && setBattery(p.source === 'battery' ? p.percent : null), () => undefined);
+    // Pre-flight (UX §3.6.2): less than 200 MB free blocks Start.
+    void services.ctx.platform.storage.diskFree().then((b) => live && setFree(b), () => undefined);
     return () => {
       live = false;
     };
@@ -136,7 +139,8 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
   const noDevice = devices !== null && devices.inputs.length === 0;
   const noSystem = mode === 'online' && devices !== null && !devices.systemAudio.supported;
   const lowBattery = battery !== null && battery < 15;
-  const blocked = !speech || noDevice || noSystem || presenceBlocks;
+  const noDisk = free !== null && free < 200e6;
+  const blocked = !speech || noDevice || noSystem || presenceBlocks || noDisk;
   const canStart = recordOk && shareOk && !blocked && !busy;
   const missing = !recordOk ? t('record.dialog.startNeedsConsent') : !shareOk ? t('record.dialog.startNeedsShareConsent') : null;
 
@@ -273,6 +277,7 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
           </div>
         </div>
         {noDevice ? <Notice tone="danger" data-testid="record-no-device">{t('errors.SPEECH_NO_DEVICE' as never)}</Notice> : null}
+        {noDisk ? <Notice tone="danger" data-testid="record-no-disk">{t('record.dialog.noDisk', { free: size(free ?? 0, i18n) })}</Notice> : null}
         {lowBattery ? <Notice tone="warning" data-testid="record-low-battery">{t('record.dialog.lowBattery', { percent: battery ?? 0 })}</Notice> : null}
         {error === 'permission' ? (
           <Notice tone="danger" data-testid="record-permission">

@@ -26,16 +26,20 @@ export function clockLabel(ms: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
-/** The label of a locator alone: "p. 9", "p. ix", "art. 18.º (p. 9)", "art. 2.º (pp. 1–2)", "slide 3", "41:12", "§ Introdução". */
-export function locatorLabel(loc: Locator, lang: string | null | undefined): string {
+/**
+ * The label of a locator alone: "p. 9", "p. ix", "art. 18.º (p. 9)", "art. 2.º (pp. 1–2)", "slide 3", "41:12", "§ Introdução".
+ * `printed` (INT): the printed label of a physical page when the PDF has page labels, as the document view shows it.
+ */
+export function locatorLabel(loc: Locator, lang: string | null | undefined, printed?: (page: number) => string | null | undefined): string {
   const w = WORDS[labelLang(lang)];
+  const pageText = (n: number) => printed?.(n) || String(n);
   switch (loc.type) {
-    case 'page': return `${w.p} ${loc.pageLabel ?? loc.page}`;
+    case 'page': return `${w.p} ${loc.pageLabel ?? pageText(loc.page)}`;
     case 'article': {
       const art = `${w.art} ${loc.article}`;
       if (!loc.pages) return art;
       const [a, b] = loc.pages;
-      return a === b ? `${art} (${w.p} ${a})` : `${art} (${w.pp} ${a}–${b})`;
+      return a === b ? `${art} (${w.p} ${pageText(a)})` : `${art} (${w.pp} ${pageText(a)}–${pageText(b)})`;
     }
     case 'slide': return `${w.slide} ${loc.slide}`;
     case 'segment': return clockLabel(loc.startMs);

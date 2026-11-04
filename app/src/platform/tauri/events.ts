@@ -24,5 +24,6 @@ export function createEventBindings(): Platform['events'] {
     onShortcut: (cb) => on<{ id: 'marker'; kind: MarkerKind }>('app:shortcut', cb),
     onTray: (cb) => on<{ action: TrayAction }>('app:tray', (p) => cb(p.action)),
     onDrop: (cb) => on<{ picked: Picked[]; x: number; y: number }>('app:drop', cb),
+    onDrag: (cb) => on<{ state: 'enter' | 'leave'; names: string[] }>('app:drag', cb),
   };
 }

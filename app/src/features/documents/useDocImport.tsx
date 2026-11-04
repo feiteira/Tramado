@@ -71,9 +71,13 @@ export function useDocImport(classId: ClassId, services: AppServices): { pick(de
       if (docs.length) {
         const n = docs.length;
         const progress = toast.show({ message: tp('documents.adding.progress', n, { i: 0 }), durationMs: 120_000 });
-        let results: Awaited<ReturnType<typeof cls.documents.import>> = [];
+        const results: Awaited<ReturnType<typeof cls.documents.import>> = [];
         try {
-          results = await cls.documents.import(docs, dest);
+          // One file at a time, so the toast counts them ("… (2 of 5)").
+          for (const [i, d] of docs.entries()) {
+            results.push(...(await cls.documents.import([d], dest)));
+            toast.update(progress, tp('documents.adding.progress', n, { i: i + 1 }));
+          }
         } finally {
           toast.dismiss(progress);
         }

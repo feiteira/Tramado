@@ -49,6 +49,7 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
   const [language, setLanguage] = useState<string>(view?.language || 'auto');
   const [keepVideo, setKeepVideo] = useState(false);
   const [permission, setPermission] = useState(false);
+  const [useVtt, setUseVtt] = useState(true);
   const cpuOk = info ? info.cpuOk && info.localWhisper : true;
   const [choice, setChoice] = useState<Choice>(cpuOk ? 'here' : queue.cloud.on ? 'cloud' : 'later');
   const [busy, setBusy] = useState(false);
@@ -69,7 +70,8 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
       : undefined;
     try {
       const done = services.recording.importAudio(classId, file, {
-        title: shownTitle.trim(), keepVideo: keepVideo && isVideo(file.name), startedAt: at.toUTC().toISO() ?? undefined, language: language as Lang | 'auto', transcribe: choice, ...(consent ? { consent } : {}),
+        title: shownTitle.trim(), keepVideo: keepVideo && isVideo(file.name), startedAt: at.toUTC().toISO() ?? undefined, language: language as Lang | 'auto',
+        transcribe: subtitles && useVtt ? 'later' : choice, ...(consent ? { consent } : {}), ...(subtitles && useVtt ? { subtitles } : {}),
       });
       close();
       await done;
@@ -136,9 +138,9 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
         {file && isVideo(file.name) ? (
           <Checkbox checked={keepVideo} onChange={setKeepVideo} label={t('record.import.keepVideo', { size: file.size ? size(file.size, i18n) : '—' })} data-testid="import-keep-video" />
         ) : null}
-        {subtitles ? <Notice tone="info" data-testid="import-vtt-notice">{t('record.import.vttLater', { file: subtitles.name })}</Notice> : null}
+        {subtitles ? <Checkbox checked={useVtt} onChange={setUseVtt} label={t('record.import.useVtt', { file: subtitles.name })} data-testid="import-use-vtt" /> : null}
         {shared ? <Checkbox checked={permission} onChange={setPermission} label={t('record.import.permission.v1')} data-testid="import-permission" /> : null}
-        <RadioGroup
+        {subtitles && useVtt ? null : <RadioGroup
           label={t('record.save.transcript')}
           value={choice}
           onChange={setChoice}
@@ -149,7 +151,7 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
             { value: 'later', label: t('record.save.none') },
           ]}
           data-testid="import-transcribe"
-        />
+        />}
       </div>
     </Dialog>
   );

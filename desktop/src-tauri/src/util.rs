@@ -54,11 +54,6 @@ pub fn header_flag(req: &Request<'_>, name: &str) -> AppResult<bool> {
     }
 }
 
-/// The error of a command that is not implemented yet (architecture D-2).
-pub fn not_implemented(cmd: &str) -> AppError {
-    AppError::not_implemented(cmd)
-}
-
 /// Bytes for the webview (it receives an `ArrayBuffer`).
 pub fn bytes_response(bytes: Vec<u8>) -> Response {
     Response::new(InvokeResponseBody::Raw(bytes))

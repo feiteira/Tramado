@@ -46,6 +46,7 @@ const TAB_ICONS: Record<ClassTabId, LucideIcon> = {
   lectures: AudioLines, documents: Files, notes: NotebookPen, exams: ClipboardCheck, chat: MessagesSquare, ask: Sparkles, members: Users, share: FolderSync,
 };
 const AUDIO_VIDEO = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|webm|mp4|m4v|mov|mkv|avi|wma|amr|3gp)$/i;
+const INVITE = /\.tramado-invite$/i;
 
 interface Counts { lectures: number; documents: number; exams: number; people: Array<{ memberId: string; name: string; colour: string | null; online: boolean }> }
 
@@ -119,22 +120,18 @@ function ClassFrame({ cls, route, services }: { cls: ClassView; route: Extract<R
       toast.error(e);
     }
   };
-  const runAction = (load: () => Promise<{ default: (s: AppServices, classId: string) => Promise<void> }>, fallback: ClassTabId) =>
+  const runAction = (load: () => Promise<{ default: (s: AppServices, classId: string) => Promise<void> }>) =>
     void load()
       .then((m) => m.default(services, cls.id))
-      .catch((e: unknown) => {
-        // A screen not built yet answers NOT_IMPLEMENTED: open its tab instead of failing silently.
-        if ((e as { code?: string })?.code === 'NOT_IMPLEMENTED') replace({ name: 'class', classId: cls.id, tab: fallback });
-        else toast.error(e);
-      });
+      .catch((e: unknown) => toast.error(e));
 
   const addItems: MenuEntry[] = [
-    { id: 'documents', label: t('classes.header.addDocuments'), icon: FilePlus2, onSelect: () => runAction(ACTIONS.importDocuments, 'documents'), testId: 'class-add-documents' },
+    { id: 'documents', label: t('classes.header.addDocuments'), icon: FilePlus2, onSelect: () => runAction(ACTIONS.importDocuments), testId: 'class-add-documents' },
     { id: 'recording', label: t('classes.header.addRecording'), icon: FileAudio, onSelect: () => dialogs.open('import', { classId: cls.id }), testId: 'class-add-recording' },
     { id: 'exam-date', label: t('classes.header.addExamDate'), icon: CalendarDays, onSelect: () => dialogs.open('exam-date', { classId: cls.id }), testId: 'class-add-exam-date' },
     { id: 'exam-paper', label: t('classes.header.addExamPaper'), icon: ClipboardCheck, onSelect: () => dialogs.open('exam-paper', { classId: cls.id }), testId: 'class-add-exam-paper' },
     { kind: 'separator' },
-    { id: 'note', label: t('classes.header.addNote'), icon: NotebookPen, onSelect: () => runAction(ACTIONS.newNote, 'notes'), testId: 'class-add-note' },
+    { id: 'note', label: t('classes.header.addNote'), icon: NotebookPen, onSelect: () => runAction(ACTIONS.newNote), testId: 'class-add-note' },
     ...(cls.shared ? [{ id: 'class-note', label: t('classes.header.addClassNote'), icon: NotebookPen, onSelect: () => replace({ name: 'class', classId: cls.id, tab: 'notes' }), testId: 'class-add-class-note' }] : []),
   ];
   const notifyItems: MenuEntry[] = (['important', 'all', 'none'] as const).map((v) => ({
@@ -269,6 +266,18 @@ function ClassTabs({
     if (tab === 'lectures' && (types.some((m) => m.startsWith('audio/') || m.startsWith('video/')) || names.some((n) => AUDIO_VIDEO.test(n)))) return 'lecture';
     return 'documents';
   };
+  // INT: in the desktop app the window, not the webview, sees the drag (Tauri `app:drag`): the overlay follows it.
+  // Invite files are not class files (they open the Join dialog), so they show no overlay.
+  useEffect(
+    () =>
+      services.ctx.platform.events.onDrag((e) => {
+        const names = e.names.filter((n) => !INVITE.test(n));
+        if (e.state === 'leave' || !names.length || tab === 'documents' || cls.archived || modalOpen()) setDrag(null);
+        else setDrag(targetFor(names, []));
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [services, tab, cls.archived],
+  );
   useEffect(
     () =>
       services.ctx.platform.events.onDrop((e) => {

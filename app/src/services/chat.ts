@@ -4,6 +4,7 @@
 // UX ChatMessageView, and writes my lines (message, edit, delete + redaction under a per-path lock, thanks). Delivery
 // ticks come from `fileInfo` availability (≤ 1 poll / 2 s while unsent lines exist, on indexUpdated); unread and
 // mentions from `private/<classId>/chat-state.json`; notifications for mentions and @everyone from organisers.
+import { modelLabel as catalogModelLabel } from '../core/ai/catalog';
 import { PlatformError } from '../core/errors';
 import { newUlid } from '../core/ids';
 import { parserFor } from '../core/model/parse';
@@ -37,11 +38,9 @@ const mimeOf = (name: string) => MIME[name.slice(name.lastIndexOf('.') + 1).toLo
 
 interface FileState { lines: ChatSourceLine[]; size: number; skipped: number; newer: number }
 
-/** The view-side model label of a model id ("google/gemma-4-31b-it:free" → "gemma-4-31b-it (free)"). */
+/** The view-side model label of a model id ("google/gemma-4-31b-it:free" → "Gemma 4 31B (free)", the bundled name without a catalog). */
 export function modelLabel(id: string): ModelLabel {
-  const free = id.endsWith(':free');
-  const base = id.replace(/:free$/, '');
-  return { id, label: `${base.slice(base.indexOf('/') + 1)}${free ? ' (free)' : ''}`, free };
+  return { id, label: catalogModelLabel(id), free: id.endsWith(':free') };
 }
 
 function viewLocator(l: StorageLocator): Locator {
@@ -79,6 +78,7 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
   const { store, classId } = cls;
   const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
   const view = new Store<ChatView>({ items: [], pins: [], unread: 0, mentions: 0, olderAvailable: false, newerFormatLines: 0, loaded: false });
+  const viewCache = new Map<string, { json: string; v: ChatMessageView }>();
   // @AI on this computer (UX §3.10.2): questions being answered here, and questions asked while AI was not set up.
   const aiStore = new Store<Record<string, ChatAiLocal>>({});
   const asking = new Set<string>();
@@ -176,7 +176,13 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
     const mine = ctx.identity.get()?.memberId ?? '';
     const myDevice = me();
     const byKey = new Map(folded.map((x) => [x.key, x]));
-    const items: ChatMessageView[] = folded.map((x) => toView(x, byKey, ci));
+    // INT (5 000 messages): a message whose view did not change keeps its object, so the list re-renders only
+    // the lines that changed (React.memo in ChatLine) and the change check below compares references.
+    const items: ChatMessageView[] = folded.map((x) => stableView(toView(x, byKey, ci)));
+    if (viewCache.size > items.length * 2) {
+      const keep = new Set(items.map((v) => v.id));
+      for (const k of [...viewCache.keys()]) if (!keep.has(k)) viewCache.delete(k);
+    }
     let unread = 0;
     let mentions = 0;
     const fresh: FoldedMessage[] = [];
@@ -193,7 +199,10 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
     const olderAvailable = [...months].some(([d, list]) => list.some((l) => !loadedMonths.get(d)?.has(l.month)));
     const newerFormatLines = [...files.values()].reduce((n, f) => n + f.newer, 0);
     const next: ChatView = { items, pins: [], unread, mentions, olderAvailable, newerFormatLines, loaded: true };
-    if (JSON.stringify(next) !== JSON.stringify(view.get())) view.set(next);
+    const prev = view.get();
+    const same = prev.loaded && prev.unread === unread && prev.mentions === mentions && prev.olderAvailable === olderAvailable && prev.newerFormatLines === newerFormatLines
+      && prev.items.length === items.length && items.every((v, i) => v === prev.items[i]);
+    if (!same) view.set(next);
     publishAi();
     for (const x of fresh) {
       const why = notifiesMe(x, mine, m.organisers.isOrganiserAt);
@@ -203,6 +212,15 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
       }, `chat-${x.key}`).catch(() => undefined);
     }
     if (hasUnsent()) schedulePoll(0);
+  }
+
+  /** The previous object of a message whose view is unchanged (compared as JSON, one message at a time). */
+  function stableView(v: ChatMessageView): ChatMessageView {
+    const json = JSON.stringify(v);
+    const hit = viewCache.get(v.id);
+    if (hit && hit.json === json) return hit.v;
+    viewCache.set(v.id, { json, v });
+    return v;
   }
 
   function toView(x: FoldedMessage, byKey: Map<string, FoldedMessage>, ci: ClassServiceImpl): ChatMessageView {
