@@ -51,7 +51,8 @@ const r = spawnSync('cargo', args, {
 /** Test instances still running: `[pid, command line]` of tramado-syncthing with a temp home. */
 function leftovers() {
   if (process.platform === 'win32') return [];
-  const ps = spawnSync('pgrep', ['-af', 'tramado-syncthing'], { encoding: 'utf8' });
+  // the executable itself (first word) is a tramado-syncthing serving a temporary home
+  const ps = spawnSync('pgrep', ['-af', '^[^ ]*tramado-syncthing[^ ]* serve '], { encoding: 'utf8' });
   const tmp = [tmpdir(), process.env.TMPDIR, '/tmp'].filter(Boolean);
   return (ps.stdout || '')
     .split('\n')

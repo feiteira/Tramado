@@ -562,6 +562,39 @@ mod tests {
     }
 
     #[test]
+    fn a_copied_home_is_refused_before_any_spawn() {
+        let Some(m) = machine_id() else {
+            return; // no machine ID on this OS: the check is skipped (§2.5 step 0)
+        };
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join(CONFIG_FILE), SAMPLE).unwrap();
+        let mut inst = InstanceFile {
+            format: INSTANCE_FORMAT.into(),
+            version: 1,
+            device_id: "LMRSFKK-CDQBSRF-UNW65YW-RJASPVK-ISWFVO5-CP2CB54-64AZW4S-U5MGNQH".into(),
+            sync_port: Some(22150),
+            install_id: "00".repeat(16),
+            machine: Some("another-computer".into()),
+            created_at: "2026-11-04T10:00:00.000Z".into(),
+        };
+        write_instance(dir.path(), &inst).unwrap();
+        let before = std::fs::read_to_string(dir.path().join(CONFIG_FILE)).unwrap();
+        let e = prespawn(dir.path(), true, false).err().unwrap();
+        assert_eq!(e.code(), Code::SyncIdentityCopied);
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(CONFIG_FILE)).unwrap(),
+            before,
+            "untouched"
+        );
+        inst.machine = Some(m);
+        write_instance(dir.path(), &inst).unwrap();
+        let p = prespawn(dir.path(), true, false).unwrap();
+        assert_eq!(p.api_key, "KEY123");
+        let x = std::fs::read_to_string(dir.path().join(CONFIG_FILE)).unwrap();
+        assert!(x.contains(&format!("<address>127.0.0.1:{}</address>", p.gui_port)));
+    }
+
+    #[test]
     fn api_key_and_ports() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join(CONFIG_FILE), SAMPLE).unwrap();

@@ -682,3 +682,123 @@ fn shutdown_one_then_other_within_budget() {
         "a clean stop deletes runtime.json"
     );
 }
+
+#[test]
+#[ignore]
+fn copied_identity_is_refused_then_resolved() {
+    if init::machine_id().is_none() {
+        return; // the check is skipped where no machine ID exists (§2.5 step 0)
+    }
+    let a = Node::new("Ana");
+    let home = a.paths.syncthing_home();
+    let copy = |home: &std::path::Path| {
+        let mut inst = init::read_instance(home).unwrap();
+        inst.machine = Some("another-computer".into());
+        init::write_instance(home, &inst).unwrap();
+    };
+    copy(&home);
+    let e = a.engine.start().unwrap_err();
+    assert_eq!(e.code(), tramado_base::error::Code::SyncIdentityCopied);
+    assert_eq!(
+        a.engine.status().error,
+        Some(tramado_base::error::Code::SyncIdentityCopied)
+    );
+    assert!(
+        tramado_sync::supervisor::read_runtime(&home).is_none(),
+        "nothing was spawned"
+    );
+    // "This is the same computer"
+    let same = a
+        .engine
+        .resolve_copied_identity(tramado_sync::CopiedIdentityAction::Same)
+        .unwrap();
+    assert_eq!(same.device_id, a.id);
+    assert_eq!(
+        a.engine.start().unwrap().state,
+        tramado_sync::SyncState::Running
+    );
+    a.engine.stop(Duration::from_secs(5));
+    // "Set up as a new computer": a new device, the copied home kept aside
+    copy(&home);
+    let new = a
+        .engine
+        .resolve_copied_identity(tramado_sync::CopiedIdentityAction::New)
+        .unwrap();
+    assert_ne!(new.device_id, a.id);
+    assert_eq!(a.fs.device().as_deref(), Some(new.device_id.as_str()));
+    let aside = std::fs::read_dir(&a.paths.data)
+        .unwrap()
+        .flatten()
+        .any(|e| {
+            e.file_name()
+                .to_string_lossy()
+                .starts_with("syncthing.copied-")
+        });
+    assert!(aside);
+    assert_eq!(
+        a.engine.start().unwrap().state,
+        tramado_sync::SyncState::Running
+    );
+}
+
+/// Helper for `parent_killed_takes_syncthing_down`: runs only inside the child test process.
+#[test]
+#[ignore]
+fn pdeathsig_helper() {
+    let Some(out) = std::env::var_os("TRAMADO_PDEATHSIG_OUT") else {
+        return;
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let home = dir.path().join("syncthing");
+    init::create_identity(&bin(), &home).unwrap();
+    let prep = init::prespawn(&home, true, false).unwrap();
+    let (child, _) =
+        tramado_sync::supervisor::spawn(&bin(), &home, prep.gui_port, &prep.api_key).unwrap();
+    std::fs::write(&out, child.id().to_string()).unwrap();
+    std::thread::sleep(Duration::from_secs(60));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+#[ignore]
+fn parent_killed_takes_syncthing_down() {
+    let dir = tempfile::tempdir().unwrap();
+    let out = dir.path().join("pid");
+    let mut helper = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--ignored",
+            "--exact",
+            "pdeathsig_helper",
+            "--nocapture",
+            "--test-threads=1",
+        ])
+        .env("TRAMADO_PDEATHSIG_OUT", &out)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .unwrap();
+    assert!(wait_until(MINUTE, || std::fs::read_to_string(&out)
+        .is_ok_and(|s| !s.is_empty())));
+    let pid: u32 = std::fs::read_to_string(&out)
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+    assert!(tramado_sync::supervisor::pid_alive(pid));
+    helper.kill().unwrap(); // SIGKILL: no chance to clean up
+    let _ = helper.wait();
+    let t = Instant::now();
+    assert!(
+        wait_until(
+            Duration::from_secs(5),
+            || !tramado_sync::supervisor::pid_alive(pid)
+                || std::fs::read_to_string(format!("/proc/{pid}/stat"))
+                    .is_ok_and(|s| s.contains(") Z "))
+        ),
+        "Syncthing outlived its parent"
+    );
+    eprintln!(
+        "Syncthing exited {:?} after the parent was killed",
+        t.elapsed()
+    );
+}

@@ -27,7 +27,8 @@ pub const SAMPLE: usize = 10;
 
 #[derive(Default)]
 pub struct Guard {
-    own: HashMap<String, VecDeque<(String, Instant)>>,
+    /// (path, when, was it a deletion or a move away)
+    own: HashMap<String, VecDeque<(String, Instant, bool)>>,
     local: HashMap<String, VecDeque<(Instant, String)>>,
     remote: HashMap<(String, String), VecDeque<(Instant, String)>>,
     tripped_local: HashSet<String>,
@@ -47,29 +48,40 @@ fn prune<T>(q: &mut VecDeque<(Instant, T)>, now: Instant) {
 }
 
 impl Guard {
-    /// A write, append, move or removal Tramado made itself (from the `WriteObserver`).
-    pub fn note_own(&mut self, class: &str, path: &str, now: Instant) {
+    /// A write, append, move or removal Tramado made itself (from the `WriteObserver`);
+    /// `deletion` for removals and the source of a move.
+    pub fn note_own(&mut self, class: &str, path: &str, deletion: bool, now: Instant) {
         let q = self.own.entry(class.to_string()).or_default();
         while q
             .front()
-            .is_some_and(|(_, t)| now.saturating_duration_since(*t) > OWN_LOG)
+            .is_some_and(|(_, t, _)| now.saturating_duration_since(*t) > OWN_LOG)
         {
             q.pop_front();
         }
-        q.push_back((path.to_string(), now));
+        q.push_back((path.to_string(), now, deletion));
     }
 
-    /// Tramado itself changed `path` (or a directory above it) within the last 30 s.
-    pub fn is_own(&self, class: &str, path: &str, now: Instant) -> bool {
+    fn matches(&self, class: &str, path: &str, now: Instant, deletions_only: bool) -> bool {
         self.own.get(class).is_some_and(|q| {
-            q.iter().any(|(p, t)| {
-                now.saturating_duration_since(*t) <= OWN_LOG
+            q.iter().any(|(p, t, del)| {
+                (*del || !deletions_only)
+                    && now.saturating_duration_since(*t) <= OWN_LOG
                     && (p == path
                         || path
                             .strip_prefix(p.as_str())
                             .is_some_and(|rest| rest.starts_with('/')))
             })
         })
+    }
+
+    /// Tramado itself changed `path` (or a directory above it) within the last 30 s.
+    pub fn is_own(&self, class: &str, path: &str, now: Instant) -> bool {
+        self.matches(class, path, now, false)
+    }
+
+    /// Tramado itself deleted (or moved away) `path` or a directory above it within 30 s.
+    pub fn is_own_deletion(&self, class: &str, path: &str, now: Instant) -> bool {
+        self.matches(class, path, now, true)
     }
 
     /// A `LocalChangeDetected` (files only). Fires once when the threshold is crossed.
@@ -80,7 +92,7 @@ impl Guard {
         deleted: bool,
         now: Instant,
     ) -> Option<Trip> {
-        if !deleted || self.is_own(class, path, now) {
+        if !deleted || self.is_own_deletion(class, path, now) {
             return None;
         }
         let q = self.local.entry(class.to_string()).or_default();
@@ -163,7 +175,8 @@ mod tests {
     fn own_deletions_and_modifications_do_not_count() {
         let mut g = Guard::default();
         let t0 = Instant::now();
-        g.note_own(C, "Aulas/Aula 3", t0);
+        g.note_own(C, "Aulas/Aula 3", true, t0);
+        g.note_own(C, "Docs/written.md", false, t0);
         for i in 0..30 {
             assert!(g
                 .local_change(C, &format!("Aulas/Aula 3/f{i}"), true, t0)
@@ -171,6 +184,9 @@ mod tests {
             assert!(g.local_change(C, &format!("x{i}"), false, t0).is_none());
         }
         assert!(!g.is_own(C, "Aulas/Aula 30", t0));
+        assert!(g.is_own(C, "Docs/written.md", t0));
+        // a file Tramado wrote and a file manager then deleted still counts
+        assert!(!g.is_own_deletion(C, "Docs/written.md", t0));
         assert!(!g.is_own(C, "Aulas/Aula 3/f", t0 + OWN_LOG + Duration::from_secs(1)));
     }
 

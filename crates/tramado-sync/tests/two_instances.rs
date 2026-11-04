@@ -349,3 +349,93 @@ fn admit_refused_without_pending_offer() {
         Code::Invalid
     );
 }
+
+#[test]
+#[ignore]
+fn lost_identity_rejoins_through_member_files() {
+    let (mut a, b, class) = pair();
+    b.push(policy(&class));
+    // Bruno's member file carries his addresses (folder spec §8.3)
+    let addrs = b.engine.own_addresses().unwrap();
+    let bruno = format!(".tramado/members/{}.json", b.id);
+    let body =
+        serde_json::to_vec(&serde_json::json!({"deviceId": b.id, "addresses": addrs})).unwrap();
+    b.fs.write(&class, &bruno, &body, true).unwrap();
+    assert!(wait_until(MINUTE, || a.file(&class, &bruno).is_some()));
+    // Ana's Syncthing home is lost (classes.json survives): a new device on relaunch
+    a.engine.stop(Duration::from_secs(5));
+    std::fs::remove_dir_all(a.paths.syncthing_home()).unwrap();
+    a.relaunch();
+    let new = a.engine.identity().unwrap().device_id;
+    assert_ne!(new, a.id);
+    a.engine.start().unwrap();
+    let ca = node_client(&a);
+    assert!(
+        wait_until(MINUTE, || ca
+            .folder(&class)
+            .unwrap()
+            .is_some_and(|f| folder_devices(&f).contains(&b.id))),
+        "the folder was re-created with Bruno"
+    );
+    // Bruno admits the new device by the folder-ID proof
+    assert!(
+        wait_until(MINUTE, || ca
+            .completion(&class, &b.id)
+            .is_ok_and(|v| v["remoteState"] == "valid")),
+        "the new identity reconnected"
+    );
+    a.fs.write(&class, "after-loss.md", b"ok", false).unwrap();
+    assert!(wait_until(MINUTE, || b
+        .file(&class, "after-loss.md")
+        .is_some()));
+}
+
+#[test]
+#[ignore]
+fn mass_delete_is_paused_then_restored() {
+    let (a, b, class) = pair();
+    let name = |i: usize| format!("Documentos/{i:02}.md");
+    for i in 0..30 {
+        a.fs.write(&class, &name(i), format!("doc {i}").as_bytes(), false)
+            .unwrap();
+    }
+    assert!(wait_until(MINUTE, || (0..30)
+        .all(|i| b.file(&class, &name(i)).is_some())));
+    // a file manager empties the folder on Ana's computer
+    std::fs::remove_dir_all(a.root(&class).join("Documentos")).unwrap();
+    a.engine.scan(&class, Some("Documentos")).unwrap();
+    assert!(
+        wait_until(MINUTE, || a.saw(
+            |e| matches!(e, SyncEvent::MassDelete { count, .. } if *count > 20)
+        )),
+        "the guard tripped"
+    );
+    let ca = node_client(&a);
+    assert_eq!(
+        ca.folder(&class).unwrap().unwrap()["paused"],
+        true,
+        "paused at once"
+    );
+    std::thread::sleep(Duration::from_secs(2));
+    let kept = (0..30)
+        .filter(|i| b.file(&class, &name(*i)).is_some())
+        .count();
+    eprintln!("files still on the peer after the trip: {kept}/30");
+    // "Restore the files": reset → exit 3 → respawn paused → resume → pulled back
+    let restarts = a.engine.status().restarts;
+    a.engine
+        .resolve_mass_delete(&class, tramado_sync::MassDeleteAction::Restore)
+        .unwrap();
+    assert!(
+        a.engine.status().restarts > restarts,
+        "Syncthing was respawned after the reset"
+    );
+    assert!(
+        wait_until(Duration::from_secs(90), || (0..30)
+            .all(|i| a.file(&class, &name(i)).is_some())),
+        "the files came back"
+    );
+    let ca = node_client(&a);
+    assert_eq!(ca.folder(&class).unwrap().unwrap()["paused"], false);
+    assert_eq!(kept, 30, "the peer never applied the deletions");
+}

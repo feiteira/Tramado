@@ -1997,7 +1997,9 @@ impl Inner {
         let ignores_changed = before
             .is_none_or(|b| b.skip_audio != a.skip_audio || b.local_ignores != a.local_ignores);
         if ignores_changed && before.is_some() {
-            self.work.push(Task::Ignores(a.class_id.clone()));
+            // synchronously: "Remove from this computer only" adds the line, then deletes the
+            // local copy (folder spec §11.2); the deletion must not be scanned first
+            self.run_task(Task::Ignores(a.class_id.clone()));
         }
         if before.is_none_or(|b| b.joining != a.joining) {
             self.work.push(Task::DeviceName);

@@ -91,9 +91,9 @@ impl WriteObserver for ScanObserver {
         let now = Instant::now();
         {
             let mut g = inner.guard.lock().unwrap_or_else(|e| e.into_inner());
-            g.note_own(class_id, path, now);
+            g.note_own(class_id, path, matches!(kind, WriteKind::Remove), now);
             if let WriteKind::Move { from } = kind {
-                g.note_own(class_id, from, now);
+                g.note_own(class_id, from, true, now);
             }
         }
         let shared = inner

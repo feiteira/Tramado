@@ -379,6 +379,21 @@ impl Node {
         id
     }
 
+    /// Quits and relaunches the app over the same data dir (a fresh `SyncEngine`).
+    pub fn relaunch(&mut self) {
+        self.engine.stop(Duration::from_secs(5));
+        self.engine = SyncEngine::new(
+            SyncConfig {
+                paths: self.paths.clone(),
+                fs: self.fs.clone(),
+                registry: self.registry.clone(),
+                version: "0.1.0-test".into(),
+                sidecar: Some(bin()),
+            },
+            self.sink.clone(),
+        );
+    }
+
     pub fn root(&self, class: &str) -> PathBuf {
         self.registry.root(class).unwrap()
     }
