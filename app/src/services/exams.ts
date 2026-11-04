@@ -54,6 +54,8 @@ const EXAM_PARSE = parserFor('tramado.exam');
 const ANSWERS_PARSE = parserFor('tramado.answers');
 const EDIT_PARSE = parserFor('tramado.exam-edit');
 const IMAGE = /\.(jpe?g|png|webp)$/i;
+/** AI OCR is for exams and short documents (critique G10, D15): one request per page, at most 20 pages. */
+export const MAX_OCR_PAGES = 20;
 const MIME: Record<string, string> = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', txt: 'text/plain', md: 'text/markdown', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 const extOf = (name: string) => (/\.([^.]+)$/.exec(name)?.[1] ?? '').toLowerCase();
 
@@ -438,6 +440,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       pageStarts.forEach((s, i) => d.pages.push({ offset: s, file: f.path, page: i + 1 }));
       return text;
     }
+    if (scan.length > MAX_OCR_PAGES) throw new PlatformError('INVALID', `AI can read at most ${MAX_OCR_PAGES} pages of an exam`, { pages: scan.length, max: MAX_OCR_PAGES });
     d.method = 'ocr';
     patch(d, { pages: (d.draft.get()?.pages ?? 0) + scan.length - 1 });
     const parts: string[] = [];
@@ -446,7 +449,15 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       parts.push(await ocr(d, jpeg, lang));
       patch(d, { ocrDone: (d.draft.get()?.ocrDone ?? 0) + 1 });
     }
-    return scan.length === pages ? parts.join('\n\n') : `${text}\n\n${parts.join('\n\n')}`;
+    // Where each page starts in the file's text (the question's `source.page`): text pages first, read pages after.
+    const whole = scan.length === pages;
+    if (!whole) pageStarts.forEach((s, i) => d.pages.push({ offset: s, file: f.path, page: i + 1 }));
+    let at = whole ? 0 : text.length + 2;
+    parts.forEach((t, i) => {
+      d.pages.push({ offset: at, file: f.path, page: scan[i]! });
+      at += t.length + 2;
+    });
+    return whole ? parts.join('\n\n') : `${text}\n\n${parts.join('\n\n')}`;
   }
 
   async function runDraft(d: DraftState): Promise<void> {
@@ -675,15 +686,22 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       const d = newDraft({ ...meta }, null);
       d.picks = [...picks];
       const title = meta.title ?? picks[0]!.name.replace(/\.[^.]+$/, '');
-      d.dir = await examDir(title);
-      const used: string[] = [];
-      for (const p of picks) {
-        const name = unique(used, sanitize(p.name, 'file'));
-        used.push(name);
-        const dest = fitClassPath(d.dir, name) ?? `${d.dir}/${name.slice(-60)}`;
-        const stamp = await platform.fs.importFile(classId, p.token, dest);
-        const ext = extOf(name);
-        d.files.push({ path: dest, sha256: stamp.sha256 ?? sha256Hex(await platform.fs.read(classId, dest)), size: stamp.size, mime: MIME[ext] ?? 'application/octet-stream' });
+      try {
+        d.dir = await examDir(title);
+        const used: string[] = [];
+        for (const p of picks) {
+          const name = unique(used, sanitize(p.name, 'file'));
+          used.push(name);
+          const dest = fitClassPath(d.dir, name) ?? `${d.dir}/${name.slice(-60)}`;
+          const stamp = await platform.fs.importFile(classId, p.token, dest);
+          const ext = extOf(name);
+          d.files.push({ path: dest, sha256: stamp.sha256 ?? sha256Hex(await platform.fs.read(classId, dest)), size: stamp.size, mime: MIME[ext] ?? 'application/octet-stream' });
+        }
+      } catch (e) {
+        drafts.delete(d.draft.get()!.id);
+        d.draft.set(null);
+        rebuild();
+        throw e;
       }
       patch(d, { pages: d.files.length, meta: { ...meta, title } });
       void runDraft(d);

@@ -104,6 +104,24 @@ describe('ExamService: import → review', () => {
     b.s.dispose();
   });
 
+  it('a scanned PDF: every page without text is read (2 pages + 1 extraction); questions keep their page', async () => {
+    const b = await bed();
+    const ctx = b.s.ctx as { pdfRender: unknown; extractHost: unknown };
+    ctx.pdfRender = { pages: async () => 2, renderJpeg: async (_b: Uint8Array, page: number) => new Uint8Array([0xff, 0xd8, page]) };
+    ctx.extractHost = { extract: async () => ({ sha256: '', extractor: 'x', kind: 'pdf', text: '', units: [], warnings: [], imagePages: [1, 2], pageStarts: [0, 0] }) };
+    b.ai.controls.next('Exame de recurso\nGRUPO I (10 valores)\nComente: «A lei é geral.»');
+    b.ai.controls.next('GRUPO II (10 valores)\n1. Defina direito subjetivo. (5 valores)\n2. Explique a proporcionalidade. (5 valores)');
+    b.platform.mem.queueDialog({ picks: [{ name: 'recurso.pdf', bytes: new Uint8Array([0x25, 0x50, 0x44, 0x46]) }] });
+    const id = await b.exams.startImport(await b.platform.dialogs.pickFiles({ title: 'x', filters: [], multiple: false }));
+    const d = (await until(b.exams.draft(id), (v) => v?.step === 'review' || v?.step === 'failed'))!;
+    expect(d.error).toBeNull();
+    expect(d.cost.requests).toBe(3);
+    expect(d.ocrDone).toBe(2);
+    expect(d.questions.map((q) => [q.number, q.source?.page])).toEqual([['I', 1], ['1', 2], ['2', 2]]);
+    expect(d.questions.every((q) => q.source?.file.endsWith('/recurso.pdf'))).toBe(true);
+    b.s.dispose();
+  });
+
   it('typed questions skip the AI; review validation refuses duplicate numbers and empty texts', async () => {
     const b = await bed();
     const id = await b.exams.startTyped(TYPED, { type: 'midterm' });
