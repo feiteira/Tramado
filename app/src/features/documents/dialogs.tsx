@@ -136,7 +136,7 @@ export function DeleteDialog({ file, className, shared, onDelete, onRemoveLocal,
       open
       onClose={onClose}
       title={shared ? t('documents.deleteConfirm.title', { file, class: className }) : t('documents.deleteConfirm.titleLocal', { file })}
-      size="sm"
+      size={shared ? 'md' : 'sm'}
       data-testid="doc-delete-dialog"
       footer={
         <>

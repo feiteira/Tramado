@@ -15,7 +15,6 @@ import type { AppServices } from '../../services/types/common';
 import type { DocSummary } from '../../services/types/documents';
 import { useRouter } from '../../shell/router';
 import { useStore } from '../../shell/useStore';
-import { useKeyLabel } from '../../shell/keys';
 import { Button, IconButton } from '../../ui/components/Button';
 import { RadioGroup } from '../../ui/components/Choice';
 import { useConfirm } from '../../ui/components/Confirm';
@@ -49,7 +48,6 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   useNavigatorRegistration();
   const i18n = useI18n();
   const { t, tp } = i18n;
-  const key = useKeyLabel();
   const toast = useToast();
   const confirm = useConfirm();
   const { route, go, replace } = useRouter();
@@ -130,7 +128,9 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   const focusRow = (path: string | null) => {
     setFocused(path);
     if (!path) return;
-    requestAnimationFrame(() => listRef.current?.querySelector<HTMLElement>(`[data-doc-path="${CSS.escape(path)}"]`)?.focus());
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-doc-path="${CSS.escape(path)}"]`);
+    if (el) el.focus();
+    else requestAnimationFrame(() => listRef.current?.querySelector<HTMLElement>(`[data-doc-path="${CSS.escape(path)}"]`)?.focus());
   };
 
   // ── Actions ──
@@ -185,7 +185,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
       ...(scanOk ? [{ id: 'ocr', label: t('documents.menu.ocr'), icon: Sparkles, onSelect: () => go({ name: 'document', classId, relPath: d.path }), testId: 'doc-menu-ocr' }] : []),
       { kind: 'separator' },
       ...(shared && !d.localOnly ? [{ id: 'local', label: t('documents.menu.removeLocal'), icon: HardDrive, onSelect: () => void removeLocal(d), testId: 'doc-menu-local' }] : []),
-      { id: 'delete', label: shared && !d.localOnly ? t('documents.menu.delete') : t('documents.menu.deleteLocal'), icon: Trash2, danger: true, hint: key('Delete'), onSelect: () => setModal({ kind: 'delete', doc: d }), testId: 'doc-menu-delete' },
+      { id: 'delete', label: shared && !d.localOnly ? t('documents.menu.delete') : t('documents.menu.deleteLocal'), icon: Trash2, danger: true, hint: 'Del', onSelect: () => setModal({ kind: 'delete', doc: d }), testId: 'doc-menu-delete' },
     ];
   };
 
@@ -304,12 +304,18 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         }}
       >
         <td className="doc-cell doc-cell--name">
-          <span className={cx('doc-icon', `doc-icon--${d.kind}`, d.localOnly && 'doc-icon--private')} aria-hidden><Icon size={17} strokeWidth={1.75} /></span>
-          <span className="doc-name">
-            <button type="button" className="doc-name__open" tabIndex={-1} onClick={() => open(d)}>{d.name}</button>
-            {mode === 'recent' && d.dir !== docsDir ? <span className="doc-name__dir t-small t-muted">{relFolder(docsDir, d.dir).split('/').join(' › ')}</span> : null}
-            {d.conflictOf || d.duplicateOf || (d.fromChat && mode === 'recent') ? <span className="doc-name__flags">{flags(d)}</span> : null}
-          </span>
+          <div className="doc-cell__inner">
+            <span className={cx('doc-icon', `doc-icon--${d.kind}`, d.localOnly && 'doc-icon--private')} aria-hidden><Icon size={17} strokeWidth={1.75} /></span>
+            <span className="doc-name">
+              <button type="button" className="doc-name__open" tabIndex={-1} onClick={() => open(d)}>{d.name}</button>
+              {(mode === 'recent' && d.dir !== docsDir) || d.conflictOf || d.duplicateOf || (d.fromChat && mode === 'recent') ? (
+                <span className="doc-name__sub">
+                  {mode === 'recent' && d.dir !== docsDir ? <span className="doc-name__dir t-small t-muted">{relFolder(docsDir, d.dir).split('/').join(' › ')}</span> : null}
+                  {flags(d)}
+                </span>
+              ) : null}
+            </span>
+          </div>
         </td>
         <td className="doc-cell doc-cell--num t-tabular">{pagesOf(d)}</td>
         <td className="doc-cell doc-cell--who">{d.addedBy === undefined ? '' : d.addedBy === null ? '—' : d.addedBy.self ? t('common.you') : d.addedBy.name}</td>
@@ -350,10 +356,12 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         onKeyDown={(e) => onRowKey(e, p)}
       >
         <td className="doc-cell doc-cell--name">
-          <span className="doc-icon doc-icon--folder" aria-hidden><Folder size={17} strokeWidth={1.75} /></span>
-          <span className="doc-name">
-            <button type="button" className="doc-name__open" tabIndex={-1} onClick={() => goFolder(p)}>{nameOf(p)}</button>
-          </span>
+          <div className="doc-cell__inner">
+            <span className="doc-icon doc-icon--folder" aria-hidden><Folder size={17} strokeWidth={1.75} /></span>
+            <span className="doc-name">
+              <button type="button" className="doc-name__open" tabIndex={-1} onClick={() => goFolder(p)}>{nameOf(p)}</button>
+            </span>
+          </div>
         </td>
         <td className="doc-cell doc-cell--num t-muted">—</td>
         <td className="doc-cell doc-cell--who t-muted" colSpan={2}>{n ? tp('common.count.files', n) : t('documents.tab.emptyFolderShort')}</td>
@@ -496,7 +504,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
             <tbody>
               {loading ? Array.from({ length: 5 }, (_, i) => (
                 <tr key={i} className="doc-row doc-row--skeleton" aria-hidden>
-                  <td className="doc-cell doc-cell--name"><span className="skeleton skeleton--icon" /><span className="skeleton" style={{ width: `${55 - i * 6}%` }} /></td>
+                  <td className="doc-cell doc-cell--name"><div className="doc-cell__inner"><span className="skeleton skeleton--icon" /><span className="skeleton" style={{ width: `${55 - i * 6}%` }} /></div></td>
                   <td className="doc-cell"><span className="skeleton skeleton--short" /></td>
                   <td className="doc-cell"><span className="skeleton skeleton--short" /></td>
                   <td className="doc-cell"><span className="skeleton skeleton--short" /></td>

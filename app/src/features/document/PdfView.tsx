@@ -152,6 +152,7 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
   useEffect(() => {
     let cancelled = false;
     let task: { destroy(): Promise<void> } | null = null;
+    let resize: ResizeObserver | null = null;
     const { services, classId, path } = props;
     const platform = services.ctx.platform;
     void (async () => {
@@ -182,8 +183,22 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
           tagPages();
           pdfViewer.currentScaleValue = 'auto';
           const first = live.current.cite?.page ?? live.current.initialPage;
-          if (first && first >= 1 && first <= pdfViewer.pagesCount) pdfViewer.currentPageNumber = first;
+          if (first && first >= 1 && first <= pdfViewer.pagesCount) {
+            pdfViewer.currentPageNumber = first;
+            // Once the scale has laid the pages out, put the page at the top again.
+            requestAnimationFrame(() => {
+              if (viewer.current === pdfViewer && !live.current.cite) pdfViewer.scrollPageIntoView({ pageNumber: first });
+            });
+          }
         });
+        // The container changed size (side panel, window): a preset scale (auto, fit width) is applied again.
+        resize = new ResizeObserver(() => {
+          const v = viewer.current;
+          if (!v || !v.pagesCount) return;
+          const preset = v.currentScaleValue;
+          if (preset === 'auto' || preset === 'page-width' || preset === 'page-fit') v.currentScaleValue = preset;
+        });
+        resize.observe(box.current);
         eventBus.on('pagerendered', tagPages);
         eventBus.on('pagechanging', (e: { pageNumber: number }) => live.current.onPage(e.pageNumber));
         eventBus.on('scalechanging', (e: { scale: number }) => live.current.onScale(e.scale));
@@ -250,6 +265,7 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
     })();
     return () => {
       cancelled = true;
+      resize?.disconnect();
       void task?.destroy().catch(() => undefined);
       viewer.current?.cleanup?.();
       viewer.current = null;

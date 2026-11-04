@@ -288,3 +288,6 @@ textarea.note-editor:focus-visible {
 .conflict__cell--gap {
   background: var(--paper-sunk);
 }
+.markdown .md-task {
+  margin-inline-start: -1.2em;
+}

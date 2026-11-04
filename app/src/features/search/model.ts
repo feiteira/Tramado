@@ -191,10 +191,33 @@ export function groupRows(rows: readonly ResultRow[]): Array<{ kind: ResultKind;
       list.push(r);
       if (list.length >= MAX_PER_GROUP) break;
     }
-    if (list.length) out.push({ kind, rows: list });
+    if (list.length) out.push({ kind, rows: diverse(list) });
   }
   return out;
 }
+
+/** The first rows of a group show at most two places of one source (one lecture, one file); the rest follow. */
+function diverse(rows: ResultRow[]): ResultRow[] {
+  const head: ResultRow[] = [];
+  const tail: ResultRow[] = [];
+  const seen = new Map<string, number>();
+  for (const r of rows) {
+    const src = sourceKey(r.route);
+    const n = seen.get(src) ?? 0;
+    seen.set(src, n + 1);
+    (n < 2 ? head : tail).push(r);
+  }
+  return [...head, ...tail];
+}
+const sourceKey = (r: Route): string => {
+  switch (r.name) {
+    case 'lecture': return `l:${r.lectureId}`;
+    case 'document': return `d:${r.relPath}`;
+    case 'note': return `n:${r.relPath}`;
+    case 'exam': return `e:${r.examId}`;
+    default: return JSON.stringify(r);
+  }
+};
 
 /** A chat message as the palette sees it (ChatMessageView fields). */
 export interface ChatLike {

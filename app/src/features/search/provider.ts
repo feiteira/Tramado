@@ -125,8 +125,9 @@ export default function provider(services: AppServices) {
       const label = t('search.askAiOff');
       return { id: 'ask', label, icon: 'sparkles', kind: 'ask', testid: 'palette-ask', ariaLabel: label, run: () => void navigate({ name: 'settings', section: 'ai' }, go) };
     }
-    const scope = scopeClass ? classLabel(scopeClass).short || classLabel(scopeClass).name : t('search.scopeAll');
-    const label = t('search.askAi', { q: q.trim(), scope });
+    const label = scopeClass
+      ? t('search.askAi', { q: q.trim(), scope: classLabel(scopeClass).short || classLabel(scopeClass).name })
+      : t('search.askAiAll', { q: q.trim() });
     const route: Route = scopeClass ? { name: 'class', classId: scopeClass, tab: 'ask', query: q.trim() } : { name: 'ask', query: q.trim() };
     return { id: 'ask', label, icon: 'sparkles', kind: 'ask', testid: 'palette-ask', ariaLabel: label, shortcut: 'Mod+Enter', run: () => void navigate(route, go) };
   }

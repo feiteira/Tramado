@@ -10,6 +10,7 @@ export const search = {
   groups: { lectures: 'Lectures', documents: 'Documents', notes: 'Notes', exams: 'Exams', chat: 'Chat', commands: 'Commands', recent: 'Recent', recentSearches: 'Recent searches' },
   showAll: 'Show all {n}',
   askAi: 'Ask AI: “{q}” in {scope}',
+  askAiAll: 'Ask AI: “{q}” in all classes',
   askAiOff: 'Ask AI (set up AI first)',
   indexing: { one: 'Still reading {n} file; results may be incomplete.', other: 'Still reading {n} files; results may be incomplete.' },
   none: { title: 'Nothing found for “{q}”.', body: 'Try fewer words, or search all classes.', all: 'Search all classes', ask: 'Ask AI' },
