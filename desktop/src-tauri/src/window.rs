@@ -2,8 +2,12 @@
 // If a copy of the MPL was not distributed with this file, You can obtain one at
 // https://mozilla.org/MPL/2.0/.
 
-//! The main window (architecture §4.4, §5.5). It is created hidden and shown here unless the
-//! app was started with `--hidden` (autostart). `CloseRequested` is not intercepted in Rust: the
+//! The main window (architecture §4.4, §5.5). It is created here, hidden, from its entry in
+//! `tauri.conf.json` (`"create": false`, so Tauri does not create it before `setup`), and shown
+//! unless the app was started with `--hidden` (autostart). With `TRAMADO_DATA_DIR` the webview
+//! keeps its own storage (localStorage, caches) in `$TRAMADO_DATA_DIR/data/webview`: Tauri's
+//! default is the platform's app-local data folder, so an isolated run would otherwise share
+//! the webview storage of the person's real Tramado and of every other isolated instance. `CloseRequested` is not intercepted in Rust: the
 //! webview handles it (Trama pattern). Files dropped on the window become pick tokens and reach
 //! the webview as `app:drop` (D-4: it never gets a path it could use).
 //!
@@ -13,8 +17,10 @@
 //! (≤ 256 KiB; `tools/desktop-smoke.mjs --ipc-check` uses it to call the commands for real).
 
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use tauri::{AppHandle, DragDropEvent, Emitter, Manager, Window, WindowEvent};
-use tramado_base::error::AppResult;
+use tramado_base::error::{AppError, AppResult, Code};
+use tramado_base::paths::Paths;
 use tramado_base::picks::{PickKind, Picked};
 
 use crate::commands::events;
@@ -31,11 +37,41 @@ pub struct DropEvent {
 
 pub const MAIN: &str = "main";
 
-pub fn init(app: &AppHandle, _shared: &Shared) -> AppResult<()> {
+pub fn init(app: &AppHandle, shared: &Shared) -> AppResult<()> {
+    create_main(app, shared)?;
     if !std::env::args().skip(1).any(|a| a == "--hidden") {
         show_main(app);
     }
     Ok(())
+}
+
+/// Builds the main window from its configuration (once).
+fn create_main(app: &AppHandle, shared: &Shared) -> AppResult<()> {
+    if app.get_webview_window(MAIN).is_some() {
+        return Ok(());
+    }
+    let config = app.config();
+    let Some(cfg) = config.app.windows.iter().find(|w| w.label == MAIN) else {
+        return Err(AppError::new(
+            Code::IoError,
+            "no main window in the configuration",
+        ));
+    };
+    let mut builder = tauri::WebviewWindowBuilder::from_config(app, cfg)
+        .map_err(|e| AppError::new(Code::IoError, format!("main window: {e}")))?;
+    if let Some(dir) = webview_data_dir(&shared.paths) {
+        builder = builder.data_directory(dir);
+    }
+    builder
+        .build()
+        .map_err(|e| AppError::new(Code::IoError, format!("main window: {e}")))?;
+    Ok(())
+}
+
+/// The webview's storage folder: Tauri's default (the app-local data folder), except in an
+/// isolated run, where it lives under `TRAMADO_DATA_DIR`.
+pub fn webview_data_dir(paths: &Paths) -> Option<PathBuf> {
+    paths.dev_isolated.then(|| paths.data.join("webview"))
 }
 
 /// Shows and focuses the main window (errors are logged, never fatal).
@@ -174,6 +210,19 @@ pub fn media_selftest_script(media_base: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn isolated_runs_keep_their_own_webview_storage() {
+        let dir = std::path::Path::new("/tmp/tramado-e2e-a");
+        let isolated = Paths::for_tests(dir);
+        assert_eq!(
+            webview_data_dir(&isolated),
+            Some(dir.join("data").join("webview"))
+        );
+        let mut real = Paths::for_tests(dir);
+        real.dev_isolated = false;
+        assert_eq!(webview_data_dir(&real), None);
+    }
 
     #[test]
     fn selftest_script_names_the_scheme() {
