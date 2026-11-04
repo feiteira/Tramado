@@ -69,7 +69,8 @@
 .member__who {
   display: flex;
   flex-direction: column;
-  flex: 1 1 12rem;
+  /* Names are short: a smaller basis keeps presence and actions on the row at 1000 px (long names wrap instead). */
+  flex: 1 1 8rem;
   min-width: 0;
 }
 .member__name {
@@ -228,6 +229,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
+  /* Ghost buttons: their label lines up with the text column above (the hover fill extends into the gutter). */
+  margin-inline-start: calc(-1 * var(--s-2));
 }
 
 /* ── Invite dialog (UX §3.12.2) ─────────────────────────────────────────────────────── */

@@ -108,7 +108,12 @@ describe('mesh: invite and join', () => {
     await settle(mesh, [ana, carla], 2);
     await mesh.advance(91_000);
     expect(carla.services.sync.state.get().joinStalled).toEqual([classId]);
-    await expect(carla.services.sync.retryJoin(classId)).resolves.toBe(classId);
+    const retried = carla.services.sync.retryJoin(classId);
+    // The join record stays open while the knock re-runs (the join dialog reads a closed record as "let in").
+    expect(carla.services.sync.joining(classId)).not.toBeNull();
+    expect(carla.services.sync.state.get().joinStalled).toEqual([]);
+    await expect(retried).resolves.toBe(classId);
+    expect(carla.services.sync.joining(classId)).not.toBeNull();
     expect(carla.services.sync.state.get().joinStalled).toEqual([]);
     expect((await carla.platform.classes.list()).find((e) => e.classId === classId)).toMatchObject({ joining: true, skipAudio: true });
     await ana.services.sync.admit(classId, carla.deviceId);

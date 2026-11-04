@@ -19,7 +19,7 @@ import { useConfirm } from '../../ui/components/Confirm';
 import { EmptyState, Notice } from '../../ui/components/Feedback';
 import { SearchField } from '../../ui/components/Field';
 import { useToast } from '../../ui/components/Toast';
-import { Composer, decodeMentions, type MentionOption } from '../../ui/tramado/Composer';
+import { Composer, decodeMentions, encodeMentions, type MentionOption } from '../../ui/tramado/Composer';
 import { useI18n } from '../../ui/i18n';
 import { chatRows, excerpt, findMatches, lastEditable, mentionsMe, visibleItems, WINDOW } from './model';
 import { ChatLine, type LineContext } from './ChatLine';
@@ -235,7 +235,6 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     setEditing(null);
     if (!m || text.trim() === decodeMentions(m.text, allNames).trim()) return;
     try {
-      const { encodeMentions } = await import('../../ui/tramado/Composer');
       await cls.chat.edit(parseRef(id), encodeMentions(text, mentionOptions));
     } catch (e) {
       toast.error(e);
@@ -256,22 +255,32 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     }
   }
 
+  // The find bar takes the focus however it opens (Ctrl/⌘+F or the "Find in chat" link), so Esc closes it.
+  const openFind = () => {
+    setFindOpen(true);
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[data-testid="chat-find-input"]')?.focus());
+  };
+  // Closing it hands the focus back to the composer (the find field it had is gone).
+  const closeFind = () => {
+    setFindOpen(false);
+    setQuery('');
+    requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')?.focus());
+  };
+
   // Keys: Ctrl/⌘+F find, Esc closes the reply bar / find bar, PageUp at the top loads earlier, ↑ in an empty
   // composer edits my last message, ↑/↓ move between messages in the list.
   const onKeyDown = (e: React.KeyboardEvent) => {
     const mod = e.ctrlKey || e.metaKey;
     if (mod && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') {
       e.preventDefault();
-      setFindOpen(true);
-      requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[data-testid="chat-find-input"]')?.focus());
+      openFind();
       return;
     }
     if (e.key === 'Escape' && !e.defaultPrevented) {
       if (editing) return;
       if (findOpen) {
         e.preventDefault();
-        setFindOpen(false);
-        setQuery('');
+        closeFind();
         return;
       }
       if (replyTo) {
@@ -310,7 +319,8 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     mine: (m) => m.author.self && !m.unverified,
     mentionsMe: (m) => mentionsMe(m, me.memberId),
     lastMine: [...shown].reverse().find((m) => m.author.self && (m.kind === 'message' || m.kind === 'ai'))?.id ?? null,
-    editing, setEditing, saveEdit, flash, focusId, setFocusId,
+    // A focused message that left the window (deleted, older than the window) gives the Tab stop back to the newest.
+    editing, setEditing, saveEdit, flash, focusId: focusId && shown.some((m) => m.id === focusId) ? focusId : null, setFocusId,
     defaultFocus: [...shown].reverse().find((m) => m.kind === 'message' || m.kind === 'ai')?.id ?? null, match: currentHit, matches: new Set(matches),
     reply: (m) => {
       setReplyTo(m);
@@ -335,7 +345,9 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
       {findOpen ? (
         <div className="chat__find" role="search" data-testid="chat-find">
           <SearchField
-            label={t('chat.find')}
+            aria-label={t('chat.find')}
+            placeholder={t('chat.find')}
+            fieldClassName="chat__find-field"
             value={query}
             onChange={(v) => {
               setQuery(v);
@@ -349,8 +361,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
               if (e.key === 'Escape') {
                 e.preventDefault();
                 e.stopPropagation();
-                setFindOpen(false);
-                setQuery('');
+                closeFind();
               }
             }}
             data-testid="chat-find-input"
@@ -358,11 +369,11 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
           <span className="chat__find-count t-small" aria-live="polite" data-testid="chat-find-count">
             {query.trim() ? t('chat.findCount', { n: matches.length ? Math.min(hit, matches.length - 1) + 1 : 0, total: matches.length }) : ''}
           </span>
-          <IconButton icon={X} label={t('common.close')} onClick={() => { setFindOpen(false); setQuery(''); }} data-testid="chat-find-close" />
+          <IconButton icon={X} label={t('common.close')} onClick={closeFind} data-testid="chat-find-close" />
         </div>
       ) : null}
       <div className="chat__scroll" ref={scroller} onScroll={onScroll}>
-        <div className="chat__list" role="log" aria-label={t('chat.label')} data-testid="chat-list" onKeyDown={onListKeyDown}>
+        <div className="chat__list" role="log" aria-live="off" aria-label={t('chat.label')} data-testid="chat-list" onKeyDown={onListKeyDown}>
           {hidden > 0 || view.olderAvailable ? (
             <div className="chat__earlier">
               <Button variant="ghost" size="sm" busy={loadingOlder} onClick={() => void loadEarlier()} data-testid="chat-load-earlier">
@@ -436,7 +447,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         />
         {!findOpen ? (
           <div className="chat__hint t-small">
-            <button type="button" className="chat__find-open" onClick={() => setFindOpen(true)} data-testid="chat-find-open">
+            <button type="button" className="chat__find-open" onClick={openFind} data-testid="chat-find-open">
               <Search size={13} aria-hidden strokeWidth={1.75} /> {t('chat.find')}
             </button>
           </div>

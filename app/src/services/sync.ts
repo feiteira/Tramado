@@ -408,7 +408,9 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
     async retryJoin(classId) {
       const j = joins.get(classId);
       if (!j) throw new PlatformError('NOT_FOUND', 'no join of this class in this session');
-      clearStall(classId);
+      // The join record stays until join() replaces it (a closed record reads as "let in"); a failed retry keeps it,
+      // so [Try again] can run once more.
+      clearStall(classId, false);
       await platform.sync.cancelJoin(classId);
       await app().library.load();
       const preview = { ...j.preview, warnings: j.preview.warnings.filter((w) => w !== 'alreadyMember') };

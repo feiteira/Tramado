@@ -46,7 +46,13 @@ export default function Admission({ services }: { services: AppServices }) {
       if (e.type !== 'admitted') return;
       const key = `${e.classId}|${e.deviceId}`;
       setJoined((list) => [...list.filter((j) => j.key !== key), { key, classId: e.classId, deviceId: e.deviceId, name: e.name }].slice(-3));
-      const id = window.setTimeout(() => setJoined((list) => list.filter((j) => j.key !== key)), JOINED_MS);
+      // The same computer again restarts its card's 10 s (an older timer would hide the new card early).
+      const prev = timers.current.get(key);
+      if (prev !== undefined) window.clearTimeout(prev);
+      const id = window.setTimeout(() => {
+        timers.current.delete(key);
+        setJoined((list) => list.filter((j) => j.key !== key));
+      }, JOINED_MS);
       timers.current.set(key, id);
     });
     const all = timers.current;

@@ -28,7 +28,7 @@
   padding: var(--s-2) 0;
   border-bottom: 1px solid var(--rule);
 }
-.chat__find .field {
+.chat__find .chat__find-field {
   flex: 1;
   max-width: 420px;
 }

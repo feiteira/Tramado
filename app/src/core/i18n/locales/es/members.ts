@@ -32,7 +32,7 @@ export const members: Messages['members'] = {
     already: 'Ya está en {class}.',
     openIt: 'Abrirla',
     invitedBy: '{name} le invitó a',
-    whatYouGet: 'Lo que recibirá: clases y transcripciones, documentos, apuntes de la clase y el chat de la asignatura. Sus propios apuntes, subrayados y práctica siguen siendo privados.',
+    whatYouGet: 'Lo que recibirá: clases y transcripciones, documentos, apuntes de la asignatura y el chat. Sus propios apuntes, subrayados y práctica siguen siendo privados.',
     folder: 'Guardarla en',
     folderExists: 'Ya existe una carpeta con este nombre. Elija otro lugar.',
     audio: 'Descargar también las grabaciones de las clases (unos 11 MB por hora)',
@@ -131,6 +131,8 @@ export const members: Messages['members'] = {
     helperCloud: 'transcripción en la nube',
     noHelpers: 'Todavía nadie ayuda a transcribir las clases de esta asignatura.',
     helperModel: { turbo: 'Modelo recomendado', small: 'Modelo pequeño', large: 'Modelo más preciso' },
+    removeDeviceTitle: '¿Quitar «{device}» de {class}?',
+    removeDeviceBody: 'El Tramado de todos deja de compartir la asignatura con «{device}». A partir de ahora, un miembro tiene que dejar entrar a los ordenadores nuevos (esto activa «Preguntar antes de dejar entrar»).',
   },
   joinMore: {
     own: 'Esta invitación es suya. Envíesela a sus compañeros.',

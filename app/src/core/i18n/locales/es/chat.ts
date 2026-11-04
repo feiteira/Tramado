@@ -35,6 +35,7 @@ export const chat: Messages['chat'] = {
   examChip: '¿Añadir a Exámenes: {kind} el {date}?',
   system: {
     thanks: '{a} agradeció a {b} la transcripción de {lecture}.',
+    thanksYou: '{a} le agradeció la transcripción de {lecture}.',
     joined: '{name} se unió a la asignatura.',
     left: '{name} salió de la asignatura.',
     pinned: '{name} fijó un mensaje.',

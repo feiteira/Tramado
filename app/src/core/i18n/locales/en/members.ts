@@ -132,6 +132,8 @@ export const members = {
     helperCloud: 'cloud transcription',
     noHelpers: 'Nobody helps transcribe this class’s lectures yet.',
     helperModel: { turbo: 'Recommended model', small: 'Small model', large: 'Most accurate model' },
+    removeDeviceTitle: 'Remove “{device}” from {class}?',                     // G2 (UI-GROUP): an unverified computer
+    removeDeviceBody: 'Everyone’s Tramado stops sharing the class with “{device}”. From now on, new computers must be let in by a member (this turns on “Ask before letting people in”).',
   },
   joinMore: {
     own: 'This is your own invite. Send it to your classmates instead.',

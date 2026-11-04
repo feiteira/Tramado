@@ -15,6 +15,8 @@ export function RemoveDialog({ classId, className, target, services, onClose }: 
   const { t } = useI18n();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  // One (unverified) computer, not a person: its own sentence ("…with “Carla-PC”", not "…with Carla-PC's computers").
+  const device = !target.memberId;
   const run = async () => {
     setBusy(true);
     try {
@@ -32,7 +34,7 @@ export function RemoveDialog({ classId, className, target, services, onClose }: 
       onClose={onClose}
       dismissible={!busy}
       size="sm"
-      title={t('members.remove.title', { name: target.name, class: className })}
+      title={device ? t('members.more.removeDeviceTitle', { device: target.name, class: className }) : t('members.remove.title', { name: target.name, class: className })}
       onSubmit={() => void run()}
       data-testid="member-remove-dialog"
       footer={
@@ -42,7 +44,7 @@ export function RemoveDialog({ classId, className, target, services, onClose }: 
         </>
       }
     >
-      <p className="t-secondary">{t('members.remove.body', { name: target.name })}</p>
+      <p className="t-secondary">{device ? t('members.more.removeDeviceBody', { device: target.name }) : t('members.remove.body', { name: target.name })}</p>
     </Dialog>
   );
 }

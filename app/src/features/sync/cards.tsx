@@ -11,6 +11,7 @@ import { Button } from '../../ui/components/Button';
 import { Notice } from '../../ui/components/Feedback';
 import { useToast } from '../../ui/components/Toast';
 import { useI18n } from '../../ui/i18n';
+import { requestDiagnostics } from './diagnosticsFlag';
 import './sync.css';
 
 const SYNC_ERRORS = new Set(['SYNC_UNAVAILABLE', 'SYNC_PORT', 'SYNC_LOCKED']);
@@ -23,8 +24,11 @@ export function syncErrorOf(status: { state: string; error: string | null } | nu
   return status.state === 'error' ? 'SYNC_UNAVAILABLE' : null;
 }
 
-/** "Sharing isn't running…" with [Try again] and [Details] (UX §3.15.2). */
-export function SyncErrorCard({ services, code, onRetried, compact }: { services: AppServices; code: string; onRetried?(): void; compact?: boolean }) {
+/**
+ * "Sharing isn't running…" with [Try again] and [Details] (UX §3.15.2). [Details] opens the diagnostics: Settings ›
+ * Sharing with them expanded, or `onDetails` where the card already sits in that section.
+ */
+export function SyncErrorCard({ services, code, onRetried, onDetails, compact }: { services: AppServices; code: string; onRetried?(): void; onDetails?(): void; compact?: boolean }) {
   const { t } = useI18n();
   const toast = useToast();
   const { go } = useRouter();
@@ -47,7 +51,18 @@ export function SyncErrorCard({ services, code, onRetried, compact }: { services
       actions={
         <>
           <Button size="sm" busy={busy} onClick={() => void retry()} data-testid="sync-retry">{t('sync.error.retry')}</Button>
-          <Button size="sm" variant="ghost" onClick={() => go({ name: 'settings', section: 'sharing' })} data-testid="sync-details">{t('sync.error.details')}</Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              if (onDetails) return onDetails();
+              requestDiagnostics();
+              go({ name: 'settings', section: 'sharing' });
+            }}
+            data-testid="sync-details"
+          >
+            {t('sync.error.details')}
+          </Button>
         </>
       }
       data-testid="sync-error-card"

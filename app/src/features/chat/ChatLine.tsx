@@ -74,8 +74,11 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
     let text = m.text;
     if (m.kind === 'thanks' && m.thanks) {
       const lecture = ctx.lectures.find((l) => l.id === m.thanks!.lectureId)?.title ?? t('chat.aLecture');
-      const b = m.thanks.to.memberId === ctx.me.memberId ? t('common.you') : m.thanks.to.name;
-      text = t('chat.system.thanks', { a: ctx.mine(m) ? capital(t('common.you'), i18n.meta.bcp47) : ctx.nameOf(m), b, lecture });
+      const a = ctx.mine(m) ? capital(t('common.you'), i18n.meta.bcp47) : ctx.nameOf(m);
+      // "thanked you" has its own sentence: PT-PT and ES put the pronoun before the verb ("agradeceu-lhe", "le agradeció").
+      text = m.thanks.to.memberId === ctx.me.memberId
+        ? t('chat.system.thanksYou', { a, lecture })
+        : t('chat.system.thanks', { a, b: m.thanks.to.name, lecture });
     }
     return (
       <div className="chat-system" data-testid="chat-system" data-message-id={m.id} data-kind={m.kind}>
@@ -181,18 +184,28 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
       renderMention={renderMention}
       onLink={(href) => {
         if (!/^https:\/\//i.test(href)) return;
-        void ctx.services.ctx.platform.system.openExternal(href, { title: t('chat.link.title'), message: t('chat.link.body'), confirm: t('chat.link.open'), cancel: t('common.cancel') });
+        let host = href;
+        try {
+          host = new URL(href).host;
+        } catch {
+          return;
+        }
+        void ctx.services.ctx.platform.system.openExternal(href, { title: t('chat.link.title'), message: t('chat.link.body', { host }), confirm: t('chat.link.open'), cancel: t('common.cancel') });
       }}
       data-testid="chat-text"
     />
   ) : null;
 
+  // The list is one Tab stop (the current message, ↑/↓ between messages): only the current message's toolbar takes
+  // the next Tab stop (Reply; ←/→ reach the rest). Other messages' hidden toolbars stay out of the Tab order.
+  const current = (ctx.focusId ?? ctx.defaultFocus) === m.id;
+  const tab = (first: boolean) => (current && first ? 0 : -1);
   const actions = !m.deleted && !editing ? (
     <Toolbar label={t('chat.actions.label')} roving className="chat-msg__actions" data-testid="chat-actions">
-      <IconButton icon={CornerUpLeft} size="sm" label={t('chat.actions.reply')} onClick={() => ctx.reply(m)} data-testid="chat-reply" />
-      <IconButton icon={Copy} size="sm" label={t('chat.actions.copy')} onClick={() => void ctx.copy(m)} data-testid="chat-copy" />
-      {mine && m.kind === 'message' ? <IconButton icon={Pencil} size="sm" label={t('chat.actions.edit')} onClick={() => ctx.edit(m)} data-testid="chat-edit" /> : null}
-      {mine ? <IconButton icon={Trash2} size="sm" variant="danger" label={t('chat.actions.delete')} onClick={() => void ctx.remove(m)} data-testid="chat-delete" /> : null}
+      <IconButton icon={CornerUpLeft} size="sm" label={t('chat.actions.reply')} onClick={() => ctx.reply(m)} tabIndex={tab(true)} data-testid="chat-reply" />
+      <IconButton icon={Copy} size="sm" label={t('chat.actions.copy')} onClick={() => void ctx.copy(m)} tabIndex={tab(false)} data-testid="chat-copy" />
+      {mine && m.kind === 'message' ? <IconButton icon={Pencil} size="sm" label={t('chat.actions.edit')} onClick={() => ctx.edit(m)} tabIndex={tab(false)} data-testid="chat-edit" /> : null}
+      {mine ? <IconButton icon={Trash2} size="sm" variant="danger" label={t('chat.actions.delete')} onClick={() => void ctx.remove(m)} tabIndex={tab(false)} data-testid="chat-delete" /> : null}
     </Toolbar>
   ) : null;
 
@@ -208,7 +221,7 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
     <article
       className={cx('chat-msg', row.first && 'chat-msg--first', row.last && 'chat-msg--last', mention && 'chat-msg--mention', ctx.flash === m.id && 'chat-msg--flash',
         ctx.match === m.id && 'chat-msg--match', ctx.matches.has(m.id) && 'chat-msg--hit', m.unverified && 'chat-msg--unverified', m.kind === 'ai' && 'chat-msg--ai')}
-      tabIndex={(ctx.focusId ?? ctx.defaultFocus) === m.id ? 0 : -1}
+      tabIndex={current ? 0 : -1}
       onFocus={(e) => {
         if (e.target === e.currentTarget) ctx.setFocusId(m.id);
       }}

@@ -35,6 +35,7 @@ export const chat = {
   examChip: 'Add to Exams: {kind} on {date}?',
   system: {
     thanks: '{a} thanked {b} for transcribing {lecture}.',
+    thanksYou: '{a} thanked you for transcribing {lecture}.',                // G2 (UI-GROUP)
     joined: '{name} joined the class.',
     left: '{name} left the class.',
     pinned: '{name} pinned a message.',

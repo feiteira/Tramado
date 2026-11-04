@@ -77,7 +77,8 @@ export default function JoinDialog({ props, services, close }: { props: DialogPr
     if (joiningNow) setWasJoining(true);
   }, [joiningNow]);
   const folder = joined ? sync.folders[joined] : undefined;
-  const admitted = !!joined && (!!folder && Object.values(folder.completion).some((c) => c.remoteState === 'valid') || (wasJoining && !j));
+  // In: a member's device has the folder, or the join record was closed (admittedMe) — not while [Try again] re-runs it.
+  const admitted = !!joined && !busy && ((!!folder && Object.values(folder.completion).some((c) => c.remoteState === 'valid')) || (wasJoining && !j));
   useEffect(() => {
     if (step === 'wait' && admitted) setStep('done');
   }, [step, admitted]);
@@ -152,7 +153,15 @@ export default function JoinDialog({ props, services, close }: { props: DialogPr
       setStep('wait');
     } catch (e) {
       const err = toPlatformError(e);
-      if (err.code === 'CONFLICT') setError({ key: 'members.join.already', classId: preview.classId, className: preview.invite.l });
+      if (err.code === 'CONFLICT') {
+        // Rust: "already on this computer" carries data.classId; otherwise the chosen folder exists (UX §3.12.3).
+        const classId = (err.data as { classId?: ClassId } | undefined)?.classId;
+        if (classId) {
+          setError({ key: 'members.join.already', classId, className: services.library.classes.get().find((c) => c.id === classId)?.name ?? preview.invite.l });
+          setStep('paste');
+        } else setSubmitError('folderExists');
+        return;
+      }
       setSubmitError(err.code);
     } finally {
       setBusy(false);
@@ -284,7 +293,9 @@ export default function JoinDialog({ props, services, close }: { props: DialogPr
             <span>{t('members.join.asName', { name: identity?.name ?? '' })}</span>
             <Button size="sm" variant="ghost" onClick={() => { go({ name: 'settings', section: 'profile' }); close(); }} data-testid="join-name-change">{t('common.change')}</Button>
           </p>
-          {submitError ? (
+          {submitError === 'folderExists' ? (
+            <Notice tone="warning" data-testid="join-folder-exists">{t('members.join.folderExists')}</Notice>
+          ) : submitError ? (
             syncErrorOf(null, submitError) ? <SyncErrorCard services={services} code={submitError} /> : <Notice tone="danger" data-testid="join-error">{t(`errors.${submitError}` as 'errors.AI_BUSY')}</Notice>
           ) : null}
         </div>

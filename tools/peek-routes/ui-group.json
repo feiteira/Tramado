@@ -678,5 +678,61 @@
         "expect-text": "admission-toast=Diogo Santos"
       }
     ]
+  },
+  {
+    "name": "chat-find-pt-dark",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "size": "1000x660",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "chat-find-open"
+      },
+      {
+        "type": "chat-find-input=slides"
+      },
+      {
+        "expect-text": "chat-find-count=1"
+      },
+      {
+        "press": "Escape"
+      },
+      {
+        "expect-not": "chat-find"
+      }
+    ]
+  },
+  {
+    "name": "members-devices-pt-1000",
+    "query": "route=class&class=law&tab=members&sync=fake",
+    "lang": "pt",
+    "size": "1000x660",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "member-devices-toggle"
+      },
+      {
+        "expect": "member-device:2"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-error-details",
+    "query": "route=settings&section=sharing&sync=error",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "click": "sync-details"
+      },
+      {
+        "expect": "sharing-log"
+      }
+    ]
   }
 ]

@@ -183,7 +183,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
                   <ul className="member__devices">
                     {p.devices.map((d) => (
                       <li key={d.deviceId} className="member-device" data-testid="member-device" data-device-id={d.deviceId} tabIndex={0}>
-                        {cls.presence.others.get()[d.deviceId]?.power === 'ac' ? <Monitor size={15} aria-hidden strokeWidth={1.75} /> : <Laptop size={15} aria-hidden strokeWidth={1.75} />}
+                        {deviceIcon(d.deviceId === me.deviceId ? null : cls.presence.others.get()[d.deviceId]?.power)}
                         <span className="member-device__name">
                           {d.deviceName}
                           {d.deviceId === me.deviceId ? <span className="t-muted"> {t('members.list.thisComputer')}</span> : null}
@@ -350,6 +350,12 @@ function WithdrawDialog({ className, onClose, onConfirm }: { className: string; 
       <Checkbox checked={alsoDelete} onChange={setAlsoDelete} label={t('members.list.withdrawConfirm.alsoDelete')} data-testid="members-withdraw-delete" />
     </Dialog>
   );
+}
+
+/** UX §3.12.1: a laptop when the device reports a battery (on battery or plugged in: `battery` / `ac`), otherwise a
+ * monitor (desktops report `unknown`, claims.ts). No presence file yet (or this computer): a laptop. */
+function deviceIcon(power: 'ac' | 'battery' | 'unknown' | null | undefined) {
+  return power === 'unknown' ? <Monitor size={15} aria-hidden strokeWidth={1.75} /> : <Laptop size={15} aria-hidden strokeWidth={1.75} />;
 }
 
 function newestOf<T extends { ms: number }>(xs: T[]): T | null {

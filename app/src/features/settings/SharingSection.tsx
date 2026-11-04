@@ -109,7 +109,7 @@ export default function SharingSection({ services }: { services: AppServices }) 
         <span className="sharing__label">{t('settings.sharing.status')}</span>
         <div className="sharing__value">
           {sync.identityCopied ? <IdentityCopiedCard services={services} /> : null}
-          {errorCode && !sync.identityCopied ? <SyncErrorCard services={services} code={errorCode} /> : null}
+          {errorCode && !sync.identityCopied ? <SyncErrorCard services={services} code={errorCode} onDetails={() => setDiagOpen(true)} /> : null}
           {!errorCode && !sync.identityCopied ? (
             <div className="sharing__status">
               <span className="sharing__status-text" data-testid="sharing-status-text" data-state={status?.state ?? 'stopped'}>
