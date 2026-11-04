@@ -46,7 +46,8 @@ export interface ClassService {
   writeBan(target: BanTarget, state: 'banned' | 'unbanned', reason?: string): Promise<void>;
   /** Removes my member and presence files (leaving, sync spec §17). */
   removeOwnFiles(): Promise<void>;
-  /** Writes my class.json, meta and member file again for a fork (sync spec §17). */
+  /** Forks the class (sync spec §17): the new class.json under the old ID, `platform.classes.fork`, then my meta and
+   *  member file under the new ID. */
   writeFork(newClassId: ClassId, nonce: string): Promise<void>;
   /** Private UI state of the class (architecture §13.2 ui-state.json). */
   uiState(): Promise<Record<string, unknown>>;
