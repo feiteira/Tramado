@@ -169,6 +169,13 @@ export function createAiService(ctx: AppContext, app: () => AppServices): AiServ
     for (const r of results) if (r.status === 'rejected') ctx.log('warn', 'AI settings could not be read', { error: String(r.reason) });
     refresh();
   })();
+  // Start-up validation of the chain against the catalog (critique G21): in the background, once a key exists.
+  const warmCatalog = () => {
+    if (key.set && !customHostId() && ctx.prefs.get('ai.enabled') !== '0' && !isFresh(catalogCache, ctx.clock.now())) {
+      void service.catalog().catch((e: unknown) => ctx.log('info', 'AI catalog not refreshed', { code: errorCode(e) }));
+    }
+  };
+  void ready.then(warmCatalog);
 
   async function refreshQuota(): Promise<void> {
     await ready;
@@ -179,7 +186,7 @@ export function createAiService(ctx: AppContext, app: () => AppServices): AiServ
     refresh();
   }
 
-  return {
+  const service: AiService = {
     settings,
     client,
     ready: () => ready,
@@ -191,6 +198,7 @@ export function createAiService(ctx: AppContext, app: () => AppServices): AiServ
       key = await platform.secrets.set('openrouter', v);
       quota = null;
       refresh();
+      warmCatalog();
     },
     async clearKey() {
       await ready;
@@ -292,6 +300,7 @@ export function createAiService(ctx: AppContext, app: () => AppServices): AiServ
       return { requests: estimateRequests(task, count), remaining: customHostId() ? null : q?.remaining ?? null };
     },
   };
+  return service;
 }
 
 // ── Storage → view (UX §3.9.1, §4.1), shared by ExamService, AskService and the chat (T-SYNC) ───────────────────

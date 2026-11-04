@@ -18,6 +18,7 @@ export interface FakeAiControls {
   fail(code: ErrorCode): void;
 }
 export interface FakeAiOptions {
+  /** Default `off` (no key); the demo passes its `ai=` mode. */
   mode?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real';
   /** `real`: the session-only key and the fetch to use. */
   key?: () => string | null;
@@ -169,7 +170,8 @@ const nextMidnight = (now: number) => (Math.floor(now / 86_400_000) + 1) * 86_40
 const TRANSIENT = new Set<ErrorCode>(['AI_BUSY', 'AI_UPSTREAM', 'AI_TIMEOUT', 'AI_UNAVAILABLE', 'AI_OFFLINE']);
 
 export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
-  const mode = opts.mode ?? 'fake';
+  // No options = a fresh install without a key (AI_NO_KEY); the demo passes its `ai=` mode (default `fake`).
+  const mode = opts.mode ?? 'off';
   const now = opts.now ?? (() => Date.now());
   let privacy: PrivacyLevel = 'no-training';
   let busyRelax = false;
@@ -243,6 +245,11 @@ export function createFakeAi(opts: FakeAiOptions = {}): FakeAi {
     async send(req: AiPipeRequest, onEvent: (e: AiWireEvent) => void) {
       requests.push(req);
       const started = now();
+      if (mode === 'off') {
+        log(req, null, 'AI_NO_KEY', started, 0);
+        queueMicrotask(() => onEvent({ type: 'fail', code: 'AI_NO_KEY', message: `AI is not set up (request ${req.requestId})` }));
+        return;
+      }
       let status: number | null = null;
       let bytesIn = 0;
       await transport.send(req as never, (e) => {

@@ -31,7 +31,7 @@ GRUPO II (12 valores)
 interface Bed { s: AppServicesImpl; classId: ClassId; exams: ExamService & { idle(): Promise<void> }; ai: FakeAi; search: FakeSearch; platform: MemoryPlatform; clock: { advance(ms: number): void }; idle(): Promise<void> }
 
 async function bed(opts: { ai?: FakeAi; key?: boolean } = {}): Promise<Bed> {
-  const ai = opts.ai ?? createFakeAi();
+  const ai = opts.ai ?? createFakeAi({ mode: 'fake' });
   const { ctx, platform, clock } = await createTestContext({ name: 'Ana Ribeiro', ai });
   if (opts.key !== false) await platform.secrets.set('openrouter', 'test-key-0001');
   const s = createServices(ctx);
