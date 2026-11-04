@@ -1,0 +1,90 @@
+name: AI canary
+
+# Are the free-model defaults (app/src/core/ai/ai-defaults.json) still alive? Once a day, with the repository secret
+# OPENROUTER_API_KEY: the catalog, then three tiny free requests per privacy level (.github/scripts/canary.mjs; free
+# models only, nothing that costs money). After three failing days in a row it opens an issue (or comments on the open
+# one); when it passes again it closes that issue. Without the secret the run is skipped with a notice.
+# Critique G21, plan §8.2. By hand: gh workflow run canary.yml
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canary
+  cancel-in-progress: false
+
+env:
+  ISSUE_TITLE: 'AI canary: the free-model defaults failed three days in a row'
+
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Is a key configured?
+        id: key
+        env:
+          KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::notice title=AI canary skipped::The repository secret OPENROUTER_API_KEY is not set, so no request was sent."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.key.outputs.present == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.key.outputs.present == 'true'
+        with:
+          node-version: 22
+      - name: Catalog and three tiny free requests per privacy level
+        id: run
+        if: steps.key.outputs.present == 'true'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: node .github/scripts/canary.mjs --summary="$RUNNER_TEMP/canary.md"
+      - name: Open an issue after three failing days
+        if: failure() && steps.run.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          today=$(date -u +%F)
+          # The latest finished run of each earlier day, newest first: this run plus two failures = three days.
+          earlier=$(gh run list -R "$GITHUB_REPOSITORY" --workflow canary.yml --limit 40 \
+            --json databaseId,conclusion,createdAt,status \
+            --jq "[.[] | select(.status == \"completed\" and .databaseId != $RUN_ID and (.createdAt[0:10] != \"$today\"))]
+                  | group_by(.createdAt[0:10]) | map(max_by(.createdAt)) | sort_by(.createdAt) | reverse
+                  | .[0:2] | map(.conclusion) | join(\",\")")
+          echo "Earlier days: ${earlier:-none}"
+          if [ "$earlier" != "failure,failure" ]; then
+            echo "Not three failing days yet: no issue."
+            exit 0
+          fi
+          { cat "$RUNNER_TEMP/canary.md" 2>/dev/null || echo "The canary stopped before it wrote its summary: see the run."; echo; echo "Run: $RUN_URL"; } > "$RUNNER_TEMP/issue.md"
+          open=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "\"$ISSUE_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/issue.md"
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$ISSUE_TITLE" --body-file "$RUNNER_TEMP/issue.md"
+          fi
+      - name: Close the issue when the canary passes again
+        if: success() && steps.run.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          open=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "\"$ISSUE_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue close "$open" -R "$GITHUB_REPOSITORY" --comment "The canary passes again: $RUN_URL"
+          fi

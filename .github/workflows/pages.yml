@@ -1,0 +1,46 @@
+name: Pages
+
+# Publishes site/ (the static join page, site/join/index.html: sync spec §7.2, UX §3.12.2) to GitHub Pages, so an
+# invite link https://feiteira.github.io/Tramado/join/#<code> opens it. The page reads the code from the URL fragment
+# only and makes no request of its own.
+#
+# Pages is not switched on for this repository yet, so a push only records a skipped job. To publish:
+#   1. Settings › Pages › Build and deployment › Source: "GitHub Actions";
+#   2. Settings › Secrets and variables › Actions › Variables: PAGES_ENABLED = true (deploys on every change to site/),
+#      or start this workflow by hand: gh workflow run pages.yml
+# Then build the app with JOIN_PAGE set (app/src/core/sync/invite.ts; plan §9).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.PAGES_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v5

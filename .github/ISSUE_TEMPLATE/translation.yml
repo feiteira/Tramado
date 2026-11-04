@@ -1,0 +1,23 @@
+name: Translation or manual
+description: A wrong, unclear or unnatural word in the interface or the manual
+labels: [translation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tramado is in English, European Portuguese and European Spanish. Tell us where a word or sentence is wrong,
+        unclear or sounds unnatural (for example Brazilian instead of European Portuguese, or Latin American instead of
+        European Spanish).
+        Pode escrever em português · Puede escribir en español.
+  - type: dropdown
+    attributes:
+      label: Language
+      options: [English, Português (Portugal), Español (España)]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Where, what it says now, and what it should say
+      placeholder: "Settings › Sharing › “…” should be “…”"
+    validations:
+      required: true

@@ -1,0 +1,360 @@
+name: CI
+
+# Linux checks run on every push to main and every pull request; Windows and macOS are built only when asked.
+#   web           leak and link checks, typecheck, Vitest, the privacy files, the web build (property tests at 2000
+#                 runs nightly)
+#   rust-light    fmt + clippy of the light crates, the whole workspace checked without whisper.cpp, the Rust unit
+#                 tests, the Syncthing contract and two-instance tests with the pinned binary, cargo-deny (bans,
+#                 licences, sources)
+#   rust-speech   the heavy speech crate (whisper.cpp, libopus) and the full workspace lint: nightly, by hand, or when
+#                 the speech crate, the lockfile or the toolchain change
+#   supply-chain  cargo deny with advisories, npm audit of the shipped packages: nightly and by hand
+#   release       installers for Linux, Windows and macOS (unsigned; macOS signed ad hoc), started by hand from main:
+#                   gh workflow run ci.yml --ref main -f release=build     the installers, as workflow artifacts
+#                   gh workflow run ci.yml --ref main -f release=publish   the same, then a draft GitHub release
+#                 It needs every check above plus `npm run check:versions` (no locked version younger than 14 days),
+#                 one version everywhere and release notes for it (architecture §18.6).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '41 2 * * *'
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Installers to build (none = run every check)
+        type: choice
+        options: [none, build, publish]
+        default: none
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Linux packages for the desktop crate (Tauri, WebKitGTK, the tray), recording (ALSA, PulseAudio) and the native
+  # builds (bindgen, whisper.cpp and libopus through CMake). Architecture §3.1.
+  LINUX_BUILD_PACKAGES: >-
+    libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+    libasound2-dev libpulse-dev libclang-dev cmake
+  CARGO_TERM_COLOR: always
+
+jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-24.04
+    outputs:
+      speech: ${{ steps.filter.outputs.speech }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Does the heavy speech build need to run?
+        id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) base="$PR_BASE" ;;
+            push) base="$PUSH_BEFORE" ;;
+            *) base="" ;;
+          esac
+          if [ -z "$base" ] || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            speech=true   # nightly, by hand, or no usable base: run it
+          elif git diff --name-only "$base" HEAD | grep -qE '^(crates/tramado-speech/|desktop/src-tauri/src/commands/speech\.rs$|Cargo\.(toml|lock)$|\.cargo/|rust-toolchain\.toml$|tools/fetch-speech-assets\.mjs$|\.github/workflows/ci\.yml$)'; then
+            speech=true
+          else
+            speech=false
+          fi
+          echo "speech=$speech" >> "$GITHUB_OUTPUT"
+          echo "Speech build: $speech"
+
+  web:
+    name: Web (typecheck, tests, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: No secrets or account ids in the repository
+        run: node tools/check-leaks.mjs
+      - name: Every relative link and picture of the README, manual and release notes resolves
+        run: node .github/scripts/check-links.mjs
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Property tests (2000 runs)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm run test:property
+      - name: PRIVACY.md and its translations match the code
+        run: npm run --workspace app check:privacy
+      - run: npm run build
+
+  rust-light:
+    name: Rust (light crates, Syncthing contract)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - name: Linux build packages
+        run: |
+          sudo apt-get update
+          # shellcheck disable=SC2086 # one word per package
+          sudo apt-get install -y $LINUX_BUILD_PACKAGES
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: light
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the web app (the desktop crate embeds app/dist)
+        run: npm run build
+      - run: npm run lint:rust:lite
+      - name: The whole workspace without whisper.cpp
+        run: npm run check:rust:lite
+      - run: npm run test:rust
+      - name: Cache the pinned Syncthing release
+        uses: actions/cache@v5
+        with:
+          path: |
+            tools/.cache/syncthing-*
+            desktop/src-tauri/binaries
+            desktop/src-tauri/resources/syncthing
+          key: syncthing-${{ runner.os }}-${{ hashFiles('tools/fetch-syncthing.mjs') }}
+      - name: Contract and two-instance tests against the real Syncthing (sync spec §24)
+        run: npm run test:contract
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - name: cargo-deny (bans, licences, sources)
+        run: cargo deny check bans licenses sources
+
+  rust-speech:
+    name: Rust (speech crate, full workspace)
+    needs: changes
+    if: needs.changes.outputs.speech == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+    steps:
+      - uses: actions/checkout@v7
+      - name: Linux build packages
+        run: |
+          sudo apt-get update
+          # shellcheck disable=SC2086 # one word per package
+          sudo apt-get install -y $LINUX_BUILD_PACKAGES
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: speech
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the web app (the desktop crate embeds app/dist)
+        run: npm run build
+      - name: Cache the speech assets
+        uses: actions/cache@v5
+        with:
+          path: desktop/src-tauri/resources/speech
+          key: speech-assets-${{ hashFiles('tools/fetch-speech-assets.mjs') }}
+      - name: Silero VAD (SHA-256 checked)
+        run: npm run fetch:speech
+      - name: Lint the whole workspace (whisper.cpp included)
+        run: npm run lint:rust
+      - run: npm run test:rust:speech
+
+  supply-chain:
+    name: Supply chain (advisories, npm audit)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - name: cargo-deny (advisories, bans, licences, sources)
+        run: cargo deny check
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: npm audit of what ships (dev tools excluded)
+        run: npm audit --omit=dev
+
+  release-gate:
+    name: Release gate (versions, notes, 14-day rule)
+    if: github.event_name == 'workflow_dispatch' && inputs.release != 'none'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: One version everywhere, with release notes
+        id: version
+        run: |
+          v=$(node -p "require('./desktop/src-tauri/tauri.conf.json').version")
+          cargo_v=$(sed -n '/^\[workspace.package\]/,/^\[/{s/^version *= *"\(.*\)"/\1/p}' Cargo.toml)
+          app_v=$(node -p "require('./app/package.json').version")
+          desktop_v=$(node -p "require('./desktop/package.json').version")
+          echo "tauri.conf.json $v · Cargo.toml $cargo_v · app $app_v · desktop $desktop_v"
+          if [ "$cargo_v" != "$v" ] || [ "$app_v" != "$v" ] || [ "$desktop_v" != "$v" ]; then
+            echo "::error::The versions differ: bump them together (architecture §18.6)"; exit 1
+          fi
+          notes="docs/release-notes/v${v%%-*}.md"
+          test -f "$notes" || { echo "::error::$notes is missing: write the release notes first"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: No locked version younger than 14 days (D59)
+        run: npm run check:versions
+
+  release:
+    name: Installers (${{ matrix.os }})
+    needs: [web, rust-light, rust-speech, supply-chain, release-gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [Linux, Windows, macOS]
+    # Linux on the older LTS so the AppImage and the .deb run on older distributions (glibc 2.35).
+    runs-on: ${{ matrix.os == 'Windows' && 'windows-latest' || matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-22.04' }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - name: Linux build packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          # shellcheck disable=SC2086 # one word per package
+          sudo apt-get install -y $LINUX_BUILD_PACKAGES libfuse2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # One universal app for Apple silicon and Intel Macs.
+          targets: ${{ matrix.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The runner's default shell on purpose: on Windows that is PowerShell, where `tar` is Windows' own tar.exe, which
+      # unpacks the .zip release. Under Git Bash `tar` is GNU tar, which cannot read a .zip (nor a `D:\` path).
+      - name: Syncthing sidecar (SHA-256 checked)
+        run: node tools/fetch-syncthing.mjs ${{ matrix.os == 'macOS' && '--target=universal-apple-darwin' || '' }}
+      - name: Silero VAD (SHA-256 checked)
+        run: node tools/fetch-speech-assets.mjs
+      - name: Build the installers (AppImage, deb)
+        if: runner.os == 'Linux'
+        run: npm run tauri --workspace @tramado/desktop -- build --config src-tauri/tauri.sidecar.conf.json --bundles appimage,deb
+      - name: Build the installer (NSIS)
+        if: runner.os == 'Windows'
+        env:
+          # The cmake crate replaces the Release flags of the Visual Studio generator with its own and leaves out the
+          # optimisation level: whisper.cpp would be built with MSVC's /Od. whisper-rs-sys passes CMAKE_* variables
+          # through, and a defined one is left alone (research/trama-rust.md §2.6).
+          CMAKE_C_FLAGS_RELEASE: /MD /O2 /Ob2 /DNDEBUG
+          CMAKE_CXX_FLAGS_RELEASE: /MD /O2 /Ob2 /DNDEBUG
+        run: npm run tauri --workspace @tramado/desktop -- build --config src-tauri/tauri.sidecar.conf.json --bundles nsis
+      - name: Check that the speech engine is optimised
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          shopt -s nullglob
+          whisper=(target/release/build/whisper-rs-sys-*/out/build/CMakeCache.txt)
+          test ${#whisper[@]} -gt 0 || { echo "::error::whisper.cpp's CMakeCache.txt was not found"; exit 1; }
+          grep -E '^CMAKE_(C|CXX)_FLAGS_RELEASE' "${whisper[0]}"
+          grep -qE '^CMAKE_CXX_FLAGS_RELEASE.*/O2' "${whisper[0]}"
+          # libopus is built through CMake too, without these variables: its flags are reported, not checked.
+          for c in target/release/build/opusic-sys-*/out/build/CMakeCache.txt; do
+            echo "libopus: $(grep -E '^CMAKE_C_FLAGS_RELEASE' "$c" || echo 'no CMAKE_C_FLAGS_RELEASE')"
+          done
+      - name: Build the Mac app (signed ad hoc)
+        if: runner.os == 'macOS'
+        env:
+          # "-" signs ad hoc: the app opens after "Open Anyway" in System Settings; it is not notarised.
+          APPLE_SIGNING_IDENTITY: "-"
+        run: npm run tauri --workspace @tramado/desktop -- build --config src-tauri/tauri.sidecar.conf.json --target universal-apple-darwin --bundles app,dmg
+      - name: Check that the Intel half of the speech engine uses AVX2 and FMA
+        if: runner.os == 'macOS'
+        # Cross-compiled on Apple silicon: without these, Intel Macs transcribe several times slower (GGML_* in
+        # .cargo/config.toml).
+        run: |
+          app=target/universal-apple-darwin/release/bundle/macos/Tramado.app
+          bin=""
+          for f in "$app"/Contents/MacOS/*; do
+            case "$(basename "$f")" in *syncthing*) ;; *) bin="$f" ;; esac   # the app, not the Syncthing sidecar
+          done
+          lipo -thin x86_64 "$bin" -output "$RUNNER_TEMP/tramado-x86_64"
+          otool -tv "$RUNNER_TEMP/tramado-x86_64" > "$RUNNER_TEMP/tramado-x86_64.s"
+          fma=$(grep -cE 'vfmadd[0-9]+ps.*%ymm' "$RUNNER_TEMP/tramado-x86_64.s" || true)
+          avx2=$(grep -cE 'vpmaddubsw.*%ymm' "$RUNNER_TEMP/tramado-x86_64.s" || true)
+          echo "FMA (ymm): $fma, AVX2 vpmaddubsw (ymm): $avx2"
+          test "$fma" -gt 0 && test "$avx2" -gt 0
+      - name: Installer sizes (critique R19)
+        shell: bash
+        run: |
+          {
+            echo "### ${{ matrix.os }} installers"
+            echo
+            find target -path '*/bundle/*' -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*-setup.exe' -o -name '*.dmg' \) \
+              -exec du -h {} \; | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tramado-${{ matrix.os }}-unsigned
+          path: |
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/deb/*.deb
+            target/release/bundle/nsis/*-setup.exe
+            target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Draft GitHub release
+    needs: [release-gate, release]
+    if: inputs.release == 'publish'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create a draft release with every installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release-gate.outputs.version }}
+        run: |
+          notes="docs/release-notes/v${VERSION%%-*}.md"
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "::error::release v${VERSION} already exists: bump the version first"; exit 1
+          fi
+          pre=""
+          case "$VERSION" in *-*) pre="--prerelease" ;; esac
+          mapfile -t files < <(find dist -type f | sort)
+          printf '%s\n' "${files[@]}"
+          gh release create "v${VERSION}" "${files[@]}" --draft $pre --target "$GITHUB_SHA" \
+            --title "Tramado ${VERSION}" --notes-file "$notes"

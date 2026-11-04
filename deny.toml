@@ -1,0 +1,70 @@
+# cargo-deny policy (architecture §18.6, critique R20). Run from the repository root: `cargo deny check`.
+# CI runs `bans licenses sources` on every push and the full check (with advisories) nightly and before a release.
+# Every exception below names the crate and the reason.
+
+[graph]
+# Every crate of the workspace, the heavy speech crate and every platform's dependencies included: the installers for
+# Windows and macOS ship code that a Linux-only graph would not show.
+all-features = true
+
+[advisories]
+# RustSec advisories are errors (vulnerabilities, unsound code). Unmaintained crates are reported for the workspace's
+# direct dependencies only: the transitive ones are tauri's and its maintainers' to replace. On 2026-11-04 those were
+# proc-macro-error (RUSTSEC-2024-0370, the GTK bindings' macros) and zvariant, zvariant_derive, zbus_names
+# (RUSTSEC-2026-0370/0371/0372, D-Bus for the keyring and notifications); `unmaintained = "all"` lists them again.
+version = 2
+yanked = "deny"
+unmaintained = "workspace"
+ignore = []
+
+[licenses]
+version = 2
+# The licences Tramado (MPL-2.0) may ship (architecture §18.6).
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Zlib",
+  "CC0-1.0",
+]
+confidence-threshold = 0.9
+# Tramado's own crates are MPL-2.0 and unpublished.
+private = { ignore = true }
+
+# Permissive licences outside the list above, each allowed for one crate only (decided at wave 3, architecture §18.6).
+[[licenses.exceptions]]
+# whisper.cpp's Rust bindings (the speech engine). The Unlicense is a public-domain dedication.
+crate = "whisper-rs"
+allow = ["Unlicense"]
+[[licenses.exceptions]]
+crate = "whisper-rs-sys"
+allow = ["Unlicense"]
+[[licenses.exceptions]]
+# Mozilla's root certificates as data, through ureq's rustls (HTTPS to OpenRouter and Hugging Face).
+crate = "webpki-roots"
+allow = ["CDLA-Permissive-2.0"]
+[[licenses.exceptions]]
+# Build time only (system-deps → cfg-expr, the GTK bindings' build scripts); nothing of it ships.
+crate = "target-lexicon"
+allow = ["Apache-2.0 WITH LLVM-exception"]
+
+[bans]
+# Several versions of one crate are common in the tauri graph (windows-sys, bitflags, …): reported, not fatal.
+multiple-versions = "warn"
+# The only wildcards are the path dependencies between the workspace crates (`tramado-base.workspace = true`).
+# cargo-deny allows those only in crates marked `publish = false`, which the manifests do not say yet (requested at
+# G3); until then they are reported, not fatal. Any other wildcard is still visible in the report.
+wildcards = "warn"
+allow-wildcard-paths = true
+highlight = "all"
+
+[sources]
+# crates.io only: no git dependencies and no other registry.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

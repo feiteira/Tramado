@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft 1.1 (2026-11-03, review round 1 applied; §1.1 release scope, §1.2 reconciliation). Normative for the implementation of Tramado 0.1. |
+| Status | 1.2 (2026-11-04, wave 3): draft 1.1 (review round 1; §1.1 release scope, §1.2 reconciliation) plus §21, the record of what integration (gates G0–G2) and wave 3 changed. Where §21 and an earlier section differ, §21 describes the code. Normative for Tramado 0.1. |
 | Normative inputs | [`../spec/class-folder-v1.md`](../spec/class-folder-v1.md) ("folder spec"), [`../spec/sync-protocol-v1.md`](../spec/sync-protocol-v1.md) ("sync spec"). |
 | Baseline | Research critique §5 DECISIONS 1–59, §6 layout, §7 identity, §8 error taxonomy (cited as "D#", "critique §n"). Every deviation is listed in §1 with its reason. |
 | Companion | The implementation plan (work packages, waves, gates): [`plan.md`](plan.md) (copied into the repository by M0 as its first step, with the research reports in `docs/dev/research/` and the lab sources in `tools/lab/`); ownership rules it relies on are restated in §19. |
@@ -204,7 +204,7 @@ Tramado/
 │   ├── dev/    architecture.md (this file)  plan.md  research/*.md   (copied by M0)
 │   ├── manual/ {en,pt,es}/                      (wave 3)
 │   └── release-notes/
-└── .github/workflows/  ci.yml  canary.yml  pages.yml   (wave 3)
+└── .github/  workflows/{ci,canary,pages}.yml  scripts/{canary,check-links}.mjs   (wave 3)
 ```
 
 `.gitignore` keeps every entry of the existing file (secrets, `node_modules/`, `dist/`, `target/`,
@@ -658,14 +658,16 @@ verified against (`ui/classIcons.test.ts` asserts each name is exported; 1.67.0 
 |---|---|---|
 | `tramado-syncthing` | sync supervisor | Spawns **and waits on** the child (PDEATHSIG follows the forking thread). Lives while sharing is on. |
 | `tramado-sync-events-a`, `tramado-sync-events-b` | sync events | Long-poll loops A and B (sync spec §5). |
-| `tramado-sync-config` | sync config writer | Serialises every config mutation (sync spec §3.3). |
+| `tramado-sync-work`, `tramado-sync-discovery`, `tramado-sync-ready` | sync engine | Queued engine work, discovery lookups, start-up readiness. Config mutations are serialised by a re-entrant lock instead of a `tramado-sync-config` thread (§21). |
+| `tramado-sync-boot`, `tramado-sync-stop` | desktop `commands/sync.rs` | Starting the engine at launch; stopping it at exit. |
 | `tramado-sync-ticker` | sync | 1 s tick: admission sweep (5 s), discovery (10 s), reconciliation (60 s), scan coalescer flush, mass-delete window. |
 | `tramado-watch` | base watch | notify-debouncer-full (300 ms) for every registered class root → `class:changed`. |
 | `tramado-ai-<n>` | net AI pipe | One per in-flight request (≤ 6). |
-| `tramado-model-dl` | speech models | One download at a time. |
-| `tramado-rec-capture`, `tramado-rec-mix`, `tramado-rec-write` | speech recorder | cpal streams (stay on their thread), mixer, Opus/Ogg writer. |
+| `tramado-model-download` | speech models | One download at a time. |
+| `tramado-capture`, `tramado-recorder`, `tramado-fsync`, `tramado-meter` | speech recorder | cpal streams (stay on their thread), the Opus/Ogg writer, journal fsync, level meter. |
+| `tramado-import` | speech imports | Decoding and transcoding an added recording. |
 | `tramado-transcribe` | speech jobs | One transcription job at a time (+4 `tramado-stt-<n>` workers for cloud pieces). |
-| `tramado-claim-heartbeat` | speech jobs | Rewrites the running job's claim every 60 s (D-1). |
+| `tramado-heartbeat` | speech jobs | Rewrites the running job's claim every 60 s (D-1). |
 
 Blocking work started by a command runs in `tauri::async_runtime::spawn_blocking` through `util::blocking`
 (Trama's helper); long-lived loops use the named threads above, never the blocking pool.
@@ -1124,7 +1126,7 @@ src/awake.rs      Trama verbatim ("Tramado" strings)
 src/capture.rs    Trama capture.rs: modes room (mic) / online (system [+ mic]); device picker; Status; level meter without a journal (meter)
 src/mixer.rs      Trama mixer + pause-aware clock (audio-pipeline §4.4)
 src/encode.rs     opusic-c Encoder: 16 kHz, Voip, Voice, VBR, complexity 10, 60 ms packets, 24/32/16 kbps; pre-skip
-src/journal.rs    Ogg Opus journal (ogg 0.9.2): page every 50 packets, fsync 5 s; journal.json; crash recovery (CRC scan, EOS)
+src/journal.rs    Ogg Opus journal (ogg 0.9.2): page every 17 packets (≈ 1 s; §21), fsync 5 s; journal.json; crash recovery (CRC scan, EOS)
 src/webm.rs       in-memory EBML writer: Info/Duration, Tracks (A_OPUS, CodecDelay, SeekPreRoll), Clusters ~5 s, Cues, DiscardPadding
 src/publish.rs    remux journal → ClassFs::stage_and_place(<lectureDir>/audio.webm) or data/recordings/<id>.webm (local-only)
 src/decode.rs     symphonia demux + libopus decode at 16 kHz with manual pre-skip; other codecs via symphonia; HE-AAC → SPEECH_UNSUPPORTED_AUDIO
@@ -1481,7 +1483,9 @@ export type SyncEvent =
   | { type: 'massDeleteRemote'; classId: ClassId; by: ShortId; count: number; sample: ClassPath[] }   // receiving guard
   | { type: 'folderErrors'; classId: ClassId; errors: FolderError[] }
   | { type: 'markerMissing'; classId: ClassId }
-  | { type: 'listenAddresses'; addresses: string[] };                  // ListenAddressesChanged (member file refresh)
+  | { type: 'listenAddresses'; addresses: string[] }                   // ListenAddressesChanged (member file refresh)
+  | { type: 'left'; classId: ClassId; afterwards: 'keepLocal' | 'trash' };   // G2: emitted by folders::finish_leaving
+                                                                        // once the class is retired (§21)
 ```
 
 ### 7.2 Channels (one per job; every union is tagged by `type`)
@@ -1559,7 +1563,9 @@ The Range logic is a pure function in `tramado_base::media` with unit tests (cop
 `protocol/asset.rs`).
 
 Blob fallback (D21): when `<audio>` fires `MEDIA_ERR_SRC_NOT_SUPPORTED` for a scheme URL, the player reads the bytes
-with `class_read` and plays a `blob:` URL; the media self-test (Settings → Help → Diagnostics) plays
+with `class_read` and plays a `blob:` URL. **On Linux (WebKitGTK) this is the normal path**: `<audio>` refuses the custom
+scheme, so `AppInfo.mediaAudio` is `'blob'` there and the self-test passes on the Blob path (duration 300.008, seek
+252; §21). The media self-test (Settings › About › Test audio playback) plays
 `/res/selftest.webm`, seeks to 252 000 ms and checks `|currentTime − 252| ≤ 0.25` and `duration ≈ 300`.
 
 ---
@@ -3147,10 +3153,15 @@ fetched files (tauri-build fails on a missing sidecar or resource, critique C4).
 - Linux 0.1: AppImage (with GStreamer, so `<audio>` plays WebM Opus; no `tramado://` registration, critique G17) and
   deb (sidecar installed as `/usr/bin/tramado-syncthing`). Windows (NSIS) and macOS (dmg, ad-hoc signed) follow from
   the same configuration in CI.
-- `npm run check:versions`: reads `Cargo.lock` and `package-lock.json`, queries publish dates, fails if any version
-  is younger than 14 days (D59) — run at release.
+- `npm run check:versions` (`tools/check-versions.mjs`): reads `Cargo.lock` (crates.io packages) and
+  `package-lock.json` (npm registry packages), finds each version's publish date (crates: the `pubtime` field of the
+  crates.io sparse index, read from Cargo's own index cache first; npm: the tarball's `Last-Modified`, the packument's
+  `time` as a fallback), keeps the dates in `tools/.cache/publish-dates.json`, prints the youngest versions as a table
+  (`--all` every row, `--json`, `--now=<date>`, `--days=N`, `--offline`) and fails if any version is younger than 14
+  days (D59) — run at release (CI `release-gate`).
 - `cargo deny check` with `deny.toml` (licences: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0,
-  Unicode-3.0, Zlib, CC0-1.0; advisories deny) and `npm audit --omit=dev` in CI.
+  Unicode-3.0, Zlib, CC0-1.0, plus four one-crate exceptions, §21.7; advisories and yanked crates deny; unmaintained
+  reported for direct dependencies; crates.io only) and `npm audit --omit=dev` in CI (§21.7).
 - Version bump locations: `desktop/src-tauri/tauri.conf.json`, `Cargo.toml` `[workspace.package]`, the three
   `package.json` files; release notes `docs/release-notes/v<version>.md` in EN, PT-PT and ES.
 
@@ -3203,3 +3214,158 @@ fetched files (tauri-build fails on a missing sidecar or resource, critique C4).
 | Q11 | "Delete audio after N days" scope. | Only my own recordings whose transcript is `ready` and not stale; default never (`0`). |
 | Q12 | Rotation and pairing flows are not lab-verified (sync spec §18.2 note, §24). | Both are v1.1 (§1.1); their three-instance e2e is the gate for enabling them then. |
 | Q13 | Shipping signatures and person keys in 0.1 (D-15) costs about a week of M0/T-SYNC/R-SYNC work. | Ship them: they cannot be added later without a format break for existing classes. |
+
+---
+
+## 21. Integration record (gates G0–G2, wave 3)
+
+The gate logs of the plan (`plan.md` §13–§18) list every deviation accepted at a gate, with its reason. This section
+restates, by section of this document, the ones that change what this document says, so that a reader of the
+architecture does not need the logs. Sections above were updated in place only for §4.2 (threads), §5.4 (journal
+pages), §7.1 (`left`), §8 (Linux audio) and §18.6 (supply chain); everything else stands as written, overridden by
+the items below. Plan references are given as (P§n.m) = plan section n, item m.
+
+### 21.1 Build, toolchain and tools
+
+- §3.2: `Cargo.lock` pins `rust-ini` 0.21.1 (`cargo update -p rust-ini --precise 0.21.1`): `tauri-plugin-deep-link
+  =2.6.2` does not compile with ≥ 0.21.2. Whoever regenerates the lock re-applies the pin or bumps the plugin (P§13.3).
+- §5.5: `lib.rs` declares its modules `pub mod`, so the stubs passed clippy `-D warnings` (P§13.7).
+- §18.1: `fetch-syncthing.mjs` installs the archive's `AUTHORS.txt` as `resources/syncthing/AUTHORS`; `--gpg` requires
+  a `VALIDSIG` by the release key `FBA2E162…` and reads only the signed text (P§13.8).
+- §18.3: `bundle.macOS.files` maps `Resources/{en,pt,es}.lproj/InfoPlist.strings` (P§13.4).
+- §17: `check-leaks.mjs` also scans `docs/` for `sk-or-v1-` keys and compares against the local key file without
+  printing it; the fixed fictional `user_id` written by `redact-fixtures.mjs` is exempt (P§13.21, P§14.5).
+  `.gitattributes` keeps `app/test-fixtures/**` byte-exact (P§13.16).
+- §17: `peek-matrix.mjs` honours `--axe` and has `--jobs=N` and `--name=`; at G2 all 375 entries passed with axe
+  (P§17.7). `desktop-smoke.mjs --flow=g1` drives the real screens under Xvfb (P§17.8).
+- §17, manual pictures: `npm run screenshots` writes PNGs into `docs/manual/img/<lang>/`, where they are git-ignored;
+  the manual commits lossless WebP copies of the pictures it uses (§21.7).
+
+### 21.2 Rust
+
+- §5.1 `tramado-base` public additions: `ids::{derive_class_id, derive_item_id, member_id, device_id_from_cert_der,
+  device_id_from_sha256, is_valid_device_id}`, `files::{write_atomic_mode, check_line, conflict_original}`,
+  `Code::ALL`, `Code::parse`, `Deserialize for Code`, `Paths::for_tests` (P§13.6).
+- §5.2 `tramado-net`: `AiWireEvent::Fail` carries a typed `code` and optional `data` (P§13.5); `Secrets::get` is public;
+  `models/<id>/endpoints` refuses empty, `.` and `..` segments; `service-hosts.json` stores `{id, base, label}`
+  (P§15.7).
+- §5.3 `tramado-sync` (P§15.8): `SyncSink::trash` (default `IO_ERROR`), `SyncEngine::set_pick_resolver`,
+  `has_shared_class`; `new` registers its own `WriteObserver`; config mutations are serialised by a re-entrant lock;
+  `appdata.json` gains `userPaused`, `settings`, `lostIdentity`; Syncthing also starts at launch when the only shared
+  class is still leaving; `sync_join_class` on a class already here → `CONFLICT` with `data.classId`; `sync_admit` on an
+  unknown or unshared class → `NOT_FOUND`, without an offer or for a banned device → `PERMISSION_DENIED`; diagnostics
+  report `status.deviceId` as a ShortId. `folders::finish_leaving` emits `SyncEvent::Left` (§7.1; P§18.1).
+- §5.4 `tramado-speech` (P§15.9): `FinishedRecording` + `audio?: PublishedAudio`, `import?: ImportInfo`;
+  `ImportInfo { fileName, mime, hadVideo, lectureDir }`; `speech_recording_publish` also fails with `JOB_BUSY` (still
+  recording) and `NOT_FOUND`, and a second publish with `CONFLICT`; a journal page every 17 packets (≈ 1 s); local jobs
+  report `checking → vad → transcribing` (no `decoding`); `auto` with no detected language → `und`; peaks scale the
+  loudest bucket to 255; new modules `recorder`, `pieces`, `samples`, `langs`. The import thread sets its `done` flag
+  before it sends `Done` (P§14.1).
+- §5.5 desktop: `commands/sync.rs` and `commands/speech.rs` also `manage` `Arc<SyncEngine>` / `Arc<Speech>` for
+  `diag_collect`; `speech::init` passes `PipeStt::new(Arc<AiPipe>)`, so cloud transcription goes through the real pipe
+  (secret store, privacy level, activity log; live-checked at G2) (P§14.4, P§17.9). `class_open` refuses programs and
+  launchers (`INVALID`); `app_take_pending_links` returns an opened invite file's text (P§15.7).
+- §6.3: the e2e dialog queue also takes `{confirm: bool}`; `TRAMADO_E2E_EVAL` and `TRAMADO_E2E_MEDIA_SELFTEST` exist,
+  honoured only with `TRAMADO_DATA_DIR` + `TRAMADO_E2E=1` (P§15.7). `dialog_save_text` (G2) is in the §6.3 table.
+- §8: on Linux the player always uses the Blob URL (`AppInfo.mediaAudio = 'blob'`), because WebKitGTK's `<audio>`
+  refuses the custom scheme; the self-test passes on that path (P§15.7).
+
+### 21.3 TypeScript
+
+- §9 `Platform`: `AppInfo` + `mediaAudio?: 'scheme' | 'blob'`, `traySupported?: boolean`; `dialogs.saveText(req,
+  text)`; `MemoryPlatform.mem` + `putRecording`, `peekSecret`; `DemoControls.media`; `DemoFlags.ai` + `'real'`,
+  `missing=1`, `code=demo` (P§15.5, P§18.2, P§18.8).
+- §11.2 API freeze (P§15.1): the T-SYNC extras are members of the frozen interfaces and the `*Impl` names are aliases
+  (`ClassService` + `model`, `ready`, `reload`, `personAt`, `isOrganiserAt`, `deviceRef`, `nameOf`, `policy`,
+  `writeBan`, `removeOwnFiles`, `writeFork`, `uiState`, `setUiState`; `SyncService` + `connections`, `connectionOf`,
+  `onIndexUpdated`, `noteForeignWrite`, `fork`, `completeForks`; `TrustService`, `ClaimEngine`, `PresenceService`,
+  `NotificationService` extras). The additions of T-AI, T-DOCS and T-LECTURES (P§15.11–13) and those accepted at G2
+  (P§18, "Accepted as delivered") are part of the contract. `ChatMessageView.thanks` (P§15.2).
+- Services wiring (P§14.2, P§14.6, P§14.7): `ClassStoreImpl.setEntry` hands each live store the reloaded library entry;
+  `AppState.enter` calls `recording.recover()` after `library.load()` and `transcription.start()` once `sync.boot()`
+  settled; one volunteering rule (`core/speech/volunteer.ts`) for the claims and the queue.
+- Palette (P§18.4–5, P§17.1): `PaletteItem`/`PaletteGroup` gain the result fields, the provider context is
+  `PaletteSearchContext { classId; scope?; includeArchived?; go? }`, `openPalette(query?)` with window events
+  `tramado:palette` / `tramado:navigate`; the frame owns Recent, Recent searches, Ask AI and "Nothing found"
+  (`FRAME_KINDS`).
+- Routes and registries: the class route + `lectureId?`, `docPath?` (P§18.7); `DOCK_ROWS` + the exam row (P§18.6).
+- Prefs: `ai.model` also accepts a custom service's model name; `ai.fallbacks` stay OpenRouter ids (P§18.10).
+- Consent: `ConsentInput.textId` + `'record.import.permission.v1'` (P§18.11). `library.syncOf`: an unavailable class
+  being joined is `waiting` (P§18.12).
+- Model files: `LectureFile.utcOffsetMin?`, `TranscriptFile.speakers[].labelHlc?` (P§18.3).
+- Behaviour fixed by the specs over the UX text: annotations are private only in 0.1 (`visibility: 'class'` →
+  `NOT_IMPLEMENTED`); "Keep both" names the copy `<base> (2).md` (P§15.12).
+- Test ids: the class settings dialog root is `class-settings` (the New class dialog keeps `class-dialog`); the Missing
+  state is `missing-item`; leave asks through `confirm-dialog` (P§13.1, P§13.12). `layers.test.ts` lets `ui/` and
+  `workers/` `import type` from `services/types`, `services/context` and `platform/types` (P§13.13).
+- `window.__tramadoE2E` exists only when `AppInfo.e2e` (P§15.6).
+
+### 21.4 Private data (additions to §13.2)
+
+`data/recordings/<id>.{ogg,json,webm}`, `data/transcribe/<lectureId>.{json,partial.json,result.json}`,
+`data/transcribe/speed.json` (tramado-speech); `private/<classId>/fork.json` and `trust.json` `left` entries with
+`memberId`, `name`, `deviceName` (TrustService); `private/<classId>/notes-index.json` (`tramado.notes-private` v1);
+`private/<classId>/drafts/<recordingId>.json` (`tramado.recording-draft`) and `lectures/<id>.json` + `noAutoClaim`,
+`nudgedAt`; `private/<classId>/hashes.json` (`tramado.hash-cache` v1) (P§15, P§18).
+
+### 21.5 Spec decisions and errata
+
+In the spec text: the organiser departure stamp (folder spec §8.2, sync spec §17; P§16.1); `utcOffsetMin`,
+`labelHlc` and the one-space merge (folder spec §8.6, §8.8, §8.9; P§16.2). Accepted at G1 but **not yet in the spec
+text** (the integrator folds them in):
+
+- sync spec §14.5: a new claim starts at `heartbeat: firstHeartbeat(observations, me)` = 1 + the largest heartbeat of a
+  `supersedes` entry naming me, else 0 (the text says 0); the 2000-run property test found two `working` devices
+  otherwise (P§15.10).
+- folder spec §6.2 rule 3: a writer change in the same round is also accepted when the new writer's `done` claim wins
+  that round; and its second case is no longer "v1.1" (transcript corrections are in 0.1) (P§15.10).
+- sync spec §6.1: a folder created paused has no directory or marker until the ignores POST and the resume; §22.2
+  counts deletions only (Syncthing reports new and modified files alike); §3.6 converts separators only (no NFC crate;
+  Syncthing keeps NFC) (P§15.8).
+- research `audio-pipeline.md` §2.7: intermediate Ogg granules are samples × 3; only the last page is
+  `preskip + real × 3` (RFC 7845 §4) (P§15.9).
+
+Still open: the `.st*` name rule is case-sensitive in TS and Rust, as the folder spec says (P§13.9).
+
+### 21.6 Release scope
+
+The v1.1 list of §1.1 is unchanged. On 2026-11-04, 47 locked crates were younger than 14 days (the youngest turns 14
+days old on 2026-11-16), so `npm run check:versions`, and with it the CI release gate, fails until then (P§13.10).
+
+### 21.7 Wave 3: documents, CI and supply chain (DOCS)
+
+- **`deny.toml`**: the licence list of §18.6 plus four exceptions, each for one crate: `whisper-rs` and
+  `whisper-rs-sys` (Unlicense), `webpki-roots` (CDLA-Permissive-2.0, Mozilla's root certificates as data) and the
+  build-only `target-lexicon` (Apache-2.0 WITH LLVM-exception). Advisories and yanked crates deny; unmaintained crates
+  are reported for direct dependencies only (on 2026-11-04 the transitive ones were `proc-macro-error`, `zvariant`,
+  `zvariant_derive`, `zbus_names`). `multiple-versions` warns. `wildcards` warns: the only wildcards are the path
+  dependencies between the workspace crates, which cargo-deny allows only in crates marked `publish = false`. Sources:
+  crates.io only.
+- **`.github/workflows/ci.yml`**: on every push to `main` and every pull request, `web` (leak check, link check,
+  typecheck, Vitest, `check:privacy`, web build; property tests at 2000 runs nightly) and `rust-light` (`npm ci` and
+  the web build first, because the desktop crate embeds `app/dist`; `lint:rust:lite`, `check:rust:lite`, `test:rust`,
+  `test:contract` with the pinned Syncthing, cargo-deny bans/licences/sources). `rust-speech` (`lint:rust`,
+  `test:rust:speech`) runs nightly, by hand, or when the speech crate, `commands/speech.rs`, the manifests, the lock, the
+  toolchain or the workflow change. `supply-chain` (full `cargo deny check`, `npm audit --omit=dev`) runs nightly and by
+  hand, so a new advisory never turns an unrelated push red. `release` runs only by hand (`-f release=build|publish`)
+  behind `release-gate` (one version in `tauri.conf.json`, `Cargo.toml`, `app/` and `desktop/package.json`; release
+  notes for it; `check:versions`) and every check above: Linux on ubuntu-22.04 (AppImage, deb; glibc 2.35), Windows
+  (NSIS; `CMAKE_{C,CXX}_FLAGS_RELEASE=/MD /O2 /Ob2 /DNDEBUG`, checked in whisper.cpp's `CMakeCache.txt`), macOS
+  (universal `.app` + `.dmg`, signed ad hoc, AVX2/FMA checked in the Intel slice); installer sizes go to the job
+  summary (critique R19). `publish` creates a **draft** release (a pre-release for `x.y.z-rc.n`) with the notes of
+  `docs/release-notes/vx.y.z.md`.
+- **`.github/workflows/canary.yml`** (critique G21): daily and by hand, with the repository secret
+  `OPENROUTER_API_KEY`; without it the run succeeds with a notice and sends nothing. `.github/scripts/canary.mjs`
+  checks the catalog (every chain model listed and free, the default model takes tools, the STT model listed) and sends
+  three tiny streamed requests per privacy level, one per chain model, as the app does (`no-training` and `standard`
+  pass when one model answers; `zdr` has no free chain, so the no-training chain is sent with `zdr: true` and must get
+  the data-policy refusal the app classifies as `AI_PRIVACY_BLOCKS`). It prints models, statuses and error classes
+  only. After three failing days it opens an issue (or comments on the open one) and closes it when the canary passes
+  again.
+- **`.github/workflows/pages.yml`** deploys `site/` to GitHub Pages only by hand or when the repository variable
+  `PAGES_ENABLED` is `true`, so pushes never fail while Pages is off.
+- **Manual and links**: `docs/manual/{en,pt,es}/` (8 chapters each) with lossless WebP pictures taken by
+  `npm run screenshots`; `.github/scripts/check-links.mjs` (in CI) checks every relative link and heading anchor of
+  the README, the root documents, the manual and the release notes, that every picture is used, at most 1440 px wide,
+  and that the pictures stay under 10 MB together. Release notes are one file per version with the three languages
+  (Trama's form).

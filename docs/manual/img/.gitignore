@@ -1,0 +1,3 @@
+# `npm run screenshots` writes PNGs here (tools/screenshots/capture.mjs). The manual uses lossless WebP copies of the
+# pictures it shows (AGENTS.md, "Manual screenshots"), so the PNGs are never committed.
+*.png

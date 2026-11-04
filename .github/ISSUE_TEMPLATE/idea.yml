@@ -1,0 +1,18 @@
+name: Idea
+description: Something that would make Tramado more useful for your classes
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us what you are trying to do in your studies, not only the feature you have in mind: it helps us find the
+        simplest way. Some things are already planned for a later version (see the release notes).
+        Pode escrever em português · Puede escribir en español.
+  - type: textarea
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What would help?

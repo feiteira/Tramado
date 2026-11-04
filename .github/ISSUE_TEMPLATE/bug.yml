@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in Tramado does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never include real class material or keys**: no lecture recordings, transcripts, classmates' names, chat
+        messages or OpenRouter keys, not even in screenshots. Reproduce the problem with the example library
+        (Welcome screen › Try the example) or invented material instead.
+        Security problem? Do not open an issue: use **Security › Report a vulnerability** (see SECURITY.md).
+        Pode escrever em português · Puede escribir en español.
+  - type: checkboxes
+    attributes:
+      label: Privacy
+      options:
+        - label: This report contains no real class material, no personal details and no API key.
+          required: true
+  - type: textarea
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: If you can, start from the example library.
+      placeholder: "1. Try the example\n2. Open Constitutional Law › Lectures › Aula 6\n3. …"
+  - type: textarea
+    attributes:
+      label: Diagnostics
+      description: Settings › About › Copy diagnostics (no class content; check before pasting), or the details an
+        error screen lets you copy.
+      render: text
+  - type: input
+    attributes:
+      label: Tramado version and operating system
+      placeholder: "Tramado 0.1.0-rc.1, AppImage on Ubuntu 24.04 / Windows 11 / macOS 15"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Area
+      options: [Recording or transcription, Documents or search, Exams or AI, Sharing or chat, Installing or starting, Other]
+  - type: dropdown
+    attributes:
+      label: Interface language
+      options: [English, Português, Español]
