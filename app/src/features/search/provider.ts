@@ -63,7 +63,7 @@ export interface SearchContext {
 
 const RECENT_ITEMS_KEY = 'tramado.search.recentItems';
 /** How long a query waits for a class that is still reading its files. */
-const SETTLE_WAIT_MS = 1500;
+const SETTLE_WAIT_MS = 4000;
 
 function readRecentItems(): RecentItem[] {
   try {
@@ -215,6 +215,8 @@ export default function provider(services: AppServices) {
       const all = (ctx.scope ?? (ctx.classId ? 'class' : 'all')) === 'all';
       const scopeArg = !all && ctx.classId ? ctx.classId : 'all';
       // A class still reading its files: give the index a moment (the palette shows the indexing line otherwise).
+      await Promise.all((scopeArg === 'all' ? classIds : [scopeArg]).map((id) => services.search.ensure(id).catch(() => undefined)));
+      if (signal.aborted) return [];
       if (indexingNotice(classIds) && services.search.settled) {
         const wait = Promise.all((scopeArg === 'all' ? classIds : [scopeArg]).map((id) => services.search.settled!(id).catch(() => undefined)));
         await Promise.race([wait, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
@@ -232,6 +234,17 @@ export default function provider(services: AppServices) {
       if (signal.aborted) return [];
       const lang = services.ctx.prefs.get('ui.locale') || 'en';
       const rows = passages.map((p) => rowOf(p, lang)).filter((r): r is ResultRow => !!r && classIds.includes(r.classId));
+      // An exam paper's original file ("Exames/Frequência 2025-26/enunciado.pdf") is named after its exam folder.
+      for (const r of rows) {
+        if (r.route.name !== 'document') continue;
+        try {
+          const examsDir = services.forClass(r.classId).store.dir('exams');
+          const rel = r.route.relPath;
+          if (examsDir && rel.startsWith(`${examsDir}/`) && rel.split('/').length > 2) r.title = `${rel.split('/').at(-2)} — ${r.title}`;
+        } catch {
+          // keep the file name
+        }
+      }
       // Lecture titles come from the passages; fill any missing one from the lecture list.
       for (const r of rows) {
         if (r.kind !== 'lecture' || r.title) continue;
