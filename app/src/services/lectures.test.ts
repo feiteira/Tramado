@@ -10,6 +10,7 @@ import type { ClassStoreImpl } from './classStore';
 import { createServices } from './index';
 import { FOLD_DEBOUNCE_MS, type LectureServiceImpl } from './lectures';
 import { claimView, installClassFakes } from './testing/fakeClaims';
+import { createFakeSearch } from './testing/fakeSearch';
 import { createTestContext } from './testing/context';
 
 const BRUNO: DeviceId = 'TKBNV23-6HQ5HVU-DM667CH-DELE5MV-VW4HTSN-27PQJFW-FVGLDA3-4XDXLAT';
@@ -130,6 +131,20 @@ describe('LectureService: list and detail', () => {
     expect(lectures.list.get()[0]!.autoExamMarks).toBe(0);
     expect(JSON.parse(dec.decode((await platform.privateFiles.read(classId, `lectures/${id}.json`))!)).removedAutoMarks).toEqual([30_000]);
     void cs;
+  });
+
+  it('links legal references to the article in the class’s law text', async () => {
+    const { platform, classId, me, lectures, settle, services } = await setup();
+    (services as { search: unknown }).search = createFakeSearch([
+      { id: 'p1', classId, source: { kind: 'document', path: 'Documentos/CRP.pdf', sha256: 'a'.repeat(64) }, locator: { type: 'article', article: '180.º', pages: [40, 40] }, label: 'CRP · art. 180.º', text: '…', score: 2, hits: [] },
+      { id: 'p2', classId, source: { kind: 'document', path: 'Documentos/CRP.pdf', sha256: 'a'.repeat(64) }, locator: { type: 'article', article: '18.º', pages: [12, 13] }, label: 'CRP · art. 18.º', text: '…', score: 1, hits: [] },
+    ]);
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/x', transcript: { segments: SEGMENTS } });
+    await settle();
+    const d = lectures.open(id);
+    await settle();
+    await settle();
+    expect(d.get()!.references).toEqual([{ segmentId: 's_bbbbb', start: 17, end: 35, article: '18.º', code: null, target: { path: 'Documentos/CRP.pdf', page: 12 } }]);
   });
 
   it('shows the transcription state: arriving audio, a classmate transcribing, stale, failed, transcript only elsewhere, deleted audio', async () => {

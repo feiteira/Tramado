@@ -110,6 +110,8 @@ const parseTranscript = parserFor('tramado.transcript');
 const parseEdit = parserFor('tramado.transcript-edit');
 
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** A file of a lecture directory (a lecture may sit at the class root: dir ''). */
+export const inLecture = (dir: ClassPath, name: string): ClassPath => (dir ? `${dir}/${name}` : name);
 const errorMessage = (e: unknown) => toPlatformError(e).message;
 
 export function createLectureService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): LectureServiceImpl {
@@ -128,7 +130,6 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
   let disposed = false;
 
   const me = () => ctx.device.get()?.deviceId ?? '';
-  const myName = () => ctx.identity.get()?.name ?? '';
   const classServices = () => {
     try {
       return app().forClass(classId);
@@ -252,7 +253,7 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     if (!lec) return null;
     const id = item.id;
     const dir = item.dir;
-    const tPath = `${dir}/transcript.json` as ClassPath;
+    const tPath = inLecture(dir, 'transcript.json');
     const bytes = await store.readBytes(tPath).catch(() => null);
     let onDisk: LectureRecord['onDisk'] = null;
     if (bytes) {
@@ -273,7 +274,7 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     const audioSha = lec.value.audio?.sha256 ?? null;
     const r = transcript ? replay(transcript, logs, { audioSha256: audioSha, newer: loaded!.newer }) : null;
     const effective: EffectiveTranscript | null = r ? { ...r.transcript, correctedBy: namesFor(r.info.touched) } : null;
-    const audioPath = `${dir}/audio.webm` as ClassPath;
+    const audioPath = inLecture(dir, 'audio.webm');
     const stat = await platform.fs.stat(classId, audioPath).catch(() => null);
     watchClaims(id);
     const cs = classServices();
@@ -430,7 +431,8 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     void (async () => {
       try {
         const passages = await app().search.passages(classId, `artigo ${number} art. ${number}`, { kinds: ['document'], limit: 20 });
-        const p = passages.find((x) => x.locator.type === 'article' && x.locator.article.replace(/[^\dA-Za-z]/g, '').startsWith(article.replace(/[^\dA-Za-z]/g, '')) && x.source.kind === 'document');
+        const norm = (a: string) => a.replace(/[^\dA-Za-z]/g, '').toLowerCase();
+        const p = passages.find((x) => x.locator.type === 'article' && norm(x.locator.article) === norm(article) && x.source.kind === 'document');
         const target = p && p.source.kind === 'document' && p.locator.type === 'article' ? { path: p.source.path, page: p.locator.pages?.[0] ?? null } : null;
         refTargets.set(key, target);
       } catch {
@@ -540,9 +542,9 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
   /** transcript.json, then .md, then .vtt (folder spec §8.8), into the lecture's current directory. */
   async function writeTranscriptFiles(r: LectureRecord, t: TranscriptFile): Promise<void> {
     const dir = store.state.get().index.lectures.get(r.id)?.dir ?? r.dir;
-    await store.writeJson(`${dir}/transcript.json`, t, { own: true });
-    await store.writeText(`${dir}/transcript.md`, renderMarkdown(t, r.lecture), { own: true });
-    await store.writeText(`${dir}/transcript.vtt`, renderVtt(t), { own: true });
+    await store.writeJson(inLecture(dir, 'transcript.json'), t, { own: true });
+    await store.writeText(inLecture(dir, 'transcript.md'), renderMarkdown(t, r.lecture), { own: true });
+    await store.writeText(inLecture(dir, 'transcript.vtt'), renderVtt(t), { own: true });
   }
 
   // ── actions ──

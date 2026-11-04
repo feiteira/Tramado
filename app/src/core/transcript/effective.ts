@@ -79,6 +79,12 @@ export function pendingOps(t: Pick<TranscriptFile, 'lectureId' | 'round' | 'fold
 export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: ReplayOptions = {}): { transcript: EffectiveTranscript; info: ReplayInfo } {
   const segments = [...t.segments].map(copySeg).sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
   const speakers = t.speakers.map((s) => ({ ...s }));
+  // Every speaker a segment uses is listed, with its default label when nobody named it. Speakers are only
+  // ever added (here, by set_speaker and by label_speaker), so folding part of the edits commutes with replay.
+  const listSpeaker = (id: string) => {
+    if (!speakers.some((x) => x.id === id) && isSpeakerId(id)) speakers.push({ id, label: speakerLabel(id, t.language) });
+  };
+  for (const s of segments) listSpeaker(s.speaker);
   const info: ReplayInfo = { ops: 0, touched: {}, dropped: [], foldedTo: {}, speakerHlc: {}, redirects: {}, splitFrom: {} };
   const concurrent = new Set<SegmentId>();
   const used = new Set<SegmentId>();
@@ -147,6 +153,7 @@ export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: Replay
         if (op.hlc > (seg.editHlc.speaker ?? '')) {
           seg.speaker = op.speaker!;
           seg.editHlc.speaker = op.hlc;
+          listSpeaker(op.speaker!);
         }
         touch(seg.id, deviceId);
         break;
@@ -203,10 +210,6 @@ export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: Replay
     }
   }
 
-  // Every speaker a segment uses is listed, with its default label when nobody named it.
-  for (const s of segments) {
-    if (!speakers.some((x) => x.id === s.speaker) && isSpeakerId(s.speaker)) speakers.push({ id: s.speaker, label: speakerLabel(s.speaker, t.language) });
-  }
   for (const s of segments) if (s.editHlc && Object.keys(s.editHlc).length === 0) delete s.editHlc;
   segments.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
   for (const [id, set] of touched) if (segments.some((s) => s.id === id)) info.touched[id] = [...set].sort();

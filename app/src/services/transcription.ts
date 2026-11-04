@@ -18,7 +18,7 @@ import { fromResult } from '../core/transcript/fromResult';
 import { renderMarkdown, renderVtt } from '../core/transcript/render';
 import type { ModelId, SpeechInfo, TranscribeEvent, TranscribeRequest, TranscriptionResult } from '../platform/types';
 import type { AppContext } from './context';
-import { updateLecturePrivate, type LectureRecord, type LectureServiceImpl } from './lectures';
+import { inLecture, updateLecturePrivate, type LectureRecord, type LectureServiceImpl } from './lectures';
 import { Store } from './store';
 import type { AppServices, ClassServices } from './types/common';
 import type { TranscribePhase, TranscriptionQueue, TranscriptionQueueState } from './types/transcription';
@@ -67,6 +67,7 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
   const work = new Set<Promise<unknown>>();
   let started = false;
   let disposed = false;
+  let noticeRaised = false;
   let speechInfo: SpeechInfo | null = null;
 
   const track = <T>(p: Promise<T>): Promise<T> => {
@@ -326,10 +327,9 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     });
     const store = cls(classId).store;
     const dir = store.state.get().index.lectures.get(lectureId)?.dir ?? r.dir;
-    const prefix = dir ? `${dir}/` : '';
-    await store.writeJson(`${prefix}transcript.json`, t, { own: true });
-    await store.writeText(`${prefix}transcript.md`, renderMarkdown(t, r.lecture), { own: true });
-    await store.writeText(`${prefix}transcript.vtt`, renderVtt(t), { own: true });
+    await store.writeJson(inLecture(dir, 'transcript.json'), t, { own: true });
+    await store.writeText(inLecture(dir, 'transcript.md'), renderMarkdown(t, r.lecture), { own: true });
+    await store.writeText(inLecture(dir, 'transcript.vtt'), renderVtt(t), { own: true });
     await lectures.refresh();
     return t.revision;
   }
@@ -495,6 +495,11 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     }
     for (const k of [...timers.keys()]) if (!seen.has(k)) cancelTimer(k);
     state.update((s) => ({ ...s, lectures: views, volunteer: pref, volunteerEffective: effective, cloud, volunteerNotice: notice }));
+    if (notice && !noticeRaised) {
+      // Also as a system notification, once per session, for when the window is hidden (UX §5.22 `volunteerOn`).
+      noticeRaised = true;
+      notify('model', 'notify.volunteerOn', {}, 'volunteer-on');
+    }
   }
 
   function cancelTimer(k: string) {
