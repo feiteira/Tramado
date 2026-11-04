@@ -26,9 +26,8 @@ import type { UiLocale } from '../core/i18n/languages';
 import type { MemoryPlatform } from '../platform/memory';
 import { deviceIdentity, poolKey } from '../platform/memory/signer';
 import { emptyDemoKeys, type DemoKeys } from './keys';
-import { CLASSES } from './example';
-import { demoPeaks, buildTranscript } from './example/fill';
-import { FILLER } from './example/content/transcripts';
+import { CLASSES, demoTranscript } from './example';
+import { demoPeaks } from './example/fill';
 import { docSourceText } from './example/sources';
 import { PEOPLE, UNVERIFIED_DEVICE } from './example/people';
 import { clockLabel, clockMs, lisbon, lisbonDateTime } from './example/time';
@@ -320,10 +319,7 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
       if (l.transcript) {
         const t = l.transcript;
         const owner = devOf(t.by, t.device);
-        const speaker = l.speakers[0]?.id ?? 'lecture';
-        segments = buildTranscript({
-          key: l.key, durationMs: l.durationMs, keys: t.keySegments, speaker, fillerSpeaker: t.filler.speaker, sentences: FILLER[t.filler.lang], seed: t.filler.seed,
-        }).map((s) => (t.original?.[s.id] !== undefined ? { ...s, text: t.original[s.id]! } : s));
+        segments = demoTranscript(l.key)?.segments ?? [];
         const atMs = lisbon(t.at);
         const transcript: TranscriptFile = {
           format: 'tramado.transcript', version: 1, lectureId: id, round: 1, revision: t.revision, audioSha256, language: l.language,

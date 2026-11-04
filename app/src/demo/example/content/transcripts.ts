@@ -27,12 +27,32 @@ export const L7_KEY: KeySegmentText[] = [
   { id: 's_l7c00', at: '0:30:10', text: 'Necessidade quer dizer que não havia meio menos restritivo para atingir o mesmo fim.' },
 ];
 
+/**
+ * `l8` "Aula 8 — Estado de exceção": not transcribed yet in the fixtures (Bruno is at 40 %); this is what the speech
+ * fake delivers when the demo finishes that job (`finishTranscription('l8')`).
+ */
+export const L8_KEY: KeySegmentText[] = [
+  { id: 's_l8a00', at: '0:00:06', text: 'Bom dia a todos. Hoje o tema é o estado de exceção.' },
+  { id: 's_l8b00', at: '0:09:20', text: 'O estado de exceção suspende o exercício de alguns direitos, mas não os elimina.' },
+  { id: 's_l8c00', at: '0:27:45', text: 'A declaração tem de ser fundamentada e ter um prazo certo.' },
+  { id: 's_l8d00', at: '0:44:10', text: 'Há direitos que nunca ficam suspensos, a começar pelo direito à vida.' },
+  { id: 's_l8e00', at: '1:16:30', text: 'Na próxima semana fazemos uma revisão de toda a matéria.' },
+];
+
 /** `b3` "Lecture 3 — Cell membranes" (online, stereo: "Me" / "Class"). */
 export const B3_KEY: KeySegmentText[] = [
   { id: 's_b3a00', at: '0:07:15', speaker: 'class', text: 'The membrane is a fluid mosaic: lipids and proteins move sideways within the layer.' },
   { id: 's_b3b00', at: '0:18:40', speaker: 'class', text: 'This will come up on the exam: explain why small non-polar molecules cross the bilayer easily.' },
   { id: 's_b3c00', at: '0:31:05', speaker: 'me', text: 'Does cholesterol make the membrane more or less fluid?' },
   { id: 's_b3d00', at: '0:31:20', speaker: 'class', text: 'It depends on the temperature: cholesterol buffers fluidity in both directions.' },
+];
+
+/** `b4` "Lecture 4 — Osmosis and diffusion": not transcribed in the fixtures ("Waiting for a transcriber"). */
+export const B4_KEY: KeySegmentText[] = [
+  { id: 's_b4a00', at: '0:00:08', text: 'Today we look at how water and small molecules move across membranes.' },
+  { id: 's_b4b00', at: '0:12:30', text: 'Diffusion always runs from high concentration to low concentration.' },
+  { id: 's_b4c00', at: '0:29:15', text: 'In a hypotonic solution a red blood cell takes in water and swells.' },
+  { id: 's_b4d00', at: '0:46:40', text: 'Next time we will look at active transport and the sodium pump.' },
 ];
 
 /** 40 neutral, fictional sentences per language (UX §7.1). */

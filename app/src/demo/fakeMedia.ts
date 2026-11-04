@@ -39,6 +39,14 @@ export const MIN_RATE = 0.5;
 export const MAX_RATE = 3;
 const TIME_UPDATE_MS = 250;
 
+/** Every FakeMedia not yet disposed, so the demo's `tick(ms)` hook can move them all (UX §7.2). */
+const LIVE = new Set<FakeMedia>();
+
+/** Advances every live FakeMedia by `ms` of media time (wire into `__tramadoDemo.tick`). */
+export function tickFakeMedia(ms: number): void {
+  for (const m of [...LIVE]) m.tick(ms);
+}
+
 export function createFakeMedia(durationMs: number, deps: FakeMediaDeps = {}): FakeMedia {
   const now = deps.now ?? (() => performance.now());
   const startTimer = deps.setInterval ?? ((fn: () => void, ms: number) => globalThis.setInterval(fn, ms));
@@ -147,11 +155,13 @@ export function createFakeMedia(durationMs: number, deps: FakeMediaDeps = {}): F
     },
     dispose() {
       disposed = true;
+      LIVE.delete(media);
       playing = false;
       stopClock();
       timeListeners.clear();
       endListeners.clear();
     },
   };
+  LIVE.add(media);
   return media;
 }

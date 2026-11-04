@@ -19,10 +19,10 @@ import { resolveQuote } from '../../core/search/resolve';
 import { createMemoryPlatform, type MemoryPlatform } from '../../platform/memory';
 import { deviceIdentity, poolKey } from '../../platform/memory/signer';
 import { demoRoute, parseDemoFlags } from '../boot';
-import { createFakeMedia } from '../fakeMedia';
+import { createFakeMedia, tickFakeMedia } from '../fakeMedia';
 import { MISSING_ID, type DemoKeys } from '../keys';
 import { DEMO_ASSETS, fakeAudio, seedDemo, type SeedOptions } from '../seed';
-import { CLASSES, findDoc, findLecture } from './index';
+import { CLASSES, demoTranscript, findDoc, findLecture } from './index';
 import { FIRST_FREE_POOL_SLOT, MEMBER_KEYS, PEOPLE, UNVERIFIED_DEVICE } from './people';
 import { FILLER, L6_E00_WHISPER } from './content/transcripts';
 import { LF_PAGES, lfArticlePage } from './content/lf';
@@ -135,8 +135,10 @@ describe('transcripts and markers', () => {
     for (const lang of ['pt', 'en', 'es'] as const) for (const s of FILLER[lang]) expect(RADAR[lang]!.test(fold(s)), s).toBe(false);
     const auto = (key: string) => {
       const { lecture } = findLecture(key)!;
-      return transcriptOf(lecture).filter((s) => RADAR[radarLang(lecture.language)]!.test(fold(s.text))).map((s) => s.startMs);
+      return demoTranscript(key)!.segments.filter((s) => RADAR[radarLang(lecture.language)]!.test(fold(s.text))).map((s) => s.startMs);
     };
+    expect(auto('l8')).toEqual([]);
+    expect(auto('b4')).toEqual([]);
     expect(auto('l6')).toEqual([clockMs('0:41:12'), clockMs('1:05:00')]);
     expect(auto('l7')).toEqual([]);
     expect(auto('b3')).toEqual([clockMs('0:18:40')]);
@@ -166,6 +168,20 @@ describe('transcripts and markers', () => {
     expect(transcriptOf(l6).find((s) => s.id === 's_l6e00')!.text).toBe('É o que diz o artigo 18.º, n.º 3.');
     expect(l6.transcript!.original!.s_l6e00).toBe(L6_E00_WHISPER);
     expect(effectiveText(l6, 's_l6e00')).toBe('É o que diz o artigo 18.º, n.º 3.');
+  });
+
+  it('scripts the transcripts the speech fake delivers for l8 and b4, and returns the seeded ones', () => {
+    for (const key of ['l6', 'l7', 'l8', 'b3', 'b4']) {
+      const t = demoTranscript(key)!;
+      const { lecture } = findLecture(key)!;
+      expect(t.language).toBe(lecture.language);
+      expect(new Set(t.segments.map((s) => s.id)).size).toBe(t.segments.length);
+      expect(t.segments.every((s) => RE_SEGMENT_ID.test(s.id) && s.endMs <= lecture.durationMs)).toBe(true);
+      expect(t.segments.length).toBeGreaterThan(200);
+      if (lecture.transcript) expect(t.segments).toEqual(transcriptOf(lecture).map((s) => (lecture.transcript!.original?.[s.id] ? { ...s, text: lecture.transcript!.original[s.id]! } : s)));
+    }
+    expect(demoTranscript('l8')!.segments.find((s) => s.id === 's_l8d00')!.startMs).toBe(clockMs('0:44:10'));
+    expect(demoTranscript('nope')).toBeNull();
   });
 
   it('draws the peaks of UX §7.1', () => {
@@ -724,5 +740,15 @@ describe('createFakeMedia (UX §7.1)', () => {
     media.dispose();
     media.play();
     expect(media.playing).toBe(false);
+  });
+
+  it('lets the demo tick every live player', () => {
+    const a = createFakeMedia(10_000, { now: () => 0, setInterval: () => 1, clearInterval: () => undefined });
+    const b = createFakeMedia(10_000, { now: () => 0, setInterval: () => 1, clearInterval: () => undefined });
+    b.dispose();
+    tickFakeMedia(1500);
+    expect(a.ms).toBe(1500);
+    expect(b.ms).toBe(0);
+    a.dispose();
   });
 });
