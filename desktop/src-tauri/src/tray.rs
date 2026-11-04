@@ -162,9 +162,52 @@ fn toggle_sharing(app: &AppHandle) {
     emit(app, action);
 }
 
+/// Linux: the tray needs libayatana-appindicator (or libappindicator), which the tray crate
+/// loads at run time and **panics** without; look for it first.
+#[cfg(target_os = "linux")]
+pub fn tray_supported() -> bool {
+    use std::path::PathBuf;
+    const NAMES: [&str; 4] = [
+        "libayatana-appindicator3.so.1",
+        "libappindicator3.so.1",
+        "libayatana-appindicator3.so",
+        "libappindicator3.so",
+    ];
+    let mut dirs: Vec<PathBuf> = [
+        "/usr/lib",
+        "/usr/lib64",
+        "/lib",
+        "/lib64",
+        "/usr/local/lib",
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib/aarch64-linux-gnu",
+        "/lib/x86_64-linux-gnu",
+        "/lib/aarch64-linux-gnu",
+    ]
+    .iter()
+    .map(PathBuf::from)
+    .collect();
+    if let Some(v) = std::env::var_os("LD_LIBRARY_PATH") {
+        dirs.extend(std::env::split_paths(&v));
+    }
+    if let Some(appdir) = std::env::var_os("APPDIR") {
+        let a = PathBuf::from(appdir);
+        dirs.push(a.join("usr/lib"));
+        dirs.push(a.join("usr/lib/x86_64-linux-gnu"));
+        dirs.push(a.join("usr/lib/aarch64-linux-gnu"));
+    }
+    dirs.iter()
+        .any(|d| NAMES.iter().any(|n| d.join(n).exists()))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn tray_supported() -> bool {
+    true
+}
+
 /// Shows or removes the tray icon (on the main thread, where GTK and AppKit want it).
 pub fn set_mode(app: &AppHandle, mode: BackgroundMode) {
-    let want = mode.tray_on_close && mode.shared_classes > 0;
+    let want = mode.tray_on_close && mode.shared_classes > 0 && tray_supported();
     let handle = app.clone();
     let run = app.run_on_main_thread(move || {
         let Some(state) = handle.try_state::<TrayState>() else {

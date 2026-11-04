@@ -52,6 +52,11 @@ pub struct AppInfo {
     /// "tramado-media://localhost" | "http://tramado-media.localhost"
     pub media_base: String,
     pub paths: AppPaths,
+    /// How `<audio>` plays class recordings here: `"scheme"` (a `tramado-media` URL) or `"blob"`
+    /// (WebKitGTK: its media pipeline cannot read custom schemes, so the player goes straight to
+    /// the Blob-URL fallback of architecture §8; measured by the media self-test, critique R3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media_audio: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -189,6 +194,16 @@ fn webview_label(version: String) -> String {
     }
 }
 
+/// `AppInfo.mediaAudio`: WebKitGTK cannot play media from a custom scheme (the media self-test
+/// fails with `MEDIA_ERR_SRC_NOT_SUPPORTED`; the Blob fallback seeks within 0.25 s).
+pub fn media_audio() -> &'static str {
+    if cfg!(target_os = "linux") {
+        "blob"
+    } else {
+        "scheme"
+    }
+}
+
 /// `AppInfo.mediaBase` (architecture §8).
 pub fn media_base() -> &'static str {
     if cfg!(windows) {
@@ -223,6 +238,7 @@ pub async fn app_info(
             data: p.data.to_string_lossy().into_owned(),
             cache: p.cache.to_string_lossy().into_owned(),
         },
+        media_audio: Some(media_audio().to_string()),
     })
 }
 
