@@ -32,7 +32,6 @@ export const notes = {
     keepMine: 'Keep this one',
     keepTheirs: 'Keep the other',
     keepBoth: 'Keep both',
-    copyName: '{title} ({name}’s copy)',
   },
   empty: {
     title: 'Your notes for {class}.',
@@ -57,5 +56,4 @@ export const notes = {
   conflictBoth: 'Both versions kept. The other one is now “{name}”.',
   conflictLegend: { mine: 'Only in this computer’s version', theirs: 'Only in the other version' },
   conflictOtherCopies: { one: '{n} more version is waiting.', other: '{n} more versions are waiting.' },
-  saveFailedRetry: 'Saving again in a moment.',
 };

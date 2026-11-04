@@ -79,7 +79,7 @@ export const documents = {
   },
   makePrivate: {
     title: 'Make “{file}” private?',
-    body: 'It moves out of the class folder into Tramado’s private storage on this computer, so it is removed for everyone else in {class}.',
+    body: 'It stays on this computer only and is removed for everyone else in {class}. Classmates who already opened it keep nothing new from you.',
     confirm: 'Make private',
     done: '“{file}” is now only on this computer.',
   },
@@ -166,7 +166,7 @@ export const documents = {
     highlightLost: 'This highlight’s text changed; it may point at the wrong place.',
     askPlaceholder: 'Ask about this document…',
     askIntro: 'Answers come from this document’s text, with its pages cited.',
-    askOff: 'Set up AI to ask about this document.',
+    askOff: 'To ask about this document, set up AI first.',
     askSend: 'Ask',
     askNoText: 'Search and AI can’t read this file’s text yet.',
     explainTitle: 'Explanation',

@@ -31,7 +31,7 @@ export const OCR_WARNING = 'ocr';
 
 // Vision prompts for documents (the exam OCR prompt of core/ai talks about exam papers).
 const OCR_PROMPT: Record<'en' | 'pt' | 'es', string> = {
-  en: 'This is one page of a scanned document. Transcribe ALL of its text verbatim, in the original language, keeping line breaks, accents and punctuation exactly. Output only the transcribed text, no commentary.',
+  en: 'This is one page of a scanned document; transcribe ALL of its text verbatim, in the original language, keeping line breaks, accents and punctuation exactly. Output only the transcribed text, no commentary.',
   pt: 'Isto é uma página de um documento digitalizado. Transcreve TODO o texto literalmente, na língua original, mantendo as quebras de linha, os acentos e a pontuação. Escreve apenas o texto transcrito, sem comentários.',
   es: 'Esta es una página de un documento escaneado. Transcribe TODO su texto literalmente, en el idioma original, manteniendo los saltos de línea, las tildes y la puntuación. Escribe solo el texto transcrito, sin comentarios.',
 };
