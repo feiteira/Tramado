@@ -69,7 +69,7 @@ threads (D3; critique C5). The OpenRouter key and the Syncthing API key never re
 | D-2 | Critique §8 taxonomy. | Adds `NOT_IMPLEMENTED` (common). | Scaffold stubs (M0) return it; the release gate fails if any command still can. |
 | D-3 | Folder spec §12 private files. | `classes.json` adds per-class `joining: boolean`, `skipAudio: boolean` and `leaving: {since, afterwards} \| null`, and top-level `root` (where new classes are created) and `leftClasses: ClassId[]`; `identity.json` adds `deviceName`, `colour` and `personPub`; `hlc.json` carries `format`/`version` like every other record. §13 is the single list of private files (folder spec §12 points here). | Sync spec §8 needs a persisted "joining" state, §17 a persisted "leaving" state; §21 "Skip audio files" is per class per device. `classes.json` is private (not part of the format). |
 | D-4 | Trama opens dialogs from JS (`@tauri-apps/plugin-dialog`) and passes absolute paths to Rust. | Dialogs run in Rust and return **opaque pick tokens**; commands that read or write outside class folders accept tokens, never paths. | An XSS in rendered classmate content could otherwise read any file (`~/.ssh/id_rsa`) and write it into a synced class folder, i.e. exfiltrate it to a classmate. |
-| D-5 | D1 "Tauri 2.12", critique V10 lists latest versions. | Exact pins at releases ≥ 14 days old today (D59): `tauri =2.12.4`, `tauri-build =2.7.3`, plugins at their 2026-10-14 releases, `notify =8.2.0`, `@tauri-apps/cli 2.12.3`, `ureq =3.5.0` (D59). `opusic-sys =0.7.6` is the lab-verified version and turns 14 days old on 2026-11-09, before any release. | D59. |
+| D-5 | D1 "Tauri 2.12", critique V10 lists latest versions. | Exact pins at releases ≥ 14 days old today (D59): `tauri =2.12.4`, `tauri-build =2.7.3`, plugins at their 2026-10-14 releases, `notify =8.2.0`, `@tauri-apps/cli 2.12.3`, `ureq =3.5.0` (D59). `opusic-sys =0.7.6` is the lab-verified version and turns 14 days old on 2026-11-09; until then it passes the release gate as a reviewed exception (§18.6). | D59. |
 | D-6 | Trama destroys the window on close. | Main window uses `backgroundThrottling: "disabled"`; "close to tray" **hides** the window (the webview keeps running). | D-1 needs the TS engine alive while in the tray (D48). Rust still owns all liveness-critical loops, so throttled timers only coarsen timing (§4.3). |
 | D-7 | Critique C37 (Channel + `*_status()` for re-attach). | Generalised: every long job takes a `Channel` and has a `*_attach(..., channel)` command that replaces the job's channel after a webview reload (`speech_recorder_attach`, `speech_transcribe_attach`, `speech_model_attach`, `speech_import_attach`). | One pattern for recorder, transcription, model download and import. |
 | D-8 | Critique G9.5 "optionally persist the index". | No index persistence in 0.1: indexes are rebuilt from the per-file text cache when a class opens (≈0.3 s per 3.5 M chars, critique V7). | Less code, no cache invalidation bugs; revisit if a class takes > 1 s (Q4). |
@@ -3159,12 +3159,29 @@ fetched files (tauri-build fails on a missing sidecar or resource, critique C4).
 - Linux 0.1: AppImage (with GStreamer, so `<audio>` plays WebM Opus; no `tramado://` registration, critique G17) and
   deb (sidecar installed as `/usr/bin/tramado-syncthing`). Windows (NSIS) and macOS (dmg, ad-hoc signed) follow from
   the same configuration in CI.
+- A pre-release `.deb` carries the Debian form of the one version: `x.y.z-rc.n` becomes `x.y.z~rc.n` in the control
+  file only (Tauri has no deb version setting; CI rewrites it after the build and checks the files are unchanged),
+  because Debian reads `0.1.0-rc.2` as 0.1.0 revision `rc.2`, newer than the final `0.1.0`.
+- Windows: NSIS, per-user (`installMode: currentUser`, no administrator prompt), WebView2 through the download
+  bootstrapper, English/Portuguese/Spanish installer, `.tramado-invite` and `tramado://` registered by the installer;
+  the sidecar is `tramado-syncthing.exe` beside the app's executable and every child process gets `CREATE_NO_WINDOW`.
+  macOS: universal app (minimum 14.2), `Info.plist` with the microphone and audio-capture reasons, the
+  `audio-input` entitlement under the hardened runtime, `tramado://` (`CFBundleURLTypes`) and the invite type exported
+  as `eu.thehumanloop.tramado.invite`; CI checks all of these and that the app and the sidecar have both slices.
 - `npm run check:versions` (`tools/check-versions.mjs`): reads `Cargo.lock` (crates.io packages) and
   `package-lock.json` (npm registry packages), finds each version's publish date (crates: the `pubtime` field of the
   crates.io sparse index, read from Cargo's own index cache first; npm: the tarball's `Last-Modified`, the packument's
   `time` as a fallback), keeps the dates in `tools/.cache/publish-dates.json`, prints the youngest versions as a table
-  (`--all` every row, `--json`, `--now=<date>`, `--days=N`, `--offline`) and fails if any version is younger than 14
-  days (D59) — run at release (CI `release-gate`).
+  (`--all` every row, `--json`, `--now=<date>`, `--days=N`, `--offline`, `--no-exceptions`) and fails if any version is
+  younger than 14 days (D59) — run at release (CI `release-gate`).
+- **Reviewed exceptions to D59** (`tools/check-versions.exceptions.json`): a younger version passes, shown as
+  `excepted` and counted in the summary line, only when the list names its exact ecosystem, name and version with
+  `reviewed` (the date), `reason` (a security fix, a lab-verified pin) and `review` (what the published source diff
+  showed). Before adding one: download the `.crate` (or npm tarball) of that version and of the previous one into an
+  empty scratch folder, never build or run them, diff them, and read build scripts, new dependencies, process, network
+  and file system access, `unsafe` or obfuscated code and bundled binaries; a suspicious diff is never excepted. An
+  entry whose version is no longer locked or is already 14 days old is reported as stale (a warning; `::warning::` in
+  CI) and is then removed. On 2026-11-04: `ctutils 0.4.4` (RUSTSEC-2026-0385) and `opusic-sys 0.7.6` (§21.6).
 - `cargo deny check` with `deny.toml` (licences: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0,
   Unicode-3.0, Zlib, CC0-1.0, plus four one-crate exceptions, §21.7; advisories and yanked crates deny; unmaintained
   reported for direct dependencies; crates.io only) and `npm audit --omit=dev` in CI (§21.7).
@@ -3340,7 +3357,8 @@ moved back to the newest semver-compatible release at least 14 days old (P§20).
 of `Cargo.toml` (D-5) `ureq =3.5.0` (14 days old on 2026-11-04, 18:15 UTC) and `opusic-sys =0.7.6`, the lab-verified
 version (2026-11-09, 22:39 UTC); and `ctutils 0.4.4` (2026-11-06), the oldest release without RUSTSEC-2026-0385
 (an advisory beats the cooldown). `npm run check:versions`, and with it the CI release gate, passes from
-2026-11-10.
+2026-11-10; before that `ctutils 0.4.4` and `opusic-sys 0.7.6` pass as reviewed exceptions (§18.6; REL, 2026-11-04:
+both published crates were diffed against their previous releases).
 
 ### 21.7 Wave 3: documents, CI and supply chain (DOCS)
 
@@ -3361,8 +3379,11 @@ version (2026-11-09, 22:39 UTC); and `ctutils 0.4.4` (2026-11-06), the oldest re
   behind `release-gate` (one version in `tauri.conf.json`, `Cargo.toml`, `app/` and `desktop/package.json`; release
   notes for it; `check:versions`) and every check above: Linux on ubuntu-22.04 (AppImage, deb; glibc 2.35), Windows
   (NSIS; `CMAKE_{C,CXX}_FLAGS_RELEASE=/MD /O2 /Ob2 /DNDEBUG`, checked in whisper.cpp's `CMakeCache.txt`), macOS
-  (universal `.app` + `.dmg`, signed ad hoc, AVX2/FMA checked in the Intel slice); installer sizes go to the job
-  summary (critique R19). `publish` creates a **draft** release (a pre-release for `x.y.z-rc.n`) with the notes of
+  (universal `.app` + `.dmg`, signed ad hoc, AVX2/FMA checked in the Intel slice; `Info.plist`, signature,
+  entitlements and both slices checked); a pre-release `.deb` gets its Debian version (§18.6); Windows and macOS run
+  `tools/desktop-e2e/startup.mjs` (the app in a throwaway `TRAMADO_DATA_DIR` must log "webview ready" and the bundled
+  Syncthing must answer its health check); installer sizes go to the job summary (critique R19). The `web` job fails
+  on paths or module names that differ only in letter case (Windows and macOS file systems ignore case). `publish` creates a **draft** release (a pre-release for `x.y.z-rc.n`) with the notes of
   `docs/release-notes/vx.y.z.md`.
 - **`.github/workflows/canary.yml`** (critique G21): daily and by hand, with the repository secret
   `OPENROUTER_API_KEY`; without it the run succeeds with a notice and sends nothing. `.github/scripts/canary.mjs`
