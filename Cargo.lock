@@ -5598,7 +5598,7 @@ dependencies = [
 
 [[package]]
 name = "tramado-base"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "getrandom 0.4.3",
  "http-range",
@@ -5618,7 +5618,7 @@ dependencies = [
 
 [[package]]
 name = "tramado-desktop"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "log",
  "percent-encoding",
@@ -5642,7 +5642,7 @@ dependencies = [
 
 [[package]]
 name = "tramado-net"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -5660,7 +5660,7 @@ dependencies = [
 
 [[package]]
 name = "tramado-speech"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "cpal",
@@ -5687,7 +5687,7 @@ dependencies = [
 
 [[package]]
 name = "tramado-sync"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "bcrypt",

@@ -15,7 +15,7 @@ node tools/desktop-e2e/run.mjs --suite=sync-three       # three instances      (
 npm run e2e:media                                       # --suite=media       (~1 min, PulseAudio, a turbo model)
 node tools/desktop-e2e/run.mjs --suite=model            # downloads "small" (190 MB) from Hugging Face (~2 min)
 node tools/desktop-e2e/run.mjs --suite=hidden           # the 15-minute hidden-window measurement (architecture Q6)
-node tools/desktop-e2e/run.mjs --suite=smoke --bin=target/release/bundle/appimage/Tramado_0.1.0_amd64.AppImage
+node tools/desktop-e2e/run.mjs --suite=smoke --bin=target/release/bundle/appimage/Tramado_0.1.0-rc.1_amd64.AppImage
 TRAMADO_AI_LIVE=1 npm run e2e:desktop                   # + one real Ask over free models (key in ~/.openrouter.key)
 ```
 

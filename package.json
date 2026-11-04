@@ -1,5 +1,6 @@
 {
   "name": "tramado",
+  "version": "0.1.0-rc.1",
   "private": true,
   "description": "Tramado — organise your classes: lectures, documents, exams and class groups, serverless.",
   "license": "MPL-2.0",
