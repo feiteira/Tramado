@@ -1,0 +1,140 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "És o Tramado, um assistente de estudo. Responde a perguntas de exame usando APENAS os materiais da turma, que consultas com as ferramentas search_materials e read_passage. Cita cada afirmação com a ref da passagem entre parênteses retos, ex.: [S1]. Se os materiais não chegarem, diz o que falta. Responde em português europeu, de forma estruturada e concisa (máx. 200 palavras)."
+    },
+    {
+     "role": "user",
+     "content": "Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida."
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "search_materials",
+      "description": "Search this class's documents and lecture transcripts. Returns passages with a ref (S1, S2…) to cite, an id, source and location (page/article or timestamp).",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string",
+         "description": "Keywords or a question, in the language of the materials."
+        },
+        "limit": {
+         "type": "integer",
+         "description": "Max results (1-6). Default 4."
+        }
+       },
+       "required": [
+        "query"
+       ]
+      }
+     }
+    },
+    {
+     "type": "function",
+     "function": {
+      "name": "read_passage",
+      "description": "Read the full text of one passage returned by search_materials, by its id or ref.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ]
+      }
+     }
+    }
+   ],
+   "tool_choice": "auto",
+   "max_tokens": 4000,
+   "temperature": 0.2,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 2.05,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture012001e48f1ca",
+   "object": "chat.completion",
+   "created": 1793720982,
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "tool_calls",
+     "native_finish_reason": "tool_calls",
+     "message": {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "reasoning": "O utilizador está a fazer uma pergunta de exame sobre constitucionalidade de um regulamento municipal que proíbe distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Preciso responder usando APENAS materiais da turma, consultando com search_materials e read_passage. Devo citar cada afirmação com ref da passagem entre parênteses retos, ex: [S1]. Responder em português europeu, estruturado e conciso (máx 200 palavras).\n\nPrimeiro, devo buscar materiais relevantes sobre liberdade de expressão, igualdade, partidos políticos, competência municipal, regulamentos, proibição de panfletos, discriminação por partido, etc.\n\nVou fazer search_materials com query relevante. Como não conheço os materiais, devo pesquisar. Vou tentar query em português: \"liberdade de expressão panfletos partidos políticos regulamento municipal igualdade\". Ou \"proibição distribuição panfletos partido oposição constitucionalidade\". Vou fazer search.",
+      "tool_calls": [
+       {
+        "type": "function",
+        "index": 0,
+        "id": "call-7556be41-0b6c-4b58-8f5a-65b552b448fe",
+        "function": {
+         "name": "search_materials",
+         "arguments": "{\"query\":\"liberdade de expressão distribuição panfletos partidos políticos igualdade regulamento municipal\",\"limit\":6}"
+        }
+       }
+      ],
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "O utilizador está a fazer uma pergunta de exame sobre constitucionalidade de um regulamento municipal que proíbe distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Preciso responder usando APENAS materiais da turma, consultando com search_materials e read_passage. Devo citar cada afirmação com ref da passagem entre parênteses retos, ex: [S1]. Responder em português europeu, estruturado e conciso (máx 200 palavras).\n\nPrimeiro, devo buscar materiais relevantes sobre liberdade de expressão, igualdade, partidos políticos, competência municipal, regulamentos, proibição de panfletos, discriminação por partido, etc.\n\nVou fazer search_materials com query relevante. Como não conheço os materiais, devo pesquisar. Vou tentar query em português: \"liberdade de expressão panfletos partidos políticos regulamento municipal igualdade\". Ou \"proibição distribuição panfletos partido oposição constitucionalidade\". Vou fazer search.",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 584,
+    "completion_tokens": 277,
+    "total_tokens": 861,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 224,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

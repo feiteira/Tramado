@@ -1,0 +1,174 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "google/gemma-4-26b-a4b-it:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "exam_questions",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "questions"
+      ],
+      "properties": {
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "description": "Exam title/course, if stated"
+       },
+       "questions": {
+        "type": "array",
+        "description": "Every question AND sub-question, flattened, in document order",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "number",
+          "parent",
+          "group",
+          "text",
+          "points",
+          "kind",
+          "options"
+         ],
+         "properties": {
+          "number": {
+           "type": "string",
+           "description": "Label as printed: '1', '2', '2a', '2b'"
+          },
+          "parent": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "number of the parent question for sub-questions, else null"
+          },
+          "group": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "Section/group heading, e.g. 'GRUPO I'"
+          },
+          "text": {
+           "type": "string",
+           "description": "Question text verbatim, without the points"
+          },
+          "points": {
+           "type": [
+            "number",
+            "null"
+           ],
+           "description": "Points (valores) for this item, null if not stated"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "open",
+            "multiple_choice",
+            "true_false",
+            "short",
+            "container"
+           ]
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           },
+           "description": "Choices for multiple_choice, else []"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "max_tokens": 6000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 30.9,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixturecf40734fed634",
+   "object": "chat.completion",
+   "created": 1793721240,
+   "model": "google/gemma-4-26b-a4b-it:free",
+   "provider": "Google AI Studio",
+   "system_fingerprint": null,
+   "service_tier": "default",
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "stop",
+     "native_finish_reason": "STOP",
+     "message": {
+      "role": "assistant",
+      "content": "```json\n{\n  \"exam_metadata\": {\n    \"institution\": \"Faculdade de Direito\",\n    \"subject\": \"Direito Constitucional I\",\n    \"type\": \"Frequência\",\n    \"date\": \"20/11/2026\",\n    \"duration\": \"90 minutos\"\n  },\n  \"groups\": [\n    {\n      \"group_name\": \"GRUPO I\",\n      \"total_value\": \"8 valores\",\n      \"questions\": [\n        {\n          \"number\": 1,\n          \"text\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\",\n          \"value\": \"3 valores\"\n        },\n        {\n          \"number\": 2,\n          \"text\": \"Responda às seguintes alíneas:\",\n          \"value\": \"5 valores\",\n          \"sub_questions\": [\n            {\n              \"label\": \"a\",\n              \"text\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito?\",\n              \"value\": \"2 valores\"\n            },\n            {\n              \"label\": \"b\",\n              \"text\": \"Indique os três subprincípios da proporcionalidade.\",\n              \"value\": \"3 valores\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"group_name\": \"GRUPO II\",\n      \"total_value\": \"12 valores\",\n      \"questions\": [\n        {\n          \"number\": 3,\n          \"text\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\",\n          \"value\": \"8 valores\"\n        },\n        {\n          \"number\": 4,\n          \"text\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\",\n          \"value\": \"2 valores\"\n        },\n        {\n          \"number\": 5,\n          \"text\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\",\n          \"value\": \"2 valores\"\n        }\n      ]\n    }\n  ]\n}\n```",
+      "refusal": null,
+      "reasoning": "\n*   Input: An exam paper for \"Direito Constitucional I\".\n*   Task: Extract exam questions into JSON format.\n*   Constraints: Copy text verbatim. Do not answer the questions.\n\n    *   Header: Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\n    *   Group I (8 values):\n        *   Q1: Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n        *   Q2: Responda às seguintes alíneas: (5 valores)\n            *   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n            *   b) Indique os três subprincípios da proporcionalidade. (3 valores)\n    *   Group II (12 values):\n        *   Q3: Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n        *   Q4: Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n        *   Q5: Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\n\n    *   Root object should contain metadata (optional but good practice) and a list of questions.\n    *   Since the exam is divided into groups, I should reflect that structure.\n    *   Each question should have the text and the value/points.\n\n    *   *Structure Idea:*\n        ```json\n        {\n          \"exam_info\": {\n            \"subject\": \"Direito Constitucional I\",\n            \"type\": \"Frequência\",\n            \"date\": \"20/11/2026\",\n            \"duration\": \"90 minutos\"\n          },\n          \"groups\": [\n            {\n              \"name\": \"GRUPO I\",\n              \"total_value\": \"8 valores\",\n              \"questions\": [...]\n            },\n            {\n              \"name\": \"GRUPO II\",\n              \"total_value\": \"12 valores\",\n              \"questions\": [...]\n            }\n          ]\n        }\n        ```\n\n    *   *Question 1:* `{\"text\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\", \"value\": \"3 valores\"}`\n    *   *Question 2:* This is a parent question with sub-questions.\n        *   `{\"text\": \"Responda às seguintes alíneas:\", \"value\": \"5 valores\", \"sub_questions\": [...]}`\n        *   `sub_questions`:\n            *   `{\"text\": \"a) O que se entende por \\\"conteúdo essencial\\\" de um direito?\", \"value\": \"2 valores\"}`\n            *   `{\"text\": \"b) Indique os três subprincípios da proporcionalidade.\", \"value\": \"3 valores\"}`\n    *   *Question 3:* `{\"text\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\", \"value\": \"8 valores\"}`\n    *   *Question 4:* `{\"text\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\", \"value\": \"2 valores\"}`\n    *   *Question 5:* `{\"text\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\", \"value\": \"2 valores\"}`\n\n    *   Verbatim? Yes.\n    *   No answers? Yes.\n    *   JSON format? Yes.",
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "\n*   Input: An exam paper for \"Direito Constitucional I\".\n*   Task: Extract exam questions into JSON format.\n*   Constraints: Copy text verbatim. Do not answer the questions.\n\n    *   Header: Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\n    *   Group I (8 values):\n        *   Q1: Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n        *   Q2: Responda às seguintes alíneas: (5 valores)\n            *   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n            *   b) Indique os três subprincípios da proporcionalidade. (3 valores)\n    *   Group II (12 values):\n        *   Q3: Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n        *   Q4: Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n        *   Q5: Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\n\n    *   Root object should contain metadata (optional but good practice) and a list of questions.\n    *   Since the exam is divided into groups, I should reflect that structure.\n    *   Each question should have the text and the value/points.\n\n    *   *Structure Idea:*\n        ```json\n        {\n          \"exam_info\": {\n            \"subject\": \"Direito Constitucional I\",\n            \"type\": \"Frequência\",\n            \"date\": \"20/11/2026\",\n            \"duration\": \"90 minutos\"\n          },\n          \"groups\": [\n            {\n              \"name\": \"GRUPO I\",\n              \"total_value\": \"8 valores\",\n              \"questions\": [...]\n            },\n            {\n              \"name\": \"GRUPO II\",\n              \"total_value\": \"12 valores\",\n              \"questions\": [...]\n            }\n          ]\n        }\n        ```\n\n    *   *Question 1:* `{\"text\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\", \"value\": \"3 valores\"}`\n    *   *Question 2:* This is a parent question with sub-questions.\n        *   `{\"text\": \"Responda às seguintes alíneas:\", \"value\": \"5 valores\", \"sub_questions\": [...]}`\n        *   `sub_questions`:\n            *   `{\"text\": \"a) O que se entende por \\\"conteúdo essencial\\\" de um direito?\", \"value\": \"2 valores\"}`\n            *   `{\"text\": \"b) Indique os três subprincípios da proporcionalidade.\", \"value\": \"3 valores\"}`\n    *   *Question 3:* `{\"text\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\", \"value\": \"8 valores\"}`\n    *   *Question 4:* `{\"text\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\", \"value\": \"2 valores\"}`\n    *   *Question 5:* `{\"text\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\", \"value\": \"2 valores\"}`\n\n    *   Verbatim? Yes.\n    *   No answers? Yes.\n    *   JSON format? Yes.",
+        "format": "google-gemini-v1",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 276,
+    "completion_tokens": 1442,
+    "total_tokens": 1718,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 906,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

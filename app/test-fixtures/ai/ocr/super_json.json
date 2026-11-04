@@ -1,0 +1,75 @@
+{
+ "request": {
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "This is a photo of an exam paper. Return ONLY a JSON object {\"title\": string|null, \"rules\": [string], \"questions\": [{\"number\": string, \"parent\": string|null, \"text\": string, \"points\": number|null, \"kind\": \"open\"|\"case\"|\"comment\"|\"short\"|\"choose_n\"|\"container\"}]}. Use numbers as printed (\"I\", \"II\", \"II.a\"). Copy question text verbatim. No markdown fences."
+     },
+     {
+      "type": "image_url",
+      "image_url": {
+       "url": "data:image/jpeg;base64,<exam_photo.jpg>"
+      }
+     }
+    ]
+   }
+  ],
+  "max_tokens": 4000,
+  "temperature": 0,
+  "model": "nvidia/nemotron-3.5-super-vl:free",
+  "reasoning": {
+   "effort": "low",
+   "exclude": true
+  }
+ },
+ "status": 200,
+ "latency_s": 25.02,
+ "response": {
+  "id": "gen-1700000000-Fixtured4055e1783209",
+  "object": "chat.completion",
+  "created": 1793724111,
+  "model": "nvidia/nemotron-3.5-super-vl:free",
+  "provider": "Nvidia",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+   {
+    "index": 0,
+    "logprobs": null,
+    "finish_reason": "stop",
+    "native_finish_reason": "stop",
+    "message": {
+     "role": "assistant",
+     "content": "{\"title\": \"FACULDADE DE DIREITO — Teoria Geral do Direito Civil\", \"rules\": [\"Exame — época normal — 20 de junho de 2026 — Duração: 2 horas\", \"Permitida a consulta de legislação não anotada.\", \"Ponderação global da redação e sistematização: 2 valores.\"], \"questions\": [{\"number\": \"I\", \"parent\": null, \"text\": \"António, com 17 anos, vendeu a Bento o relógio que herdou do avô por 50 euros. Dois meses depois de completar 18 anos, quer anular o negócio. Quid iuris?\", \"points\": 8, \"kind\": \"case\"}, {\"number\": \"II\", \"parent\": null, \"text\": \"Responda a duas das seguintes questões:\\na) Distinga erro-vício de erro na declaração.\\nb) Explique o regime da reserva mental (art. 244.º do CC).\\nc) O que é um negócio usurário?\", \"points\": 6, \"kind\": \"choose_n\"}, {\"number\": \"III\", \"parent\": null, \"text\": \"Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»\", \"points\": 4, \"kind\": \"comment\"}]}",
+     "refusal": null
+    }
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1419,
+   "completion_tokens": 2990,
+   "total_tokens": 4409,
+   "cost": 0,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0,
+    "upstream_inference_prompt_cost": 0,
+    "upstream_inference_completions_cost": 0
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 2682,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ }
+}

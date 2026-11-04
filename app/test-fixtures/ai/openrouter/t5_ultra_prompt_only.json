@@ -1,0 +1,85 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Return ONLY a JSON object (no markdown, no prose) matching this JSON Schema:\n{\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"title\", \"questions\"], \"properties\": {\"title\": {\"type\": [\"string\", \"null\"], \"description\": \"Exam title/course, if stated\"}, \"questions\": {\"type\": \"array\", \"description\": \"Every question AND sub-question, flattened, in document order\", \"items\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"number\", \"parent\", \"group\", \"text\", \"points\", \"kind\", \"options\"], \"properties\": {\"number\": {\"type\": \"string\", \"description\": \"Label as printed: '1', '2', '2a', '2b'\"}, \"parent\": {\"type\": [\"string\", \"null\"], \"description\": \"number of the parent question for sub-questions, else null\"}, \"group\": {\"type\": [\"string\", \"null\"], \"description\": \"Section/group heading, e.g. 'GRUPO I'\"}, \"text\": {\"type\": \"string\", \"description\": \"Question text verbatim, without the points\"}, \"points\": {\"type\": [\"number\", \"null\"], \"description\": \"Points (valores) for this item, null if not stated\"}, \"kind\": {\"type\": \"string\", \"enum\": [\"open\", \"multiple_choice\", \"true_false\", \"short\", \"container\"]}, \"options\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"description\": \"Choices for multiple_choice, else []\"}}}}}}\n\nExam:\nFaculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "max_tokens": 6000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 45.89,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture5f3e5411b32fe",
+   "object": "chat.completion",
+   "created": 1793721186,
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "stop",
+     "native_finish_reason": "stop",
+     "message": {
+      "role": "assistant",
+      "content": "{\n  \"title\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\",\n  \"questions\": [\n    {\n      \"number\": \"1\",\n      \"parent\": null,\n      \"group\": \"GRUPO I\",\n      \"text\": \"Distinta direitos, liberdades e garantias de direitos económicos, sociais e culturais.\",\n      \"points\": 3,\n      \"kind\": \"open\",\n      \"options\": []\n    },\n    {\n      \"number\": \"2\",\n      \"parent\": null,\n      \"group\": \"GRUPO I\",\n      \"text\": \"Responda às seguintes alíneas:\",\n      \"points\": 5,\n      \"kind\": \"container\",\n      \"options\": []\n    },\n    {\n      \"number\": \"2a\",\n      \"parent\": \"2\",\n      \"group\": \"GRUPO I\",\n      \"text\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito?\",\n      \"points\": 2,\n      \"kind\": \"open\",\n      \"options\": []\n    },\n    {\n      \"number\": \"2b\",\n      \"parent\": \"2\",\n      \"group\": \"GRUPO I\",\n      \"text\": \"Indique os três subprincípios da proporcionalidade.\",\n      \"points\": 3,\n      \"kind\": \"open\",\n      \"options\": []\n    },\n    {\n      \"number\": \"3\",\n      \"parent\": null,\n      \"group\": \"GRUPO II\",\n      \"text\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\",\n      \"points\": 8,\n      \"kind\": \"open\",\n      \"options\": []\n    },\n    {\n      \"number\": \"4\",\n      \"parent\": null,\n      \"group\": \"GRUPO II\",\n      \"text\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\",\n      \"points\": 2,\n      \"kind\": \"true_false\",\n      \"options\": []\n    },\n    {\n      \"number\": \"5\",\n      \"parent\": null,\n      \"group\": \"GRUPO II\",\n      \"text\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\",\n      \"points\": 2,\n      \"kind\": \"multiple_choice\",\n      \"options\": [\n        \"individual e concreto\",\n        \"geral e abstrato\",\n        \"retroativo\"\n      ]\n    }\n  ]\n}",
+      "refusal": null,
+      "reasoning": "We need to output JSON object with title and questions array. Title: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\". Questions: each question and sub-question flattened. Need number, parent, group, text, points, kind, options.\n\nWe have groups: GRUPO I (8 valores) and GRUPO II (12 valores). Questions:\n\n1. \"Distinta direitos, liberdades e garantias de direitos económicos, sociais e culturais.\" (3 valores) - open question.\n\n2. \"Responda às seguintes alíneas:\" (5 valores) - this is a container? It has sub-questions a and b. The parent question 2 is a container with points 5? But sub-questions have points 2 and 3. The instruction: \"Every question AND sub-question, flattened, in document order\". So we need to include question 2 as a container? The schema includes kind \"container\". For container, options empty. For sub-questions, parent = \"2\". The container's text maybe \"Responda às seguintes alíneas:\"? But the text should be the question text verbatim, without the points. For container, maybe include the text \"Responda às seguintes alíneas:\"? The points for container is 5? But sub-questions have points 2 and 3. The total is 5. Could set container points = 5, kind = \"container\". Sub-questions: 2a and 2b.\n\n2a: \"O que se entende por \"conteúdo essencial\" de um direito?\" (2 valores) - open.\n\n2b: \"Indique os três subprincípios da proporcionalidade.\" (3 valores) - open.\n\n3: \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\" (8 valores) - open.\n\n4: \"Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique.\" (2 valores) - true_false? The kind enum includes true_false. The question asks true/false and justify. So kind = \"true_false\". Options maybe [\"Verdadeiro\", \"Falso\"]? But the schema expects options for multiple_choice only. For true_false, options maybe empty? But we can include options as [\"Verdadeiro\", \"Falso\"]? The schema says options: \"Choices for multiple_choice, else []\". So for true_false, options should be empty array. But we could still include? Safer to follow spec: else []. So options = [].\n\n5: \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\" (2 valores) - multiple_choice. Options: [\"individual e concreto\", \"geral e abstrato\", \"retroativo\"]? The text includes (A), (B), (C). We'll include the option texts as given.\n\nNow group: For questions 1 and 2 (and sub-questions) group = \"GRUPO I\". For 3,4,5 group = \"GRUPO II\". The container question 2 also group \"GRUPO I\". Sub-questions also group \"GRUPO I\". Parent for sub-questions = \"2\". For top-level questions parent = null.\n\nNumber: as printed: \"1\", \"2\", \"2a\", \"2b\", \"3\", \"4\", \"5\". For container 2, number \"2\". For sub-questions \"2a\", \"2b\". Good.\n\nPoints: numeric values. For container 2, points = 5. For sub-questions, points = 2 and 3. For others: 3, 8, 2, 2.\n\nKind: 1 open, 2 container, 2a open, 2b open, 3 open, 4 true_false, 5 multiple_choice.\n\nOptions: for multiple_choice: array of strings. For others: [].\n\nNow title: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\". Could include the duration? The title field: \"Exam title/course, if stated\". So include the line.\n\nNow produce JSON object with no markdown. Ensure no extra properties. Use proper JSON.\n\nLet's construct.",
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "We need to output JSON object with title and questions array. Title: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\". Questions: each question and sub-question flattened. Need number, parent, group, text, points, kind, options.\n\nWe have groups: GRUPO I (8 valores) and GRUPO II (12 valores). Questions:\n\n1. \"Distinta direitos, liberdades e garantias de direitos económicos, sociais e culturais.\" (3 valores) - open question.\n\n2. \"Responda às seguintes alíneas:\" (5 valores) - this is a container? It has sub-questions a and b. The parent question 2 is a container with points 5? But sub-questions have points 2 and 3. The instruction: \"Every question AND sub-question, flattened, in document order\". So we need to include question 2 as a container? The schema includes kind \"container\". For container, options empty. For sub-questions, parent = \"2\". The container's text maybe \"Responda às seguintes alíneas:\"? But the text should be the question text verbatim, without the points. For container, maybe include the text \"Responda às seguintes alíneas:\"? The points for container is 5? But sub-questions have points 2 and 3. The total is 5. Could set container points = 5, kind = \"container\". Sub-questions: 2a and 2b.\n\n2a: \"O que se entende por \"conteúdo essencial\" de um direito?\" (2 valores) - open.\n\n2b: \"Indique os três subprincípios da proporcionalidade.\" (3 valores) - open.\n\n3: \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\" (8 valores) - open.\n\n4: \"Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique.\" (2 valores) - true_false? The kind enum includes true_false. The question asks true/false and justify. So kind = \"true_false\". Options maybe [\"Verdadeiro\", \"Falso\"]? But the schema expects options for multiple_choice only. For true_false, options maybe empty? But we can include options as [\"Verdadeiro\", \"Falso\"]? The schema says options: \"Choices for multiple_choice, else []\". So for true_false, options should be empty array. But we could still include? Safer to follow spec: else []. So options = [].\n\n5: \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\" (2 valores) - multiple_choice. Options: [\"individual e concreto\", \"geral e abstrato\", \"retroativo\"]? The text includes (A), (B), (C). We'll include the option texts as given.\n\nNow group: For questions 1 and 2 (and sub-questions) group = \"GRUPO I\". For 3,4,5 group = \"GRUPO II\". The container question 2 also group \"GRUPO I\". Sub-questions also group \"GRUPO I\". Parent for sub-questions = \"2\". For top-level questions parent = null.\n\nNumber: as printed: \"1\", \"2\", \"2a\", \"2b\", \"3\", \"4\", \"5\". For container 2, number \"2\". For sub-questions \"2a\", \"2b\". Good.\n\nPoints: numeric values. For container 2, points = 5. For sub-questions, points = 2 and 3. For others: 3, 8, 2, 2.\n\nKind: 1 open, 2 container, 2a open, 2b open, 3 open, 4 true_false, 5 multiple_choice.\n\nOptions: for multiple_choice: array of strings. For others: [].\n\nNow title: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\". Could include the duration? The title field: \"Exam title/course, if stated\". So include the line.\n\nNow produce JSON object with no markdown. Ensure no extra properties. Use proper JSON.\n\nLet's construct.",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 638,
+    "completion_tokens": 1583,
+    "total_tokens": 2221,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 984,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

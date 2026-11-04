@@ -1,0 +1,252 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "És o Tramado, um assistente de estudo. Responde a perguntas de exame usando APENAS os materiais da turma, que consultas com as ferramentas search_materials e read_passage. Cita cada afirmação com a ref da passagem entre parênteses retos, ex.: [S1]. Se os materiais não chegarem, diz o que falta. Responde em português europeu, de forma estruturada e concisa (máx. 200 palavras)."
+    },
+    {
+     "role": "user",
+     "content": "Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida."
+    },
+    {
+     "role": "assistant",
+     "reasoning": "The user asks: \"Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\"\n\nWe need to analyze the constitutionality of a municipal regulation that prohibits distribution of pamphlets from an opposition party while allowing those from other parties. This is a constitutional law question, likely concerning freedom of expression, equality, non-discrimination, political rights, etc. We need to use class materials. We must search for relevant materials. Let's search.",
+     "tool_calls": [
+      {
+       "type": "function",
+       "index": 0,
+       "id": "call-cc938de2-da05-475a-ab76-60046729b37b",
+       "function": {
+        "name": "search_materials",
+        "arguments": "{\"query\":\"regulamento municipal proíbe distribuição panfletos partido oposição constitucionalidade\",\"limit\":4}"
+       }
+      }
+     ],
+     "reasoning_details": [
+      {
+       "type": "reasoning.text",
+       "text": "The user asks: \"Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\"\n\nWe need to analyze the constitutionality of a municipal regulation that prohibits distribution of pamphlets from an opposition party while allowing those from other parties. This is a constitutional law question, likely concerning freedom of expression, equality, non-discrimination, political rights, etc. We need to use class materials. We must search for relevant materials. Let's search.",
+       "format": "unknown",
+       "index": 0
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call-cc938de2-da05-475a-ab76-60046729b37b",
+     "content": "{\"results\": [{\"ref\": \"S1\", \"id\": \"rec:aula-05-direitos-fundamentais#t=00:12:05\", \"source\": \"Aula 5 — Direitos fundamentais (gravação, 2026-10-14)\", \"location\": \"00:12:05–00:14:10\", \"snippet\": \"[00:12:05] Professora: Atenção que isto sai sempre no exame. O artigo 18 é a chave: qualquer restrição tem de passar o teste da proporcionalidade, com três degraus — adequação, nec…\"}]}"
+    },
+    {
+     "role": "assistant",
+     "reasoning": "Let's read the passage.",
+     "tool_calls": [
+      {
+       "type": "function",
+       "index": 0,
+       "id": "call-475aca67-90da-4531-9b57-d731cdfd37a1",
+       "function": {
+        "name": "read_passage",
+        "arguments": "{\"id\":\"rec:aula-05-direitos-fundamentais#t=00:12:05\"}"
+       }
+      }
+     ],
+     "reasoning_details": [
+      {
+       "type": "reasoning.text",
+       "text": "Let's read the passage.",
+       "format": "unknown",
+       "index": 0
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call-475aca67-90da-4531-9b57-d731cdfd37a1",
+     "content": "{\"ref\": \"S1\", \"id\": \"rec:aula-05-direitos-fundamentais#t=00:12:05\", \"source\": \"Aula 5 — Direitos fundamentais (gravação, 2026-10-14)\", \"location\": \"00:12:05–00:14:10\", \"text\": \"[00:12:05] Professora: Atenção que isto sai sempre no exame. O artigo 18 é a chave: qualquer restrição tem de passar o teste da proporcionalidade, com três degraus — adequação, necessidade e proporcionalidade em sentido estrito. [00:13:02] Aluno: E um regulamento municipal pode restringir? [00:13:20] Professora: Não sozinho. A restrição tem de vir de lei, geral e abstrata, nunca de um ato dirigido a um grupo concreto. [00:13:58] E nunca pode tocar no conteúdo essencial do direito.\"}"
+    },
+    {
+     "role": "assistant",
+     "reasoning": "We have a passage about Article 18 (likely of the Portuguese Constitution) and proportionality test. Also mentions that restriction must come from law, general and abstract, not an act directed at a concrete group. This is relevant.\n\nWe need more materials: perhaps about freedom of expression, political rights, equality, non-discrimination. Let's search for \"liberdade de expressão panfletos\" or \"direito de reunião\" etc.",
+     "tool_calls": [
+      {
+       "type": "function",
+       "index": 0,
+       "id": "call-6664b553-916e-44cf-b948-f953a2cc6b53",
+       "function": {
+        "name": "search_materials",
+        "arguments": "{\"query\":\"liberdade de expressão distribuição panfletos partido político\",\"limit\":4}"
+       }
+      }
+     ],
+     "reasoning_details": [
+      {
+       "type": "reasoning.text",
+       "text": "We have a passage about Article 18 (likely of the Portuguese Constitution) and proportionality test. Also mentions that restriction must come from law, general and abstract, not an act directed at a concrete group. This is relevant.\n\nWe need more materials: perhaps about freedom of expression, political rights, equality, non-discrimination. Let's search for \"liberdade de expressão panfletos\" or \"direito de reunião\" etc.",
+       "format": "unknown",
+       "index": 0
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call-6664b553-916e-44cf-b948-f953a2cc6b53",
+     "content": "{\"results\": [{\"ref\": \"S3\", \"id\": \"doc:constituicao-apontamentos.pdf#p9\", \"source\": \"Constituição — apontamentos.pdf\", \"location\": \"p. 9, art. 37.º\", \"snippet\": \"Artigo 37.º (Liberdade de expressão e informação). 1. Todos têm o direito de exprimir e divulgar livremente o seu pensamento pela palavra, pela imagem ou por qualquer outro meio. 2…\"}]}"
+    },
+    {
+     "role": "assistant",
+     "reasoning": "Let's read that.",
+     "tool_calls": [
+      {
+       "type": "function",
+       "index": 0,
+       "id": "call-4531fdbb-5445-4e92-b01f-c1bdf05d4265",
+       "function": {
+        "name": "read_passage",
+        "arguments": "{\"id\":\"doc:constituicao-apontamentos.pdf#p9\"}"
+       }
+      }
+     ],
+     "reasoning_details": [
+      {
+       "type": "reasoning.text",
+       "text": "Let's read that.",
+       "format": "unknown",
+       "index": 0
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call-4531fdbb-5445-4e92-b01f-c1bdf05d4265",
+     "content": "{\"ref\": \"S3\", \"id\": \"doc:constituicao-apontamentos.pdf#p9\", \"source\": \"Constituição — apontamentos.pdf\", \"location\": \"p. 9, art. 37.º\", \"text\": \"Artigo 37.º (Liberdade de expressão e informação). 1. Todos têm o direito de exprimir e divulgar livremente o seu pensamento pela palavra, pela imagem ou por qualquer outro meio. 2. O exercício destes direitos não pode ser impedido ou limitado por qualquer tipo ou forma de censura.\"}"
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "search_materials",
+      "description": "Search this class's documents and lecture transcripts. Returns passages with a ref (S1, S2…) to cite, an id, source and location (page/article or timestamp).",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string",
+         "description": "Keywords or a question, in the language of the materials."
+        },
+        "limit": {
+         "type": "integer",
+         "description": "Max results (1-6). Default 4."
+        }
+       },
+       "required": [
+        "query"
+       ]
+      }
+     }
+    },
+    {
+     "type": "function",
+     "function": {
+      "name": "read_passage",
+      "description": "Read the full text of one passage returned by search_materials, by its id or ref.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ]
+      }
+     }
+    }
+   ],
+   "tool_choice": "auto",
+   "max_tokens": 4000,
+   "temperature": 0.2,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 2.14,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture40618cc45c312",
+   "object": "chat.completion",
+   "created": 1793721030,
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "tool_calls",
+     "native_finish_reason": "tool_calls",
+     "message": {
+      "role": "assistant",
+      "content": null,
+      "refusal": null,
+      "reasoning": "Also need Article 18 (restrictions on rights). Let's search.",
+      "tool_calls": [
+       {
+        "type": "function",
+        "index": 0,
+        "id": "call-44812adb-7817-4e0a-a18d-c402bf3d55b5",
+        "function": {
+         "name": "search_materials",
+         "arguments": "{\"query\":\"artigo 18 restrição direitos fundamentais proporcionalidade\",\"limit\":4}"
+        }
+       }
+      ],
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "Also need Article 18 (restrictions on rights). Let's search.",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 1696,
+    "completion_tokens": 66,
+    "total_tokens": 1762,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 16,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

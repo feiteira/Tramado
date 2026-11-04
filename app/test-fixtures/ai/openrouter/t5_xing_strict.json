@@ -1,0 +1,134 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "xingchen-agi/xing4.0-29b-a4b:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "exam_questions",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "questions"
+      ],
+      "properties": {
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "description": "Exam title/course, if stated"
+       },
+       "questions": {
+        "type": "array",
+        "description": "Every question AND sub-question, flattened, in document order",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "number",
+          "parent",
+          "group",
+          "text",
+          "points",
+          "kind",
+          "options"
+         ],
+         "properties": {
+          "number": {
+           "type": "string",
+           "description": "Label as printed: '1', '2', '2a', '2b'"
+          },
+          "parent": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "number of the parent question for sub-questions, else null"
+          },
+          "group": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "Section/group heading, e.g. 'GRUPO I'"
+          },
+          "text": {
+           "type": "string",
+           "description": "Question text verbatim, without the points"
+          },
+          "points": {
+           "type": [
+            "number",
+            "null"
+           ],
+           "description": "Points (valores) for this item, null if not stated"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "open",
+            "multiple_choice",
+            "true_false",
+            "short",
+            "container"
+           ]
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           },
+           "description": "Choices for multiple_choice, else []"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "max_tokens": 6000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 429,
+  "latency_s": 1.83,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "provider"
+  },
+  "json": {
+   "error": {
+    "message": "Provider returned error",
+    "code": 429,
+    "metadata": {
+     "raw": "<redacted>",
+     "provider_name": "Phala",
+     "is_byok": false,
+     "limit_source": "upstream_provider_shared_pool",
+     "remedy_hint": "Retry shortly, add your own provider key to use your own limits (https://openrouter.ai/workspaces/default/byok), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing."
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "google/gemma-4-31b-it:free",
+   "models": [
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3.5-super-vl:free"
+   ],
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Tramado, a study assistant. Answer in European Portuguese, briefly."
+    },
+    {
+     "role": "user",
+     "content": "Em uma frase: o que é o princípio da separação de poderes?"
+    }
+   ],
+   "max_tokens": 1024,
+   "temperature": 0.3
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 4.39,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture79990df4e652c",
+   "object": "chat.completion",
+   "created": 1793720857,
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "stop",
+     "native_finish_reason": "stop",
+     "message": {
+      "role": "assistant",
+      "content": "O princípio da separação de poderes consiste na divisão do Estado em três órgãos independentes — legislativo, executivo e judicial — para evitar a concentração de poder.",
+      "refusal": null,
+      "reasoning": "*   Role: Tramado, a study assistant.\n    *   Language: European Portuguese.\n    *   Constraint: Brief, in one sentence.\n    *   Topic: Principle of separation of powers.\n\n    *   The separation of powers divides government into branches (legislative, executive, judicial) to prevent concentration of power and ensure checks and balances.\n\n    *   *Draft 1:* O princípio da separação de poderes divide o Estado em três órgãos independentes (legislativo, executivo e judicial) para evitar a concentração de poder.\n    *   *Draft 2:* Consiste na divisão do poder estatal em três funções independentes — legislativa, executiva e judicial — para evitar abusos de autoridade.\n\n    *   European Portuguese? Yes.\n    *   Brief? Yes.\n    *   One sentence? Yes.\n\n    \"O princípio da separação de poderes consiste na divisão do Estado em três órgãos independentes — legislativo, executivo e judicial — para evitar a concentração de poder.\"",
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "*   Role: Tramado, a study assistant.\n    *   Language: European Portuguese.\n    *   Constraint: Brief, in one sentence.\n    *   Topic: Principle of separation of powers.\n\n    *   The separation of powers divides government into branches (legislative, executive, judicial) to prevent concentration of power and ensure checks and balances.\n\n    *   *Draft 1:* O princípio da separação de poderes divide o Estado em três órgãos independentes (legislativo, executivo e judicial) para evitar a concentração de poder.\n    *   *Draft 2:* Consiste na divisão do poder estatal em três funções independentes — legislativa, executiva e judicial — para evitar abusos de autoridade.\n\n    *   European Portuguese? Yes.\n    *   Brief? Yes.\n    *   One sentence? Yes.\n\n    \"O princípio da separação de poderes consiste na divisão do Estado em três órgãos independentes — legislativo, executivo e judicial — para evitar a concentração de poder.\"",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 47,
+    "completion_tokens": 247,
+    "total_tokens": 294,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 210,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "google/does-not-exist:free",
+   "messages": [
+    {
+     "role": "user",
+     "content": "ping"
+    }
+   ],
+   "max_tokens": 5
+  }
+ },
+ "response": {
+  "status": 400,
+  "latency_s": 0.13,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "client"
+  },
+  "json": {
+   "error": {
+    "message": "google/does-not-exist:free is not a valid model ID",
+    "code": 400
+   }
+  }
+ }
+}

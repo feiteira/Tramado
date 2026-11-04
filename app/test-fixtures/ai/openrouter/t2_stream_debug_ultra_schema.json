@@ -1,0 +1,421 @@
+{
+ "request": {
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "stream": true,
+   "debug": {
+    "echo_upstream_body": true
+   },
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "exam_questions",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "questions"
+      ],
+      "properties": {
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "description": "Exam title/course, if stated"
+       },
+       "questions": {
+        "type": "array",
+        "description": "Every question AND sub-question, flattened, in document order",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "number",
+          "parent",
+          "group",
+          "text",
+          "points",
+          "kind",
+          "options"
+         ],
+         "properties": {
+          "number": {
+           "type": "string",
+           "description": "Label as printed: '1', '2', '2a', '2b'"
+          },
+          "parent": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "number of the parent question for sub-questions, else null"
+          },
+          "group": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "Section/group heading, e.g. 'GRUPO I'"
+          },
+          "text": {
+           "type": "string",
+           "description": "Question text verbatim, without the points"
+          },
+          "points": {
+           "type": [
+            "number",
+            "null"
+           ],
+           "description": "Points (valores) for this item, null if not stated"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "open",
+            "multiple_choice",
+            "true_false",
+            "short",
+            "container"
+           ]
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           },
+           "description": "Choices for multiple_choice, else []"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "max_tokens": 3000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "headers": {
+   "content-type": "text/event-stream"
+  },
+  "lines": [
+   [
+    0.425,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[],\"debug\":{\"echo_upstream_body\":{\"model\":\"private/nvidia/nemotron-3-ultra-550b-a55b\",\"stream\":true,\"stream_options\":{\"include_usage\":true},\"user\":\"<included to upstream but not in debug info>\",\"messages\":[{\"role\":\"system\",\"content\":\"You extract exam questions into JSON. Copy text verbatim. Do not answer the questions.\"},{\"role\":\"user\",\"content\":\"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\\nGRUPO I (8 valores)\\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\\n2. Responda às seguintes alíneas: (5 valores)\\n   a) O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\\nGRUPO II (12 valores)\\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\\n4. Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"}],\"temperature\":0,\"max_tokens\":3000,\"top_p\":0.95,\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"exam_questions\",\"strict\":true,\"schema\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"title\",\"questions\"],\"properties\":{\"title\":{\"type\":[\"string\",\"null\"],\"description\":\"Exam title/course, if stated\"},\"questions\":{\"type\":\"array\",\"description\":\"Every question AND sub-question, flattened, in document order\",\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"number\",\"parent\",\"group\",\"text\",\"points\",\"kind\",\"options\"],\"properties\":{\"number\":{\"type\":\"string\",\"description\":\"Label as printed: '1', '2', '2a', '2b'\"},\"parent\":{\"type\":[\"string\",\"null\"],\"description\":\"number of the parent question for sub-questions, else null\"},\"group\":{\"type\":[\"string\",\"null\"],\"description\":\"Section/group heading, e.g. 'GRUPO I'\"},\"text\":{\"type\":\"string\",\"description\":\"Question text verbatim, without the points\"},\"points\":{\"type\":[\"number\",\"null\"],\"description\":\"Points (valores) for this item, null if not stated\"},\"kind\":{\"type\":\"string\",\"enum\":[\"open\",\"multiple_choice\",\"true_false\",\"short\",\"container\"]},\"options\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Choices for multiple_choice, else []\"}}}}}}}},\"reasoning_effort\":\"medium\",\"chat_template_kwargs\":{\"thinking\":true,\"enable_thinking\":true}}}}"
+   ],
+   [
+    0.425,
+    ""
+   ],
+   [
+    0.583,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\"The\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\"The\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.583,
+    ""
+   ],
+   [
+    0.626,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" user wants me to extract the\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" user wants me to extract the\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.626,
+    ""
+   ],
+   [
+    0.703,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" exam questions from\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" exam questions from\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.703,
+    ""
+   ],
+   [
+    0.703,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" the provided text into JSON\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" the provided text into JSON\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.703,
+    ""
+   ],
+   [
+    0.703,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" format. I need to copy\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" format. I need to copy\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.703,
+    ""
+   ],
+   [
+    0.799,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" the text verbatim and not\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" the text verbatim and not\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.799,
+    ""
+   ],
+   [
+    0.799,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" answer the questions. The\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" answer the questions. The\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.799,
+    ""
+   ],
+   [
+    0.799,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" output should be a JSON structure\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" output should be a JSON structure\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.799,
+    ""
+   ],
+   [
+    1.08,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" representing the exam.\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" representing the exam.\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.08,
+    ""
+   ],
+   [
+    1.485,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    1.485,
+    ""
+   ],
+   [
+    1.914,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    1.914,
+    ""
+   ],
+   [
+    2.322,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    2.322,
+    ""
+   ],
+   [
+    2.735,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    2.735,
+    ""
+   ],
+   [
+    3.152,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    3.152,
+    ""
+   ],
+   [
+    3.574,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    3.574,
+    ""
+   ],
+   [
+    3.999,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    3.999,
+    ""
+   ],
+   [
+    4.412,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    4.412,
+    ""
+   ],
+   [
+    4.855,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    4.856,
+    ""
+   ],
+   [
+    5.25,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    5.25,
+    ""
+   ],
+   [
+    5.674,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    5.674,
+    ""
+   ],
+   [
+    6.104,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    6.104,
+    ""
+   ],
+   [
+    6.511,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    6.511,
+    ""
+   ],
+   [
+    6.93,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    6.93,
+    ""
+   ],
+   [
+    7.462,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    7.462,
+    ""
+   ],
+   [
+    7.771,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    7.771,
+    ""
+   ],
+   [
+    8.197,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    8.197,
+    ""
+   ],
+   [
+    8.611,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    8.611,
+    ""
+   ],
+   [
+    9.031,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    9.031,
+    ""
+   ],
+   [
+    9.453,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    9.453,
+    ""
+   ],
+   [
+    9.893,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    9.893,
+    ""
+   ],
+   [
+    10.299,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    10.299,
+    ""
+   ],
+   [
+    10.719,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    10.719,
+    ""
+   ],
+   [
+    10.779,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"{\\\"title\\\": \\\"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\\\", \\\"questions\\\": [{\\\"number\\\": \\\", \\\", \\\"parent\\\": \\\"GRUPO I (8 valores)\\\", \\\"group\\\": \\\"GRUPO I (8 valores)\\\", \\\"text\\\": \\\"Distinta direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\\\", \\\"points\\\": 3, \\\"kind\\\": \\\"open\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"2\\\", \\\"parent\\\": \\\"GRUPO I (8 valores)\\\", \\\"group\\\": \\\"GRUPO I (8 valores)\\\", \\\"text\\\": \\\"Responda às seguintes alíneas: (5 valores)\\\", \\\"points\\\": 5, \\\"kind\\\": \\\"open\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"2a\\\", \\\"parent\\\": \\\"2\\\", \\\"group\\\": \\\"GRUPO I (8 valores)\\\", \\\"text\\\": \\\"a) O que se entende por \\\\\\\"conteúdo essencial\\\\\\\" de um direito? (2 valores)\\\", \\\"points\\\": 2, \\\"kind\\\": \\\"open\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"2b\\\", \\\"parent\\\": \\\"2\\\", \\\"group\\\": \\\"GRUPO I (8 valores)\\\", \\\"text\\\": \\\"b) Indique os três subprincípios da proporcionalidade. (3 valores)\\\", \\\"points\\\": 3, \\\"kind\\\": \\\"open\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"3\\\", \\\"parent\\\": \\\"GRUPO II (12 valores)\\\", \\\"group\\\": \\\"GRUPO II (12 valores)\\\", \\\"text\\\": \\\"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\\\", \\\"points\\\": 8, \\\"kind\\\": \\\"open\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"4\\\", \\\"parent\\\": \\\"GRUPO II (12 valores)\\\", \\\"group\\\": \\\"GRUPO II (12 valores)\\\", \\\"text\\\": \\\"Verdadeiro ou falso: \\\\\\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\\\\\" Justifique. (2 valores)\\\", \\\"points\\\": 2, \\\"kind\\\": \\\"true_false\\\", \\\"options\\\": []}, {\\\"number\\\": \\\"5\\\", \\\"parent\\\": \\\"GRUPO II (12 valores)\\\", \\\"group\\\": \\\"GRUPO II (12 valores)\\\", \\\"text\\\": \\\"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\\\", \\\"points\\\": 2, \\\"kind\\\": \\\"multiple_choice\\\", \\\"options\\\": [\\\"(A) individual e concreto\\\", \\\"(B) geral e abstrato\\\", \\\"(C) retroativo\\\"]}]}\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    10.779,
+    ""
+   ],
+   [
+    10.783,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":null},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}]}"
+   ],
+   [
+    10.783,
+    ""
+   ],
+   [
+    10.783,
+    "data: {\"id\":\"gen-1700000000-Fixtureec2ca342e452a\",\"object\":\"chat.completion.chunk\",\"created\":1793721576,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"service_tier\":null,\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":296,\"completion_tokens\":660,\"total_tokens\":956,\"cost\":0,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0,\"upstream_inference_prompt_cost\":0,\"upstream_inference_completions_cost\":0},\"completion_tokens_details\":{\"reasoning_tokens\":42,\"image_tokens\":0,\"audio_tokens\":0}}}"
+   ],
+   [
+    10.783,
+    ""
+   ],
+   [
+    10.783,
+    "data: [DONE]"
+   ],
+   [
+    10.783,
+    ""
+   ]
+  ],
+  "latency_s": 10.78
+ }
+}

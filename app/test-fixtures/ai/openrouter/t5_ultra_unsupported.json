@@ -1,0 +1,174 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "exam_questions",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "questions"
+      ],
+      "properties": {
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "description": "Exam title/course, if stated"
+       },
+       "questions": {
+        "type": "array",
+        "description": "Every question AND sub-question, flattened, in document order",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "number",
+          "parent",
+          "group",
+          "text",
+          "points",
+          "kind",
+          "options"
+         ],
+         "properties": {
+          "number": {
+           "type": "string",
+           "description": "Label as printed: '1', '2', '2a', '2b'"
+          },
+          "parent": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "number of the parent question for sub-questions, else null"
+          },
+          "group": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "Section/group heading, e.g. 'GRUPO I'"
+          },
+          "text": {
+           "type": "string",
+           "description": "Question text verbatim, without the points"
+          },
+          "points": {
+           "type": [
+            "number",
+            "null"
+           ],
+           "description": "Points (valores) for this item, null if not stated"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "open",
+            "multiple_choice",
+            "true_false",
+            "short",
+            "container"
+           ]
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           },
+           "description": "Choices for multiple_choice, else []"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "max_tokens": 6000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 11.55,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture5e9f55f35bd84",
+   "object": "chat.completion",
+   "created": 1793721130,
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "stop",
+     "native_finish_reason": "stop",
+     "message": {
+      "role": "assistant",
+      "content": "{\"title\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026)\", \"questions\": [{\"number\": \", \", \"parent\": \"GRUPO I (8 valores)\", \"group\": \"GRUPO I (8 valores)\", \"text\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\", \"points\": 3, \"kind\": \"open\", \"options\": []}, {\"number\": \"2\", \"parent\": \"GRUPO I (8 valores)\", \"group\": \"GRUPO I (8 valores)\", \"text\": \"Responda às seguintes alíneas:\", \"points\": 5, \"kind\": \"open\", \"options\": []}, {\"number\": \"2a\", \"parent\": \"2\", \"group\": \"GRUPO I (8 valores)\", \"text\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito?\", \"points\": 2, \"kind\": \"open\", \"options\": []}, {\"number\": \"2b\", \"parent\": \"2\", \"group\": \"GRUPO I (8 valores)\", \"text\": \"Indique os três subprincípios da proporcionalidade.\", \"points\": 3, \"kind\": \"open\", \"options\": []}, {\"number\": \"3\", \"parent\": \"GRUPO II (12 valores)\", \"group\": \"GRUPO II (12 valores)\", \"text\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\", \"points\": 8, \"kind\": \"open\", \"options\": []}, {\"number\": \"4\", \"parent\": \"GRUPO II (12 valores)\", \"group\": \"GRUPO II (12 valores)\", \"text\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\", \"points\": 2, \"kind\": \"true_false\", \"options\": []}, {\"number\": \"5\", \"parent\": \"GRUPO II (12 valores)\", \"group\": \"GRUPO II (12 valores)\", \"text\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter:\", \"points\": 2, \"kind\": \"multiple_choice\", \"options\": [\"(A) individual e concreto\", \"(B) geral e abstrato\", \"(C) retroativo\"]}]}",
+      "refusal": null,
+      "reasoning": "The user wants me to extract the exam questions from the provided text into JSON format.\nI need to copy the text verbatim and not answer the questions.\nThe output should be a JSON object representing the exam structure.",
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "The user wants me to extract the exam questions from the provided text into JSON format.\nI need to copy the text verbatim and not answer the questions.\nThe output should be a JSON object representing the exam structure.",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 296,
+    "completion_tokens": 609,
+    "total_tokens": 905,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 43,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

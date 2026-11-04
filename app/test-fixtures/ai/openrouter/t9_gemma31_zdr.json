@@ -1,0 +1,45 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "google/gemma-4-31b-it:free",
+   "provider": {
+    "zdr": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "Responde só 'ok'."
+    }
+   ],
+   "max_tokens": 50,
+   "reasoning": {
+    "enabled": false
+   }
+  }
+ },
+ "response": {
+  "status": 404,
+  "latency_s": 0.14,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "client"
+  },
+  "json": {
+   "error": {
+    "message": "No endpoints found matching your data policy (Zero data retention). Configure: https://openrouter.ai/settings/privacy",
+    "code": 404,
+    "metadata": {
+     "routing_funnel": [
+      {
+       "step": "Initial Endpoints",
+       "endpoint_count": 1
+      }
+     ],
+     "failed_routing_step": "Filter by Data Policy"
+    }
+   }
+  }
+ }
+}

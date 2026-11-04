@@ -1,0 +1,24 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "messages": "ping"
+  }
+ },
+ "response": {
+  "status": 400,
+  "latency_s": 0.46,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "client"
+  },
+  "json": {
+   "error": {
+    "message": "Input required: specify \"prompt\" or \"messages\"",
+    "code": 400
+   }
+  }
+ }
+}

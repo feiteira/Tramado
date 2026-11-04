@@ -1,0 +1,87 @@
+{
+ "request": {
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "This is a photo of an exam paper. Transcribe ALL of its text verbatim, in the original language, keeping line breaks, accents and punctuation exactly. Output only the transcribed text, no commentary."
+     },
+     {
+      "type": "image_url",
+      "image_url": {
+       "url": "data:image/jpeg;base64,<exam_photo_small.jpg>"
+      }
+     }
+    ]
+   }
+  ],
+  "max_tokens": 4000,
+  "temperature": 0,
+  "models": [
+   "google/gemma-4-31b-it:free",
+   "google/gemma-4-26b-a4b-it:free",
+   "dots-studio/dots-3-note-preview:free"
+  ],
+  "provider": {
+   "data_collection": "deny"
+  }
+ },
+ "status": 200,
+ "latency_s": 23.79,
+ "response": {
+  "id": "gen-1700000000-Fixture2ac6a7d9efddf",
+  "object": "chat.completion",
+  "created": 1793724087,
+  "model": "dots-studio/dots-3-note-preview:free",
+  "provider": "AtlasCloud",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+   {
+    "index": 0,
+    "logprobs": null,
+    "finish_reason": "stop",
+    "native_finish_reason": "stop",
+    "message": {
+     "role": "assistant",
+     "content": "\n\nFACULDADE DE DIREITO — Teoria Geral do Direito Civil\nExame — época normal — 20 de junho de 2026 — Duração: 2 horas\nPermitida a consulta de legislação não anotada.\n\nGRUPO I (8 valores)\nAntónio, com 17 anos, vendeu a Bento o relógio que herdou do avô\npor 50 euros. Dois meses depois de completar 18 anos, quer anular\no negócio. Quid iuris?\n\nGRUPO II (6 valores)\nResponda a duas das seguintes questões:\na) Distinga erro-vício de erro na declaração.\nb) Explique o regime da reserva mental (art. 244.º do CC).\nc) O que é um negócio usurário?\n\nGRUPO III (4 valores)\nComente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»\n\nPonderação global da redação e sistematização: 2 valores.",
+     "refusal": null,
+     "reasoning": "Thinking Process:\n\n1.  **Analyze the Request:** The user wants a verbatim transcription of the text in the provided image of an exam paper. The output should only contain the transcribed text, with no extra commentary, keeping line breaks, accents, and punctuation exactly as they are in the image.\n\n2.  **Examine the Image Content (Portuguese text):**\n    *   Header:\n        *   `FACULDADE DE DIREITO — Teoria Geral do Direito Civil`\n        *   `Exame — época normal — 20 de junho de 2026 — Duração: 2 horas`\n        *   `Permitida a consulta de legislação não anotada.`\n    *   GRUPO I (8 valores):\n        *   `GRUPO I (8 valores)`\n        *   `António, com 17 anos, vendeu a Bento o relógio que herdou do avô`\n        *   `por 50 euros. Dois meses depois de completar 18 anos, quer anular`\n        *   `o negócio. Quid iuris?`\n    *   GRUPO II (6 valores):\n        *   `GRUPO II (6 valores)`\n        *   `Responda a duas das seguintes questões:`\n        *   `a) Distinga erro-vício de erro na declaração.`\n        *   `b) Explique o regime da reserva mental (art. 244.º do CC).`\n        *   `c) O que é um negócio usurário?`\n    *   GRUPO III (4 valores):\n        *   `GRUPO III (4 valores)`\n        *   `Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»`\n    *   Footer line:\n        *   `Ponderação global da redação e sistematização: 2 valores.`\n\n3.  **Transcribe line-by-line carefully (checking accents, punctuation, capitalization):**\n\n    *   Line 1: `FACULDADE DE DIREITO — Teoria Geral do Direito Civil` (Note the em-dash or hyphen, looks like a long dash `—` or standard hyphen `-`, usually written as `—` in Portuguese exams, but let's write `—` or standard `-`. Let's use `—` as it looks like an em-dash).\n    *   Line 2: `Exame — época normal — 20 de junho de 2026 — Duração: 2 horas` (Again, dashes `—`).\n    *   Line 3: `Permitida a consulta de legislação não anotada.`\n    *   Line 4: (blank space/separator, but let's just write the text lines sequentially)\n    *   Line 5: `GRUPO I (8 valores)`\n    *   Line 6: `António, com 17 anos, vendeu a Bento o relógio que herdou do avô`\n    *   Line 7: `por 50 euros. Dois meses depois de completar 18 anos, quer anular`\n    *   Line 8: `o negócio. Quid iuris?`\n    *   Line 9: (blank line)\n    *   Line 10: `GRUPO II (6 valores)`\n    *   Line 11: `Responda a duas das seguintes questões:`\n    *   Line 12: `a) Distinga erro-vício de erro na declaração.`\n    *   Line 13: `b) Explique o regime da reserva mental (art. 244.º do CC).`\n    *   Line 14: `c) O que é um negócio usurário?`\n    *   Line 15: (blank line)\n    *   Line 16: `GRUPO III (4 valores)`\n    *   Line 17: `Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»` (Note the quotes: looks like guillemets `«` and `»`). Let me look closely at the quote style: `«A capacidade de gozo é a regra; a incapacidade é a exceção.»` - yes, standard Portuguese quotation marks `«` and `»`.\n    *   Line 18: (blank line)\n    *   Line 19: `Ponderação global da redação e sistematização: 2 valores.`\n\nLet me double check the exact spelling:\n- \"FACULDADE DE DIREITO — Teoria Geral do Direito Civil\" -> looks like standard capital letters, maybe lowercase for \"Teoria Geral do Direito Civil\"? Yes, looks like title case: \"Teoria Geral do Direito Civil\".\n- \"Exame — época normal — 20 de junho de 2026 — Duração: 2 horas\" -> \"Duração\" has ç, \"horas\" standard.\n- \"Permitida a consulta de legislação não anotada.\" -> standard.\n- \"GRUPO I (8 valores)\"\n- \"António, com 17 anos, vendeu a Bento o relógio que herdou do avô\" -> \"António\" with accent, \"avô\" with circumflex.\n- \"por 50 euros. Dois meses depois de completar 18 anos, quer anular\" -> \"euros\" lowercase, \"Dois\" capitalized as start of line but grammatically mid-sentence. Let's write exactly how it is split across lines:\n  \"António, com 17 anos, vendeu a Bento o relógio que herdou do avô\"\n  \"por 50 euros. Dois meses depois de completar 18 anos, quer anular\"\n  \"o negócio. Quid iuris?\"\n- \"GRUPO II (6 valores)\"\n- \"Responda a duas das seguintes questões:\" -> \"questões\" with tilde.\n- \"a) Distinga erro-vício de erro na declaração.\" -> \"erro-vício\" with hyphen, \"declaração\" with ç.\n- \"b) Explique o regime da reserva mental (art. 244.º do CC).\" -> \"reserva mental\", \"art. 244.º do CC\" - note the degree symbol `º` after 244, standard Portuguese ordinal indicator. \"CC\" capital letters.\n- \"c) O que é um negócio usurário?\" -> \"negócio\" with tilde, \"usurário\" with tilde and acute accent? \"usurário\" has tilde on 'u' and acute on 'a' -> \"usurário\" (standard spelling: usurário, wait, standard spelling is \"usurário\" with tilde on u? No, \"usurário\" - accent on 'a', no tilde on 'u'. Let's look closely at the image: \"usurário?\" looks like \"usurário\" with standard spelling: u-s-u-r-á-r-i-o. Let me write \"usurário\" as standard but look at image: \"negócio usurário?\").\n- \"GRUPO III (4 valores)\"\n- \"Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»\" -> \"capacidade de gozo é a regra; a incapacidade é a exceção.\"\n- \"Ponderação global da redação e sistematização: 2 valores.\" -> \"redação\" with ç, \"sistematização\" with ç.\n\nLet's write it down exactly with line breaks as in the image.",
+     "reasoning_details": [
+      {
+       "type": "reasoning.text",
+       "text": "Thinking Process:\n\n1.  **Analyze the Request:** The user wants a verbatim transcription of the text in the provided image of an exam paper. The output should only contain the transcribed text, with no extra commentary, keeping line breaks, accents, and punctuation exactly as they are in the image.\n\n2.  **Examine the Image Content (Portuguese text):**\n    *   Header:\n        *   `FACULDADE DE DIREITO — Teoria Geral do Direito Civil`\n        *   `Exame — época normal — 20 de junho de 2026 — Duração: 2 horas`\n        *   `Permitida a consulta de legislação não anotada.`\n    *   GRUPO I (8 valores):\n        *   `GRUPO I (8 valores)`\n        *   `António, com 17 anos, vendeu a Bento o relógio que herdou do avô`\n        *   `por 50 euros. Dois meses depois de completar 18 anos, quer anular`\n        *   `o negócio. Quid iuris?`\n    *   GRUPO II (6 valores):\n        *   `GRUPO II (6 valores)`\n        *   `Responda a duas das seguintes questões:`\n        *   `a) Distinga erro-vício de erro na declaração.`\n        *   `b) Explique o regime da reserva mental (art. 244.º do CC).`\n        *   `c) O que é um negócio usurário?`\n    *   GRUPO III (4 valores):\n        *   `GRUPO III (4 valores)`\n        *   `Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»`\n    *   Footer line:\n        *   `Ponderação global da redação e sistematização: 2 valores.`\n\n3.  **Transcribe line-by-line carefully (checking accents, punctuation, capitalization):**\n\n    *   Line 1: `FACULDADE DE DIREITO — Teoria Geral do Direito Civil` (Note the em-dash or hyphen, looks like a long dash `—` or standard hyphen `-`, usually written as `—` in Portuguese exams, but let's write `—` or standard `-`. Let's use `—` as it looks like an em-dash).\n    *   Line 2: `Exame — época normal — 20 de junho de 2026 — Duração: 2 horas` (Again, dashes `—`).\n    *   Line 3: `Permitida a consulta de legislação não anotada.`\n    *   Line 4: (blank space/separator, but let's just write the text lines sequentially)\n    *   Line 5: `GRUPO I (8 valores)`\n    *   Line 6: `António, com 17 anos, vendeu a Bento o relógio que herdou do avô`\n    *   Line 7: `por 50 euros. Dois meses depois de completar 18 anos, quer anular`\n    *   Line 8: `o negócio. Quid iuris?`\n    *   Line 9: (blank line)\n    *   Line 10: `GRUPO II (6 valores)`\n    *   Line 11: `Responda a duas das seguintes questões:`\n    *   Line 12: `a) Distinga erro-vício de erro na declaração.`\n    *   Line 13: `b) Explique o regime da reserva mental (art. 244.º do CC).`\n    *   Line 14: `c) O que é um negócio usurário?`\n    *   Line 15: (blank line)\n    *   Line 16: `GRUPO III (4 valores)`\n    *   Line 17: `Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»` (Note the quotes: looks like guillemets `«` and `»`). Let me look closely at the quote style: `«A capacidade de gozo é a regra; a incapacidade é a exceção.»` - yes, standard Portuguese quotation marks `«` and `»`.\n    *   Line 18: (blank line)\n    *   Line 19: `Ponderação global da redação e sistematização: 2 valores.`\n\nLet me double check the exact spelling:\n- \"FACULDADE DE DIREITO — Teoria Geral do Direito Civil\" -> looks like standard capital letters, maybe lowercase for \"Teoria Geral do Direito Civil\"? Yes, looks like title case: \"Teoria Geral do Direito Civil\".\n- \"Exame — época normal — 20 de junho de 2026 — Duração: 2 horas\" -> \"Duração\" has ç, \"horas\" standard.\n- \"Permitida a consulta de legislação não anotada.\" -> standard.\n- \"GRUPO I (8 valores)\"\n- \"António, com 17 anos, vendeu a Bento o relógio que herdou do avô\" -> \"António\" with accent, \"avô\" with circumflex.\n- \"por 50 euros. Dois meses depois de completar 18 anos, quer anular\" -> \"euros\" lowercase, \"Dois\" capitalized as start of line but grammatically mid-sentence. Let's write exactly how it is split across lines:\n  \"António, com 17 anos, vendeu a Bento o relógio que herdou do avô\"\n  \"por 50 euros. Dois meses depois de completar 18 anos, quer anular\"\n  \"o negócio. Quid iuris?\"\n- \"GRUPO II (6 valores)\"\n- \"Responda a duas das seguintes questões:\" -> \"questões\" with tilde.\n- \"a) Distinga erro-vício de erro na declaração.\" -> \"erro-vício\" with hyphen, \"declaração\" with ç.\n- \"b) Explique o regime da reserva mental (art. 244.º do CC).\" -> \"reserva mental\", \"art. 244.º do CC\" - note the degree symbol `º` after 244, standard Portuguese ordinal indicator. \"CC\" capital letters.\n- \"c) O que é um negócio usurário?\" -> \"negócio\" with tilde, \"usurário\" with tilde and acute accent? \"usurário\" has tilde on 'u' and acute on 'a' -> \"usurário\" (standard spelling: usurário, wait, standard spelling is \"usurário\" with tilde on u? No, \"usurário\" - accent on 'a', no tilde on 'u'. Let's look closely at the image: \"usurário?\" looks like \"usurário\" with standard spelling: u-s-u-r-á-r-i-o. Let me write \"usurário\" as standard but look at image: \"negócio usurário?\").\n- \"GRUPO III (4 valores)\"\n- \"Comente: «A capacidade de gozo é a regra; a incapacidade é a exceção.»\" -> \"capacidade de gozo é a regra; a incapacidade é a exceção.\"\n- \"Ponderação global da redação e sistematização: 2 valores.\" -> \"redação\" with ç, \"sistematização\" with ç.\n\nLet's write it down exactly with line breaks as in the image.",
+       "format": "unknown",
+       "index": 0
+      }
+     ]
+    }
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 759,
+   "completion_tokens": 1956,
+   "total_tokens": 2715,
+   "cost": 0,
+   "is_byok": false,
+   "prompt_tokens_details": {
+    "cached_tokens": 0,
+    "cache_write_tokens": 0,
+    "audio_tokens": 0,
+    "video_tokens": 0
+   },
+   "cost_details": {
+    "upstream_inference_cost": 0,
+    "upstream_inference_prompt_cost": 0,
+    "upstream_inference_completions_cost": 0
+   },
+   "completion_tokens_details": {
+    "reasoning_tokens": 1366,
+    "image_tokens": 0,
+    "audio_tokens": 0
+   }
+  }
+ }
+}
