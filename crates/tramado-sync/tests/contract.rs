@@ -754,6 +754,13 @@ fn pdeathsig_helper() {
     let prep = init::prespawn(&home, true, false).unwrap();
     let (child, _) =
         tramado_sync::supervisor::spawn(&bin(), &home, prep.gui_port, &prep.api_key).unwrap();
+    // The parent is killed only once Syncthing answers, as when the app crashes in use. A SIGTERM in Syncthing's
+    // first moments, before its own signal handling is set up, can be lost (CI run 41933306752: it outlived the
+    // test); a crash that early is covered by the orphan clean-up at the next start (supervisor::orphan_cleanup).
+    let client = tramado_sync::client::Client::new(std::sync::Arc::new(
+        tramado_sync::client::HttpRest::new(prep.gui_port, &prep.api_key),
+    ));
+    assert!(wait_until(MINUTE, || client.health()));
     std::fs::write(&out, child.id().to_string()).unwrap();
     std::thread::sleep(Duration::from_secs(60));
 }
