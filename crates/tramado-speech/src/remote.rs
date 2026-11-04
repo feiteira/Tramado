@@ -226,8 +226,22 @@ impl Remote<'_> {
         let cut: Vec<Vec<(usize, usize)>> = tracks
             .iter()
             .map(|(t, s)| {
-                let all = t.to_f32(0, t.len());
-                pieces::split_long(&all, 0, s, MAX_STRETCH, CUT_WINDOW)
+                // Only a long stretch is looked at (one stretch as f32 at a time).
+                s.iter()
+                    .flat_map(|&(a, b)| {
+                        if b - a > MAX_STRETCH {
+                            pieces::split_long(
+                                &t.to_f32(a, b),
+                                a,
+                                &[(a, b)],
+                                MAX_STRETCH,
+                                CUT_WINDOW,
+                            )
+                        } else {
+                            vec![(a, b)]
+                        }
+                    })
+                    .collect()
             })
             .collect();
         for (i, (track, _)) in tracks.iter().enumerate() {
