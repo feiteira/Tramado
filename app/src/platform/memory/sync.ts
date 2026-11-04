@@ -16,8 +16,10 @@ import { instant } from '../../core/model/time';
 import { dashed, hlcNodeOf, shortIdOf, type ClassId, type ClassPath, type DeviceId, type MemberId } from '../../core/model/ids';
 import { blocksHash, writerOf } from '../../core/sync/trust';
 import { chatMonthOf, chatPath } from '../../core/sync/chat';
-import type { ChatMessage, MemberFile } from '../../core/model/files';
-import type { ClassPolicy, DeviceView, FileSyncInfo, FolderView, Platform, SyncEvent, SyncStatus } from '../types';
+import { decodeInvite } from '../../core/sync/invite';
+import { classIdOf } from '../../core/model/derive';
+import type { ChatMessage, ClassFile, MemberFile, MetaFile } from '../../core/model/files';
+import type { ClassPolicy, DeviceView, FileSyncInfo, FolderView, Platform, SyncEvent, SyncStatus, VersionEntry } from '../types';
 import type { MemoryClassRegistry } from './classes';
 import { deviceIdentity, DEVICE_KEYS, personKeyIndex, poolKey } from './signer';
 
@@ -41,7 +43,17 @@ export interface LocalSyncInternals {
   files: ((classId: ClassId) => Map<ClassPath, { bytes: Uint8Array; mtimeMs: number; modifiedBy: string }>) | null;
   emit: ((e: SyncEvent) => void) | null;
   now: () => number;
+  /** Installed by createDemoSyncControls: writes a file as another device (the demo's join, UI-GROUP G2). */
+  writeAs: ((classId: ClassId, deviceId: DeviceId, path: ClassPath, bytes: Uint8Array) => void) | null;
+  /** Kept versions of deleted files ("Recently deleted", the mass-delete dialog), per class. */
+  versions: Map<ClassId, VersionEntry[]>;
+  /** Classes whose folder marker is missing (`missing=1`, sync spec §22.3). */
+  missing: Set<ClassId>;
 }
+
+/** The demo join (UX §3.12.3 in the browser demo): an invite whose class ID is derived from its first device and this
+ * nonce gets a real (signed) class.json, meta and member file from that device once "admitted". */
+export const DEMO_JOIN_NONCE = 'demojoinclassexamplenonce2';
 
 const INTERNALS = new WeakMap<object, LocalSyncInternals>();
 
@@ -57,11 +69,12 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
   const startedAt = instant(Date.now());
   const internals: LocalSyncInternals = {
     deps, online: new Set(), peers: new Map(), policies: new Map(), joinRequests: new Map(), files: null, emit: null, now: () => Date.now(),
+    writeAs: null, versions: new Map(), missing: new Set(),
   };
   const anyShared = () => [...deps.registry.entries.values()].some((e) => e.shared);
   const status = (): SyncStatus => ({
     state: mode === 'error' ? 'error' : (mode === 'fake' || mode === 'offline') && anyShared() ? 'running' : 'stopped',
-    deviceId: deps.deviceId, version: mode === 'fake' || mode === 'offline' ? 'v2.1.7' : null, syncPort: null,
+    deviceId: deps.deviceId, version: mode === 'fake' || mode === 'offline' ? 'v2.1.7' : null, syncPort: mode === 'fake' || mode === 'offline' ? 22117 : null,
     localOnly: false, paused: false, startedAt: mode === 'fake' || mode === 'offline' ? startedAt : null, restarts: 0,
     error: mode === 'error' ? 'SYNC_UNAVAILABLE' : null,
   });
@@ -74,7 +87,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     const peers = [...internals.peers.keys()].filter((d) => d !== deps.deviceId);
     return {
       classId, label: e.dirName, path: e.path, paused: false, state: 'idle', globalFiles: files?.size ?? 0, inSyncFiles: files?.size ?? 0,
-      needFiles: 0, needBytes: 0, pullErrors: 0, error: null, devices: [deps.deviceId, ...peers],
+      needFiles: 0, needBytes: 0, pullErrors: 0, error: internals.missing.has(classId) ? 'folder marker missing' : null, devices: [deps.deviceId, ...peers],
       completion: Object.fromEntries(peers.map((d) => [d, { completion: internals.online.has(d) ? 100 : 0, needItems: 0, remoteState: internals.online.has(d) ? 'valid' : 'unknown' }])),
     };
   };
@@ -83,6 +96,58 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
       deviceId, name: p.name, connected: internals.online.has(deviceId), relay: p.relay && internals.online.has(deviceId), address: null, paused: false,
       lastSeen: internals.online.has(deviceId) ? instant(internals.now()) : p.lastSeen === null ? null : instant(p.lastSeen), folders: sharedIds(), provisional: false, ignored: false,
     }));
+
+  /** The demo's join: the inviter's device connects after 1.5 s and (fake mode) lets this computer in after 4 s. */
+  function demoJoin(classId: ClassId, invite: { l: string; s?: string; c: string; i: string; lt?: string; tm?: string; lg?: string; m: MemberId; n: string }, inviter: DeviceId) {
+    internals.peers.set(inviter, { name: invite.n, relay: false, lastSeen: internals.now() });
+    setTimeout(() => {
+      if (!deps.registry.entries.has(classId)) return;
+      if (mode === 'fake') internals.online.add(inviter);
+      internals.emit?.({ type: 'connection', deviceId: inviter, connected: mode === 'fake', relay: false, address: null });
+    }, 1500);
+    if (mode !== 'fake') return;
+    setTimeout(() => {
+      void (async () => {
+        const e = deps.registry.entries.get(classId);
+        if (!e || !internals.writeAs) return;
+        let index = -1;
+        for (let i = 0; i < DEVICE_KEYS; i++) if (deviceIdentity(i).deviceId === inviter) index = i;
+        if (index < 0 || classIdOf(inviter, DEMO_JOIN_NONCE) !== classId) return;   // stays "waiting to be let in"
+        const id = deviceIdentity(index);
+        const person = poolKey(personKeyIndex(index));
+        const now = internals.now();
+        const enc = new TextEncoder();
+        const hlc = (n: number) => formatHlc({ ms: now, counter: n, device: hlcNodeOf(inviter) });
+        const sign = async <T extends object>(path: ClassPath, rec: T) => {
+          const value = await id.key.sign(signedMessageFromCanonical(classId, path, canonicalBytes(rec as unknown as Record<string, unknown>)));
+          return { ...rec, sig: { cert: toBase64(id.cert), value: toBase64(value) } };
+        };
+        const classFile = await sign<Omit<ClassFile, 'sig'>>('.tramado/class.json', {
+          format: 'tramado.class', version: 1, classId, idNonce: DEMO_JOIN_NONCE, specVersion: '1.1', createdAt: instant(now - 40 * 86_400_000),
+          createdBy: { memberId: invite.m, deviceId: inviter, name: invite.n.slice(0, 64) }, initialName: invite.l,
+        });
+        const reg = <T>(value: T, n: number) => ({ value, hlc: hlc(n) });
+        const meta = await sign<Omit<MetaFile, 'sig'>>(`.tramado/meta/${inviter}.json`, {
+          format: 'tramado.meta', version: 1, deviceId: inviter, memberId: invite.m, organiserOps: [], hlc: hlc(9),
+          fields: {
+            name: reg(invite.l, 1), colour: reg(invite.c, 2), icon: reg(invite.i, 3), ...(invite.s ? { shortName: reg(invite.s, 4) } : {}),
+            ...(invite.lt ? { lecturer: reg(invite.lt, 5) } : {}), ...(invite.tm ? { term: reg(invite.tm, 6) } : {}), ...(invite.lg ? { language: reg(invite.lg, 7) } : {}),
+          } as MetaFile['fields'],
+        });
+        const proof = await person.sign(personProofMessage(classId, inviter, invite.m));
+        const member = await sign<Omit<MemberFile, 'sig'>>(`.tramado/members/${inviter}.json`, {
+          format: 'tramado.member', version: 1, deviceId: inviter, memberId: memberIdOf(person.pub), name: invite.n.slice(0, 64), deviceName: 'Laptop',
+          joinedAt: instant(now - 40 * 86_400_000), hlc: hlc(10), addresses: [], caps: { cpuOk: true, localModel: null, cloud: false, volunteer: 'off' },
+          person: { pub: toBase64Url(person.pub), sig: toBase64Url(proof) }, vouches: [], formats: { ...FORMATS }, app: { name: 'Tramado', version: '0.1.0', platform: 'linux' },
+        });
+        internals.writeAs(classId, inviter, '.tramado/class.json', enc.encode(JSON.stringify(classFile, null, 2) + '\n'));
+        internals.writeAs(classId, inviter, `.tramado/meta/${inviter}.json`, enc.encode(JSON.stringify(meta)));
+        internals.writeAs(classId, inviter, `.tramado/members/${inviter}.json`, enc.encode(JSON.stringify(member)));
+        deps.registry.insert({ ...e, joining: false });
+        internals.emit?.({ type: 'admittedMe', classId, byDevice: inviter });
+      })();
+    }, 4000);
+  }
 
   const sync: Platform['sync'] = {
     identity: async () => identity,
@@ -109,13 +174,31 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
       return { cert: toBase64(deps.cert), value: toBase64(await deps.sign(signedMessageFromCanonical(classId, path, canonical))) };
     },
     async shareClass(classId: ClassId, _label: string) {
-      if (mode === 'error') throw new PlatformError('SYNC_UNAVAILABLE', 'sharing is not available in this demo mode');
+      // `error` mode: the classes stay shared (the demo seeds them so), only starting Syncthing fails.
       const e = deps.registry.get(classId);
       if (e.shared) throw new PlatformError('CONFLICT', 'already shared');
       deps.registry.insert({ ...e, shared: true });
       return (await deps.registry.api.list()).find((x) => x.classId === classId)!;
     },
-    joinClass: notHere('joinClass'),
+    async joinClass(req) {
+      if (mode === 'error') throw new PlatformError('SYNC_UNAVAILABLE', 'sharing is not available in this demo mode');
+      if (mode === 'local' || !internals.emit) throw new PlatformError('NOT_IMPLEMENTED', 'sync.joinClass needs a peer (memory platform)');
+      let decoded;
+      try {
+        decoded = decodeInvite(req.code, Math.floor(internals.now() / 1000));
+      } catch (problem) {
+        throw new PlatformError(problem === 'newer' ? 'NEWER_FORMAT' : 'SYNC_INVITE_INVALID', 'invite');
+      }
+      const classId = decoded.invite.f;
+      if (deps.registry.entries.has(classId)) throw new PlatformError('CONFLICT', 'already have this class', { classId });
+      const root = await deps.registry.api.root();
+      deps.registry.insert({
+        classId, path: `${root.path}/${req.dirName}`, dirName: req.dirName, shared: true, joining: true, archived: false, skipAudio: !req.includeAudio,
+        aliases: [], localIgnores: [], addedAt: instant(internals.now()), leaving: null,
+      });
+      demoJoin(classId, decoded.invite, decoded.devices[0]!.deviceId);
+      return (await deps.registry.api.list()).find((x) => x.classId === classId)!;
+    },
     async cancelJoin(classId: ClassId) {
       deps.registry.entries.delete(classId);
     },
@@ -179,13 +262,16 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
       lastSeen: internals.online.has(d) ? instant(internals.now()) : p.lastSeen === null ? null : instant(p.lastSeen), lastConnectionDurationS: 0,
     }])),
     folderStatus: async (classId) => folderView(classId),
-    versions: async () => [],
-    restore: async () => undefined,
+    versions: async (classId) => [...(internals.versions.get(classId) ?? [])],
+    async restore(classId, items) {
+      const left = (internals.versions.get(classId) ?? []).filter((v) => !items.some((i) => i.path === v.path));
+      internals.versions.set(classId, left);
+    },
     folderErrors: async () => [],
     pauseClass: async () => undefined,
     scan: async () => undefined,
     diagnostics: async () => ({
-      status: status(), ports: { sync: null, guiOpen: false }, listeners: {}, connections: internals.online.size, relayed: 0, lastErrors: [],
+      status: status(), ports: { sync: status().syncPort, guiOpen: mode === 'fake' || mode === 'offline' }, listeners: {}, connections: internals.online.size, relayed: 0, lastErrors: [],
       logTail: [`memory platform sync (${mode})`],
     }),
     existing: async () => ({ running: false, configFound: false }),
@@ -225,7 +311,7 @@ export interface DemoSyncControls {
 export function createDemoSyncControls(
   platform: DemoSyncPlatform,
   keys: DemoSyncKeys,
-  opts: { mode: 'fake' | 'offline' | 'error' | 'local'; now: () => number; join?: 'ask' | null; online?: string[] } = { mode: 'fake', now: () => Date.now() },
+  opts: { mode: 'fake' | 'offline' | 'error' | 'local'; now: () => number; join?: 'ask' | null; online?: string[]; missing?: string | null } = { mode: 'fake', now: () => Date.now() },
 ): DemoSyncControls {
   const internals = localSyncInternals(platform.sync);
   const emit = (e: SyncEvent) => platform.mem.emitSync(e);
@@ -233,6 +319,18 @@ export function createDemoSyncControls(
     internals.files = (classId) => platform.mem.list(classId);
     internals.emit = emit;
     internals.now = opts.now;
+    internals.writeAs = (classId, deviceId, path, bytes) => writeAs(classId, deviceId, path, bytes);
+    // "Recently deleted" (UX §3.15.5) in the demo: a few fictional files deleted from `law` in the last days.
+    const law = keys.classes.law;
+    if (law && opts.mode !== 'local' && opts.mode !== 'error') {
+      const ago = (ms: number) => instant(opts.now() - ms);
+      internals.versions.set(law, [
+        { path: 'Documentos/Sumários/Sumário aula 3 (rascunho).pdf', versionTime: ago(70_000), modTime: ago(9 * 86_400_000), size: 182_400 },
+        { path: 'Documentos/Slides/Aula 2 — Fontes (versão antiga).pdf', versionTime: ago(2 * 3_600_000), modTime: ago(20 * 86_400_000), size: 2_310_000 },
+        { path: 'Apontamentos/Dúvidas para a frequência.md', versionTime: ago(3 * 86_400_000), modTime: ago(6 * 86_400_000), size: 3_100 },
+        { path: 'Documentos/Exercícios/Caso prático 1.docx', versionTime: ago(12 * 86_400_000), modTime: ago(25 * 86_400_000), size: 41_800 },
+      ]);
+    }
     const online = opts.mode === 'fake' ? (opts.online ?? ['bruno', 'jamie']) : [];
     for (const [key, m] of Object.entries(keys.members)) {
       if (!m || key === 'ana') continue;
@@ -240,6 +338,14 @@ export function createDemoSyncControls(
         internals.peers.set(d, { name: key, relay: key === 'bruno', lastSeen: opts.now() - 86_400_000 });
         if (online.includes(key)) internals.online.add(d);
       }
+    }
+    // `missing=1` (UX §7.2; until demo/boot.ts passes it, read from the page address): the folder of `class=`
+    // (default law) cannot be found (sync spec §22.3).
+    const missing = opts.missing !== undefined ? opts.missing : missingFromAddress();
+    const lost = missing ? keys.classes[missing] : undefined;
+    if (lost) {
+      internals.missing.add(lost);
+      queueMicrotask(() => emit({ type: 'markerMissing', classId: lost }));
     }
     if (opts.join === 'ask') {
       const diogo = keys.members.diogo?.deviceIds[0];
@@ -261,10 +367,10 @@ export function createDemoSyncControls(
     if (!d) throw new PlatformError('NOT_FOUND', `unknown member key ${k}`);
     return d;
   };
-  const writeAs = (classId: ClassId, deviceId: DeviceId, path: ClassPath, bytes: Uint8Array) => {
+  function writeAs(classId: ClassId, deviceId: DeviceId, path: ClassPath, bytes: Uint8Array) {
     platform.mem.applyRemote(classId, path, bytes, { modifiedBy: shortIdOf(deviceId), mtimeMs: opts.now() });
     emit({ type: 'remoteChange', classId, path, action: 'modified', modifiedBy: shortIdOf(deviceId) });
-  };
+  }
   let seq = 0;
   const rand = () => ((seq = (seq * 1103515245 + 12345) % 2147483648) / 2147483648);
   return {
@@ -336,3 +442,10 @@ export function createDemoSyncControls(
   };
 }
 
+/** The class key of `missing=1` in the browser demo's address (`class=`, default `law`), or null. */
+function missingFromAddress(): string | null {
+  const search = (globalThis as { location?: { search?: string } }).location?.search;
+  if (!search) return null;
+  const q = new URLSearchParams(search);
+  return q.get('missing') === '1' ? (q.get('class') || 'law') : null;
+}

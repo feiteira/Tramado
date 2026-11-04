@@ -3,7 +3,10 @@ import React from 'react';
 import { Copy } from 'lucide-react';
 import { checkWords } from '../../core/sync/checkWords';
 import { IconButton } from '../components/Button';
+import { useToast } from '../components/Toast';
+import { cx } from '../cx';
 import { useI18n } from '../i18n';
+import './group.css';
 
 export interface CheckWordsProps {
   deviceId: string;
@@ -13,6 +16,7 @@ export interface CheckWordsProps {
 
 export function CheckWords({ deviceId, className, ...rest }: CheckWordsProps) {
   const { t } = useI18n();
+  const toast = useToast();
   let words = '';
   try {
     words = checkWords(deviceId);
@@ -20,10 +24,10 @@ export function CheckWords({ deviceId, className, ...rest }: CheckWordsProps) {
     words = '—';
   }
   return (
-    <span className={['check-words', className].filter(Boolean).join(' ')} data-testid={rest['data-testid'] ?? 'check-words'} data-device-id={deviceId}>
+    <span className={cx('check-words', className)} data-testid={rest['data-testid'] ?? 'check-words'} data-device-id={deviceId}>
       <span className="visually-hidden">{t('members.checkWords.label')}: </span>
       <code translate="no">{words}</code>
-      <IconButton icon={Copy} label={t('members.checkWords.copy')} size="sm" onClick={() => void navigator.clipboard?.writeText(words)} data-testid="check-words-copy" />
+      <IconButton icon={Copy} label={t('members.checkWords.copy')} size="sm" onClick={() => void navigator.clipboard?.writeText(words).then(() => toast.show({ message: t('members.checkWords.copied'), tone: 'success' }), () => undefined)} data-testid="check-words-copy" />
     </span>
   );
 }

@@ -22,7 +22,7 @@ import type { AppContext } from './context';
 import { Store } from './store';
 import type { SyncServiceImpl } from './sync';
 import type { AppServices, ClassStore } from './types/common';
-import type { ChatService, ChatView } from './types/chat';
+import type { ChatAiLocal, ChatService, ChatView } from './types/chat';
 import type { AiAnswerView, ChatMessageView, Citation, Locator, ModelLabel, SourceRef } from './types/viewModels';
 
 const POLL_MIN_MS = 2000;
@@ -78,7 +78,11 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
   const { platform, clock } = ctx;
   const { store, classId } = cls;
   const liveEntry = () => (app().library as unknown as { entry?(id: string): ClassEntry | null }).entry?.(classId) ?? cls.store.state.get().entry;
-  const view = new Store<ChatView>({ items: [], pins: [], unread: 0, mentions: 0, olderAvailable: false, newerFormatLines: 0 });
+  const view = new Store<ChatView>({ items: [], pins: [], unread: 0, mentions: 0, olderAvailable: false, newerFormatLines: 0, loaded: false });
+  // @AI on this computer (UX §3.10.2): questions being answered here, and questions asked while AI was not set up.
+  const aiStore = new Store<Record<string, ChatAiLocal>>({});
+  const asking = new Set<string>();
+  const noKey = new Set<string>();
   const files = new Map<ClassPath, FileState>();
   const loadedMonths = new Map<DeviceId, Set<string>>();
   const sent = new Set<string>();
@@ -188,8 +192,9 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
     const months = monthsByDevice();
     const olderAvailable = [...months].some(([d, list]) => list.some((l) => !loadedMonths.get(d)?.has(l.month)));
     const newerFormatLines = [...files.values()].reduce((n, f) => n + f.newer, 0);
-    const next: ChatView = { items, pins: [], unread, mentions, olderAvailable, newerFormatLines };
+    const next: ChatView = { items, pins: [], unread, mentions, olderAvailable, newerFormatLines, loaded: true };
     if (JSON.stringify(next) !== JSON.stringify(view.get())) view.set(next);
+    publishAi();
     for (const x of fresh) {
       const why = notifiesMe(x, mine, m.organisers.isOrganiserAt);
       if (!why) continue;
@@ -238,6 +243,51 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
       fallback: !!line.requestedModel && line.requestedModel !== line.model, askedBy: author, at: instant(line.ms), mode: 'quick',
       grounded: citations.length ? valid / citations.length : 0, insufficient: line.status === 'error', sent: { passages: 0, chars: 0 },
     };
+  }
+
+  /** The asker's local @AI states: in flight, not set up, or the last answer line for the question failed. */
+  function publishAi() {
+    const myDevice = me();
+    const latest = new Map<string, ChatAi>();
+    for (const x of folded) {
+      if (x.ref.deviceId !== myDevice || x.line.type !== 'ai' || !x.line.replyTo) continue;
+      latest.set(msgKey(x.line.replyTo), x.line);
+    }
+    const next: Record<string, ChatAiLocal> = {};
+    for (const [key, line] of latest) if (line.status === 'error') next[key] = { state: 'error', code: line.error ?? 'UNKNOWN' };
+    for (const key of noKey) if (!latest.has(key)) next[key] = { state: 'noKey' };
+    for (const key of asking) next[key] = { state: 'working' };
+    if (JSON.stringify(next) !== JSON.stringify(aiStore.get())) aiStore.set(next);
+  }
+
+  /** Whether AI can answer on this computer (on, with a key or a custom host). */
+  function aiReady(): boolean {
+    try {
+      const s = app().ai.settings.get();
+      return s.enabled && (s.key.set || !!s.customHost);
+    } catch {
+      return false;
+    }
+  }
+
+  async function ask(ref: MsgRef) {
+    const key = msgKey(ref);
+    if (!aiReady()) {
+      noKey.add(key);
+      publishAi();
+      return;
+    }
+    noKey.delete(key);
+    asking.add(key);
+    publishAi();
+    try {
+      await app().forClass(classId).ask.askInChat(ref);
+    } catch (e) {
+      ctx.log('warn', '@AI failed', { error: String(e) });
+    } finally {
+      asking.delete(key);
+      publishAi();
+    }
   }
 
   // ── delivery ticks (sync spec §15) ──────────────────────────────────────────────────────────────
@@ -316,6 +366,17 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
     if (initialised) recompute();
   });
   queueMicrotask(() => {
+    // The first read, also when the class has no chat file yet (the list leaves its loading state).
+    const first = () => {
+      if (initialised || store.state.get().status !== 'ready') return false;
+      void refresh(null).catch((e: unknown) => ctx.log('warn', 'chat refresh failed', { error: String(e) }));
+      return true;
+    };
+    if (!first()) {
+      const off = store.state.subscribe(() => {
+        if (first() || initialised) off();
+      });
+    }
     try {
       (app().sync as SyncServiceImpl).onIndexUpdated?.((c) => {
         if (c === classId && hasUnsent()) schedulePoll(0);
@@ -330,6 +391,10 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
 
   const service: ChatService = {
     view,
+    ai: aiStore,
+    async retryAi(question) {
+      await ask(question);
+    },
     async send(input) {
       const text = input.text.normalize('NFC');
       if (text.length > CHAT_TEXT_MAX) throw new PlatformError('INVALID', 'a message has at most 8 000 characters');
@@ -341,9 +406,7 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
         ...(attachments.length ? { attachments } : {}),
       } as never);
       service.markRead();
-      if (mentions.includes('ai')) {
-        void app().forClass(classId).ask.askInChat(ref).catch((e: unknown) => ctx.log('warn', '@AI failed', { error: String(e) }));
-      }
+      if (mentions.includes('ai')) void ask(ref);
       return ref;
     },
     async edit(ref, text) {

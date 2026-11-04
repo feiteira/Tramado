@@ -74,4 +74,28 @@ export const sync = {
     undoToast: 'Deleted “{name}” for everyone.',
     undone: 'Restored “{name}”.',
   },
+  // ── G2 (UI-GROUP) ──
+  identityCopied: {
+    title: 'This looks like a copy of another computer’s Tramado.',
+    body: 'Two computers can’t share one identity. Your person and classes stay; classmates see a new computer of yours.',
+    new: 'Set up as a new computer',
+    same: 'This is the same computer',
+  },
+  massDeleteRemote: {
+    text: { one: '{name}’s computer deleted {n} file from {class}.', other: '{name}’s computer deleted {n} files from {class}.' },
+    restore: 'Restore for everyone',
+    keep: 'Keep deleted',
+    restored: 'Restoring the files for everyone.',
+  },
+  diag: { running: 'running', stopped: 'stopped', copyId: 'Copy the full device ID', noPeers: 'No classmates’ computers yet.' },
+  massDeleteMore: { sample: 'Some of the files', andMore: '…and {n} more' },
+  folderMissingMore: {
+    putBack: 'Put it back at {path}, or remove the class from this computer.',
+    removeTitle: 'Remove {class} from this computer?',
+    removeBody: 'Tramado forgets the class here. Nothing else is deleted, and your classmates keep their copies.',
+  },
+  windowsNames: {
+    one: '{n} file can’t be saved on Windows computers: {name}. Rename it.',
+    other: '{n} files can’t be saved on Windows computers: {name}. Rename them.',
+  },
 };

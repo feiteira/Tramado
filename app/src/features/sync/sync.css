@@ -1,0 +1,236 @@
+/* Sync dialogs and notices (UX §3.15.1–§3.15.5, §3.15.9, §3.15.12) and Settings › Sharing (§3.14.5). Tokens only. */
+
+.sync-card p {
+  margin: 0;
+}
+.sync-card p + p {
+  margin-top: var(--s-1);
+}
+
+/* Folder missing card (shown by the class screen in place of the tabs). */
+.folder-missing {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--s-7) var(--s-6);
+}
+.folder-missing__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  max-width: 560px;
+  padding: var(--s-5) var(--s-6);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--warning-text);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+}
+.folder-missing__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+.folder-missing__title svg {
+  flex: none;
+  color: var(--warning-text);
+}
+.folder-missing__path {
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--paper-sunk);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.folder-missing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* Mass delete */
+.mass-delete__sample {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--paper-sunk);
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+  max-height: 140px;
+  overflow-y: auto;
+}
+.mass-delete__sample li {
+  overflow-wrap: anywhere;
+}
+
+/* Recently deleted */
+.recently-deleted__intro {
+  margin: 0 0 var(--s-3);
+  color: var(--ink-2);
+}
+.recently-deleted__table {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+.recently-deleted__file {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.recently-deleted__name {
+  font-weight: 560;
+  overflow-wrap: anywhere;
+}
+.recently-deleted__dir {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+/* First share */
+.first-share__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.first-share__body p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* Overlays: notices pinned above the dock (received mass deletions, copied identity). */
+.sync-overlay {
+  position: fixed;
+  left: 50%;
+  top: var(--s-4);
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: min(620px, calc(100vw - 2 * var(--s-4)));
+  transform: translateX(-50%);
+}
+.sync-overlay .notice {
+  box-shadow: var(--shadow-2);
+}
+
+/* Settings › Sharing */
+.sharing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  max-width: 760px;
+}
+.sharing__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  gap: var(--s-2) var(--s-4);
+  align-items: start;
+}
+.sharing__label {
+  color: var(--ink-2);
+  font-weight: 600;
+  padding-top: 6px;
+}
+.sharing__value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.sharing__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.sharing__status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.sharing__device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+}
+.sharing__limits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+.sharing__limits .field {
+  min-width: 10rem;
+}
+.sharing__diag {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-raised);
+}
+.sharing__diag > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 0 var(--s-3);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.sharing__diag > summary::-webkit-details-marker {
+  display: none;
+}
+.sharing__diag > summary svg {
+  transition: transform var(--dur-1) var(--ease);
+}
+.sharing__diag[open] > summary svg {
+  transform: rotate(90deg);
+}
+.sharing__diag-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: 0 var(--s-3) var(--s-3);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+.sharing__diag-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.sharing__peers {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+.sharing__log {
+  max-height: 260px;
+  margin: 0;
+  padding: var(--s-2);
+  overflow: auto;
+  border-radius: var(--r-sm);
+  background: var(--paper-sunk);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 860px) {
+  .sharing__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sharing__label {
+    padding-top: 0;
+  }
+}

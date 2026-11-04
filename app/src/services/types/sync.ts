@@ -3,7 +3,7 @@
 import type { ClassId, ClassPath, DeviceId, EpochMs, Hex64, Hlc, MemberId, ShortId, Ulid } from '../../core/model/ids';
 import type { ClaimKind } from '../../core/sync/claims';
 import type { ClaimFile, InviteV1, PresenceFile } from '../../core/model/files';
-import type { DeviceSpec, FolderOfferView, FolderView, JoinRequestView, Picked, RestoreItem, SyncSettings, SyncStatus, VersionEntry } from '../../platform/types';
+import type { DeviceSpec, FolderOfferView, FolderView, JoinRequestView, Picked, RestoreItem, SyncEvent, SyncSettings, SyncStatus, VersionEntry } from '../../platform/types';
 import type { ReadableStore } from '../store';
 import type { TrustGate } from './common';
 
@@ -15,6 +15,9 @@ export interface SyncUiState {
   massDeleteRemote: Array<{ classId: ClassId; by: ShortId; byName: string; count: number; sample: ClassPath[] }>;
   foreignWrites: number; markerMissing: ClassId[]; identityCopied: boolean;
   joinStalled: ClassId[];                                  // not admitted 90 s after connecting (sync spec §8)
+  /** G2 (UI-GROUP, additive): distinct classmates (me excluded) with a connected device in any shared class — the
+   * sync pill's "Up to date · {n} online" (UX §2.4). */
+  onlineMembers?: number;
 }
 
 export interface SyncService {
@@ -52,7 +55,20 @@ export interface SyncService {
   fork(classId: ClassId): Promise<ClassId>;
   /** Finishes the forks of classes left with "keep a copy" once Rust finished leaving them. */
   completeForks(): Promise<void>;
+  // ── G2 (UI-GROUP, additive) ──
+  /** "Try again" of a stalled join (sync spec §8): re-runs the knock (cancel, then join again with the same invite and options). */
+  retryJoin(classId: ClassId): Promise<ClassId>;
+  /** The invite a class is being joined with (this session), for the join dialog's waiting states; null when not joining. */
+  joining(classId: ClassId): { preview: InvitePreview; since: EpochMs; connectedAt: EpochMs | null } | null;
 }
+
+/**
+ * G2 (UI-GROUP): the `left` sync event (plan §15 item 15, §16 item 3). Rust emits it when `finish_leaving` ran
+ * (sync spec §17): the folder is gone and, with `keepLocal`, the class waits to be forked. The integrator adds it to
+ * `platform/types/sync.ts` `SyncEvent` at G2 (and the Rust emission); until then services code against this union.
+ */
+export interface SyncLeftEvent { type: 'left'; classId: ClassId; afterwards: 'keepLocal' | 'trash' }
+export type SyncEventG2 = SyncEvent | SyncLeftEvent;
 
 /** A peer device's connection (G1: moved from services/sync.ts). */
 export interface ConnectionState { connected: boolean; relay: boolean; lastSeen: string | null }

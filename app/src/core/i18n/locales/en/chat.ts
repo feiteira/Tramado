@@ -29,10 +29,13 @@ export const chat = {
     noKey: 'To ask @AI, set up AI in Settings. Classmates’ keys are never shared.',
     off: 'AI is off on this computer.',
     setUp: 'Set up AI',
+    askedBy: 'asked by {name}',                                   // G2 (UI-GROUP): the AiCard header part
+    failed: 'Tramado AI couldn’t answer this time.',
   },
   examChip: 'Add to Exams: {kind} on {date}?',
   system: {
     thanks: '{a} thanked {b} for transcribing {lecture}.',
+    thanksYou: '{a} thanked you for transcribing {lecture}.',                // G2 (UI-GROUP)
     joined: '{name} joined the class.',
     left: '{name} left the class.',
     pinned: '{name} pinned a message.',
@@ -46,4 +49,16 @@ export const chat = {
   },
   find: 'Find in chat',
   newMessage: '{name}: {text}',
+  // ── G2 (UI-GROUP) ──
+  loadEarlier: 'Show earlier messages',
+  findCount: '{n} of {total}',
+  unverifiedAuthor: 'Unverified ({device})',
+  newerLines: {
+    one: '{n} message was written with a newer Tramado. Update Tramado to see it.',
+    other: '{n} messages were written with a newer Tramado. Update Tramado to see them.',
+  },
+  aLecture: 'a lecture',
+  editHint: 'Enter saves · Esc cancels',
+  attachmentMeta: '{size} · in {folder}',
+  link: { title: 'Open this link?', body: 'It opens {host} in your browser.', open: 'Open link' },
 };

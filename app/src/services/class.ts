@@ -544,6 +544,9 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
     },
     async removeOwnFiles() {
       const mine = me();
+      // The departure stamp (folder spec §8.2, sync spec §17; UI-GROUP, G2 decision): my meta file once more, same
+      // fields and ops with a fresh hlc, signed, right before my member file goes.
+      await writeMeta(() => undefined).catch(() => undefined);
       for (const p of [`.tramado/presence/${mine.deviceId}.json`, `.tramado/members/${mine.deviceId}.json`]) {
         await store.remove(p).catch(() => undefined);
       }

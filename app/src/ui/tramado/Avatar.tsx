@@ -2,7 +2,9 @@
 import React from 'react';
 import { classStyle, memberColour } from '../classColor';
 import { cx } from '../cx';
+import { useI18n } from '../i18n';
 import { PresenceDot, type PresenceState } from './PresenceDot';
+import './group.css';
 
 export interface AvatarProps {
   name: string;
@@ -23,10 +25,11 @@ export function initialsOf(name: string): string {
 }
 
 export function Avatar({ name, memberId, colour, size = 24, presence, className, ...rest }: AvatarProps) {
+  const { t } = useI18n();
   return (
     <span className={cx('cls-scope', 'avatar', className)} style={{ ...classStyle(memberColour(memberId, colour)), width: size, height: size, fontSize: size * 0.42 }} data-testid={rest['data-testid']} data-member-id={memberId}>
       <span aria-hidden>{initialsOf(name)}</span>
-      {presence ? <PresenceDot state={presence} label={presence} className="avatar__presence" /> : null}
+      {presence ? <PresenceDot state={presence} label={t(`members.dot.${presence}`)} className="avatar__presence" /> : null}
     </span>
   );
 }

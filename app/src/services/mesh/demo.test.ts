@@ -35,6 +35,45 @@ async function demo(mode: 'fake' | 'offline' | 'error' | 'local', join: 'ask' | 
   return { ctx, platform, services, classId, controls, idle, bruno };
 }
 
+async function seeded(opts: { missing?: string | null } = {}) {
+  const { seedDemo } = await import('../../demo/seed');
+  const NOW = Date.UTC(2026, 10, 3, 15, 30);
+  const { ctx, platform, clock } = await createTestContext({ syncMode: 'fake', startMs: NOW, kind: 'demo' } as never);
+  const keys = await seedDemo(platform, { lang: 'en', theme: 'light', name: 'Ana Ribeiro', nowMs: NOW, empty: false });
+  createDemoSyncControls(platform, keys, { mode: 'fake', now: () => clock.now(), missing: opts.missing ?? null });
+  const { createIdentityService } = await import('../identity');
+  (ctx as { identity: unknown }).identity = (await createIdentityService(platform)).identity;
+  const services = createServices(ctx);
+  await services.library.load();
+  await services.sync.boot();
+  for (let i = 0; i < 6; i++) {
+    clock.advance(1200);
+    for (const c of services.library.classes.get()) {
+      await (services.forClass(c.id).store as ClassStoreImpl).idle();
+      await (services.forClass(c.id).info as ClassServiceImpl).reload();
+    }
+    await new Promise((r) => setTimeout(r, 2));
+  }
+  return { services, keys };
+}
+
+describe('the seeded demo (UX §7.3)', () => {
+  it('sync=fake: Bruno (law) and Jamie (bio) are both online — two distinct classmates for the sync pill', async () => {
+    const { services } = await seeded();
+    expect(services.sync.state.get().onlineMembers).toBe(2);
+  });
+
+  it('missing=law: the folder-missing state; "Recently deleted" lists the fictional deletions', async () => {
+    const { services, keys } = await seeded({ missing: 'law' });
+    expect(services.sync.state.get().markerMissing).toEqual([keys.classes.law]);
+    expect(services.library.classes.get().find((c) => c.id === keys.classes.law)?.sync.kind).toBe('missingFolder');
+    const v = await services.sync.versions(keys.classes.law!);
+    expect(v).toHaveLength(4);
+    await services.sync.restore(keys.classes.law!, [{ path: v[0]!.path, versionTime: v[0]!.versionTime }]);
+    expect(await services.sync.versions(keys.classes.law!)).toHaveLength(3);
+  });
+});
+
 describe('memory sync demo modes', () => {
   it('fake: peers are online; peerSays and peerJoins write as the member device', async () => {
     const d = await demo('fake');

@@ -103,6 +103,25 @@ describe('organiser replay (§8.2)', () => {
     expect([...back.organisers]).toEqual(['bruno']);   // carla is not an organiser: bruno's step-in stays valid
   });
 
+  it('departure stamp: a self-add stamped before the organisers left stays invalid after they leave', () => {
+    // ana (the creator, sole organiser) rewrote her meta at h(60) when she left; bruno self-added at h(40), carla at h(70).
+    const anaMeta: MetaInput = { ...meta(A, {}), file: { ...meta(A, {}).file, hlc: h(60) } };
+    const early = meta(B, {}, [{ op: 'add', memberId: 'bruno', hlc: h(40, 'bbbbbbb') }]);
+    const late = meta(C, {}, [{ op: 'add', memberId: 'carla', hlc: h(70, 'ccccccc') }]);
+    // before anyone sees the departure, nobody but ana is an organiser
+    expect([...replayOrganisers('ana', [anaMeta, early, late], personAt, new Set()).organisers]).toEqual(['ana']);
+    // after: bruno's early self-add stays invalid; carla's, stamped after the departure, is valid
+    const r = replayOrganisers('ana', [anaMeta, early, late], personAt, new Set(['ana']));
+    expect([...r.organisers]).toEqual(['carla']);
+    expect(r.isOrganiserAt('bruno', h(80))).toBe(false);
+    // a member without a meta file has no stamp: the condition holds
+    expect([...replayOrganisers('ana', [early], personAt, new Set(['ana'])).organisers]).toEqual(['bruno']);
+    // the stamp is the greatest hlc over all of the person's devices (boundTo names former bindings)
+    const second: MetaInput = { ...meta(D('E'), {}), file: { ...meta(D('E'), {}).file, hlc: h(75) } };
+    const boundTo = (d: string) => (d === D('E') ? 'ana' : personAt(d));
+    expect([...replayOrganisers('ana', [anaMeta, second, early, late], personAt, new Set(['ana']), boundTo).organisers]).toEqual(['ana']);   // carla's add came before ana's second device left
+  });
+
   it('is independent of the order of the input files', () => {
     const files = [
       meta(A, {}, [{ op: 'add', memberId: 'bruno', hlc: h(10) }, { op: 'remove', memberId: 'bruno', hlc: h(30) }]),

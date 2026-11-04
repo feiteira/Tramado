@@ -1,0 +1,738 @@
+[
+  {
+    "name": "chat",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "chat-message"
+      },
+      {
+        "expect": "chat-ai-card"
+      },
+      {
+        "expect": "chat-day"
+      },
+      {
+        "expect": "chat-input"
+      },
+      {
+        "expect-attr": "chat-list:role=log"
+      }
+    ]
+  },
+  {
+    "name": "chat-pt-dark",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "chat-message"
+      },
+      {
+        "expect": "chat-ai-card"
+      },
+      {
+        "expect": "chat-day"
+      },
+      {
+        "expect": "chat-input"
+      },
+      {
+        "expect-attr": "chat-list:role=log"
+      }
+    ]
+  },
+  {
+    "name": "chat-es-125",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "chat-message"
+      },
+      {
+        "expect": "chat-ai-card"
+      },
+      {
+        "expect": "chat-day"
+      },
+      {
+        "expect": "chat-input"
+      },
+      {
+        "expect-attr": "chat-list:role=log"
+      }
+    ]
+  },
+  {
+    "name": "chat-1000x660",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect": "chat-message"
+      },
+      {
+        "expect": "chat-ai-card"
+      },
+      {
+        "expect": "chat-day"
+      },
+      {
+        "expect": "chat-input"
+      },
+      {
+        "expect-attr": "chat-list:role=log"
+      }
+    ]
+  },
+  {
+    "name": "chat-offline",
+    "query": "route=class&class=law&tab=chat&sync=offline",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "type": "chat-input=Até amanhã, Bruno!"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect": "chat-delivery-local"
+      },
+      {
+        "expect-text": "chat-delivery-local=Saved"
+      }
+    ]
+  },
+  {
+    "name": "chat-no-marker",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "type": "chat-input=1"
+      },
+      {
+        "expect-not": "lecture-marker"
+      }
+    ]
+  },
+  {
+    "name": "chat-mentions",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "type": "chat-input=@Br"
+      },
+      {
+        "expect": "chat-mention-popover"
+      },
+      {
+        "expect": "chat-mention-option"
+      }
+    ]
+  },
+  {
+    "name": "chat-find",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "chat-find-open"
+      },
+      {
+        "type": "chat-find-input=aula"
+      },
+      {
+        "expect": "chat-find-count"
+      }
+    ]
+  },
+  {
+    "name": "chat-ai-nokey",
+    "query": "route=class&class=law&tab=chat&sync=fake&ai=off",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "type": "chat-input=@IA o que é o conteúdo essencial?"
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "expect": "chat-ai-nokey"
+      }
+    ]
+  },
+  {
+    "name": "members",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "member-waiting"
+      },
+      {
+        "expect": "member-item:3"
+      },
+      {
+        "expect": "members-helpers"
+      },
+      {
+        "expect": "members-consent"
+      }
+    ]
+  },
+  {
+    "name": "members-pt-dark",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "member-waiting"
+      },
+      {
+        "expect": "member-item:3"
+      },
+      {
+        "expect": "members-helpers"
+      },
+      {
+        "expect": "members-consent"
+      }
+    ]
+  },
+  {
+    "name": "members-es-125",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "member-waiting"
+      },
+      {
+        "expect": "member-item:3"
+      },
+      {
+        "expect": "members-helpers"
+      },
+      {
+        "expect": "members-consent"
+      }
+    ]
+  },
+  {
+    "name": "members-1000x660",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect": "member-waiting"
+      },
+      {
+        "expect": "member-item:3"
+      },
+      {
+        "expect": "members-helpers"
+      },
+      {
+        "expect": "members-consent"
+      }
+    ]
+  },
+  {
+    "name": "members-admit",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "member-admit"
+      },
+      {
+        "expect-not": "member-waiting"
+      }
+    ]
+  },
+  {
+    "name": "members-unverified",
+    "query": "route=class&class=law&tab=members&sync=fake&unverified=1",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "member-unverified"
+      },
+      {
+        "click": "member-remove-device"
+      },
+      {
+        "expect": "member-remove-dialog"
+      }
+    ]
+  },
+  {
+    "name": "members-bio",
+    "query": "route=class&class=bio&tab=members&sync=fake",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "member-item:2"
+      }
+    ]
+  },
+  {
+    "name": "invite",
+    "query": "route=class&class=law&tab=members&sync=fake&dialog=invite",
+    "ready": "invite-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect-text": "invite-code=tri1_"
+      },
+      {
+        "expect": "invite-qr"
+      },
+      {
+        "expect": "invite-copy"
+      }
+    ]
+  },
+  {
+    "name": "invite-pt-dark",
+    "query": "route=class&class=law&tab=members&sync=fake&dialog=invite",
+    "ready": "invite-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect-text": "invite-code=tri1_"
+      },
+      {
+        "expect": "invite-qr"
+      },
+      {
+        "expect": "invite-copy"
+      }
+    ]
+  },
+  {
+    "name": "invite-es-125",
+    "query": "route=class&class=law&tab=members&sync=fake&dialog=invite",
+    "ready": "invite-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect-text": "invite-code=tri1_"
+      },
+      {
+        "expect": "invite-qr"
+      },
+      {
+        "expect": "invite-copy"
+      }
+    ]
+  },
+  {
+    "name": "invite-error",
+    "query": "route=class&class=law&tab=members&sync=error&dialog=invite",
+    "ready": "invite-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "sync-error-card"
+      }
+    ]
+  },
+  {
+    "name": "join",
+    "query": "route=today&sync=fake&dialog=join&code=tri1_eyJ2IjoxLCJmIjoidHJhbWFkby1lb2dqeTRkYW1rYmFtYnlnNGR1NWFmbDJzayIsImwiOiJNaWNyb2Vjb25vbWlhIEkiLCJzIjoiTWljcm8gSSIsImMiOiIjZDk3NzA2IiwiaSI6ImNoYXJ0LWxpbmUiLCJsdCI6IlByb2YuIFJ1aSBUYXZhcmVzIiwidG0iOiIyMDI2LzI3IMK3IDEuwrogc2VtZXN0cmUiLCJsZyI6InB0LVBUIiwibSI6InB5M2xuNnp2YjJmZWE1YzdwNmJwbmtlbXJmIiwibiI6IkJydW5vIENvc3RhIiwiZCI6W3siaWQiOiI0UTNYSUZRMkVWQlkzR1Q0VUhDQU02NFNFVkZTUjdDQTJYREhBNk9WR1lJQ0NNRlozTUdUQkdRRiIsImEiOlsidGNwOi8vMTkyLjE2OC4xLjIxOjIyMTAwIl19XSwidCI6MTc5MzcwMDAwMH0",
+    "ready": "join-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "click": "join-continue"
+      },
+      {
+        "expect": "join-step-preview"
+      },
+      {
+        "expect-attr": "join-submit:disabled=true"
+      },
+      {
+        "click": "join-rules"
+      },
+      {
+        "expect-attr": "join-submit:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "join-pt-dark",
+    "query": "route=today&sync=fake&dialog=join&code=tri1_eyJ2IjoxLCJmIjoidHJhbWFkby1lb2dqeTRkYW1rYmFtYnlnNGR1NWFmbDJzayIsImwiOiJNaWNyb2Vjb25vbWlhIEkiLCJzIjoiTWljcm8gSSIsImMiOiIjZDk3NzA2IiwiaSI6ImNoYXJ0LWxpbmUiLCJsdCI6IlByb2YuIFJ1aSBUYXZhcmVzIiwidG0iOiIyMDI2LzI3IMK3IDEuwrogc2VtZXN0cmUiLCJsZyI6InB0LVBUIiwibSI6InB5M2xuNnp2YjJmZWE1YzdwNmJwbmtlbXJmIiwibiI6IkJydW5vIENvc3RhIiwiZCI6W3siaWQiOiI0UTNYSUZRMkVWQlkzR1Q0VUhDQU02NFNFVkZTUjdDQTJYREhBNk9WR1lJQ0NNRlozTUdUQkdRRiIsImEiOlsidGNwOi8vMTkyLjE2OC4xLjIxOjIyMTAwIl19XSwidCI6MTc5MzcwMDAwMH0",
+    "ready": "join-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "click": "join-continue"
+      },
+      {
+        "expect": "join-step-preview"
+      },
+      {
+        "expect-attr": "join-submit:disabled=true"
+      },
+      {
+        "click": "join-rules"
+      },
+      {
+        "expect-attr": "join-submit:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "join-es-125",
+    "query": "route=today&sync=fake&dialog=join&code=tri1_eyJ2IjoxLCJmIjoidHJhbWFkby1lb2dqeTRkYW1rYmFtYnlnNGR1NWFmbDJzayIsImwiOiJNaWNyb2Vjb25vbWlhIEkiLCJzIjoiTWljcm8gSSIsImMiOiIjZDk3NzA2IiwiaSI6ImNoYXJ0LWxpbmUiLCJsdCI6IlByb2YuIFJ1aSBUYXZhcmVzIiwidG0iOiIyMDI2LzI3IMK3IDEuwrogc2VtZXN0cmUiLCJsZyI6InB0LVBUIiwibSI6InB5M2xuNnp2YjJmZWE1YzdwNmJwbmtlbXJmIiwibiI6IkJydW5vIENvc3RhIiwiZCI6W3siaWQiOiI0UTNYSUZRMkVWQlkzR1Q0VUhDQU02NFNFVkZTUjdDQTJYREhBNk9WR1lJQ0NNRlozTUdUQkdRRiIsImEiOlsidGNwOi8vMTkyLjE2OC4xLjIxOjIyMTAwIl19XSwidCI6MTc5MzcwMDAwMH0",
+    "ready": "join-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "click": "join-continue"
+      },
+      {
+        "expect": "join-step-preview"
+      },
+      {
+        "expect-attr": "join-submit:disabled=true"
+      },
+      {
+        "click": "join-rules"
+      },
+      {
+        "expect-attr": "join-submit:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "join-paste",
+    "query": "route=today&sync=fake&dialog=join",
+    "ready": "join-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "join-step-paste"
+      },
+      {
+        "type": "join-code=hello"
+      },
+      {
+        "click": "join-continue"
+      },
+      {
+        "expect-text": "join-dialog=doesn’t look like a Tramado invite"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing",
+    "query": "route=settings&section=sharing&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "sharing-status"
+      },
+      {
+        "expect": "sharing-check-words"
+      },
+      {
+        "click": "sharing-diagnostics"
+      },
+      {
+        "expect": "sharing-log"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-pt-dark",
+    "query": "route=settings&section=sharing&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "sharing-status"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-es-125",
+    "query": "route=settings&section=sharing&sync=fake",
+    "ready": "settings-sharing",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "sharing-status"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-error",
+    "query": "route=settings&section=sharing&sync=error",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "sync-error-card"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-local",
+    "query": "route=settings&section=sharing&sync=local",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "sharing-status-text:data-state=stopped"
+      }
+    ]
+  },
+  {
+    "name": "first-share",
+    "query": "route=today&sync=fake&dialog=first-share",
+    "ready": "first-share-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "first-share-tray"
+      },
+      {
+        "expect": "first-share-autostart"
+      }
+    ]
+  },
+  {
+    "name": "first-share-pt-dark",
+    "query": "route=today&sync=fake&dialog=first-share",
+    "ready": "first-share-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": []
+  },
+  {
+    "name": "mass-delete",
+    "query": "route=class&class=law&sync=fake&dialog=mass-delete",
+    "ready": "mass-delete-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "mass-delete-restore"
+      },
+      {
+        "expect": "mass-delete-sample"
+      },
+      {
+        "press": "Escape"
+      },
+      {
+        "expect": "mass-delete-dialog"
+      }
+    ]
+  },
+  {
+    "name": "mass-delete-es-125",
+    "query": "route=class&class=law&sync=fake&dialog=mass-delete",
+    "ready": "mass-delete-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": []
+  },
+  {
+    "name": "folder-missing",
+    "query": "route=class&class=law&sync=fake&missing=1",
+    "ready": "folder-missing",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "folder-missing-remove"
+      }
+    ]
+  },
+  {
+    "name": "folder-missing-pt-dark",
+    "query": "route=class&class=law&sync=fake&missing=1",
+    "ready": "folder-missing",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": []
+  },
+  {
+    "name": "recently-deleted",
+    "query": "route=class&class=law&sync=fake&dialog=recently-deleted",
+    "ready": "recently-deleted",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "recently-deleted-row:4"
+      }
+    ]
+  },
+  {
+    "name": "recently-deleted-es-125",
+    "query": "route=class&class=law&sync=fake&dialog=recently-deleted",
+    "ready": "recently-deleted",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "recently-deleted-row:4"
+      }
+    ]
+  },
+  {
+    "name": "recently-deleted-empty",
+    "query": "route=class&class=bio&sync=fake&dialog=recently-deleted",
+    "ready": "recently-deleted",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "recently-deleted-empty"
+      }
+    ]
+  },
+  {
+    "name": "leave",
+    "query": "route=class&class=law&sync=fake&dialog=leave",
+    "ready": "confirm-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "class-leave-delete"
+      },
+      {
+        "expect": "class-leave-delete-notes"
+      },
+      {
+        "expect-attr": "confirm-cancel:data-autofocus=true"
+      }
+    ]
+  },
+  {
+    "name": "leave-pt-dark",
+    "query": "route=class&class=law&sync=fake&dialog=leave",
+    "ready": "confirm-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": []
+  },
+  {
+    "name": "admission",
+    "query": "route=today&sync=fake&join=ask",
+    "ready": "admission-toast",
+    "axe": true,
+    "steps": [
+      {
+        "expect-text": "admission-toast=Diogo Santos"
+      }
+    ]
+  },
+  {
+    "name": "chat-find-pt-dark",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "size": "1000x660",
+    "ready": "chat-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "chat-find-open"
+      },
+      {
+        "type": "chat-find-input=slides"
+      },
+      {
+        "expect-text": "chat-find-count=1"
+      },
+      {
+        "press": "Escape"
+      },
+      {
+        "expect-not": "chat-find"
+      }
+    ]
+  },
+  {
+    "name": "members-devices-pt-1000",
+    "query": "route=class&class=law&tab=members&sync=fake",
+    "lang": "pt",
+    "size": "1000x660",
+    "ready": "member-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "member-devices-toggle"
+      },
+      {
+        "expect": "member-device:2"
+      }
+    ]
+  },
+  {
+    "name": "settings-sharing-error-details",
+    "query": "route=settings&section=sharing&sync=error",
+    "ready": "settings-sharing",
+    "axe": true,
+    "steps": [
+      {
+        "click": "sync-details"
+      },
+      {
+        "expect": "sharing-log"
+      }
+    ]
+  }
+]

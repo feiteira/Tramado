@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NotificationServiceImpl } from '../notifications';
 import type { PresenceServiceImpl } from '../presence';
-import { enc, info, meshApp, newMesh, settle, sharedClass } from './harness.testutil';
+import { dec, enc, info, meshApp, newMesh, settle, sharedClass } from './harness.testutil';
 
 describe('mesh: class service', () => {
   it('meta is last-writer-wins across devices; invalid values are refused; askBeforeAdmit only from organisers', async () => {
@@ -32,22 +32,31 @@ describe('mesh: class service', () => {
     expect(ana.services.library.classes.get()[0]!.organisers.sort()).toEqual([ana.memberId, bruno.memberId].sort());
   });
 
-  it('becoming an organiser once every organiser left (vacancy)', async () => {
+  it('becoming an organiser once every organiser left (vacancy, with the departure stamp)', async () => {
     const mesh = newMesh();
     const [ana, bruno, carla] = [await meshApp(mesh, 'ana'), await meshApp(mesh, 'bruno'), await meshApp(mesh, 'carla')];
     const classId = await sharedClass(mesh, ana, [bruno, carla]);
+    // Bruno's self-add while Ana (the only organiser) is still here.
     await info(bruno, classId).becomeOrganiser();
     await settle(mesh, [ana, bruno, carla]);
     expect(info(carla, classId).detail.get().organisers).toEqual([ana.memberId]);
+    const metaBefore = JSON.parse(dec(mesh.files('carla', classId).get(`.tramado/meta/${ana.deviceId}.json`))).hlc as string;
     await ana.services.sync.leave(classId, { afterwards: 'trash', deleteMyNotes: true });
     await settle(mesh, [ana, bruno, carla], 8);
-    // Folder spec §8.2 replay (verbatim): `vacated` is this reader's current observation, so Bruno's earlier
-    // self-add becomes valid once Ana (the only organiser) has left, and Ana drops out.
-    expect(info(carla, classId).detail.get().organisers).toEqual([bruno.memberId]);
-    // Carla's own "Become an organiser" is now invalid (Bruno is an organiser and has not left).
+    // The leave rewrote Ana's meta with a fresh hlc (the departure stamp, folder spec §8.2) before her member file went.
+    const stamp = JSON.parse(dec(mesh.files('carla', classId).get(`.tramado/meta/${ana.deviceId}.json`))).hlc as string;
+    expect(stamp > metaBefore).toBe(true);
+    expect(mesh.files('carla', classId).has(`.tramado/members/${ana.deviceId}.json`)).toBe(false);
+    // Bruno's earlier self-add was stamped before Ana left: it stays invalid on every reader.
+    for (const a of [bruno, carla]) expect(info(a, classId).detail.get().organisers).toEqual([ana.memberId]);
+    // Carla's "Become an organiser", stamped after the departure, is valid everywhere; Ana drops out.
     await info(carla, classId).becomeOrganiser();
     await settle(mesh, [bruno, carla]);
-    expect(info(bruno, classId).detail.get().organisers).toEqual([bruno.memberId]);
+    for (const a of [bruno, carla]) expect(info(a, classId).detail.get().organisers).toEqual([carla.memberId]);
+    // Bruno's own self-add now is invalid (Carla is an organiser and has not left).
+    await info(bruno, classId).becomeOrganiser();
+    await settle(mesh, [bruno, carla]);
+    for (const a of [bruno, carla]) expect(info(a, classId).detail.get().organisers).toEqual([carla.memberId]);
   });
 
   it('consent lines are signed, shared, and revocable by their author', async () => {

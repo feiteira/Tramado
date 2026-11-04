@@ -64,4 +64,35 @@ describe('meta properties', () => {
       expect(clock.tick() < formatHlc({ ms: now + 1, counter: 0, device: node })).toBe(true);
     }), { numRuns: RUNS });
   });
+
+  it('departure stamp: self-adds stamped before the organisers left never count; the first one after does, on every reader', () => {
+    fc.assert(fc.property(fc.integer(), fc.integer(), (seed, order) => {
+      const r = mulberry32(seed);
+      const base = 1_793_000_000_000;
+      const departure = formatHlc({ ms: base + 50_000, counter: 0, device: DEVS[0]!.slice(0, 7).toLowerCase() });
+      // the creator (PEOPLE[0]) left: her device's meta was rewritten with the departure stamp
+      const metas: MetaInput[] = [{ deviceId: DEVS[0]!, file: { format: 'tramado.meta', version: 1, deviceId: DEVS[0]!, memberId: PEOPLE[0]!, fields: {}, organiserOps: [], hlc: departure, sig: { cert: '', value: '' } } }];
+      const adds: Array<{ who: string; hlc: string }> = [];
+      for (let i = 1; i < 4; i++) {
+        const node = DEVS[i]!.slice(0, 7).toLowerCase();
+        const ops: MetaFile['organiserOps'] = [];
+        for (let k = 0; k < 2; k++) if (r() < 0.6) {
+          const hlc = formatHlc({ ms: base + Math.floor(r() * 100_000), counter: k, device: node });
+          ops.push({ op: 'add', memberId: PEOPLE[i]!, hlc });
+          adds.push({ who: PEOPLE[i]!, hlc });
+        }
+        metas.push({ deviceId: DEVS[i]!, file: { format: 'tramado.meta', version: 1, deviceId: DEVS[i]!, memberId: PEOPLE[i]!, fields: {}, organiserOps: ops, hlc: formatHlc({ ms: base, counter: 0, device: node }), sig: { cert: '', value: '' } } });
+      }
+      const after = adds.filter((a) => a.hlc > departure).sort((a, b) => (a.hlc < b.hlc ? -1 : 1));
+      const expected = after.length ? [after[0]!.who] : [PEOPLE[0]!];
+      const rr = mulberry32(order);
+      for (const readerOrder of [metas, [...metas].sort(() => rr() - 0.5), [...metas].reverse()]) {
+        // while the departure is unseen, only the creator organises
+        expect([...replayOrganisers(PEOPLE[0]!, readerOrder, personAt, new Set()).organisers]).toEqual([PEOPLE[0]!]);
+        const org = replayOrganisers(PEOPLE[0]!, readerOrder, personAt, new Set([PEOPLE[0]!]));
+        expect([...org.organisers].sort()).toEqual(expected);
+        for (const a of adds) if (a.hlc < departure && a.who !== expected[0]) expect(org.organisers.has(a.who)).toBe(false);
+      }
+    }), { numRuns: RUNS });
+  });
 });

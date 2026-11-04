@@ -1,0 +1,168 @@
+/* UI-GROUP's components (architecture §11.3): Composer, QrCode, CheckWords, Avatar, PresenceDot.
+   Base rules for these live in tramado.css (M0); this file refines them. Colours come from tokens only. */
+
+/* ── Composer (UX §2.11, §3.10.2) ────────────────────────────────────────────────────── */
+.composer {
+  position: relative;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
+}
+.composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.composer__input {
+  min-width: 0;
+}
+.composer__input .textarea {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 6px var(--s-1);
+  line-height: var(--lh-ui);
+}
+.composer__input .textarea:focus,
+.composer__input .textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.composer--disabled {
+  background: var(--paper-sunk);
+}
+.composer__files {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  padding: 0 var(--s-1);
+}
+.composer__file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  max-width: 260px;
+  height: 26px;
+  padding: 0 2px 0 var(--s-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  background: var(--paper-sunk);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.composer__file span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer__hint {
+  flex-basis: 100%;
+  padding: 0 var(--s-1);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.composer__mentions {
+  position: absolute;
+  left: var(--s-2);
+  bottom: calc(100% + 6px);
+  z-index: var(--z-popover);
+  width: min(340px, calc(100% - 2 * var(--s-2)));
+  max-height: 260px;
+  overflow-y: auto;
+  padding: var(--s-1);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-2);
+  list-style: none;
+  margin: 0;
+}
+.composer__mention {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.composer__mention[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+.composer__mention:hover {
+  background: var(--paper-hover);
+}
+.composer__mention[aria-selected='true']:hover {
+  background: var(--accent-soft);
+}
+.composer__mention-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.composer__mention-name {
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer__mention-hint {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.composer__mention-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.composer__mention-icon--ai {
+  background: var(--ai-soft);
+  color: var(--ai-text);
+}
+
+/* ── Check words (UX §3.12.6) ────────────────────────────────────────────────────────── */
+.check-words code {
+  padding: 1px var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--paper-sunk);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  letter-spacing: 0.01em;
+}
+.check-words--large code {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+/* ── QR code ─────────────────────────────────────────────────────────────────────────── */
+.qr-code {
+  border: 1px solid var(--rule);
+  max-width: 100%;
+  height: auto;
+}
+.qr-code--pending {
+  display: block;
+  background: var(--paper-sunk);
+}
+
+/* ── Avatar and presence ─────────────────────────────────────────────────────────────── */
+.avatar {
+  line-height: 1;
+  user-select: none;
+}
+@media (forced-colors: active) {
+  .avatar {
+    border: 1px solid CanvasText;
+  }
+  .presence-dot {
+    border: 1px solid CanvasText;
+  }
+}

@@ -81,17 +81,25 @@ export interface OrganiserReplay {
 
 /**
  * Replays every `organiserOps` entry of the trusted meta files in HLC order (ties: the writer's full device ID,
- * then the position in the file), exactly as folder spec §8.2:
+ * then the position in the file), exactly as folder spec §8.2 (with the departure stamp of the 2026-11-04 decision):
  * ```
  * S = { creator }
+ * departed(m) = the greatest `hlc` of the trusted meta files of the devices bound to m
  * for op in all organiserOps sorted by hlc:
  *   author = person bound to the device whose file holds op (at op.hlc)
- *   valid  = author ∈ S or (op.op == "add" and op.memberId == author and S ⊆ vacated)
+ *   valid  = author ∈ S or (op.op == "add" and op.memberId == author and S ⊆ vacated
+ *                           and op.hlc > departed(m) for every m ∈ S)
  *   if valid and op.op == "add" and author ∉ S: S = S − vacated
  *   if valid: add or remove op.memberId
  * ```
+ * `boundTo` names the person a meta file's device is or was bound to (a device that left keeps its last binding);
+ * by default `personAt(device, '')`, which answers the former binding of a device that left. A member with no meta
+ * file has no departure stamp (the condition holds for them).
  */
-export function replayOrganisers(creator: MemberId | null, metas: readonly MetaInput[], personAt: PersonAt, vacated: ReadonlySet<MemberId>): OrganiserReplay {
+export function replayOrganisers(
+  creator: MemberId | null, metas: readonly MetaInput[], personAt: PersonAt, vacated: ReadonlySet<MemberId>,
+  boundTo: (deviceId: DeviceId) => MemberId | null = (d) => personAt(d, '' as Hlc),
+): OrganiserReplay {
   type Op = { op: 'add' | 'remove'; memberId: MemberId; hlc: Hlc; deviceId: DeviceId; i: number };
   const ops: Op[] = [];
   for (const m of metas) {
@@ -103,12 +111,18 @@ export function replayOrganisers(creator: MemberId | null, metas: readonly MetaI
     });
   }
   ops.sort((a, b) => (a.hlc < b.hlc ? -1 : a.hlc > b.hlc ? 1 : a.deviceId < b.deviceId ? -1 : a.deviceId > b.deviceId ? 1 : a.i - b.i));
+  const departed = departureStamps(metas, boundTo);
   let S = new Set<MemberId>(creator ? [creator] : []);
   const initial = new Set(S);
   const snapshots: Array<{ hlc: Hlc; set: ReadonlySet<MemberId> }> = [];
   for (const op of ops) {
     const author = personAt(op.deviceId, op.hlc);
-    const subsetVacated = [...S].every((m) => vacated.has(m));
+    // "Become an organiser": only once every organiser has left, and stamped after each of them left.
+    const afterDeparture = (m: MemberId) => {
+      const stamp = departed.get(m);
+      return stamp === undefined || op.hlc > stamp;
+    };
+    const subsetVacated = [...S].every((m) => vacated.has(m) && afterDeparture(m));
     const valid = (author !== null && S.has(author)) || (op.op === 'add' && author !== null && op.memberId === author && subsetVacated);
     if (valid && op.op === 'add' && author !== null && !S.has(author)) S = new Set([...S].filter((m) => !vacated.has(m)));
     if (valid) {
@@ -127,6 +141,24 @@ export function replayOrganisers(creator: MemberId | null, metas: readonly MetaI
     return cur;
   };
   return { organisers: S, at, isOrganiserAt: (m, hlc) => m !== null && at(hlc).has(m) };
+}
+
+/**
+ * The departure stamps of folder spec §8.2: per person, the greatest top-level `hlc` of the trusted meta files whose
+ * device is (or, after leaving, was last) bound to them. A leaving device rewrites its meta file with a fresh `hlc`
+ * right before it deletes its member file (sync spec §17), so the stamp is at or after the moment it left, and every
+ * reader holding the same files computes the same stamps.
+ */
+export function departureStamps(metas: readonly MetaInput[], boundTo: (deviceId: DeviceId) => MemberId | null): Map<MemberId, Hlc> {
+  const out = new Map<MemberId, Hlc>();
+  for (const m of metas) {
+    if (!isHlc(m.file.hlc)) continue;
+    const who = boundTo(m.deviceId);
+    if (!who) continue;
+    const cur = out.get(who);
+    if (cur === undefined || m.file.hlc > cur) out.set(who, m.file.hlc);
+  }
+  return out;
 }
 
 // ── Effective values ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 // QrCode (UX §2.11): qrcode@1.5.4 toString(value, {type:'svg', errorCorrectionLevel:'M', margin:4}) as an <img>.
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import './group.css';
 
 export interface QrCodeProps {
   value: string;
