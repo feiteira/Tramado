@@ -1,0 +1,171 @@
+{
+ "request": {
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "models": null,
+   "stream": true,
+   "messages": [
+    {
+     "role": "user",
+     "content": "Lista 3 direitos fundamentais da Constituição portuguesa, uma linha cada."
+    }
+   ],
+   "max_tokens": 1500,
+   "temperature": 0.3
+  }
+ },
+ "response": {
+  "status": 200,
+  "headers": {
+   "content-type": "text/event-stream"
+  },
+  "lines": [
+   [
+    0.586,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\"The\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\"The\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.586,
+    ""
+   ],
+   [
+    0.618,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" user wants a list of\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" user wants a list of\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.618,
+    ""
+   ],
+   [
+    0.729,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" 3 fundamental rights from the Portuguese\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" 3 fundamental rights from the Portuguese\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.729,
+    ""
+   ],
+   [
+    0.729,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\" Constitution, one per line.\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\" Constitution, one per line.\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.729,
+    ""
+   ],
+   [
+    0.729,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":\"\\nLanguage: Portuguese.\",\"reasoning_details\":[{\"type\":\"reasoning.text\",\"text\":\"\\nLanguage: Portuguese.\",\"format\":\"unknown\",\"index\":0}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.729,
+    ""
+   ],
+   [
+    0.729,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Dire\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.729,
+    ""
+   ],
+   [
+    0.87,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"ito à vida (\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.87,
+    ""
+   ],
+   [
+    0.87,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Art. 24\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.87,
+    ""
+   ],
+   [
+    0.87,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\".º)\\nDireito à liberdade\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.87,
+    ""
+   ],
+   [
+    0.973,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" e segurança\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.973,
+    ""
+   ],
+   [
+    0.973,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\" (Art. 27\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.973,
+    ""
+   ],
+   [
+    0.973,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\".º)\\nDireito à igual\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.973,
+    ""
+   ],
+   [
+    0.973,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"dade (\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    0.973,
+    ""
+   ],
+   [
+    1.264,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Art. 13\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.264,
+    ""
+   ],
+   [
+    1.439,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\".º)\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.439,
+    ""
+   ],
+   [
+    1.45,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\",\"reasoning\":null},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}]}"
+   ],
+   [
+    1.45,
+    ""
+   ],
+   [
+    1.45,
+    "data: {\"id\":\"gen-1700000000-Fixturee4f71bf025d29\",\"object\":\"chat.completion.chunk\",\"created\":1793720898,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"provider\":\"Nvidia\",\"service_tier\":null,\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":31,\"completion_tokens\":64,\"total_tokens\":95,\"cost\":0,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0,\"upstream_inference_prompt_cost\":0,\"upstream_inference_completions_cost\":0},\"completion_tokens_details\":{\"reasoning_tokens\":23,\"image_tokens\":0,\"audio_tokens\":0}}}"
+   ],
+   [
+    1.45,
+    ""
+   ],
+   [
+    1.45,
+    "data: [DONE]"
+   ],
+   [
+    1.45,
+    ""
+   ]
+  ],
+  "latency_s": 1.45
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "google/gemma-4-26b-a4b-it:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "És o Tramado, um assistente de estudo. Responde a perguntas de exame usando APENAS os materiais da turma, que consultas com as ferramentas search_materials e read_passage. Cita cada afirmação com a ref da passagem entre parênteses retos, ex.: [S1]. Se os materiais não chegarem, diz o que falta. Responde em português europeu, de forma estruturada e concisa (máx. 200 palavras)."
+    },
+    {
+     "role": "user",
+     "content": "Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida."
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "search_materials",
+      "description": "Search this class's documents and lecture transcripts. Returns passages with a ref (S1, S2…) to cite, an id, source and location (page/article or timestamp).",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string",
+         "description": "Keywords or a question, in the language of the materials."
+        },
+        "limit": {
+         "type": "integer",
+         "description": "Max results (1-6). Default 4."
+        }
+       },
+       "required": [
+        "query"
+       ]
+      }
+     }
+    },
+    {
+     "type": "function",
+     "function": {
+      "name": "read_passage",
+      "description": "Read the full text of one passage returned by search_materials, by its id or ref.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ]
+      }
+     }
+    }
+   ],
+   "tool_choice": "auto",
+   "max_tokens": 4000,
+   "temperature": 0.2,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 429,
+  "latency_s": 0.26,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "provider"
+  },
+  "json": {
+   "error": {
+    "message": "Provider returned error",
+    "code": 429,
+    "metadata": {
+     "raw": "<redacted>",
+     "provider_name": "Google AI Studio",
+     "is_byok": false,
+     "provider_error_code": "429",
+     "limit_source": "upstream_provider_shared_pool",
+     "remedy_hint": "Retry shortly, add your own provider key to use your own limits (https://openrouter.ai/workspaces/default/byok), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing."
+    }
+   }
+  }
+ }
+}

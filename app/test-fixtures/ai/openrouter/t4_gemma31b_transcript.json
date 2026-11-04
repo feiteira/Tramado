@@ -1,0 +1,33 @@
+{
+ "messages": [
+  {
+   "role": "system",
+   "content": "És o Tramado, um assistente de estudo. Responde a perguntas de exame usando APENAS os materiais da turma, que consultas com as ferramentas search_materials e read_passage. Cita cada afirmação com a ref da passagem entre parênteses retos, ex.: [S1]. Se os materiais não chegarem, diz o que falta. Responde em português europeu, de forma estruturada e concisa (máx. 200 palavras)."
+  },
+  {
+   "role": "user",
+   "content": "Pergunta 2 (4 valores): Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida."
+  }
+ ],
+ "log": [
+  {
+   "status": 429,
+   "latency_s": 0.31,
+   "model": null,
+   "finish_reason": null,
+   "tool_calls": null,
+   "error": {
+    "message": "Provider returned error",
+    "code": 429,
+    "metadata": {
+     "raw": "<redacted>",
+     "provider_name": "Google AI Studio",
+     "is_byok": false,
+     "provider_error_code": "429",
+     "limit_source": "upstream_provider_shared_pool",
+     "remedy_hint": "Retry shortly, add your own provider key to use your own limits (https://openrouter.ai/workspaces/default/byok), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing."
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,174 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You extract exam questions into JSON. Copy text verbatim. Do not answer the questions."
+    },
+    {
+     "role": "user",
+     "content": "Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\nGRUPO I (8 valores)\n1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n2. Responda às seguintes alíneas: (5 valores)\n   a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n   b) Indique os três subprincípios da proporcionalidade. (3 valores)\nGRUPO II (12 valores)\n3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)"
+    }
+   ],
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "exam_questions",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "questions"
+      ],
+      "properties": {
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "description": "Exam title/course, if stated"
+       },
+       "questions": {
+        "type": "array",
+        "description": "Every question AND sub-question, flattened, in document order",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "number",
+          "parent",
+          "group",
+          "text",
+          "points",
+          "kind",
+          "options"
+         ],
+         "properties": {
+          "number": {
+           "type": "string",
+           "description": "Label as printed: '1', '2', '2a', '2b'"
+          },
+          "parent": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "number of the parent question for sub-questions, else null"
+          },
+          "group": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "description": "Section/group heading, e.g. 'GRUPO I'"
+          },
+          "text": {
+           "type": "string",
+           "description": "Question text verbatim, without the points"
+          },
+          "points": {
+           "type": [
+            "number",
+            "null"
+           ],
+           "description": "Points (valores) for this item, null if not stated"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "open",
+            "multiple_choice",
+            "true_false",
+            "short",
+            "container"
+           ]
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           },
+           "description": "Choices for multiple_choice, else []"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "max_tokens": 6000,
+   "temperature": 0,
+   "reasoning": {
+    "effort": "low"
+   }
+  }
+ },
+ "response": {
+  "status": 200,
+  "latency_s": 23.94,
+  "headers": {
+   "content-type": "application/json"
+  },
+  "json": {
+   "id": "gen-1700000000-Fixture54d716a9daafa",
+   "object": "chat.completion",
+   "created": 1793721103,
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "provider": "Nvidia",
+   "system_fingerprint": null,
+   "service_tier": null,
+   "choices": [
+    {
+     "index": 0,
+     "logprobs": null,
+     "finish_reason": "stop",
+     "native_finish_reason": "stop",
+     "message": {
+      "role": "assistant",
+      "content": "{\"title\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\", \"questions\": [{\"number\": \", \", \"parent\": null, \"group\": \"GRUPO I (8 valores)\", \"text\": \"1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\", \"points\": 3, \"kind\": \"short\", \"options\": []}, {\"number\": \", \", \"parent\": null, \"group\": \"GRUPO I (8 valores)\", \"text\": \"2. Responda às seguintes alíneas: (5 valores)\", \"points\": 5, \"kind\": \"multiple_choice\", \"options\": []}, {\"number\": \"a)\", \"parent\": \", \", \"group\": \"GRUPO I (8 valores)\", \"text\": \"a) O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\", \"points\": 2, \"kind\": \"short\", \"options\": []}, {\"number\": \"b)\", \"parent\": \", \", \"group\": \"GRUPO I (8 valores)\", \"text\": \"b) Indique os três subprincípios da proporcionalidade. (3 valores)\", \"points\": 3, \"kind\": \"short\", \"options\": []}, {\"number\": \", \", \"parent\": null, \"group\": \"GRUPO II (12 valores)\", \"text\": \"3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\", \"points\": 8, \"kind\": \"short\", \"options\": []}, {\"number\": \", \", \"parent\": null, \"group\": \"GRUPO II (12 valores)\", \"text\": \"4. Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\", \"points\": 2, \"kind\": \"true_false\", \"options\": []}, {\"number\": \", \", \"parent\": null, \"group\": \"GRUPO II (12 valores)\", \"text\": \"5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\", \"points\": 2, \"kind\": \"multiple_choice\", \"options\": [\"(A) individual e concreto\", \"(B) geral e abstrato\", \"(C) retroativo\"]}]}",
+      "refusal": null,
+      "reasoning": "The user wants me to extract exam questions into JSON format. I need to copy the text verbatim and not answer the questions. I should structure this as JSON.\n\nLet me analyze the input text:\n- Header: Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\n- GRUPO I (8 valores)\n  1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n  2. Responda às seguintes alíneas: (5 valores)\n     a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n     b) Indique os três subprincípios da proporcionalidade. (3 valores)\n- GRUPO II (12 valores)\n  3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n  4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n  5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\n\nI need to create a JSON structure that represents this exam. I should copy text verbatim. I should not answer the questions.\n\nPossible JSON structure:\n{\n  \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n  \"grupos\": [\n    {\n      \"nome\": \"GRUPO I\",\n      \"valor_total\": \"8 valores\",\n      \"questoes\": [\n        {\n          \"numero\": 1,\n          \"enunciado\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\",\n          \"valor\": \"3 valores\"\n        },\n        {\n          \"numero\": 2,\n          \"enunciado\": \"Responda às seguintes alíneas:\",\n          \"valor\": \"5 valores\",\n          \"alíneas\": [\n            {\n              \"letra\": \"a)\",\n              \"enunciado\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito?\",\n              \"valor\": \"2 valores\"\n            },\n            {\n              \"letra\": \"b)\",\n              \"enunciado\": \"Indique os três subprincípios da proporcionalidade.\",\n              \"valor\": \"3 valores\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"nome\": \"GRUPO II\",\n      \"valor_total\": \"12 valores\",\n      \"questoes\": [\n        {\n          \"numero\": 3,\n          \"enunciado\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\",\n          \"valor\": \"8 valores\"\n        },\n        {\n          \"numero\": 4,\n          \"enunciado\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\",\n          \"valor\": \"2 valores\"\n        },\n        {\n          \"numero\": 5,\n          \"enunciado\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\",\n          \"valor\": \"2 valores\"\n        }\n      ]\n    }\n  ]\n}\n\nI need to make sure I copy verbatim. Let me check special characters: é, ç, ã, ó, etc. JSON should handle Unicode fine. I need to escape quotes inside strings.\n\nThe user said \"Copy text verbatim. Do not answer the questions.\" So I will just output the JSON.\n\nI should ensure valid JSON. Let me construct it carefully.\n\nHeader: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\"\n\nGroup I: \"GRUPO I (8 valores)\" - I can split nome and valor_total or keep together. I'll keep separate for clarity but ensure verbatim text is preserved in fields.\n\nQuestion 1: \"1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\" - I can store numero, enunciado without number, valor. Or store full text. The instruction says extract exam questions into JSON. I'll structure it logically but keep text verbatim in the string fields.\n\nQuestion 2: \"2. Responda às seguintes alíneas: (5 valores)\"\n  a) \"a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\"\n  b) \"b) Indique os três subprincípios da proporcionalidade. (3 valores)\"\n\nQuestion 3: \"3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n\nQuestion 4: \"4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\"\n\nQuestion 5: \"5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n\nI'll produce a clean JSON. I'll escape inner double quotes.\n\nLet's write it out.\n\n{\n  \"exame\": {\n    \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n    \"grupos\": [\n      {\n        \"identificacao\": \"GRUPO I (8 valores)\",\n        \"questoes\": [\n          {\n            \"numero\": 1,\n            \"texto\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\"\n          },\n          {\n            \"numero\": 2,\n            \"texto\": \"Responda às seguintes alíneas: (5 valores)\",\n            \"alíneas\": [\n              {\n                \"letra\": \"a)\",\n                \"texto\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\"\n              },\n              {\n                \"letra\": \"b)\",\n                \"texto\": \"Indique os três subprincípios da proporcionalidade. (3 valores)\"\n              }\n            ]\n          }\n        ]\n      },\n      {\n        \"identificacao\": \"GRUPO II (12 valores)\",\n        \"questoes\": [\n          {\n            \"numero\": 3,\n            \"texto\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n          },\n          {\n            \"numero\": 4,\n            \"texto\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\"\n          },\n          {\n            \"numero\": 5,\n            \"texto\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n          }\n        ]\n      }\n    ]\n  }\n}\n\nThis looks good. I will output only the JSON, no markdown code blocks? Usually it's fine to output raw JSON or in a code block. The user didn't specify format beyond JSON. I'll output raw JSON text to be safe, or maybe a code block. I'll just output the JSON directly.\n\nDouble check verbatim copying:\n- \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\" -> correct.\n- \"GRUPO I (8 valores)\" -> correct.\n- \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\" -> correct.\n- \"Responda às seguintes alíneas: (5 valores)\" -> correct.\n- \"O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\" -> correct.\n- \"Indique os três subprincípios da proporcionalidade. (3 valores)\" -> correct.\n- \"GRUPO II (12 valores)\" -> correct.\n- \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\" -> correct.\n- \"Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\" -> correct.\n- \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\" -> correct.\n\nI removed the question numbers from the \"texto\" fields since I have a \"numero\" field, but the text is verbatim minus the leading number. Is that okay? The user said copy text verbatim. Maybe I should include the full text including the number in the texto field to be strictly verbatim. But having a separate numero field is more structured. However, \"copy text verbatim\" might mean don't paraphrase. Removing the number isn't paraphrasing, it's structuring. But to be safest, I could include the full original line in a \"texto_completo\" field or just keep the texto as the full line. Let me reconsider.\n\nIf I put \"texto\": \"1. Distinga direitos...\" then the numero field is redundant. But it's fine. I'll include the full text exactly as it appears, including the number and value, in a field called \"enunciado\" or \"texto\". And I can also have \"numero\" parsed out. But to avoid any accusation of not copying verbatim, I'll make the main text field contain the full verbatim string.\n\nRevised structure:\n\n{\n  \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n  \"grupos\": [\n    {\n      \"nome\": \"GRUPO I (8 valores)\",\n      \"questoes\": [\n        {\n          \"enunciado\": \"1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\"\n        },\n        {\n          \"enunciado\": \"2. Responda às seguintes alíneas: (5 valores)\",\n          \"alíneas\": [\n            {\n              \"enunciado\": \"a) O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\"\n            },\n            {\n              \"enunciado\": \"b) Indique os três subprincípios da proporcionalidade. (3 valores)\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"nome\": \"GRUPO II (12 valores)\",\n      \"questoes\": [\n        {\n          \"enunciado\": \"3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n        },\n        {\n          \"enunciado\": \"4. Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\"\n        },\n        {\n          \"enunciado\": \"5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n        }\n      ]\n    }\n  ]\n}\n\nThis is very safe. All text is verbatim. I'll output this. I won't add any explanatory text.",
+      "reasoning_details": [
+       {
+        "type": "reasoning.text",
+        "text": "The user wants me to extract exam questions into JSON format. I need to copy the text verbatim and not answer the questions. I should structure this as JSON.\n\nLet me analyze the input text:\n- Header: Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\n- GRUPO I (8 valores)\n  1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\n  2. Responda às seguintes alíneas: (5 valores)\n     a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\n     b) Indique os três subprincípios da proporcionalidade. (3 valores)\n- GRUPO II (12 valores)\n  3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\n  4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\n  5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\n\nI need to create a JSON structure that represents this exam. I should copy text verbatim. I should not answer the questions.\n\nPossible JSON structure:\n{\n  \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n  \"grupos\": [\n    {\n      \"nome\": \"GRUPO I\",\n      \"valor_total\": \"8 valores\",\n      \"questoes\": [\n        {\n          \"numero\": 1,\n          \"enunciado\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais.\",\n          \"valor\": \"3 valores\"\n        },\n        {\n          \"numero\": 2,\n          \"enunciado\": \"Responda às seguintes alíneas:\",\n          \"valor\": \"5 valores\",\n          \"alíneas\": [\n            {\n              \"letra\": \"a)\",\n              \"enunciado\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito?\",\n              \"valor\": \"2 valores\"\n            },\n            {\n              \"letra\": \"b)\",\n              \"enunciado\": \"Indique os três subprincípios da proporcionalidade.\",\n              \"valor\": \"3 valores\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"nome\": \"GRUPO II\",\n      \"valor_total\": \"12 valores\",\n      \"questoes\": [\n        {\n          \"numero\": 3,\n          \"enunciado\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida.\",\n          \"valor\": \"8 valores\"\n        },\n        {\n          \"numero\": 4,\n          \"enunciado\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique.\",\n          \"valor\": \"2 valores\"\n        },\n        {\n          \"numero\": 5,\n          \"enunciado\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo.\",\n          \"valor\": \"2 valores\"\n        }\n      ]\n    }\n  ]\n}\n\nI need to make sure I copy verbatim. Let me check special characters: é, ç, ã, ó, etc. JSON should handle Unicode fine. I need to escape quotes inside strings.\n\nThe user said \"Copy text verbatim. Do not answer the questions.\" So I will just output the JSON.\n\nI should ensure valid JSON. Let me construct it carefully.\n\nHeader: \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\"\n\nGroup I: \"GRUPO I (8 valores)\" - I can split nome and valor_total or keep together. I'll keep separate for clarity but ensure verbatim text is preserved in fields.\n\nQuestion 1: \"1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\" - I can store numero, enunciado without number, valor. Or store full text. The instruction says extract exam questions into JSON. I'll structure it logically but keep text verbatim in the string fields.\n\nQuestion 2: \"2. Responda às seguintes alíneas: (5 valores)\"\n  a) \"a) O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\"\n  b) \"b) Indique os três subprincípios da proporcionalidade. (3 valores)\"\n\nQuestion 3: \"3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n\nQuestion 4: \"4. Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\"\n\nQuestion 5: \"5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n\nI'll produce a clean JSON. I'll escape inner double quotes.\n\nLet's write it out.\n\n{\n  \"exame\": {\n    \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n    \"grupos\": [\n      {\n        \"identificacao\": \"GRUPO I (8 valores)\",\n        \"questoes\": [\n          {\n            \"numero\": 1,\n            \"texto\": \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\"\n          },\n          {\n            \"numero\": 2,\n            \"texto\": \"Responda às seguintes alíneas: (5 valores)\",\n            \"alíneas\": [\n              {\n                \"letra\": \"a)\",\n                \"texto\": \"O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\"\n              },\n              {\n                \"letra\": \"b)\",\n                \"texto\": \"Indique os três subprincípios da proporcionalidade. (3 valores)\"\n              }\n            ]\n          }\n        ]\n      },\n      {\n        \"identificacao\": \"GRUPO II (12 valores)\",\n        \"questoes\": [\n          {\n            \"numero\": 3,\n            \"texto\": \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n          },\n          {\n            \"numero\": 4,\n            \"texto\": \"Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\"\n          },\n          {\n            \"numero\": 5,\n            \"texto\": \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n          }\n        ]\n      }\n    ]\n  }\n}\n\nThis looks good. I will output only the JSON, no markdown code blocks? Usually it's fine to output raw JSON or in a code block. The user didn't specify format beyond JSON. I'll output raw JSON text to be safe, or maybe a code block. I'll just output the JSON directly.\n\nDouble check verbatim copying:\n- \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\" -> correct.\n- \"GRUPO I (8 valores)\" -> correct.\n- \"Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\" -> correct.\n- \"Responda às seguintes alíneas: (5 valores)\" -> correct.\n- \"O que se entende por \"conteúdo essencial\" de um direito? (2 valores)\" -> correct.\n- \"Indique os três subprincípios da proporcionalidade. (3 valores)\" -> correct.\n- \"GRUPO II (12 valores)\" -> correct.\n- \"Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\" -> correct.\n- \"Verdadeiro ou falso: \"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\" Justifique. (2 valores)\" -> correct.\n- \"Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\" -> correct.\n\nI removed the question numbers from the \"texto\" fields since I have a \"numero\" field, but the text is verbatim minus the leading number. Is that okay? The user said copy text verbatim. Maybe I should include the full text including the number in the texto field to be strictly verbatim. But having a separate numero field is more structured. However, \"copy text verbatim\" might mean don't paraphrase. Removing the number isn't paraphrasing, it's structuring. But to be safest, I could include the full original line in a \"texto_completo\" field or just keep the texto as the full line. Let me reconsider.\n\nIf I put \"texto\": \"1. Distinga direitos...\" then the numero field is redundant. But it's fine. I'll include the full text exactly as it appears, including the number and value, in a field called \"enunciado\" or \"texto\". And I can also have \"numero\" parsed out. But to avoid any accusation of not copying verbatim, I'll make the main text field contain the full verbatim string.\n\nRevised structure:\n\n{\n  \"cabecalho\": \"Faculdade de Direito — Direito Constitucional I — Frequência (20/11/2026). Duração: 90 minutos.\",\n  \"grupos\": [\n    {\n      \"nome\": \"GRUPO I (8 valores)\",\n      \"questoes\": [\n        {\n          \"enunciado\": \"1. Distinga direitos, liberdades e garantias de direitos económicos, sociais e culturais. (3 valores)\"\n        },\n        {\n          \"enunciado\": \"2. Responda às seguintes alíneas: (5 valores)\",\n          \"alíneas\": [\n            {\n              \"enunciado\": \"a) O que se entende por \\\"conteúdo essencial\\\" de um direito? (2 valores)\"\n            },\n            {\n              \"enunciado\": \"b) Indique os três subprincípios da proporcionalidade. (3 valores)\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"nome\": \"GRUPO II (12 valores)\",\n      \"questoes\": [\n        {\n          \"enunciado\": \"3. Um município aprova um regulamento que proíbe a distribuição de panfletos de um partido da oposição, mantendo permitidos os dos restantes partidos. Analise a constitucionalidade da medida. (8 valores)\"\n        },\n        {\n          \"enunciado\": \"4. Verdadeiro ou falso: \\\"Os direitos, liberdades e garantias vinculam apenas entidades públicas.\\\" Justifique. (2 valores)\"\n        },\n        {\n          \"enunciado\": \"5. Escolha a opção correta. A lei restritiva de direitos deve ter caráter: (A) individual e concreto; (B) geral e abstrato; (C) retroativo. (2 valores)\"\n        }\n      ]\n    }\n  ]\n}\n\nThis is very safe. All text is verbatim. I'll output this. I won't add any explanatory text.",
+        "format": "unknown",
+        "index": 0
+       }
+      ]
+     }
+    }
+   ],
+   "usage": {
+    "prompt_tokens": 296,
+    "completion_tokens": 3351,
+    "total_tokens": 3647,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "audio_tokens": 0,
+     "video_tokens": 0
+    },
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 2747,
+     "image_tokens": 0,
+     "audio_tokens": 0
+    }
+   }
+  }
+ }
+}

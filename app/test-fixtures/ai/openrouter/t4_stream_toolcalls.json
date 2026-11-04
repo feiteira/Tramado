@@ -1,0 +1,156 @@
+{
+ "request": {
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "stream": true,
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "search_materials",
+      "description": "Search this class's documents and lecture transcripts. Returns passages with a ref (S1, S2…) to cite, an id, source and location (page/article or timestamp).",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string",
+         "description": "Keywords or a question, in the language of the materials."
+        },
+        "limit": {
+         "type": "integer",
+         "description": "Max results (1-6). Default 4."
+        }
+       },
+       "required": [
+        "query"
+       ]
+      }
+     }
+    },
+    {
+     "type": "function",
+     "function": {
+      "name": "read_passage",
+      "description": "Read the full text of one passage returned by search_materials, by its id or ref.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id"
+       ]
+      }
+     }
+    }
+   ],
+   "tool_choice": "auto",
+   "max_tokens": 2000,
+   "reasoning": {
+    "exclude": true
+   },
+   "messages": [
+    {
+     "role": "system",
+     "content": "Usa sempre search_materials antes de responder."
+    },
+    {
+     "role": "user",
+     "content": "O que diz o artigo 18.º sobre restrições? E o 13.º?"
+    }
+   ]
+  }
+ },
+ "response": {
+  "status": 200,
+  "headers": {
+   "content-type": "text/event-stream"
+  },
+  "lines": [
+   [
+    0.817,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    0.817,
+    ""
+   ],
+   [
+    1.246,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    1.247,
+    ""
+   ],
+   [
+    1.688,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    1.688,
+    ""
+   ],
+   [
+    1.736,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"role\":\"assistant\",\"tool_calls\":[{\"index\":0,\"id\":\"call-f6907457-001c-4a65-85c5-add0e90e0a2a\",\"type\":\"function\",\"function\":{\"name\":\"search_materials\",\"arguments\":\"\"}}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.736,
+    ""
+   ],
+   [
+    1.736,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"role\":\"assistant\",\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"query\\\":\\\"artigo 18 restrições\\\",\\\"limit\\\":6}\"}}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.736,
+    ""
+   ],
+   [
+    1.925,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"role\":\"assistant\",\"tool_calls\":[{\"index\":1,\"id\":\"call-c95e05c6-1344-44af-810a-d48671dce908\",\"type\":\"function\",\"function\":{\"name\":\"search_materials\",\"arguments\":\"\"}}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.926,
+    ""
+   ],
+   [
+    1.926,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"role\":\"assistant\",\"tool_calls\":[{\"index\":1,\"function\":{\"arguments\":\"{\\\"query\\\":\\\"artigo 13 restrições\\\",\\\"limit\\\":6}\"}}]},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    1.926,
+    ""
+   ],
+   [
+    1.955,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\"}]}"
+   ],
+   [
+    1.955,
+    ""
+   ],
+   [
+    1.955,
+    "data: {\"id\":\"gen-1700000000-Fixture9d965c7ac2a2d\",\"object\":\"chat.completion.chunk\",\"created\":1793721641,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"service_tier\":null,\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"tool_calls\",\"native_finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":456,\"completion_tokens\":225,\"total_tokens\":681,\"cost\":0,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0,\"upstream_inference_prompt_cost\":0,\"upstream_inference_completions_cost\":0},\"completion_tokens_details\":{\"reasoning_tokens\":140,\"image_tokens\":0,\"audio_tokens\":0}}}"
+   ],
+   [
+    1.955,
+    ""
+   ],
+   [
+    1.956,
+    "data: [DONE]"
+   ],
+   [
+    1.956,
+    ""
+   ]
+  ],
+  "latency_s": 1.96
+ }
+}

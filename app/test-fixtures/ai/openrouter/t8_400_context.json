@@ -1,0 +1,33 @@
+{
+ "request": {
+  "method": "POST",
+  "path": "/chat/completions",
+  "body": {
+   "model": "liquid/lfm-2.5-2.6b:free",
+   "messages": [
+    {
+     "role": "user",
+     "content": "<296488 chars of passages>"
+    }
+   ],
+   "max_tokens": 50
+  }
+ },
+ "response": {
+  "status": 400,
+  "latency_s": 0.43,
+  "headers": {
+   "content-type": "application/json",
+   "x-openrouter-error-origin": "client"
+  },
+  "json": {
+   "error": {
+    "message": "This endpoint's maximum context length is 65536 tokens. However, you requested about 77013 tokens (76963 of text input, 50 in the output). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically.",
+    "code": 400,
+    "metadata": {
+     "provider_name": null
+    }
+   }
+  }
+ }
+}

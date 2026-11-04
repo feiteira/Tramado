@@ -1,0 +1,156 @@
+{
+ "request": {
+  "path": "/chat/completions",
+  "body": {
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "stream": true,
+   "max_tokens": 60,
+   "reasoning": {
+    "enabled": false
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "<370669 chars>"
+    }
+   ]
+  }
+ },
+ "response": {
+  "status": 200,
+  "headers": {
+   "content-type": "text/event-stream"
+  },
+  "lines": [
+   [
+    2.52,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    2.52,
+    ""
+   ],
+   [
+    2.95,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    2.95,
+    ""
+   ],
+   [
+    3.348,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    3.348,
+    ""
+   ],
+   [
+    3.767,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    3.767,
+    ""
+   ],
+   [
+    4.216,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    4.216,
+    ""
+   ],
+   [
+    4.606,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    4.607,
+    ""
+   ],
+   [
+    5.023,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    5.023,
+    ""
+   ],
+   [
+    5.443,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    5.443,
+    ""
+   ],
+   [
+    5.865,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    5.865,
+    ""
+   ],
+   [
+    6.283,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    6.283,
+    ""
+   ],
+   [
+    6.719,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    6.719,
+    ""
+   ],
+   [
+    7.122,
+    ": OPENROUTER PROCESSING"
+   ],
+   [
+    7.122,
+    ""
+   ],
+   [
+    7.356,
+    "data: {\"id\":\"gen-1700000000-Fixtured76ca0dd6cd52\",\"object\":\"chat.completion.chunk\",\"created\":1793721564,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"4\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}"
+   ],
+   [
+    7.356,
+    ""
+   ],
+   [
+    7.577,
+    "data: {\"id\":\"gen-1700000000-Fixtured76ca0dd6cd52\",\"object\":\"chat.completion.chunk\",\"created\":1793721564,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}]}"
+   ],
+   [
+    7.577,
+    ""
+   ],
+   [
+    7.577,
+    "data: {\"id\":\"gen-1700000000-Fixtured76ca0dd6cd52\",\"object\":\"chat.completion.chunk\",\"created\":1793721564,\"model\":\"nvidia/nemotron-3.5-super-vl:free\",\"provider\":\"Nvidia\",\"service_tier\":null,\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":99031,\"completion_tokens\":2,\"total_tokens\":99033,\"cost\":0,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0,\"upstream_inference_prompt_cost\":0,\"upstream_inference_completions_cost\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}"
+   ],
+   [
+    7.577,
+    ""
+   ],
+   [
+    7.577,
+    "data: [DONE]"
+   ],
+   [
+    7.577,
+    ""
+   ]
+  ],
+  "latency_s": 7.58
+ }
+}
