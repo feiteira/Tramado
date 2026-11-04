@@ -1934,6 +1934,10 @@ by its change and accepted: REL `features/exam/review.ts` → `reviewOps.ts` and
 13. PAGES review: the invite dialog draws the QR at 220 px, about 2–2.4 px per module at versions 16–22, half the
     4 px minimum (sync spec §7.2 and UX §3.12.2 now say 356–452 px); `features/members/{InviteDialog.tsx,members.css}`.
     UX's component table still says "size default 340 (≥ 4 px per module for version 15–17)".
+    **Fixed before the rc.2 tag** (lead): `QrCode` takes `modulePx` and sizes itself from the code's version
+    ((modules + 8) × modulePx); the invite dialog uses `modulePx={4}` (356 px at version 16) with the text under it.
+    The peek PNGs decode with jsQR (version 16, the join-page link) in light, dark and 125 %; manual `invite.webp`
+    retaken in en/pt/es.
 14. Dev-only npm advisories (`npm audit` without `--omit=dev`): vite 8.3.0–8.3.2, vitest and `@vitest/mocker`
     5.0.0–5.0.2, source-map-js ≤ 1.2.1; nothing in the shipped app.
 

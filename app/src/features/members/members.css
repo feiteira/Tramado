@@ -254,24 +254,19 @@
 }
 .invite__qr {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--s-4);
+  gap: var(--s-3);
   padding: var(--s-3);
   border: 1px dashed var(--rule-strong);
   border-radius: var(--r-lg);
   background: var(--paper);
 }
+/* The QR keeps its own size (≥ 4 px per module, UX §3.12.2): never squeezed below it. */
 .invite__qr img,
 .invite__qr .qr-code {
   flex: none;
-  width: 220px;
-  height: 220px;
-}
-@media (max-width: 640px) {
-  .invite__qr {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  max-width: none;
 }
 .invite__qr-text {
   display: flex;

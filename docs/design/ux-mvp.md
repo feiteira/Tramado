@@ -1170,7 +1170,7 @@ Notice, Card, Section, Toolbar, Field/TextField/TextArea/SearchField/Select, Men
 | `QuotaMeter` | `{ quota: Quota\|null; compact?: boolean }` | §3.14.3 |
 | `CostLine` | `{ requests: number; quota: Quota\|null; model: ModelLabel }` | "About {n} requests · {left} free left today" |
 | `CheckWords` | `{ deviceId: string }` | two words, mono, with a copy button (§3.12.6) |
-| `QrCode` | `{ value: string; size?: number; label: string }` | `qrcode@1.5.4` `toString(value,{type:'svg',errorCorrectionLevel:'M',margin:4})`, inserted as an `<img src="data:image/svg+xml;…">` with `alt=label`; `size` default 340 (≥ 4 px per module for version 15–17) |
+| `QrCode` | `{ value: string; size?: number; label: string }` | `qrcode@1.5.4` `toString(value,{type:'svg',errorCorrectionLevel:'M',margin:4})`, inserted as an `<img src="data:image/svg+xml;…">` with `alt=label`; `size` default 340; `modulePx` instead sizes it from the code's version, (modules + 8) × modulePx (the invite uses 4: ≥ 4 px per module, 356–452 px for version 16–22) |
 | `DropOverlay` | `{ classId; target: 'documents'\|'exam'\|'lecture' }` | full-main overlay, dashed `--accent` border, `.paper-grid` |
 | `ProgressSteps` | `{ steps: {label; state:'todo'\|'doing'\|'done'\|'failed'}[] }` | an ordered list with icons |
 | `PinsStrip` | `{ pins: PinView[]; onOpen(messageId); onHide() }` | §3.3 (v1.1; not built in 0.1) |

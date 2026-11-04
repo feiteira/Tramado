@@ -102,7 +102,7 @@ export default function InviteDialog({ props, services, close }: { props: Dialog
               {t('members.invite.copy')}
             </Button>
             <div className="invite__qr">
-              <QrCode value={invite.qrText} size={220} label={t('members.invite.qrLabel', { class: name })} data-testid="invite-qr" />
+              <QrCode value={invite.qrText} modulePx={4} label={t('members.invite.qrLabel', { class: name })} data-testid="invite-qr" />
               <div className="invite__qr-text">
                 <span><QrIcon size={14} aria-hidden strokeWidth={1.75} /> {t('members.invite.qr')}</span>
                 <span className="t-small t-muted">{t('members.invite.qrHint')}</span>
