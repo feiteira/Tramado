@@ -64,7 +64,10 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
 
   const meta = (): Partial<ExamFile> => {
     const y = academicYearOf(year);
-    return { ...(name.trim() ? { title: name.trim().slice(0, 200) } : {}), type: kind, ...(y ? { academicYear: y } : {}) };
+    // Typed questions have no file name to fall back on: "Midterm 2026" in the UI language.
+    const fallback = typed !== null || !aiOn ? `${t(`exams.kinds.${kind}`)}${y ? ` ${y}` : ''}` : '';
+    const title = name.trim() || fallback;
+    return { ...(title ? { title: title.slice(0, 200) } : {}), type: kind, ...(y ? { academicYear: y } : {}) };
   };
 
   const choose = async () => {
