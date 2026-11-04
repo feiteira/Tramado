@@ -6,6 +6,8 @@ import type { ClassId, Ulid } from '../../core/model/ids';
 import type { ShareMode } from '../../platform/types';
 
 export const session = {
+  /** Start was pressed and the recorder is starting (the dock's "Starting…"; markers disabled). */
+  starting: new Store<{ classId: ClassId; title: string } | null>(null),
   /** Stop was pressed here (not a failure). */
   stopping: new Store<boolean>(false),
   /** "Saving the recording…": the recording being published. */

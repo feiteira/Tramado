@@ -56,11 +56,11 @@
   display: block;
   margin-bottom: 2px;
   font-family: var(--font-ui);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-md);
   font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
   font-variant-caps: all-small-caps;
+  line-height: 1.2;
   color: var(--ink-3);
 }
 .tv-text {

@@ -80,6 +80,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
 
   return (
     <div className="lectures-tab" data-testid="class-lectures">
+      {lectures.length === 0 && !recordingHere && pending.length === 0 && !loading ? null : (
       <div className="lectures-tab__bar">
         <Button icon={CircleDot} onClick={record} disabled={!!rec} data-testid="lectures-record">
           {t('lectures.list.record')}
@@ -92,6 +93,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
           <SearchField ref={filterRef} size="sm" value={q} onChange={setQ} placeholder={t('lectures.list.filter')} aria-label={t('lectures.list.filter')} className="lectures-tab__filter" data-testid="lectures-filter" />
         ) : null}
       </div>
+      )}
       {loading ? (
         <div className="lecture-list" aria-busy="true" data-testid="lecture-list-loading">
           {[0, 1, 2, 3].map((i) => (

@@ -25,7 +25,7 @@ import { mb, size, timeLeft } from '../lectures/format';
 import '../record/record.css';
 
 const MODELS: readonly ModelId[] = ['turbo', 'small', 'large-v3'];
-const SHORTCUTS = { important: 'CmdOrCtrl+Alt+1', confused: 'CmdOrCtrl+Alt+2', exam: 'CmdOrCtrl+Alt+3', todo: 'CmdOrCtrl+Alt+4' } as const;
+import { MARKER_SHORTCUTS as SHORTCUTS } from '../record/Recovery';
 
 export default function TranscriptionSection({ services }: { services: AppServices }) {
   const i18n = useI18n();

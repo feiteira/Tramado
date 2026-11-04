@@ -27,6 +27,7 @@ import { ClassTab } from '../../ui/tramado/ClassTab';
 import { LevelMeter } from '../../ui/tramado/LevelMeter';
 import { defaultLectureTitle, hhmm } from '../lectures/format';
 import { LANGUAGE_OPTIONS, readRecordPrefs, shareKey, type ShareChoice } from './prefs';
+import { session } from './session';
 import './record.css';
 
 export default function RecordDialog({ props, services, close }: { props: DialogPropsMap['record']; services: AppServices; close(): void }) {
@@ -149,10 +150,11 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
         ? { kind: 'share', scope: 'lecture', share: shareMode, textId: 'record.dialog.consentShare.v1', textLang: onRecord.share.textLang, text: onRecord.share.text }
         : { kind: 'share', scope: 'lecture', share: shareMode, textId: 'record.dialog.consentShare.v1', textLang: lang, text: consentShareText, ...(view?.lecturer ? { lecturer: view.lecturer } : {}) }
       : null;
+    const startTitle = defaultLectureTitle(lectures.length + 1, DateTime.fromMillis(services.ctx.clock.now()), i18n);
+    session.starting.set({ classId, title: startTitle });
     try {
-      const n = lectures.length + 1;
       await services.recording.start({
-        classId, title: defaultLectureTitle(n, DateTime.fromMillis(services.ctx.clock.now()), i18n), mode, includeMic: mode === 'room' ? true : includeMe,
+        classId, title: startTitle, mode, includeMic: mode === 'room' ? true : includeMe,
         inputDeviceId: device || null, language: language as Lang | 'auto', consent: { record, share: shareInput, remember: remember && !useRecord },
       });
       await app.setPref(`record.${classId}`, JSON.stringify({ mode, includeMic: includeMe, share: shareMode ?? 'none', language, device }));
@@ -162,6 +164,7 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
       if (code === 'SPEECH_PERMISSION') setError('permission');
       else toast.error(e);
     } finally {
+      session.starting.set(null);
       setBusy(false);
     }
   };

@@ -47,6 +47,7 @@ export default function DockRow({ services }: { services: AppServices }) {
   const state = useStore(services.recording.state);
   const saving = useStore(session.saving);
   const failed = useStore(session.failed);
+  const starting = useStore(session.starting);
   const classes = useStore(services.library.classes);
   const [noteAt, setNoteAt] = useState<number | null>(null);
   const [note, setNote] = useState('');
@@ -219,6 +220,25 @@ export default function DockRow({ services }: { services: AppServices }) {
 
   const live = <span className="visually-hidden" role="status" aria-live="polite">{announce}</span>;
 
+  if (starting && !state) {
+    const cls = classes.find((c) => c.id === starting.classId);
+    return (
+      <div className="dock-row dock-row--rec" role="region" aria-label={t('record.dock.region')} data-testid="record-dock" data-state="starting">
+        {live}
+        <span className="dock-rec">
+          <span className="rec-dot rec-dot--still" aria-hidden />
+          <span className="dock-rec__label">{t('record.dock.starting')}</span>
+        </span>
+        <span className="dock-row__title">{cls?.shortName ?? ''} · {starting.title}</span>
+        <span className="dock-row__spacer" />
+        <div className="dock-strip">
+          {KINDS.map((k) => (
+            <MarkerButton key={k} kind={k} label={t(`record.markers.${k}`)} keyHint={KEY_OF[k]} compact disabled onClick={() => undefined} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (saving && !state) {
     return (
       <div className="dock-row dock-row--rec" role="region" aria-label={t('record.dock.region')} data-testid="record-dock" data-state="saving">
