@@ -8,10 +8,10 @@
 // logged), then the key may appear in no file of the data folder except the secrets store, and in no log.
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, relative } from 'node:path';
-import { lookup } from 'node:dns/promises';
+import { join } from 'node:path';
 import { ROOT, addSecret, assert, sleep } from './lib.mjs';
 import { onboard, createClass, importDocuments, cspProbe, fontsProbe, networkProbe, allowListed } from './steps.mjs';
+import { openTab } from './sync.mjs';
 
 export default async function smoke(h) {
   const live = process.env.TRAMADO_AI_LIVE === '1';
@@ -60,6 +60,15 @@ export default async function smoke(h) {
     await a.present('screen-document', 20_000);
     await a.until('the passage marked on the PDF page', `return document.querySelector('[data-testid="doc-pdf-page"] mark.cite, [data-testid="doc-pdf-page"] .cite-mark')`, [], 30_000);
     return label.replace(/\s+/g, ' ').slice(0, 120);
+  });
+
+  await h.step('Settings › About: the audio self-test passes (GStreamer in this build or bundle)', async () => {
+    await a.click('nav-settings');
+    await a.click('settings-nav-about');
+    await a.click('about-media-test');
+    const state = await a.until('the result', `const r = document.querySelector('[data-testid="about-media-result"]'); return r ? r.dataset.state + ': ' + r.textContent : null`, [], 60_000);
+    assert(state.startsWith('ok'), `the self-test failed: ${state}`);
+    return state;
   });
 
   if (live) {
@@ -111,10 +120,8 @@ export default async function smoke(h) {
 /** One Ask through the Ask tab; returns which model answered (from the AI activity log). */
 async function liveAsk(a, classId) {
   await a.call('ai_activity_clear');
-  await a.click('class-ask', { selector: '[data-testid="class-tabs"] [data-tab="ask"], [data-testid="class-ask"]' }).catch(async () => {
-    await a.js(`window.dispatchEvent(new CustomEvent('tramado:navigate', { detail: { name: 'class', classId: arguments[0], tab: 'ask' } }))`, classId);
-  });
-  await a.present('screen-ask', 30_000).catch(() => a.present('ask-input', 30_000));
+  await openTab(a, classId, 'ask');
+  await a.present('ask-input', 30_000);
   await a.type('ask-input', 'Segundo o regulamento, quem pode inscrever-se na época de recurso? Responda numa frase.');
   await a.click('ask-send');
   const end = Date.now() + 5 * 60_000;
@@ -131,8 +138,14 @@ async function liveAsk(a, classId) {
   }
   await sleep(1500);
   const activity = await a.call('ai_activity', { limit: 20 });
-  const answered = activity.filter((x) => x.status === 200 || x.ok || x.outcome === 'ok');
-  const model = (answered.at(-1) ?? activity.at(-1) ?? {}).model ?? '(unknown)';
+  // The turn records the model that answered (the chain's first model may have been busy).
+  const turn = await a.run(`const ask = window.__tramadoE2E.forClass(arguments[0]).ask;
+    const t = ask.threads.get()[0]; if (!t) return null;
+    const turns = ask.thread(t.threadId).get(); const last = turns.at(-1);
+    return last ? { model: last.model, status: last.status, citations: last.citations.length } : null;`, classId);
+  assert(turn && turn.status === 'ok' && turn.model, `the turn: ${JSON.stringify(turn)}`);
+  const model = turn.model;
+  const requests = activity.filter((x) => /chat\/completions/.test(x.path)).map((x) => `${x.status ?? x.code}`);
   const cites = await a.js(`return document.querySelectorAll('[data-testid="ask-turn"] [data-testid="cite-chip"], [data-testid="ask-turn"] .cite').length`);
-  return `answered by ${model} (${activity.length} request(s) in the activity log; ${cites} citation(s)): "${text.replace(/\s+/g, ' ').slice(0, 140)}"`;
+  return `answered by ${model} (chat requests in the activity log: ${requests.join(', ') || 'none'}; ${turn.citations} citation(s), ${cites} on screen): "${text.replace(/\s+/g, ' ').slice(0, 140)}"`;
 }

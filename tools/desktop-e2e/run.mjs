@@ -10,7 +10,7 @@
 //
 //   node tools/desktop-e2e/run.mjs --suite=smoke|sync-two|sync-three|media|model|hidden [--bin=<path>] [--keep]
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { Harness, ROOT, say, since, warn } from './lib.mjs';
 
 const opts = {};
@@ -52,17 +52,34 @@ for (const tool of ['Xvfb', 'tauri-driver', 'WebKitWebDriver', 'python3']) {
   }
 }
 
-const h = new Harness({ suite, bin, keep: opts.keep === 'true' || process.env.TRAMADO_E2E_KEEP === '1', artifacts: process.env.TRAMADO_E2E_ARTIFACTS });
+// An AppImage runs extracted (no FUSE needed): its AppRun sets up the bundled GTK, WebKit and GStreamer as a person's
+// double-click would, then execs usr/bin/tramado-desktop.
+let appBin = bin;
+let extracted = null;
+if (bin.endsWith('.AppImage')) {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { spawnSync } = await import('node:child_process');
+  extracted = mkdtempSync(join(tmpdir(), 'tramado-appimage-'));
+  const r = spawnSync(resolve(bin), ['--appimage-extract'], { cwd: extracted, stdio: 'ignore' });
+  if (r.status !== 0) {
+    console.error(`desktop-e2e: ${bin} --appimage-extract failed (${r.status ?? r.error?.message})`);
+    process.exit(2);
+  }
+  appBin = join(extracted, 'squashfs-root/AppRun');
+}
+const h = new Harness({ suite, bin: appBin, keep: opts.keep === 'true' || process.env.TRAMADO_E2E_KEEP === '1', artifacts: process.env.TRAMADO_E2E_ARTIFACTS });
 const deadline = Number(process.env.TRAMADO_E2E_TIMEOUT_MS ?? (suite === 'hidden' ? 40 : 25) * 60_000);
 const watchdog = setTimeout(() => {
   warn(`✗ the run took longer than ${deadline / 60000} min`);
   h.cleanup().finally(() => process.exit(1));
 }, deadline);
+if (extracted) h.onCleanup(async () => (await import('node:fs')).rmSync(extracted, { recursive: true, force: true }));
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => h.cleanup().finally(() => process.exit(130)));
 
 let ok = false;
 try {
-  say(`Tramado desktop e2e — suite ${suite}\n  app: ${bin}\n  work: ${h.work}\n  D-Bus: ${h.privateBus ? 'private session per instance' : 'inherited'}`);
+  say(`Tramado desktop e2e — suite ${suite}\n  app: ${bin}${extracted ? ` (extracted: ${appBin})` : ''}${h.bundled ? ' (bundled sidecar)' : ''}\n  work: ${h.work}\n  D-Bus: ${h.privateBus ? 'private session per instance' : 'inherited'}`);
   await h.startDisplay();
   say(`  display: ${h.display}`);
   const mod = await SUITES[suite]();

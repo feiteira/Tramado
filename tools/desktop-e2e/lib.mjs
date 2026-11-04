@@ -263,6 +263,10 @@ export class Harness {
   constructor({ suite, bin, keep, artifacts }) {
     this.suite = suite;
     this.bin = bin;
+    /** The app process's executable name (an AppImage's AppRun execs usr/bin/tramado-desktop). */
+    this.exe = basename(bin) === 'AppRun' ? 'tramado-desktop' : basename(bin);
+    /** A bundle carries its Syncthing sidecar beside the binary. */
+    this.bundled = basename(bin) === 'AppRun' ? existsSync(join(dirname(bin), 'usr/bin/tramado-syncthing')) : existsSync(join(dirname(bin), 'tramado-syncthing'));
     this.keep = keep;
     this.work = mkdtempSync(join(tmpdir(), `tramado-e2e-${suite}-`));
     this.artifacts = artifacts ?? join(this.work, 'artifacts');
@@ -353,9 +357,7 @@ export class App {
   }
 
   env() {
-    const bin = this.h.bin;
-    // A bundle carries its sidecar next to the binary; a cargo build does not.
-    const bundled = existsSync(join(dirname(bin), 'tramado-syncthing'));
+    const bundled = this.h.bundled;
     return {
       ...process.env,
       DISPLAY: this.h.display,
@@ -673,7 +675,7 @@ export class App {
   /** The app's own process(es): the binary, started with this instance's TRAMADO_DATA_DIR. */
   pids() {
     const want = `TRAMADO_DATA_DIR=${this.dir}`;
-    const exe = basename(this.h.bin);
+    const exe = this.h.exe;
     return allPids().filter((p) => basename(procExe(p)) === exe && procEnv(p).includes(want));
   }
   pid() {
