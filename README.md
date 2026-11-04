@@ -102,7 +102,8 @@ classmates' computers or OpenRouter can transcribe for you.
 
 ### Build from source
 
-Requirements: Node.js 22.12 or later, Rust stable 1.90 or later (`rust-toolchain.toml` picks it), and on Linux:
+Requirements: Node.js 22.12 or later, Rust 1.90 or later (`rust-toolchain.toml` selects the stable channel), and on
+Linux:
 
 ```bash
 sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev \

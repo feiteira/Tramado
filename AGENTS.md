@@ -46,7 +46,7 @@ node .github/scripts/check-links.mjs   # every relative link and picture of the 
 npm run peek -- --route=<r> --query='…' --ready=<testid> --axe [--lang=pt] [--theme=dark] [--scale=1.25] \
      [--click=<id>] [--press=<key>] [--type=<id>=<text>] [--expect=<id>[:n]] [--expect-not=<id>] \
      [--expect-text=<id>=<s>] [--expect-attr=<id>:<attr>=<v|null>] --out=<png>
-node tools/peek-matrix.mjs [--only=m0] [--axe] [--lang=pt] [--jobs=N]   # every entry of tools/peek-routes/*.json
+node tools/peek-matrix.mjs [--only=m0] [--name=<entry>,…] [--axe] [--jobs=N]   # every entry of tools/peek-routes/*.json
 npm run screenshots              # the manual's pictures, en/pt/es (see "Manual screenshots")
 node tools/desktop-smoke.mjs [--flow=g1] [--media-selftest]             # the real debug app under Xvfb
 ```
@@ -68,7 +68,7 @@ Opt-in live AI checks (free models only, never in CI):
 | `TRAMADO_DATA_DIR=<dir>` | isolated config/data/cache/classes under `<dir>` (development, e2e); also disables single-instance, forces the secrets file and keeps Syncthing on loopback |
 | `TRAMADO_E2E=1` | e2e hooks (`window.__tramadoE2E`, dialog queue `TRAMADO_E2E_DIALOGS`, `TRAMADO_E2E_EVAL`, `TRAMADO_E2E_MEDIA_SELFTEST`); honoured only with `TRAMADO_DATA_DIR` |
 | `TRAMADO_SYNCTHING_BIN` | the Syncthing binary to run (else the sidecar next to the executable) |
-| `TRAMADO_SPEECH_DIR` | where speech models are looked up (tests, offline machines) |
+| `TRAMADO_SPEECH_DIR` | the folder with model files for the opt-in `tramado-speech` tests (`crates/tramado-speech/tests/*.rs`); the app ignores it |
 | `TRAMADO_SYNCTHING_FROM`, `TRAMADO_SPEECH_FROM` | the fetch scripts copy from a local folder instead of downloading |
 | `TRAMADO_AI_LIVE=1` | runs the live AI tests (with `OPENROUTER_API_KEY`) |
 | `TRAMADO_PROPERTY_RUNS` | property-test runs (`test:property` sets 2000) |

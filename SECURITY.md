@@ -6,8 +6,9 @@ classmates' computers. We take reports seriously and are grateful for them.
 ## Reporting a vulnerability
 
 Please report privately: **do not open a public issue**. Use GitHub's private reporting, the **Report a
-vulnerability** button under this repository's **Security** tab. Include what you found, how to reproduce it, and the
-Tramado version (Settings › About) and operating system. **Copy diagnostics** in Settings › About gives a summary
+vulnerability** button under this repository's **Security** tab. If that button is missing, open an issue titled
+"Security contact" with no details at all, and we will open a private channel and answer there. Include what you
+found, how to reproduce it, and the Tramado version (Settings › About) and operating system. **Copy diagnostics** in Settings › About gives a summary
 without the content of your classes.
 
 We aim to acknowledge reports within 5 working days, to keep you informed while we work on a fix, and to agree a
@@ -31,7 +32,8 @@ The [architecture](docs/dev/architecture.md#16-security-model) (§16) lists ever
   confined to the class's registered folder and refuses symbolic links, so rendered content from a classmate cannot
   read or write elsewhere on your computer.
 - **Untrusted content is rendered safely.** Chat, notes, transcripts and AI output are shown without raw HTML; links
-  open only after a native confirmation; images come only from class files.
+  open in your browser only over `https`, and only after a native confirmation that names the site (except OpenRouter,
+  Hugging Face and this project's own pages); images come only from class files.
 - **Classmates' records are checked.** Membership and authority records are signed with each computer's Syncthing key
   and bound to a person key; a file written by the wrong computer is ignored and the owner's copy restores itself;
   deleting someone else's file needs their authorship.

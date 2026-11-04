@@ -27,8 +27,8 @@ recientemente*).
 ![Un texto legal abierto en la página que cita una respuesta, con el pasaje marcado y la lista de artículos](../img/es/document-pdf.webp)
 
 Los PDF se abren dentro de Tramado, con navegación por **página**, **zoom**, **Ajustar al ancho** y **Buscar en el
-documento**. Los textos legales tienen la lista de sus **Artículos** a la izquierda. Seleccione texto para
-**Resaltarlo** (los resaltados se quedan en este ordenador), **Explicarlo**, **Preguntar** sobre él o **Copiar con la
+documento**. Los textos legales tienen la lista de sus **Artículos** a la izquierda. Seleccione texto y elija
+**Resaltar** (los resaltados se quedan en este ordenador), **Explicar**, **Preguntar** o **Copiar con la
 fuente** (*«…» — Constitución, art. 18, p. 9*). **Preguntar sobre este documento** abre Preguntar con este documento
 como fuente; **Abrir con…** abre el archivo en otra aplicación. Cuando una respuesta de la IA cita un pasaje, el
 documento se abre en esa página con el pasaje marcado.

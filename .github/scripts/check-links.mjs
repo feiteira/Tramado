@@ -102,7 +102,9 @@ function widthOf(file) {
   return null;
 }
 
-const images = walk(IMG_DIR).filter((f) => /\.(webp|png|jpe?g|gif|svg)$/i.test(f));
+// PNGs are what `npm run screenshots` writes next to the WebP copies; they are git-ignored there (docs/manual/img/
+// .gitignore), so a local run after taking screenshots must not count them.
+const images = walk(IMG_DIR).filter((f) => /\.(webp|jpe?g|gif|svg)$/i.test(f));
 let bytes = 0;
 for (const img of images) {
   bytes += statSync(img).size;

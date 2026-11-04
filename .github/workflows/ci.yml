@@ -257,12 +257,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Syncthing sidecar and Silero VAD (SHA-256 checked)
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = macOS ]; then node tools/fetch-syncthing.mjs --target=universal-apple-darwin
-          else node tools/fetch-syncthing.mjs; fi
-          node tools/fetch-speech-assets.mjs
+      # The runner's default shell on purpose: on Windows that is PowerShell, where `tar` is Windows' own tar.exe, which
+      # unpacks the .zip release. Under Git Bash `tar` is GNU tar, which cannot read a .zip (nor a `D:\` path).
+      - name: Syncthing sidecar (SHA-256 checked)
+        run: node tools/fetch-syncthing.mjs ${{ matrix.os == 'macOS' && '--target=universal-apple-darwin' || '' }}
+      - name: Silero VAD (SHA-256 checked)
+        run: node tools/fetch-speech-assets.mjs
       - name: Build the installers (AppImage, deb)
         if: runner.os == 'Linux'
         run: npm run tauri --workspace @tramado/desktop -- build --config src-tauri/tauri.sidecar.conf.json --bundles appimage,deb

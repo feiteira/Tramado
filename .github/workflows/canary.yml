@@ -71,7 +71,7 @@ jobs:
             echo "Not three failing days yet: no issue."
             exit 0
           fi
-          { cat "$RUNNER_TEMP/canary.md"; echo; echo "Run: $RUN_URL"; } > "$RUNNER_TEMP/issue.md"
+          { cat "$RUNNER_TEMP/canary.md" 2>/dev/null || echo "The canary stopped before it wrote its summary: see the run."; echo; echo "Run: $RUN_URL"; } > "$RUNNER_TEMP/issue.md"
           open=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "\"$ISSUE_TITLE\" in:title" --json number --jq '.[0].number // empty')
           if [ -n "$open" ]; then
             gh issue comment "$open" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/issue.md"

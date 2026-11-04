@@ -86,8 +86,8 @@ silicon; si no lo tiene, el ordenador de un compañero u OpenRouter pueden trans
   en cualquier punto para saltar allí.
 - **La transcripción**: haga clic en la hora de una línea para escuchar desde ahí. **Buscar en la transcripción** busca
   en el texto. Las referencias a artículos (*artículo 18*) enlazan con el documento que los contiene.
-- **Seleccione texto** para **Resaltarlo** (Importante, No lo entendí, Examen, Pendiente, Otro), **Comentarlo** (solo
-  usted lo ve), **Explicarlo** con IA, **Preguntar…** sobre él o **Copiar con la fuente**.
+- **Seleccione texto** y elija **Resaltar** (Importante, No lo entendí, Examen, Pendiente, Otro), **Comentar** (solo
+  usted lo ve), **Explicar** con IA, **Preguntar…** o **Copiar con la fuente**.
 - **El panel lateral**: **Notas** (solo suyas; <kbd>N</kbd> añade una en el momento actual), **IA** y **Marcadores**
   (los suyos, más los momentos en los que el profesor dijo algo como "esto entra en el examen", encontrados
   automáticamente).

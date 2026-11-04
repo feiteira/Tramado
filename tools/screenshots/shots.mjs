@@ -94,7 +94,8 @@ export const SHOTS = [
     },
   },
   { name: 'settings-ai', query: 'route=settings&section=ai&ai=fake', ready: 'settings-ai' },
-  { name: 'settings-transcription', query: 'route=settings&section=transcription&model=downloading', ready: 'settings-transcription' },
+  // speech=fake: without the speech fake the browser demo says "Speech models need the Tramado app" and greys the models.
+  { name: 'settings-transcription', query: 'route=settings&section=transcription&speech=fake&model=downloading', ready: 'settings-transcription' },
   {
     name: 'settings-sharing',
     query: 'route=settings&section=sharing&sync=fake',
