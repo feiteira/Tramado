@@ -486,7 +486,7 @@
   },
   {
     "name": "exam-extracting",
-    "query": "route=exam&class=law&exam=final&mode=extracting&ai=fake",
+    "query": "route=exam&class=law&exam=freq&mode=extracting&ai=fake",
     "ready": "exam-extracting",
     "axe": true,
     "steps": [
@@ -500,7 +500,7 @@
   },
   {
     "name": "exam-extracting-es-125",
-    "query": "route=exam&class=law&exam=final&mode=extracting&ai=fake",
+    "query": "route=exam&class=law&exam=freq&mode=extracting&ai=fake",
     "ready": "exam-extracting",
     "axe": true,
     "steps": [
@@ -1253,6 +1253,9 @@
     "ready": "ask-thread",
     "axe": true,
     "steps": [
+      {
+        "click": "ask-threads-toggle"
+      },
       {
         "expect": "ask-thread-item:1"
       },
