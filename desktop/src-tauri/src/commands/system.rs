@@ -281,6 +281,13 @@ mod tests {
             "https://github.com/someone/else",
             "https://pt.wikipedia.org/wiki/C%C3%B3digo_Civil",
             "https://huggingface.co.evil.example/",
+            // the project's GitHub Pages: only the Tramado repository's own path, after normalising
+            "https://feiteira.github.io/TramadoEvil/",
+            "https://feiteira.github.io/Tramado/../other/",
+            "https://feiteira.github.io/Tramado/%2e%2e/other/",
+            "https://feiteira.github.io/other/",
+            "https://feiteira.github.io.evil.example/Tramado/",
+            "https://evil.github.io/Tramado/join/",
         ] {
             assert!(
                 matches!(classify_external(ask).unwrap(), External::Ask { .. }),

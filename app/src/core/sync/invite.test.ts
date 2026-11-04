@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { InviteV1 } from '../model/files';
 import { dashless } from '../model/ids';
 import {
-  chooseInviteDevices, decodeInvite, encodeInvite, findCode, inviteJson, inviteLink, qrInvite, qrText, reduceInvite, selectInviteAddresses,
+  JOIN_PAGE, chooseInviteDevices, decodeInvite, encodeInvite, findCode, inviteJson, inviteLink, inviteWeb, qrInvite, qrText, reduceInvite,
+  selectInviteAddresses,
 } from './invite';
 
 // sync spec §7.2 example (fictional)
@@ -64,8 +66,33 @@ describe('invites (sync spec §7)', () => {
     expect(q.d[0]!.a).toHaveLength(2);
     expect(q.s ?? q.lt ?? q.tm ?? q.lg).toBeUndefined();
     const text = qrText(EXAMPLE);
-    expect(text.startsWith('tramado://join/tri1_')).toBe(true);
+    expect(text).toBe(`https://feiteira.github.io/Tramado/join/#${encodeInvite(q)}`);
     expect(text.length).toBeLessThan(560);
+  });
+
+  it('the web link is the live join page with the code in the fragment (§7.2), and every form decodes', () => {
+    const code = encodeInvite(EXAMPLE);
+    expect(JOIN_PAGE).toBe('https://feiteira.github.io/Tramado/join/');
+    const web = inviteWeb(code)!;
+    expect(web).toBe(`https://feiteira.github.io/Tramado/join/#${code}`);
+    const url = new URL(web);
+    expect(url.origin + url.pathname + url.search).toBe(JOIN_PAGE);   // nothing of the code before the '#'
+    expect(url.hash).toBe(`#${code}`);
+    for (const text of [web, `Join “TGDC” on Tramado: ${web}\nOr open Tramado → Join a class and paste this code:\n${code}`, qrText(EXAMPLE)]) {
+      expect(decodeInvite(text, 1793721438).invite.f).toBe(EXAMPLE.f);
+    }
+    expect(findCode(web)?.code).toBe(code);
+  });
+
+  it('the join page (site/join/index.html) parses codes as §7.2 does and loads nothing from anywhere', () => {
+    const html = readFileSync(new URL('../../../../site/join/index.html', import.meta.url), 'utf8');
+    expect(html).toContain(String.raw`/\btr([ip])(\d+)_([A-Za-z0-9_-]{40,4096})/`);   // findCode's regex
+    expect(html).toContain(`content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;`);
+    expect(html).toContain('<meta name="referrer" content="no-referrer">');
+    expect(html).not.toMatch(/\s(src|srcset|action|poster)=/i);                    // no subresources, no forms
+    const hrefs = [...html.matchAll(/\shref="([^"]*)"/g)].map((m) => m[1]!);
+    expect(hrefs.filter((h) => !h.startsWith('data:'))).toEqual(['https://github.com/feiteira/Tramado/releases']);
+    expect(html).toContain("'tramado://' + (m[1] === 'p' ? 'pair/' : 'join/') + code");
   });
 
   it('address selection and device choice (§7.1)', () => {

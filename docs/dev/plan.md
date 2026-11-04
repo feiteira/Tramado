@@ -1153,8 +1153,8 @@ node tools/peek-matrix.mjs --axe && npm run screenshots
 npm run build:desktop && npm run e2e:desktop && npm run e2e:sync && node tools/desktop-e2e/run.mjs --suite=sync-three && npm run e2e:media
 npm run check:versions && cargo deny check && npm audit --omit=dev && npm run check:leaks
 npm run gen:privacy && git diff --exit-code PRIVACY.md
-curl -sf https://feiteira.github.io/Tramado/join/ >/dev/null && echo "join page live: build with JOIN_PAGE set" \
-  || echo "join page not live: keep JOIN_PAGE=''"
+curl -sf https://feiteira.github.io/Tramado/join/ >/dev/null && echo "join page live (JOIN_PAGE is set since rc.2)" \
+  || echo "join page down: fix Pages before releasing, invites link to it"
 ```
 Bump versions (arch §18.6), commit `G3: 0.1.0-rc.1`, tag `v0.1.0-rc.1`, push. A GitHub release is created only when
 the user asks.
@@ -1814,7 +1814,7 @@ Merge and gate fixes:
   `cargo deny check` (advisories, bans with `wildcards = "deny"`, licences, sources): pass; `npm audit --omit=dev`:
   0 vulnerabilities; `check:leaks`: clean.
 - `gen:privacy && git diff --exit-code PRIVACY.md`: pass.
-- Join page: not live → `JOIN_PAGE = ''` kept.
+- Join page: not live → `JOIN_PAGE = ''` kept. (rc.2: live; PAGES set `JOIN_PAGE` to it.)
 
 Packages: `Tramado_0.1.0-rc.1_amd64.AppImage` 115,382,776 B, `Tramado_0.1.0-rc.1_amd64.deb` 28,698,816 B (installed
 55,817 KiB: `/usr/bin/tramado-desktop`, `/usr/bin/tramado-syncthing`, the `.desktop` file and
@@ -1873,5 +1873,7 @@ deleted, the tramado-speech exports, `tauri.conf.json` deb `files`, and the demo
 **Not applied** (for the lead)
 13. L10N 4 (Today heading "Próximos exames" / "Próximos exámenes"): optional; "Em breve" / "Próximamente" stay.
 14. DOCS 3 (a privacy row for the phone loading the join page): the join page is not live, `JOIN_PAGE = ''`.
+    Applied for rc.2 by PAGES: the page is live, `JOIN_PAGE = 'https://feiteira.github.io/Tramado/join/'`, and the
+    `joinPage` row is in Settings › Privacy and PRIVACY*.md.
 15. Repository settings and policy: GitHub private vulnerability reporting is off (SECURITY.md has a fallback); GitHub
     Pages is not switched on; CONTRIBUTING's DCO sign-off is undecided; no GitHub release was created.

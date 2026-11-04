@@ -510,7 +510,7 @@ then wait **more than 35 minutes** because Syncthing honours the discovery serve
 payload = UTF-8 bytes of the compact JSON of InviteV1 (keys in the order above, no spaces)
 code    = "tri1_" + base64url(payload) without "=" padding
 link    = "tramado://join/" + code
-web     = "https://feiteira.github.io/Tramado/join/#" + code      # optional static page; fragment never reaches a server
+web     = "https://feiteira.github.io/Tramado/join/#" + code      # the static join page (live); fragment never reaches a server
 file    = "<short name or name>.tramado-invite": UTF-8 text, line 1 = link, line 2 = a sentence for people
 ```
 
@@ -525,9 +525,10 @@ file    = "<short name or name>.tramado-invite": UTF-8 text, line 1 = link, line
   addresses, the third and then the second device, `lt`, `tm`. Readers MUST refuse codes over 4,096
   characters.
 - **QR code:** always encodes a **reduced invite** (first device only, ≤ 2 addresses, no `s`, `lt`, `tm`, `lg`;
-  about 450 characters), as `web` when the build has a join page (§25 Q4) and as `link` otherwise; byte mode,
-  error correction M (version 15–17). It is rendered at ≥ 4 px per module with a 4-module quiet zone (about
-  340 px). The copyable code and the file stay complete; a full 3-device code is about 1,000 characters.
+  about 400–750 characters), as `web` when the build has a join page (§25 Q4; v1 builds do) and as `link`
+  otherwise; byte mode, error correction M (version 16–22; the §7.2 example as `web` is 552 characters, version 18).
+  It is rendered at ≥ 4 px per module with a 4-module quiet zone (356–452 px for versions 16–22). The copyable
+  code and the file stay complete; a full 3-device code is about 1,000 characters.
 - **No short human code.** A device ID alone is 56 characters and the folder ID 26; anything shorter would
   need a rendezvous server. Tramado says so plainly.
 - Deep links: `tauri-plugin-deep-link` registers `tramado://` where the OS allows (Windows, macOS, deb,
@@ -1628,7 +1629,7 @@ The UI translates codes; messages go to logs. Device IDs in copied diagnostics a
 | 1 | Check words (two friendly words derived from the joiner's device ID, shown on both screens). | **Words in v1**: `checkWords(deviceId) = ADJ[h[0]] + "-" + NOUN[h[1]]`, `h = SHA-256(UTF-8("tramado-check-v1|" + canonical dashed deviceId))`, with the 256 adjectives and 256 animal names of `docs/spec/check-words-v1.txt` (ASCII, 3–7 letters, never translated; written once by M0 and frozen; vectors in `test-vectors/check-words.json`). |
 | 2 | Revocable / expiring invites. | Advisory expiry only; v1.1 adds the device-name token and `.tramado/invites/`. |
 | 3 | GUI over a Unix socket instead of TCP loopback. | TCP loopback (`ureq` has no Unix-socket support; socket paths are limited to 107/103 bytes). |
-| 4 | Static join page. | `https://feiteira.github.io/Tramado/join/` (`site/join/index.html`, deployed by `.github/workflows/pages.yml`), reading the fragment; no third-party scripts. Builds use it as `web` only once it is live; until then `JOIN_PAGE = ''` and links and the QR use `tramado://join/<code>`. |
+| 4 | Static join page. | `https://feiteira.github.io/Tramado/join/` (`site/join/index.html`, deployed by `.github/workflows/pages.yml`; live, used by builds from 0.1.0-rc.2), reading the fragment; no third-party scripts and no request of its own. `JOIN_PAGE` (`core/sync/invite.ts`) holds that URL, so the copied message and the QR carry `web`; a build with `JOIN_PAGE = ''` falls back to `tramado://join/<code>`. |
 | 5 | Automatic cloud transcription by volunteers (costs the volunteer money). | Off unless the volunteer explicitly allowed "use OpenRouter automatically". |
 | 6 | Private sync of personal data between a person's computers. | Not in v1 (an unshared per-person folder in v1.1). |
 | 7 | Using `ignoredFolders` on a device for per-class bans (§18.1). | Used as written, marked ◇; the contract test must confirm the PATCH shape before release, otherwise fall back to ignoring the device entirely. |

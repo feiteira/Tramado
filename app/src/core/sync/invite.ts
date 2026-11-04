@@ -10,8 +10,12 @@ export const CODE_PREFIX = 'tri1_';
 export const LINK_PREFIX = 'tramado://join/';
 export const MAX_CODE = 4096;
 export const TARGET_CODE = 2000;
-/** The static join page (sync spec §25 Q4): '' until it is live; links and the QR then use `tramado://join/`. */
-export const JOIN_PAGE = '';
+/**
+ * The static join page (sync spec §7.2, §25 Q4; `site/join/index.html`, deployed to GitHub Pages): invites carry
+ * `{JOIN_PAGE}#{code}` as their web link and QR text. The code stays in the fragment, which browsers never send. A
+ * build without a page sets '' and links and the QR fall back to `tramado://join/`.
+ */
+export const JOIN_PAGE: string = 'https://feiteira.github.io/Tramado/join/';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder('utf-8', { fatal: true });

@@ -197,7 +197,7 @@ Tramado/
 │   ├── redact-fixtures.mjs  check-leaks.mjs     fixture redaction; secret/user_id leak check before every push
 │   ├── lab/                                     research lab sources copied by M0 (no outputs with user ids)
 │   └── keys/syncthing-release.asc               Syncthing release signing key (GPG check, optional)
-├── site/join/index.html                         static join page (GitHub Pages; UX §8 OQ1)
+├── site/join/index.html                         static join page: https://feiteira.github.io/Tramado/join/ (UX §8 OQ1, `JOIN_PAGE`)
 ├── docs/
 │   ├── spec/   class-folder-v1.md  sync-protocol-v1.md  check-words-v1.txt (M0)
 │   ├── design/ ux-mvp.md
