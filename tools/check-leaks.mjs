@@ -1,7 +1,7 @@
 // check-leaks: fails when a secret or an account identifier would be committed (architecture §17).
 // Scans every tracked and untracked, non-ignored file with `git grep` for:
 //   "user_id": "<20+ alnum>"  ·  sk-or-v1-<hex>  ·  OPENROUTER_API_KEY=<value>   (outside docs/)
-//   sk-or-v1-<hex ≥ 16>                                                              (everywhere, docs/ included)
+//   sk-or-v1-<hex ≥ 16>  ·  generation ids gen-<10 digits>-<20 alnum>                (everywhere, docs/ included)
 // and, when ~/.openrouter.key exists, the key itself (fixed string; matches are never printed, only file names).
 // Run before every merge and push: `npm run check:leaks`.
 import { execFileSync } from 'node:child_process';
@@ -36,6 +36,9 @@ add('OpenRouter user_id', grep(['-E', '"user_id"[[:space:]]*:[[:space:]]*"[A-Za-
 add('OpenRouter key', grep(['-E', 'sk-or-v1-[0-9a-f]+'], OUTSIDE_DOCS));
 add('API key assignment', grep(['-E', 'OPENROUTER_API_KEY=[^[:space:]…<$"\'`]+'], OUTSIDE_DOCS));
 add('OpenRouter key (docs)', grep(['-E', 'sk-or-v1-[0-9a-f]{16,}'], EVERYWHERE));
+// Generation ids identify requests on the account; fixtures carry the fictional ones redact-fixtures.mjs writes.
+add('OpenRouter generation id', grep(['-E', 'gen-[0-9]{10}-[A-Za-z0-9]{20}'], EVERYWHERE)
+  .filter((l) => !(l.match(/gen-\d{10}-[A-Za-z0-9]{20}/g) ?? []).every((m) => m.includes('Fixture'))));
 
 // The local key itself, if this machine has one (never printed: file names only).
 const keyFile = join(homedir(), '.openrouter.key');

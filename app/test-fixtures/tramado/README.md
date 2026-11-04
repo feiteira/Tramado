@@ -6,5 +6,6 @@ Every fixture here is **fictional** (Trama's rule): invented people, laws, lectu
   `app/test-fixtures/tramado/make-fixtures.mjs` (added by the work packages that need them) writes them
   with `pdf-lib`, `jszip` and `ffmpeg`, and prints the SHA-256 of each output.
 - Saved OpenRouter outputs (golden tests, `app/test-fixtures/ai/`) pass through `tools/redact-fixtures.mjs`
-  first: `user_id`, `metadata.raw` and `Authorization` are replaced by fixed fictional values.
+  first: `user_id`, `metadata.raw`, `Authorization` and generation ids (`gen-…`) are replaced by fixed
+  fictional values.
 - `npm run check:leaks` must pass before every commit that adds fixtures.
