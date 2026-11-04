@@ -32,9 +32,9 @@ mudar isto em Definições › Partilha.
 
 A página de entrada mostra a disciplina e quem enviou o convite. Num computador com o Tramado, **Abrir no Tramado** abre
 o convite em **Entrar numa disciplina**; num telemóvel, carregue em **Copiar o código**, envie o código para o seu
-computador (por e-mail, ou por uma conversa que também use lá) e cole-o em **Entrar numa disciplina**. O convite fica
-na parte da ligação depois do `#`, que o navegador nunca envia a um servidor: a página lê-o no seu dispositivo e não
-envia nada para lado nenhum.
+computador (por e-mail, ou por uma aplicação de mensagens que também use no computador) e cole-o em **Entrar numa
+disciplina**. O convite fica na parte da ligação depois do `#`, que o navegador nunca envia a um servidor: a página
+lê-o no seu dispositivo e não envia nada para lado nenhum.
 
 Quem tiver o convite pode entrar, através do seu computador ou do de qualquer membro que esteja ligado; se não
 houver ninguém ligado, fica à espera. Para autorizar cada pessoa primeiro, um organizador liga **Perguntar antes de

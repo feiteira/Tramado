@@ -12,7 +12,7 @@ confirmação da primeira vez que o abrir.
   escolha *Mais informações › Executar mesmo assim*.
 - **macOS 14.2 ou posterior** (Apple silicon e Intel): abra o `.dmg` e arraste o Tramado para Aplicações. Da primeira
   vez, o macOS recusa abri-lo, porque não tem notarização: feche o aviso, abra *Definições do Sistema › Privacidade e
-  Segurança*, desça até Segurança e escolha *Abrir mesmo assim*.
+  segurança*, desça até Segurança e escolha *Abrir mesmo assim*.
 - **Linux** (x86-64): o `.AppImage` funciona na maioria das distribuições: torne-o executável
   (`chmod +x Tramado_<versão>_amd64.AppImage`, ou nas propriedades do ficheiro) e abra-o. Se não arrancar, instale o
   FUSE 2 (`sudo apt install libfuse2t64` no Ubuntu 24.04, `libfuse2` nas versões anteriores). No Debian e no Ubuntu

@@ -64,10 +64,14 @@ and Ask conversations stay on your computer.
 <table>
 <tr>
 <td width="50%" valign="top"><img src="docs/manual/img/en/palette.webp" alt="The search palette: the phrase 'conteúdo essencial' found in two lectures, three documents, an exam and the class chat, with the matching words highlighted"><br><b>Search everything.</b> <kbd>Ctrl</kbd>+<kbd>K</kbd> finds a phrase in lectures, documents, exams and chat.</td>
-<td width="50%" valign="top"><img src="docs/manual/img/en/exam-answers.webp" alt="A past exam question answered by the AI from the class's own material, with numbered citations to an article of law and a lecture moment, and a grounded score of 100 %"><br><b>Exams.</b> Answers drafted from your class material, each claim with its source.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/document-pdf.webp" alt="A PDF of a fictional law open on page 9 at article 18.º, with the passage that was searched for marked and the law's articles listed beside it"><br><b>Documents.</b> PDFs open on the right page with the passage marked; laws list their articles.</td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/exam-answers.webp" alt="A past exam question answered by the AI from the class's own material, with numbered citations to an article of law and a lecture moment, and a grounded score of 100 %"><br><b>Exams.</b> Answers drafted from your class material, each claim with its source.</td>
 <td width="50%" valign="top"><img src="docs/manual/img/en/chat.webp" alt="The class chat: an answer by the AI that cites a lecture at 41:12 and an article of law, followed by classmates' messages, one of them a mention"><br><b>Class chat.</b> Replies, mentions, and an <code>@AI</code> that cites the class's sources.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/invite.webp" alt="The invite dialog: Copy invite, a QR code to scan with a phone, the invite code, Copy code and Save as a file"><br><b>Invite.</b> One message, a QR code or a file; the link opens a join page in the browser.</td>
 <td width="50%" valign="top"><img src="docs/manual/img/en/members.webp" alt="The Members tab: a newcomer waiting to join, with their check words and the buttons Let in, Not now and Decline, above the class's three members and whether they are online"><br><b>Members.</b> Compare check words, then let newcomers in.</td>
 </tr>
 <tr>

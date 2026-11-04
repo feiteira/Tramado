@@ -25,7 +25,7 @@ cambiarlo en Ajustes › Sincronización.
 **Invitar** (en la cabecera de la asignatura o en Miembros) muestra la invitación:
 
 - **Copiar la invitación** copia un mensaje corto con un enlace y el código: péguelo en el grupo de la asignatura, en
-  Moodle o en un correo. El enlace abre en el navegador la página para unirse de Tramado
+  Moodle o en un correo. El enlace abre en el navegador la página de Tramado para unirse
   (`https://feiteira.github.io/Tramado/join/`);
 - el **código QR** abre la misma página en el móvil que lo escanee;
 - **Copiar el código** copia solo el código, y **Guardar como archivo…** guarda un archivo `.tramado-invite`, que se
@@ -33,9 +33,9 @@ cambiarlo en Ajustes › Sincronización.
 
 La página para unirse muestra la asignatura y quién envió la invitación. En un ordenador con Tramado, **Abrir en
 Tramado** abre la invitación en **Unirse a una asignatura**; en un móvil, pulse **Copiar el código**, envíe el código a
-su ordenador (por correo, o por un chat que también use allí) y péguelo en **Unirse a una asignatura**. La invitación va
-en la parte del enlace que sigue a `#`, que el navegador nunca envía a un servidor: la página la lee en su dispositivo
-y no envía nada a ningún sitio.
+su ordenador (por correo, o por una aplicación de mensajería que también use en el ordenador) y péguelo en **Unirse a
+una asignatura**. La invitación va en la parte del enlace que sigue a `#`, que el navegador nunca envía a un servidor:
+la página la lee en su dispositivo y no envía nada a ningún sitio.
 
 Quien tenga la invitación puede entrar, a través de su ordenador o del de cualquier miembro que esté en línea; si no
 hay nadie, espera. Para aprobar a cada persona primero, un organizador activa **Preguntar antes de dejar entrar** en
