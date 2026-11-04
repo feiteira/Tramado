@@ -11,7 +11,7 @@ export const common: Messages['common'] = {
   untitled: 'Sem título', optional: 'opcional', you: 'você', youSuffix: '{name} (você)', show: 'Mostrar', hide: 'Ocultar',
   dismiss: 'Dispensar', showInFolder: 'Mostrar na pasta', openWithSystem: 'Abrir com a aplicação do sistema', paste: 'Colar',
   chooseFile: 'Escolher um ficheiro…', chooseFolder: 'Escolher uma pasta…', learnMore: 'Porque é que isto importa',
-  onlyYou: 'Só você', sharedWithClass: 'Partilhado com a turma', onlyThisComputer: 'Só neste computador',
+  onlyYou: 'Só para si', sharedWithClass: 'Partilhado com a turma', onlyThisComputer: 'Só neste computador',
   arriving: 'A chegar…', arrivingPercent: 'A chegar… {percent} %',
   unknownError: 'Algo correu mal: {message}',
   size: { b: '{n} B', kb: '{n} KB', mb: '{n} MB', gb: '{n} GB' },

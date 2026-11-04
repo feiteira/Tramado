@@ -3,7 +3,7 @@ import type { Messages } from '../en';
 
 export const speech: Messages['speech'] = {
   models: {
-    turbo: 'Recomendado', turboHint: '{size} · buena precisión, unas {speed}× más rápido que el tiempo real en este ordenador',
+    turbo: 'Recomendado', turboHint: '{size} · buena precisión, aprox. {speed}× más rápido que el tiempo real en este ordenador',
     turboHintUnknown: '{size} · buena precisión',
     small: 'Borrador', smallHint: '{size} · más rápido, pero flojo en portugués y español',
     'large-v3': 'El más preciso', 'large-v3Hint': '{size} · más lento',
@@ -14,7 +14,7 @@ export const speech: Messages['speech'] = {
     downloading: '{done} de {total} · {speed}/s · {left}',
     verifying: 'Comprobando la descarga…',
     ready: 'Instalado',
-    failed: 'El modelo de voz no se descargó correctamente. No se instaló nada.',
+    failed: 'El modelo de voz no se ha descargado correctamente. No se ha instalado nada.',
   },
   actions: { download: 'Descargar', pause: 'Pausa', resume: 'Reanudar', delete: 'Eliminar', remove: 'Quitar', tryAgain: 'Volver a intentarlo', use: 'Usar este' },
   removeConfirm: { title: '¿Quitar el modelo de voz {model}?', body: 'Libera {size}. Puede volver a descargarlo más tarde.', confirm: 'Quitar' },
@@ -26,9 +26,9 @@ export const speech: Messages['speech'] = {
     estimate: 'unos {time} para esta clase',
     free: 'Espacio libre: {size}',
     download: 'Descargar y transcribir',
-    classmate: 'Dejar que lo haga un compañero',
+    classmate: 'Que lo haga un compañero',
     classmateDone: 'Los compañeros que ayudan a transcribir la verán.',
-    cloud: 'Usar OpenRouter',
+    cloud: 'Usar OpenRouter en su lugar',
     cloudOff: 'Usar OpenRouter (actívelo en Ajustes)',
     noDisk: 'El modelo de voz necesita {size} libres. Tiene {free}.',
     useDraft: 'Usar el modelo Borrador ({size})',
@@ -48,6 +48,6 @@ export const speech: Messages['speech'] = {
   left: {
     underMinute: 'queda menos de un minuto',
     minutes: { one: 'queda alrededor de {n} minuto', other: 'quedan unos {n} minutos' },
-    hours: 'quedan unas {h} h {m} min',
+    hours: 'quedan aprox. {h} h {m} min',
   },
 };

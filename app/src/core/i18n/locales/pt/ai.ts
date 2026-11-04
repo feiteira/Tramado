@@ -3,7 +3,7 @@
 import type { Messages } from '../en';
 
 export const ai: Messages['ai'] = {
-  pill: { model: '{model} · restam {n}', modelOnly: '{model}', local: 'IA local', off: 'IA desligada', checkKey: 'IA: verifique a chave', label: 'Definições da IA' },
+  pill: { model: '{model} · restam {n}', modelOnly: '{model}', local: 'IA local', off: 'IA desativada', checkKey: 'IA: verifique a chave', label: 'Definições da IA' },
   badge: 'IA',
   card: {
     label: 'Resposta da IA',
@@ -15,7 +15,7 @@ export const ai: Messages['ai'] = {
     groundedLabel: 'Fundamentada nas suas fontes: {p} %',
     deep: 'Resposta aprofundada',
     deepCost: 'Resposta aprofundada ({min}–{max} pedidos)',
-    retry: 'Tentar de novo',
+    retry: 'Tentar novamente',
     cut: 'A resposta ficou cortada.',
     continue: 'Continuar',
     streaming: 'A escrever…',
@@ -48,7 +48,7 @@ export const ai: Messages['ai'] = {
     badges: { moved: 'Movido', changed: 'Alterado', missing: 'Em falta', hallucinated: 'Não é uma fonte real' },
     units: { h: { one: '{n} hora', other: '{n} horas' }, m: { one: '{n} minuto', other: '{n} minutos' }, s: { one: '{n} segundo', other: '{n} segundos' } },
     movedNote: 'Este ficheiro foi movido para {path}.',
-    changedNote: 'Este ficheiro mudou depois de a resposta ter sido escrita. O excerto foi encontrado de novo pelo texto.',
+    changedNote: 'Este ficheiro mudou depois de a resposta ter sido escrita. O excerto foi encontrado novamente pelo texto.',
   },
   cost: {
     line: { one: '{n} pedido · restam {left} gratuitos hoje', other: 'Cerca de {n} pedidos · restam {left} gratuitos hoje' },
@@ -58,7 +58,7 @@ export const ai: Messages['ai'] = {
   },
   quota: {
     left: 'restam {remaining} de {limit} hoje',
-    resets: 'recomeça às {time} (meia-noite UTC)',
+    resets: 'renova-se às {time} (meia-noite UTC)',
     freeTier: 'As contas que já compraram pelo menos 10 créditos têm 1000 pedidos gratuitos por dia.',
     credit: 'Crédito: restam {amount}',
     refresh: 'Atualizar',
@@ -71,9 +71,9 @@ export const ai: Messages['ai'] = {
     noTraining: 'Sem treino (recomendado)',
     noTrainingHint: 'Os fornecedores podem guardar os pedidos durante pouco tempo (por exemplo, para detetar abusos), mas não treinam IA com eles. Funciona com o modelo gratuito predefinido.',
     standard: 'Permitir modelos gratuitos que podem treinar',
-    standardHint: 'Alguns modelos são gratuitos porque o fornecedor pode usar o que envia para melhorar a sua IA. Não use isto para nada pessoal.',
+    standardHint: 'Alguns modelos são gratuitos porque o fornecedor pode usar o que envia para melhorar os próprios modelos. Não use isto para nada pessoal.',
     standardConfirmTitle: 'Permitir modelos gratuitos que podem treinar?',
-    standardConfirmBody: 'Alguns fornecedores podem usar o que envia para melhorar a sua IA. Não use isto para nada pessoal: gravações de pessoas, textos seus que queira manter privados ou temas sensíveis.',
+    standardConfirmBody: 'Alguns fornecedores podem usar o que envia para melhorar os próprios modelos. Não use isto para nada pessoal: gravações de pessoas, textos seus que queira manter privados ou temas sensíveis.',
     standardConfirm: 'Permitir',
     zdrFree: 'Os modelos gratuitos não estão disponíveis neste nível. Escolha um modelo pago, ou as respostas vão falhar.',
     sttZdr: 'A transcrição na nuvem não está disponível no nível Não guardar nada.',
@@ -83,12 +83,12 @@ export const ai: Messages['ai'] = {
   busy: {
     title: 'Os modelos gratuitos estão ocupados neste momento. Acontece muitas vezes e não é culpa sua.',
     tried: 'Tentados: {models}.',
-    retryIn: 'Tentar de novo daqui a {s} s',
+    retryIn: 'Tentar novamente daqui a {s} s',
     once: 'Usar os modelos gratuitos da NVIDIA neste pedido',
     always: 'Usá-los sempre que estiverem ocupados',
-    alwaysConfirm: 'Usar sempre os modelos gratuitos da NVIDIA quando os outros estiverem ocupados? Podem usar o que envia para treinar a sua IA.',
+    alwaysConfirm: 'Usar sempre os modelos gratuitos da NVIDIA quando os outros estiverem ocupados? Podem usar o que envia para treinar a IA da NVIDIA.',
     change: 'Mudar de modelo',
-    footnote: 'Os modelos gratuitos da NVIDIA podem usar o que envia para treinar a sua IA.',
+    footnote: 'Os modelos gratuitos da NVIDIA podem usar o que envia para treinar a IA da NVIDIA.',
   },
   sentDisclosure: {
     title: 'O que foi enviado',
@@ -113,14 +113,14 @@ export const ai: Messages['ai'] = {
     AI_UPSTREAM: 'O fornecedor do modelo está com problemas.',
     AI_UNAVAILABLE: 'Não há nenhum fornecedor disponível para este modelo neste momento.',
     AI_TIMEOUT: 'O modelo demorou demasiado a responder.',
-    AI_OFFLINE: 'Está sem ligação. A IA precisa de internet. A pesquisa e tudo o resto continuam a funcionar.',
-    AI_LENGTH: 'O modelo não produziu uma resposta. Tente de novo ou escolha outro modelo.',
+    AI_OFFLINE: 'Está sem ligação à Internet. A IA precisa de Internet, mas a pesquisa e tudo o resto continuam a funcionar.',
+    AI_LENGTH: 'O modelo não produziu uma resposta. Tente novamente ou escolha outro modelo.',
     AI_HOST_NOT_ALLOWED: 'O Tramado ainda não tem autorização para enviar pedidos para {host}.',
     AI_BAD_ADDRESS: 'Esse endereço não parece correto. Deve ser algo como http://localhost:11434/v1.',
   },
   recovery: {
     setUp: 'Configurar a IA', updateKey: 'Atualizar a chave', useFree: 'Usar o modelo gratuito', addCredit: 'Adicionar crédito', changeModel: 'Escolher outro modelo',
-    changePrivacy: 'Mudar o nível de privacidade…', tryAgain: 'Tentar de novo', tryAgainIn: 'Tentar de novo daqui a {s} s', useFallback: 'Usar {model}', usePaid: 'Usar um modelo pago', allowHost: 'Permitir {host}',
+    changePrivacy: 'Mudar o nível de privacidade…', tryAgain: 'Tentar novamente', tryAgainIn: 'Tentar novamente daqui a {s} s', useFallback: 'Usar {model}', usePaid: 'Usar um modelo pago', allowHost: 'Permitir {host}',
   },
   hostConfirm: { title: 'Permitir que o Tramado envie pedidos de IA para {host}?', body: 'As suas perguntas e os excertos de que precisam vão para este endereço.', confirm: 'Permitir' },
   // INT (wave 3)
