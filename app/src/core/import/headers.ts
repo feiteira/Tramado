@@ -41,8 +41,10 @@ export function stripRunningLines(input: readonly (readonly string[])[], opts: {
   const need = Math.max(2, Math.ceil(withText * threshold));
   const candidate = (line: string | undefined) => line !== undefined && line.length <= MAX_LINE && !KEEP.test(line.trim());
 
-  for (const edge of ['top', 'bottom'] as const) {
-    for (let level = 0; level < depth; level++) {
+  // Level by level, top then bottom: a page-number footer goes before a second header line is judged.
+  for (let level = 0; level < depth; level++) {
+    let any = false;
+    for (const edge of ['top', 'bottom'] as const) {
       const at = (p: string[]) => (edge === 'top' ? p[0] : p[p.length - 1]);
       const counts = new Map<string, number>();
       for (const p of pages) {
@@ -54,7 +56,8 @@ export function stripRunningLines(input: readonly (readonly string[])[], opts: {
         if (k) counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       const running = new Set([...counts].filter(([, n]) => n >= need).map(([k]) => k));
-      if (!running.size) break;
+      if (!running.size) continue;
+      any = true;
       for (const p of pages) {
         if (p.length < 2) continue;
         const line = at(p);
@@ -65,6 +68,7 @@ export function stripRunningLines(input: readonly (readonly string[])[], opts: {
       }
       for (const k of running) if (!out.keys.includes(k)) out.keys.push(k);
     }
+    if (!any) break;
   }
   return out;
 }

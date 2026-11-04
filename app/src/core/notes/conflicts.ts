@@ -41,9 +41,10 @@ export function keepBothPath(notePath: string, siblings: Iterable<string>): stri
   const dot = name.lastIndexOf('.');
   const base = dot > 0 ? name.slice(0, dot) : name;
   const ext = dot > 0 ? name.slice(dot) : '.md';
+  // `unique` inserts " (2)", " (3)", … before the extension: the note itself is taken, so the copy
+  // gets the first free number from 2.
   const taken = [...siblings, name];
-  const wanted = sanitize(`${base} (2)${ext}`, `Note (2)${ext}`);
-  return join(dirOf(notePath), unique(taken, wanted));
+  return join(dirOf(notePath), unique(taken, sanitize(`${base}${ext}`, `Note${ext}`)));
 }
 
 /** The title of a note: its first `# ` heading, else the file name without `.md`. */

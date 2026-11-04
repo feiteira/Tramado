@@ -32,3 +32,27 @@ describe('PassageIndex (indexed rank.ts)', () => {
     }
   });
 });
+
+describe('PassageIndex (Tramado additions)', () => {
+  const stop2 = new Set([...stopwordsFor('pt'), ...stopwordsFor('en')]);
+  it('returns the locator of the unit, and ranks the same after removals and compaction', () => {
+    const idx = new PassageIndex(stop2);
+    idx.add('lei', 'Artigo 1.º Objeto da lei de exemplo.\nArtigo 2.º Restrições ao conteúdo essencial.', [
+      { start: 0, end: 36, locator: { type: 'article', article: '1.º', pages: [1, 1] } },
+      { start: 37, end: 83, locator: { type: 'article', article: '2.º', pages: [1, 2] } },
+    ]);
+    const hits = idx.search('restrições essencial');
+    expect(hits[0]).toMatchObject({ documentId: 'lei', locator: { type: 'article', article: '2.º', pages: [1, 2] } });
+    expect(idx.unitsOf('lei')).toHaveLength(2);
+    // Many removals compact the postings; the results of the live documents do not change.
+    const docs = Array.from({ length: 40 }, (_, i) => ({ id: `d${i}`, text: doc(3000) }));
+    const big = new PassageIndex(stop2);
+    for (const d of docs) big.add(d.id, d.text);
+    for (let i = 0; i < 30; i++) big.remove(`d${i}`);
+    const fresh = new PassageIndex(stop2);
+    for (const d of docs.slice(30)) fresh.add(d.id, d.text);
+    const q = 'contrato prazo tribunal';
+    expect(big.size).toBe(10);
+    expect(big.search(q).map((p) => [p.documentId, p.start, p.score.toFixed(9)])).toEqual(fresh.search(q).map((p) => [p.documentId, p.start, p.score.toFixed(9)]));
+  });
+});

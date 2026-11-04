@@ -56,6 +56,7 @@ export function createNotesService(ctx: AppContext, app: () => AppServices, cls:
     return { format: 'tramado.notes-private', version: 1, notes: {} };
   }
   async function touch(path: string, gone = false): Promise<void> {
+    titles.delete(`private:${path}`);
     const ix = await readIndex();
     if (gone) delete ix.notes[path];
     else ix.notes[path] = { mtimeMs: ctx.clock.now() };

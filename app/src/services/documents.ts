@@ -152,11 +152,18 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
 
   const randomPart = () => Array.from({ length: 12 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(ctx.rand() * 36)]).join('');
 
-  /** The listed document with this content, other than `except` (sizes compared first: only same-size files are hashed). */
-  async function duplicateOf(sha: Hex64, size: number, except: ClassPath | null): Promise<ClassPath | null> {
-    const docs = store.state.get().index.documents.filter((d) => d.size === size && d.path !== except)
+  /** Class files that may be duplicates: content files (not machine files), oldest first. */
+  async function contentFiles(): Promise<Array<{ path: ClassPath; size: number; mtimeMs: number }>> {
+    const all = await platform.fs.list(classId, '', { recursive: true, maxDepth: 6 }).catch(() => []);
+    return all.filter((f) => !f.isDir && classifyPath(f.path).kind === 'content')
+      .map((f) => ({ path: f.path, size: f.size, mtimeMs: f.mtimeMs }))
       .sort((a, b) => a.mtimeMs - b.mtimeMs || (a.path < b.path ? -1 : 1));
-    for (const d of docs) {
+  }
+
+  /** The file with this content among `files` (only same-size files are hashed). */
+  async function duplicateOf(files: ReadonlyArray<{ path: ClassPath; size: number; mtimeMs: number }>, sha: Hex64, size: number): Promise<ClassPath | null> {
+    for (const d of files) {
+      if (d.size !== size) continue;
       const h = memo.known(classId, d.path, d.size, d.mtimeMs) ?? (await memo.hash(classId, d.path).catch(() => null));
       if (h === sha) return d.path;
     }
@@ -169,6 +176,8 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
       const dir = destDir ?? store.dir('documents');
       if (dir) validateClassPath(dir);
       const taken = await siblings(dir);
+      // The class as it is on disk now (the store's index may not show a file imported a moment ago).
+      const existing = await contentFiles();
       const out: Array<{ name: string; path?: ClassPath; error?: ErrorCode; duplicateOf?: ClassPath }> = [];
       for (const pick of picks) {
         if (pick.isDir) {
@@ -181,7 +190,7 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
           const stamp = await platform.fs.importFile(classId, pick.token, staged);
           stagedOk = true;
           const sha = stamp.sha256 ?? (await platform.fs.hash(classId, staged));
-          const dup = await duplicateOf(sha, stamp.size, null);
+          const dup = await duplicateOf(existing, sha, stamp.size);
           if (dup && !opts.allowDuplicate) {
             await platform.fs.remove(classId, staged);
             stagedOk = false;
@@ -193,6 +202,8 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
           await store.move(staged, path);
           stagedOk = false;
           taken.push(nameOf(path));
+          const placed = await platform.fs.stat(classId, path).catch(() => null);
+          if (placed) existing.push({ path, size: placed.size, mtimeMs: placed.mtimeMs });
           out.push({ name: pick.name, path, ...(dup ? { duplicateOf: dup } : {}) });
         } catch (e) {
           if (stagedOk) await platform.fs.remove(classId, staged).catch(() => undefined);
