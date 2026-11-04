@@ -3020,7 +3020,8 @@ Conventions:
 ### 18.1 `tools/fetch-syncthing.mjs`
 
 `node tools/fetch-syncthing.mjs [--target=<triple> | --all] [--gpg] [--force]`. Default target: the host triple
-(`rustc -vV` → `host:`). Env `TRAMADO_SYNCTHING_FROM=<dir>` copies archives from a local folder (offline). For each
+(`rustc -vV` → `host:`); `universal-apple-darwin` also fetches `aarch64-` and `x86_64-apple-darwin` (tauri-build
+checks each half's sidecar while it compiles that half). Env `TRAMADO_SYNCTHING_FROM=<dir>` copies archives from a local folder (offline). For each
 target: skip when `desktop/src-tauri/binaries/tramado-syncthing-<triple>[.exe]` exists and its `.sha256` stamp
 matches the pinned archive hash; otherwise download
 `https://github.com/syncthing/syncthing/releases/download/v2.1.7/<asset>` to `tools/.cache/<asset>.part`
@@ -3383,8 +3384,8 @@ both published crates were diffed against their previous releases).
   entitlements and both slices checked); a pre-release `.deb` gets its Debian version (§18.6); Windows and macOS run
   `tools/desktop-e2e/startup.mjs` (the app in a throwaway `TRAMADO_DATA_DIR` must log "webview ready" and the bundled
   Syncthing must answer its health check); installer sizes go to the job summary (critique R19). The `web` job fails
-  on paths or module names that differ only in letter case (Windows and macOS file systems ignore case). `publish` creates a **draft** release (a pre-release for `x.y.z-rc.n`) with the notes of
-  `docs/release-notes/vx.y.z.md`.
+  on paths or module names that differ only in letter case (Windows and macOS file systems ignore case). `publish`
+  creates a **draft** release (a pre-release for `x.y.z-rc.n`) with the notes of `docs/release-notes/vx.y.z.md`.
 - **`.github/workflows/canary.yml`** (critique G21): daily and by hand, with the repository secret
   `OPENROUTER_API_KEY`; without it the run succeeds with a notice and sends nothing. `.github/scripts/canary.mjs`
   checks the catalog (every chain model listed and free, the default model takes tools, the STT model listed) and sends
