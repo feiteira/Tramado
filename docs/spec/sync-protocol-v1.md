@@ -527,8 +527,8 @@ file    = "<short name or name>.tramado-invite": UTF-8 text, line 1 = link, line
 - **QR code:** always encodes a **reduced invite** (first device only, ≤ 2 addresses, no `s`, `lt`, `tm`, `lg`;
   about 400–750 characters), as `web` when the build has a join page (§25 Q4; v1 builds do) and as `link`
   otherwise; byte mode, error correction M (version 16–22; the §7.2 example as `web` is 552 characters, version 18).
-  It is rendered at ≥ 4 px per module with a 4-module quiet zone (about 340 px). The copyable code and the file
-  stay complete; a full 3-device code is about 1,000 characters.
+  It is rendered at ≥ 4 px per module with a 4-module quiet zone (356–452 px for versions 16–22). The copyable
+  code and the file stay complete; a full 3-device code is about 1,000 characters.
 - **No short human code.** A device ID alone is 56 characters and the folder ID 26; anything shorter would
   need a rendezvous server. Tramado says so plainly.
 - Deep links: `tauri-plugin-deep-link` registers `tramado://` where the OS allows (Windows, macOS, deb,

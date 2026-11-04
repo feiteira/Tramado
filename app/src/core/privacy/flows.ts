@@ -8,8 +8,8 @@
 //               discovery, relays, NAT traversal and local announcements unless "Local network only"; usage
 //               reporting (urAccepted -1), crash reporting and auto-upgrade are off (managed.rs).
 //   joinPage    not Tramado itself: a browser opening an invite's web link or QR code (core/sync/invite.ts JOIN_PAGE)
-//               loads site/join/index.html from GitHub Pages; the code stays in the '#' fragment, never sent, and the
-//               page makes no request of its own (its CSP is default-src 'none').
+//               loads site/join/index.html from GitHub Pages; the code stays in the '#' fragment, which browsers never
+//               send, and the page makes no request of its own (its CSP is default-src 'none').
 //   keyCheck    AiService `GET key` (free requests left; the key only) when the AI pill starts and again after 15 min
 //               away, and when a key is tested; `GET models` (the catalog) at most once a day — only with a key and AI on.
 //   ai          AiClient `chat/completions` through Rust's AiPipe: the question and the passages it needs

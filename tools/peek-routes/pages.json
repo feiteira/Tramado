@@ -142,6 +142,9 @@
       },
       {
         "expect-text": "privacy-table=GitHub (USA), which hosts the invite page"
+      },
+      {
+        "expect-text": "privacy-table=which your browser never sends"
       }
     ]
   },
@@ -158,6 +161,9 @@
       },
       {
         "expect-text": "privacy-table=GitHub (EUA), que aloja a página de convites"
+      },
+      {
+        "expect-text": "privacy-table=que o seu navegador nunca envia"
       }
     ]
   },
@@ -168,6 +174,40 @@
     "axe": true,
     "lang": "es",
     "scale": 1.25,
+    "steps": [
+      {
+        "expect": "privacy-flow:10"
+      },
+      {
+        "expect-text": "privacy-table=GitHub (EE. UU.), que aloja la página de invitaciones"
+      },
+      {
+        "expect-text": "privacy-table=que su navegador nunca envía"
+      }
+    ]
+  },
+  {
+    "name": "privacy-join-page-en-dark",
+    "query": "route=settings&section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "axe": true,
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "privacy-flow:10"
+      },
+      {
+        "expect-text": "privacy-table=GitHub (USA), which hosts the invite page"
+      }
+    ]
+  },
+  {
+    "name": "privacy-join-page-es-dark",
+    "query": "route=settings&section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "axe": true,
+    "lang": "es",
+    "theme": "dark",
     "steps": [
       {
         "expect": "privacy-flow:10"

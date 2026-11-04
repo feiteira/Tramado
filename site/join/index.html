@@ -115,7 +115,11 @@
       <p id="noneBody"></p>
     </section>
 
-    <noscript><p>This page needs JavaScript to show the invite. You can also copy this whole link and paste it in Tramado → Join a class.</p></noscript>
+    <noscript>
+      <p>This page needs JavaScript to show the invite. You can also copy this whole link and paste it in Tramado → Join a class.</p>
+      <p lang="pt-PT">Esta página precisa de JavaScript para mostrar o convite. Também pode copiar esta ligação inteira e colá-la no Tramado → Entrar numa disciplina.</p>
+      <p lang="es">Esta página necesita JavaScript para mostrar la invitación. También puede copiar este enlace completo y pegarlo en Tramado → Unirse a una asignatura.</p>
+    </noscript>
 
     <p class="muted get"><span id="getNote">Don’t have Tramado yet? It is free and open source, for Windows, macOS and Linux.</span>
       <a id="get" data-testid="join-page-get" href="https://github.com/feiteira/Tramado/releases" target="_blank" rel="noopener noreferrer">Get Tramado</a></p>
@@ -137,7 +141,7 @@
           pair: 'This is a code to add another computer. It needs a newer Tramado.'
         },
         pt: {
-          title: 'Entrar numa disciplina no Tramado', invited: '{name} convidou-o para', unknown: 'Um colega',
+          title: 'Entrar numa disciplina no Tramado', invited: '{name} enviou-lhe um convite para', unknown: 'Um colega',
           step1: 'No seu computador, abra o Tramado e escolha “Entrar numa disciplina”.',
           step2: 'Cole o código abaixo. Num telemóvel, copie-o e envie-o para o seu computador.',
           open: 'Abrir no Tramado', copy: 'Copiar o código', copied: 'Código copiado. Cole-o no Tramado → Entrar numa disciplina.',
@@ -148,7 +152,7 @@
           pair: 'Este é um código para adicionar outro computador. Precisa de um Tramado mais recente.'
         },
         es: {
-          title: 'Unirse a una asignatura en Tramado', invited: '{name} le invitó a', unknown: 'Un compañero',
+          title: 'Unirse a una asignatura en Tramado', invited: '{name} le ha invitado a', unknown: 'Un compañero',
           step1: 'En su ordenador, abra Tramado y elija «Unirse a una asignatura».',
           step2: 'Pegue el código de abajo. En un móvil, cópielo y envíeselo a su ordenador.',
           open: 'Abrir en Tramado', copy: 'Copiar el código', copied: 'Código copiado. Péguelo en Tramado → Unirse a una asignatura.',
@@ -170,9 +174,11 @@
       var $ = function (id) { return document.getElementById(id); };
       $('getNote').textContent = t.getNote;
       $('get').textContent = t.get;
-      // Tramado runs on Windows, macOS and Linux only: on a phone or tablet a tramado:// link leads nowhere.
+      // Tramado runs on Windows, macOS and Linux only: on a phone or tablet a tramado:// link leads nowhere. An iPad
+      // reports itself as a Mac; only its touch screen tells it apart (Macs have none).
+      var ua = navigator.userAgent || '';
       var phone = (navigator.userAgentData && navigator.userAgentData.mobile === true) ||
-        /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent || '');
+        /Android|iPhone|iPad|iPod|Windows Phone/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
 
       // The first tr[ip]<n>_ code of the fragment (sync spec §7.2 regex).
       var hash = '';
