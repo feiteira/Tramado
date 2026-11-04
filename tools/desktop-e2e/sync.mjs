@@ -43,18 +43,18 @@ export async function inviteCode(a) {
   return code;
 }
 
-/** Join with a code through the Join dialog (already open, or from the rail). Returns the class id. */
-export async function joinWithCode(b, code, { open = false } = {}) {
-  if (open) await b.click('today-empty-join').catch(() => b.js(`window.dispatchEvent(new CustomEvent('tramado:dialog', { detail: { name: 'join' } }))`));
+/** Join with a code through the Join dialog (already open, or from the rail with fromRail). Returns the class id. */
+export async function joinWithCode(b, code, { fromRail = false } = {}) {
+  const before = await b.run('return window.__tramadoE2E.library.classes.get().map((c) => c.id)');
+  if (fromRail) await b.click('rail-join');
   await b.present('join-dialog', 30_000);
   await b.fill('join-code', code);
   await b.click('join-continue');
   await b.present('join-step-preview', 30_000);
   await b.click('join-rules');
   await b.click('join-submit');
-  await b.present('join-step-wait', 60_000).catch(() => b.present('join-step-done', 1000));
   await b.present('join-step-done', 180_000);
-  const classId = await b.untilRun('the joined class', `const s = window.__tramadoE2E; const c = s.library.classes.get().find((x) => x.shared && x.id); return c ? c.id : null;`, [], 30_000);
+  const classId = await b.untilRun('the joined class', `const c = window.__tramadoE2E.library.classes.get().find((x) => !arguments[0].includes(x.id)); return c ? c.id : null;`, [before], 30_000);
   await b.click('join-open');
   await b.present('screen-class', 30_000);
   await dismissFirstShare(b);

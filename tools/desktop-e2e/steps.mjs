@@ -45,8 +45,9 @@ export async function createClass(a, { name, share, fromDialog = false }) {
       await a.gone('first-share-dialog', 15_000);
     }
   }
-  await a.present('screen-class', 60_000);
-  return a.untilRun('the class in the library', `const s = window.__tramadoE2E; return s.library.classes.get().find((c) => c.name === arguments[0])?.id ?? null;`, [name], 30_000);
+  const id = await a.untilRun('the class in the library', `const s = window.__tramadoE2E; return s.library.classes.get().find((c) => c.name === arguments[0])?.id ?? null;`, [name], 60_000);
+  await a.until('its screen', `const s = document.querySelector('[data-testid="screen-class"]'); return s && s.dataset.classId === arguments[0]`, [id], 60_000);
+  return id;
 }
 
 /** Add › Documents… with the files answered through the dialog queue; waits for their rows. */
