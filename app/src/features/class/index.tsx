@@ -186,50 +186,54 @@ function ClassFrame({ cls, route, services }: { cls: ClassView; route: Extract<R
   const badgeOf = (id: ClassTabId) =>
     id === 'lectures' ? count(counts.lectures) : id === 'documents' ? count(counts.documents) : id === 'exams' ? count(counts.exams) : id === 'chat' ? chatBadge : id === 'members' ? count(cls.memberCount) : undefined;
 
+  const actions = (
+    <>
+      {cls.shared ? (
+        <Button icon={UserPlus} onClick={() => dialogs.open('invite', { classId: cls.id })} data-testid="class-invite">{t('classes.header.invite')}</Button>
+      ) : (
+        <Button icon={FolderSync} onClick={() => replace({ name: 'class', classId: cls.id, tab: 'share' })} data-testid="class-share-open">{t('classes.header.share')}</Button>
+      )}
+      {recordingHere ? (
+        <Tooltip label={t('classes.header.recordBusy', { class: recordingClass })}>
+          <span className="class-header__busy" tabIndex={0} aria-label={t('classes.header.recordBusy', { class: recordingClass })}>
+            <Button variant="primary" icon={CircleDot} disabled data-testid="record-class">{t('classes.header.record')}</Button>
+          </span>
+        </Tooltip>
+      ) : (
+        <Button variant="primary" icon={CircleDot} disabled={cls.archived || missingFolder} onClick={() => dialogs.open('record', { classId: cls.id })} data-testid="record-class">
+          {t('classes.header.record')}
+        </Button>
+      )}
+      <MenuButton label={t('classes.header.add')} icon={Plus} items={addItems} disabled={missingFolder} align="end" data-testid="class-add" />
+    </>
+  );
+
   return (
-    <div className="class-screen" data-testid="screen-class" data-class-id={cls.id} data-tab={tab}>
-      <ScreenHeader title={cls.name} hideTitle />
-      <header className="cls-scope class-header" style={classStyle(cls.color)}>
-        <ClassTab color={cls.color} icon={cls.icon} size="lg" filled />
-        <div className="class-header__titles">
-          <h1 className="class-header__title" tabIndex={-1} data-testid="class-title">{cls.name}</h1>
-          <p className="class-header__meta">
+    <div className="class-screen cls-scope" style={classStyle(cls.color)} data-testid="screen-class" data-class-id={cls.id} data-tab={tab}>
+      <ScreenHeader
+        className="class-header"
+        leading={<ClassTab color={cls.color} icon={cls.icon} size="lg" filled />}
+        title={cls.name}
+        subtitle={
+          <span className="class-header__meta">
             {meta.map((m, i) => (
               <React.Fragment key={i}>
                 {i > 0 ? <span className="class-header__dot" aria-hidden>·</span> : null}
                 {m}
               </React.Fragment>
             ))}
-          </p>
+          </span>
+        }
+        actions={actions}
+        more={<MenuButton label={t('app.header.more')} icon={Ellipsis} iconOnly variant="ghost" items={moreItems} align="end" data-testid="class-more" />}
+      />
+      {cls.nextExams.length ? (
+        <div className="class-header__chips" aria-label={t('today.exams.title')} role="group">
+          {cls.nextExams.slice(0, 3).map((e) => (
+            <CountdownChip key={e.examId} exam={e} now={now} onClick={() => replace({ name: 'class', classId: cls.id, tab: 'exams' })} data-testid="class-countdown" />
+          ))}
         </div>
-        <div className="class-header__actions">
-          {cls.shared ? (
-            <Button icon={UserPlus} onClick={() => dialogs.open('invite', { classId: cls.id })} data-testid="class-invite">{t('classes.header.invite')}</Button>
-          ) : (
-            <Button icon={FolderSync} onClick={() => replace({ name: 'class', classId: cls.id, tab: 'share' })} data-testid="class-share-open">{t('classes.header.share')}</Button>
-          )}
-          {recordingHere ? (
-            <Tooltip label={t('classes.header.recordBusy', { class: recordingClass })}>
-              <span className="class-header__busy" tabIndex={0} aria-label={t('classes.header.recordBusy', { class: recordingClass })}>
-                <Button variant="primary" icon={CircleDot} disabled data-testid="record-class">{t('classes.header.record')}</Button>
-              </span>
-            </Tooltip>
-          ) : (
-            <Button variant="primary" icon={CircleDot} disabled={cls.archived || missingFolder} onClick={() => dialogs.open('record', { classId: cls.id })} data-testid="record-class">
-              {t('classes.header.record')}
-            </Button>
-          )}
-          <MenuButton label={t('classes.header.add')} icon={Plus} items={addItems} disabled={missingFolder} align="end" data-testid="class-add" />
-          <MenuButton label={t('app.header.more')} icon={Ellipsis} iconOnly items={moreItems} align="end" data-testid="class-more" />
-        </div>
-        {cls.nextExams.length ? (
-          <div className="class-header__chips" aria-label={t('today.exams.title')}>
-            {cls.nextExams.slice(0, 3).map((e) => (
-              <CountdownChip key={e.examId} exam={e} now={now} onClick={() => replace({ name: 'class', classId: cls.id, tab: 'exams' })} data-testid="class-countdown" />
-            ))}
-          </div>
-        ) : null}
-      </header>
+      ) : null}
       {cls.newerFormat ? <NewerFormatNotice /> : null}
       {missingFolder ? (
         <div className="class-missing">

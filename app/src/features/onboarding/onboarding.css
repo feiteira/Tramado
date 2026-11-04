@@ -40,7 +40,7 @@
   gap: 10px;
 }
 
-.onb__wordmark {
+.onb .onb__wordmark {
   font-size: var(--fs-2xl);
 }
 
@@ -101,15 +101,18 @@
   font-weight: 620;
 }
 
-.onb__language {
-  display: flex;
+.onb .onb__language {
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-3);
 }
 
-.onb__language .radios__label {
+.onb .onb__language .radios__label {
   margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 560;
 }
 
 .onb__footnote {

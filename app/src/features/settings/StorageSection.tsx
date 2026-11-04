@@ -108,7 +108,6 @@ export default function StorageSection({ services }: { services: AppServices }) 
                 <span className="set-class">
                   <ClassTab color={c.color} icon={c.icon} size="sm" />
                   <span className="set-class__name">{c.name}</span>
-                  <span className="set-class__size t-tabular">{u ? size(u.total) : '…'}</span>
                 </span>
               }
               hint={u ? t('settings.storage.classSize', { size: size(u.total), audio: size(u.audio), trash: size(u.trash) }) : undefined}

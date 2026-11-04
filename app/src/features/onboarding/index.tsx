@@ -244,34 +244,38 @@ function NameStep({ services, onBack, onDone }: { services?: AppServices; onBack
         size="lg"
         data-testid="onboarding-name-input"
       />
-      <div className="onb__line" data-testid="onboarding-device">
-        {editingDevice ? (
-          <TextField
-            ref={deviceRef}
-            label={t('onboarding.name.deviceLabel')}
-            value={device ?? suggested}
-            onChange={(v) => setDevice(v.slice(0, 64))}
-            maxLength={64}
-            onBlur={() => setEditingDevice(false)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === 'Escape') {
-                e.preventDefault();
+      {deviceName || editingDevice ? (
+        <div className="onb__line" data-testid="onboarding-device">
+          {editingDevice ? (
+            <TextField
+              ref={deviceRef}
+              label={t('onboarding.name.deviceLabel')}
+              value={device ?? suggested}
+              onChange={(v) => setDevice(v.slice(0, 64))}
+              maxLength={64}
+              onBlur={() => {
+                if (!device?.trim()) setDevice(null);
                 setEditingDevice(false);
-              }
-            }}
-            data-testid="onboarding-device-input"
-          />
-        ) : (
-          <>
-            <span>{deviceName ? t('onboarding.name.device', { device: deviceName }) : null}</span>
-            {deviceName ? (
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                  e.preventDefault();
+                  if (!device?.trim()) setDevice(null);
+                  setEditingDevice(false);
+                }
+              }}
+              data-testid="onboarding-device-input"
+            />
+          ) : (
+            <>
+              <span>{t('onboarding.name.device', { device: deviceName })}</span>
               <Button variant="ghost" size="sm" onClick={() => setEditingDevice(true)} data-testid="onboarding-device-change">
                 {t('common.change')}
               </Button>
-            ) : null}
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      ) : null}
       {!services ? (
         <div className="onb__line onb__folder" data-testid="onboarding-folder">
           <FolderOpen size={16} strokeWidth={1.75} aria-hidden />

@@ -358,13 +358,15 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
         {empty ? (
           <div className="palette__empty" data-testid="palette-empty" role="status">
             <p className="palette__empty-title">{t('search.none.title', { q: query.trim() })}</p>
-            <p className="palette__empty-body">{t('search.none.body')}</p>
             {scope ? (
-              <div className="palette__empty-actions">
-                <Button size="sm" onClick={() => setScope(null)} data-testid="palette-search-all">
-                  {t('search.none.all')}
-                </Button>
-              </div>
+              <>
+                <p className="palette__empty-body">{t('search.none.body')}</p>
+                <div className="palette__empty-actions">
+                  <Button size="sm" onClick={() => setScope(null)} data-testid="palette-search-all">
+                    {t('search.none.all')}
+                  </Button>
+                </div>
+              </>
             ) : null}
           </div>
         ) : null}

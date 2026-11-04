@@ -64,7 +64,7 @@ export default function ProfileSection({ services }: { services: AppServices }) 
             data-testid="profile-device"
           />
         </Row>
-        <Row label={t('settings.profile.colour')} stack>
+        <Row stack>
           <div className="profile-colour">
             {me ? <Avatar name={me.name} memberId={me.memberId} colour={colour ?? undefined} size={40} data-testid="profile-avatar" /> : null}
             <ColorPicker label={t('settings.profile.colour')} value={colour} onChange={(hex) => void save({ colour: hex })} data-testid="profile-colour" />

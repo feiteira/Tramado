@@ -13,6 +13,7 @@ import type { MarkerKind } from '../services/types/viewModels';
 import { ACTIONS, DIALOGS, OVERLAYS, PALETTE_PROVIDERS, SCREENS, type DialogId } from '../features/registry';
 import Onboarding from '../features/onboarding/index';
 import { Button } from '../ui/components/Button';
+import { classIconComponent } from '../ui/tramado/ClassTab';
 import { useConfirm } from '../ui/components/Confirm';
 import { Spinner } from '../ui/components/Feedback';
 import { useToast } from '../ui/components/Toast';
@@ -399,7 +400,7 @@ function Shell({ services }: { services: AppServicesImpl }) {
       const aiG = t('app.commands.group.ai');
       const list: Command[] = [
         { id: 'go-today', label: t('app.commands.goToday'), group: nav, icon: Sun, shortcut: key('H', { shift: true }), run: () => go({ name: 'today' }) },
-        ...active.map((c, i) => ({ id: `go-class-${c.id}`, label: t('app.commands.goClass', { class: c.name }), group: nav, keywords: [c.shortName], ...(i < 9 ? { shortcut: key(String(i + 1)) } : {}), run: () => go({ name: 'class', classId: c.id }) })),
+        ...active.map((c, i) => ({ id: `go-class-${c.id}`, label: t('app.commands.goClass', { class: c.name }), group: nav, icon: classIconComponent(c.icon), keywords: [c.shortName], ...(i < 9 ? { shortcut: key(String(i + 1)) } : {}), run: () => go({ name: 'class', classId: c.id }) })),
         { id: 'go-settings', label: t('app.commands.goSettings'), group: nav, icon: Settings, shortcut: key(','), run: () => go({ name: 'settings' }) },
         ...SETTINGS_SECTIONS.map((s) => ({ id: `go-settings-${s}`, label: t('app.commands.goSettingsSection', { section: t(`settings.sections.${s}`) }), group: nav, icon: Settings, run: () => go({ name: 'settings', section: s }) })),
         { id: 'class-new', label: t('app.commands.classNew'), group: create, icon: Plus, run: () => dialogsApi.open('new-class', {}) },

@@ -11,6 +11,8 @@ describe('formatBytes / formatDuration', () => {
     expect(formatBytes(en.t, 'en-GB', 812 * 1024 ** 2)).toBe('812 MB');
     expect(formatBytes(en.t, 'en-GB', 1.08 * 1024 ** 3)).toBe('1.1 GB');
     expect(formatBytes(pt.t, 'pt-PT', 1536)).toBe('1,5 KB');
+    expect(formatBytes(en.t, 'en-GB', 1000 * 1024)).toBe('1 MB');
+    expect(formatBytes(en.t, 'en-GB', 999)).toBe('999 B');
   });
   it('durations', () => {
     expect(formatDuration(en.t, 42_000)).toBe('42 s');

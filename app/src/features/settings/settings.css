@@ -149,12 +149,27 @@
   align-items: stretch;
 }
 
+.set-row--stack > .set-row__text,
+.set-row--stack > .set-row__control {
+  flex: none;
+}
+
 .set-row__text {
   flex: 1 1 16rem;
   min-width: 0;
 }
 
 .set-row__label {
+  font-weight: 560;
+}
+
+/* A row that is just a switch: the switch sits at the end like every other row's control. */
+.set-row__control:only-child:has(> .switch-row) {
+  flex: 1;
+  align-items: stretch;
+}
+
+.set-row__control:only-child > .switch-row .choice__label {
   font-weight: 560;
 }
 
@@ -328,4 +343,8 @@
   align-items: center;
   gap: 4px;
   margin-top: var(--s-1);
+}
+
+.set-inline--start {
+  justify-content: flex-start;
 }

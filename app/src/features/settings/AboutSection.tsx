@@ -111,13 +111,11 @@ export default function AboutSection({ services }: { services: AppServices }) {
         </Row>
       </Group>
       <Group id="about-diagnostics" title={t('settings.about.diagnostics')}>
-        <Row label={t('settings.about.copyDiagnostics')} hint={t('settings.about.diagnosticsCopied')}>
-          <Button size="sm" icon={Copy} onClick={() => void copy()} data-testid="about-copy-diagnostics">
-            {t('settings.about.copyDiagnostics')}
-          </Button>
-        </Row>
-        <Row label={t('settings.about.mediaTest')} stack>
-          <div className="set-inline">
+        <Row stack>
+          <div className="set-inline set-inline--start">
+            <Button size="sm" icon={Copy} onClick={() => void copy()} data-testid="about-copy-diagnostics">
+              {t('settings.about.copyDiagnostics')}
+            </Button>
             <Button size="sm" icon={Volume2} busy={media.kind === 'testing'} onClick={() => void test()} data-testid="about-media-test">
               {t('settings.about.mediaTest')}
             </Button>

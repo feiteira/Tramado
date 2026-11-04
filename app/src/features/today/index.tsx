@@ -152,7 +152,7 @@ export default function Today({ route, services }: { route: Extract<Route, { nam
     else void ACTIONS.importDocuments().then((m) => m.default(services, id)).catch(() => go({ name: 'class', classId: id, tab: 'documents' }));
   };
 
-  const everythingEmpty = !showChecklist && exams.length === 0 && lectures.length === 0 && unreadRows.length === 0 && !queue.job && trans.others.length === 0 && trans.waiting.length === 0;
+  const everythingEmpty = exams.length === 0 && lectures.length === 0 && unreadRows.length === 0 && !queue.job && trans.others.length === 0 && trans.waiting.length === 0;
   const busy = loading && data.every((d) => d.lectures.length === 0);
 
   const left = (

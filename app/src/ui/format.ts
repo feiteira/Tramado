@@ -9,7 +9,8 @@ export function formatBytes(t: T, bcp47: string, bytes: number): string {
   const n = Math.max(0, bytes);
   const units: Array<['b' | 'kb' | 'mb' | 'gb', number]> = [['gb', 1024 ** 3], ['mb', 1024 ** 2], ['kb', 1024], ['b', 1]];
   for (const [unit, size] of units) {
-    if (n >= size || unit === 'b') {
+    // From 1000 of the smaller unit on, the larger one reads better ("1 MB", not "1,000 KB").
+    if (n >= (size * 1000) / 1024 || unit === 'b') {
       const v = n / size;
       const digits = unit !== 'b' && v < 10 ? 1 : 0;
       const text = new Intl.NumberFormat(bcp47, { maximumFractionDigits: digits, minimumFractionDigits: 0 }).format(v);
