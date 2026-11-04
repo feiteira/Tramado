@@ -34,6 +34,7 @@ const KEY_OF: Record<MarkerKind, string> = { important: '1', confused: '2', exam
 const BY_KEY: Record<string, MarkerKind> = { '1': 'important', '2': 'confused', '3': 'exam', '4': 'todo' };
 const NOTICE_MS = 10_000;
 const COMPACT_BELOW = 1280;
+const TIGHT_BELOW = 1000;
 
 type Warning = { key: string; text: string; check?: boolean };
 
@@ -57,6 +58,7 @@ export default function DockRow({ services }: { services: AppServices }) {
   const [shown, setShown] = useState<Record<string, number>>({});
   const [checkOpen, setCheckOpen] = useState(false);
   const [compact, setCompact] = useState(false);
+  const [tight, setTight] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
   const checkRef = useRef<HTMLButtonElement>(null);
   const prev = useRef<RecordingState | null>(null);
@@ -86,9 +88,13 @@ export default function DockRow({ services }: { services: AppServices }) {
   useEffect(() => {
     const main = document.getElementById('main');
     if (!main || typeof ResizeObserver === 'undefined') return undefined;
-    const ro = new ResizeObserver(() => setCompact(main.clientWidth < COMPACT_BELOW));
+    const measure = () => {
+      setCompact(main.clientWidth < COMPACT_BELOW);
+      setTight(main.clientWidth < TIGHT_BELOW);
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(main);
-    setCompact(main.clientWidth < COMPACT_BELOW);
+    measure();
     return () => ro.disconnect();
   }, [state === null]);   // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -280,7 +286,7 @@ export default function DockRow({ services }: { services: AppServices }) {
   const cls = classes.find((c) => c.id === state.classId);
   const online = !!s.tracks.system;
   return (
-    <div ref={rowRef} className={cx('dock-row', 'dock-row--rec', paused && 'dock-row--paused')} role="region" aria-label={t('record.dock.region')} tabIndex={-1} data-testid="record-dock" data-state={s.state}>
+    <div ref={rowRef} className={cx('dock-row', 'dock-row--rec', paused && 'dock-row--paused', tight && 'dock-row--tight')} role="region" aria-label={t('record.dock.region')} tabIndex={-1} data-testid="record-dock" data-state={s.state}>
       {live}
       <span className="dock-rec">
         <span className={cx('rec-dot', paused && 'rec-dot--still')} aria-hidden />
@@ -344,15 +350,21 @@ export default function DockRow({ services }: { services: AppServices }) {
           </div>
         ) : (
           KINDS.map((k) => (
-            <MarkerButton key={k} kind={k} label={t(`record.markers.${k}`)} keyHint={KEY_OF[k]} compact={compact} popped={popped === k} disabled={s.state === 'stopping'} onClick={() => void mark(k)} />
+            <MarkerButton key={k} kind={k} label={t(`record.markers.${k}`)} keyHint={KEY_OF[k]} compact={compact} tight={tight} popped={popped === k} disabled={s.state === 'stopping'} onClick={() => void mark(k)} />
           ))
         )}
       </div>
       <span className="dock-row__spacer" />
       {paused ? (
-        <Button size="sm" icon={Play} onClick={() => void services.recording.resume().catch((e: unknown) => toast.error(e))} data-testid="record-resume">
-          {t('record.dock.resume')}
-        </Button>
+        tight ? (
+          <IconButton size="sm" variant="secondary" icon={Play} label={t('record.dock.resume')} onClick={() => void services.recording.resume().catch((e: unknown) => toast.error(e))} data-testid="record-resume" />
+        ) : (
+          <Button size="sm" icon={Play} onClick={() => void services.recording.resume().catch((e: unknown) => toast.error(e))} data-testid="record-resume">
+            {t('record.dock.resume')}
+          </Button>
+        )
+      ) : tight ? (
+        <IconButton size="sm" variant="secondary" icon={Pause} label={t('record.dock.pause')} onClick={() => void services.recording.pause().catch((e: unknown) => toast.error(e))} disabled={s.state === 'stopping'} data-testid="record-pause" />
       ) : (
         <Button size="sm" icon={Pause} onClick={() => void services.recording.pause().catch((e: unknown) => toast.error(e))} disabled={s.state === 'stopping'} data-testid="record-pause">
           {t('record.dock.pause')}

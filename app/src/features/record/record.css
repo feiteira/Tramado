@@ -456,3 +456,17 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.dock-row--tight {
+  gap: var(--s-2);
+  padding: 0 var(--s-3);
+}
+.dock-row--tight .dock-meter__label,
+.dock-row--tight .dock-row__divider {
+  display: none;
+}
+.dock-row--tight .dock-row__time {
+  font-size: var(--fs-md);
+}
+.dock-row--tight .dock-row__class {
+  max-width: 140px;
+}

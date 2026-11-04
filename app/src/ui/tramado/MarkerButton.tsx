@@ -14,13 +14,16 @@ export interface MarkerButtonProps {
   /** "1"…"4", "N". */
   keyHint: string;
   compact?: boolean;
+  /** Icon only, without the key hint (the narrowest windows). */
+  tight?: boolean;
   disabled?: boolean;
   popped?: boolean;
   onClick(): void;
   pressed?: boolean;
 }
 
-export function MarkerButton({ kind, label, keyHint, compact = false, disabled, popped, onClick, pressed }: MarkerButtonProps) {
+export function MarkerButton({ kind, label, keyHint, compact = false, tight = false, disabled, popped, onClick, pressed }: MarkerButtonProps) {
+  compact = compact || tight;
   const button = (
     <button
       type="button"
@@ -33,9 +36,11 @@ export function MarkerButton({ kind, label, keyHint, compact = false, disabled, 
       onClick={onClick}
     >
       <MarkerIcon kind={kind} size={16} />
-      <kbd className="marker-button__key" aria-hidden>
-        {keyHint}
-      </kbd>
+      {tight ? null : (
+        <kbd className="marker-button__key" aria-hidden>
+          {keyHint}
+        </kbd>
+      )}
       <span className={compact ? 'visually-hidden' : 'marker-button__label'}>{label}</span>
     </button>
   );
