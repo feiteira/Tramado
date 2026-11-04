@@ -34,6 +34,8 @@ export interface FakeClaims extends ClaimEngine {
   lose(lectureId: Ulid): void;
   /** The round of this device's last claim per lecture. */
   rounds: Map<Ulid, number>;
+  /** This device already holds a claim (as after a restart): no round is run. */
+  restore(lectureId: Ulid, kind: Kind, status: ClaimFile['status'], round?: number): Promise<void>;
 }
 
 const RANK: Record<ClaimFile['status'], number> = { done: 0, working: 1, claimed: 2, released: 9, failed: 9 };
@@ -122,6 +124,17 @@ export function createFakeClaims(opts: FakeClaimsOptions | 'won' | 'lost' = 'won
     },
     lose(id) {
       for (const cb of [...(lost.get(id) ?? [])]) cb();
+    },
+    async restore(id, kind, status, round = 1) {
+      rounds.set(id, round);
+      const deviceId = o.me?.deviceId ?? 'ME';
+      const file: ClaimFile = {
+        format: 'tramado.claim', version: 1, kind, lectureId: id, round, deviceId, memberId: o.me?.memberId ?? '', claimedAt: now(), status, heartbeat: 3,
+        updatedAt: instant(now()), audioSha256: null,
+      };
+      mine.set(key(id, kind), { file, view: { deviceId, who: o.me?.name ?? 'me', status, progress: null, etaMs: null, health: 'healthy', sinceMs: 0, mine: true } });
+      await write(id, kind);
+      publish(id, kind);
     },
   };
   return fake;

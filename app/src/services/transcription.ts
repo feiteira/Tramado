@@ -352,7 +352,7 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     const i = await info();
     const ok = await check(classId, r, { automatic: opts.automatic, newRound: opts.newRound, engine }, i);
     if (!ok.eligible) {
-      setReason(classId, lectureId, ok.reason);
+      setReason(classId, lectureId, ok.reason, r.lecture.title);
       return 'ineligible';
     }
     const claims = cls(classId).claims;
@@ -371,8 +371,14 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     return 'won';
   }
 
-  function setReason(classId: ClassId, lectureId: Ulid, reason: IneligibleReason | null) {
-    state.update((s) => ({ ...s, lectures: s.lectures.map((l) => (l.classId === classId && l.lectureId === lectureId ? { ...l, eligible: reason === null, reason } : l)) }));
+  function setReason(classId: ClassId, lectureId: Ulid, reason: IneligibleReason | null, title = '') {
+    state.update((s) => {
+      const hit = s.lectures.some((l) => l.classId === classId && l.lectureId === lectureId);
+      const lectures = hit
+        ? s.lectures.map((l) => (l.classId === classId && l.lectureId === lectureId ? { ...l, eligible: reason === null, reason } : l))
+        : [...s.lectures, { classId, lectureId, title, claim: null, eligible: reason === null, reason }];
+      return { ...s, lectures };
+    });
   }
 
   function bestEngine(i: SpeechInfo | null): Engine | null {

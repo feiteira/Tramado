@@ -19,6 +19,7 @@ import { examRadar } from '../core/transcript/radar';
 import { legalRefs } from '../core/transcript/references';
 import { renderMarkdown, renderText, renderVtt } from '../core/transcript/render';
 import type { AudioSource, Marker, Platform } from '../platform/types';
+import type { ClassStoreImpl } from './classStore';
 import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { AppServices, ClassStore, IndexedItem } from './types/common';
@@ -732,7 +733,11 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     },
     fold: (id, opts) => foldNow(id, opts?.takeOver ?? false),
     records: () => records,
-    refresh: () => schedule(),
+    async refresh() {
+      // Own writes reach the index through the store's coalesced reload: let it run first.
+      await (store as Partial<ClassStoreImpl>).idle?.();
+      await schedule();
+    },
     async idle() {
       for (let i = 0; i < 20 && (running || folding.size); i++) {
         if (folding.size) await Promise.all([...folding]);
