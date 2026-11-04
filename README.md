@@ -55,9 +55,10 @@ the ones you missed come back.
 
 Invite classmates with one message (a link, a code, a QR code or a file). They get the lectures, transcripts,
 documents, class notes and a class chat with mentions, replies and an `@AI` that answers from the class's sources.
-Sharing runs on [Syncthing](https://syncthing.net), bundled with Tramado: files travel encrypted, directly between your
-computers. Organisers can ask to approve each newcomer, and everyone can compare **check words** to be sure who they let
-in. Your own notes, highlights, practice and Ask conversations stay on your computer.
+Sharing runs on [Syncthing](https://syncthing.net), bundled with Tramado: files travel encrypted between your computers
+(directly, or through a public Syncthing relay when a network blocks direct connections). Organisers can ask to
+approve each newcomer, and everyone can compare **check words** to be sure who they let in. Your own notes,
+highlights, practice and Ask conversations stay on your computer.
 
 ![The class chat with an AI answer that cites the lecture and the law](docs/manual/img/en/chat.webp)
 
