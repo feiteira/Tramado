@@ -16,7 +16,7 @@ export const ai: Messages['ai'] = {
     deep: 'Respuesta en profundidad',
     deepCost: 'Respuesta en profundidad ({min}–{max} solicitudes)',
     retry: 'Volver a intentarlo',
-    cut: 'La respuesta quedó cortada.',
+    cut: 'La respuesta se ha cortado.',
     continue: 'Continuar',
     streaming: 'Escribiendo…',
   },

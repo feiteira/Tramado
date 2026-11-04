@@ -5,7 +5,7 @@ export const sync: Messages['sync'] = {
   pill: {
     local: 'Solo en este ordenador',
     starting: 'Iniciando la sincronización…',
-    error: 'La sincronización no está funcionando',
+    error: 'La sincronización no funciona',
     paused: 'Sincronización en pausa',
     attention: { one: '{n} necesita atención', other: '{n} necesitan atención' },
     offline: 'Sin conexión',

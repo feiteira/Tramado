@@ -43,7 +43,7 @@ export const record: Messages['record'] = {
     noSystemAudio: 'O Tramado não consegue gravar o som do computador neste sistema: {reason}.',
     micOnly: 'Gravar só o microfone (na sala)',
     lowBattery: 'Com bateria, restam {percent} %. Ligue à corrente se puder.',
-    permissionDenied: 'O Tramado não tem permissão para usar o microfone. Permita-o em {place} e tente de novo.',
+    permissionDenied: 'O Tramado não tem permissão para usar o microfone. Permita-o em {place} e tente novamente.',
     permissionPlaceMac: 'Definições do Sistema › Privacidade e segurança › Microfone',
     permissionPlaceWindows: 'Definições › Privacidade e segurança › Microfone',
     openSettings: 'Abrir as definições',
@@ -133,7 +133,7 @@ export const record: Messages['record'] = {
     filterAudio: 'Áudio e vídeo',
     filterSubtitles: 'Legendas',
     noFile: 'Ainda não escolheu nenhum ficheiro.',
-    unsupported: 'O formato de áudio deste ficheiro não é suportado. Converta-o para MP3 ou M4A (AAC-LC) e tente de novo.',
+    unsupported: 'O formato de áudio deste ficheiro não é suportado. Converta-o para MP3 ou M4A (AAC-LC) e tente novamente.',
     vttLater: 'Ainda não é possível usar as legendas (“{file}”) como transcrição: o Tramado transcreve a própria gravação.',
   },
 };

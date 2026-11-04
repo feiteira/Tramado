@@ -8,7 +8,7 @@ export const documents: Messages['documents'] = {
     newFolderName: 'Nome da pasta',
     filter: 'Filtrar documentos',
     view: { folders: 'Pastas', recent: 'Recentes' },
-    columns: { name: 'Nome', pages: 'Páginas', addedBy: 'Adicionado por', date: 'Data', text: 'Texto para pesquisa e IA' },
+    columns: { name: 'Nome', pages: 'Págs.', addedBy: 'Adicionado por', date: 'Data', text: 'Pesquisa e IA' },
     privateSection: 'Só neste computador',
     emptyFolder: 'Esta pasta está vazia.',
     emptyFolderShort: 'vazia',

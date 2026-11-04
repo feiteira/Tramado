@@ -112,7 +112,7 @@ export const settings: Messages['settings'] = {
     root: 'Las asignaturas se guardan en',
     rootHint: 'Las nuevas asignaturas van aquí; las existentes se quedan donde están.',
     classSize: '{size} (grabaciones {audio} · archivos eliminados que se guardan 30 días {trash})',
-    emptyTrash: 'Vaciar la papelera de la asignatura',
+    emptyTrash: 'Vaciar la papelera',
     emptyTrashConfirm: { title: '¿Eliminar definitivamente {size} de archivos eliminados de {class} en este ordenador?', body: 'Las papeleras de sus compañeros no se ven afectadas.', confirm: 'Eliminar definitivamente' },
     skipAudio: 'Sin audio',
     models: 'Modelos de voz', manage: 'Gestionar',

@@ -15,7 +15,7 @@ export const a11y: Messages['a11y'] = {
   classTab: 'Color de la asignatura {name}',
   currentSegment: 'En reproducción',
   highlighted: 'Resaltado como {kind}',
-  cited: 'Pasaje citado',
+  cited: 'Fragmento citado',
   hit: 'Coincidencia de la búsqueda',
   dialogClose: 'Cerrar',
   required: 'obligatorio',

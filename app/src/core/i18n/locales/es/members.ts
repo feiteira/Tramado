@@ -46,7 +46,7 @@ export const members: Messages['members'] = {
     nobody: 'Ahora mismo no hay nadie de la asignatura en línea. Entrará en cuanto alguien abra Tramado.',
     waitingAsk: 'Esperando a que un miembro le deje entrar…',
     sameWords: 'Los miembros ven las mismas palabras.',
-    declined: 'La asignatura de {name} no dejó entrar a este ordenador. Pídale una invitación nueva.',
+    declined: 'La asignatura de {name} no ha dejado entrar a este ordenador. Pídale una invitación nueva.',
     stalled: 'El ordenador de {name} todavía no le ha dejado entrar. Inténtelo de nuevo dentro de 10 minutos.',
     retry: 'Volver a intentarlo',
     pairNeedsNewer: 'Para añadir otro ordenador necesita un Tramado más reciente.',

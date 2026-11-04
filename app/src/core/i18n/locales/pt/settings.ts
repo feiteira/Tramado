@@ -112,7 +112,7 @@ export const settings: Messages['settings'] = {
     root: 'As disciplinas ficam em',
     rootHint: 'As novas disciplinas ficam aqui; as existentes ficam onde estão.',
     classSize: '{size} (gravações {audio} · ficheiros eliminados guardados 30 dias {trash})',
-    emptyTrash: 'Esvaziar o lixo da disciplina',
+    emptyTrash: 'Esvaziar o lixo',
     emptyTrashConfirm: { title: 'Eliminar definitivamente {size} de ficheiros eliminados de {class} neste computador?', body: 'As cópias do lixo dos colegas não são afetadas.', confirm: 'Eliminar definitivamente' },
     skipAudio: 'Sem áudio',
     models: 'Modelos de voz', manage: 'Gerir',
