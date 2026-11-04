@@ -72,7 +72,7 @@ describe('formatOf', () => {
   it('identifies other zip-based formats', async () => {
     const { zipSync, strToU8 } = await import('fflate');
     const pptx = zipSync({ '[Content_Types].xml': strToU8('<Types/>'), 'ppt/presentation.xml': strToU8('<p/>') });
-    expect(sniffFormat('slides.pptx', pptx)).toEqual({ format: null, hint: 'pptx' });
+    expect(sniffFormat('slides.pptx', pptx)).toEqual({ format: 'pptx', hint: null });
     const ods = zipSync({ mimetype: [strToU8('application/vnd.oasis.opendocument.spreadsheet'), { level: 0 }], 'content.xml': strToU8('<x/>') });
     expect(sniffFormat('folha.ods', ods)).toEqual({ format: null, hint: 'ods' });
     const plain = zipSync({ 'a.txt': strToU8('a') });

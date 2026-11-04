@@ -19,6 +19,7 @@ export const SUPPORTED: readonly SupportedFormat[] = [
   { format: 'docx', extensions: ['docx'], mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', group: 'document' },
   { format: 'odt', extensions: ['odt'], mime: 'application/vnd.oasis.opendocument.text', group: 'document' },
   { format: 'pdf', extensions: ['pdf'], mime: 'application/pdf', group: 'document' },
+  { format: 'pptx', extensions: ['pptx'], mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', group: 'document' },
   { format: 'rtf', extensions: ['rtf'], mime: 'application/rtf', group: 'document' },
   { format: 'txt', extensions: ['txt', 'text'], mime: 'text/plain', group: 'document' },
   { format: 'md', extensions: ['md', 'markdown'], mime: 'text/markdown', group: 'document' },
@@ -39,7 +40,7 @@ export function mimeOf(format: ImportFormat): string {
 const BY_EXTENSION = new Map<string, ImportFormat>(SUPPORTED.flatMap((s) => s.extensions.map((e) => [e, s.format] as const)));
 
 /** Formats whose files are binary containers: a damaged one must not be read as text. */
-const BINARY: ReadonlySet<ImportFormat> = new Set(['docx', 'odt', 'pdf']);
+const BINARY: ReadonlySet<ImportFormat> = new Set(['docx', 'odt', 'pdf', 'pptx']);
 
 export interface Sniffed {
   format: ImportFormat | null;
@@ -74,7 +75,7 @@ function sniffZip(bytes: Uint8Array, ext: string): Sniffed {
   if (has('[Content_Types].xml')) {
     if (names.some((n) => n.startsWith('word/'))) return { format: 'docx', hint: null };
     if (names.some((n) => n.startsWith('xl/'))) return { format: null, hint: 'xlsx' };
-    if (names.some((n) => n.startsWith('ppt/'))) return { format: null, hint: 'pptx' };
+    if (names.some((n) => n.startsWith('ppt/'))) return { format: 'pptx', hint: null };
   }
   if (has('content.xml') && ext === 'odt') return { format: 'odt', hint: null };
   return { format: null, hint: 'zip' };

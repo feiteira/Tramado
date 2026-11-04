@@ -5,6 +5,7 @@ import { decodeHtml, htmlToText } from './html';
 import { markdownToText } from './md';
 import { odtToText } from './odt';
 import { type PdfJsLike, extractPdfText } from './pdf';
+import { pptxToText } from './pptx';
 import { decodeRtfBytes, isRtf, rtfToText } from './rtf';
 import { parseSrt } from './srt';
 import { baseName, canonicalize, decodeTextWithInfo, tidyPlain } from './text';
@@ -22,6 +23,12 @@ export { canonicalize, decodeText, decodeTextWithInfo, baseName, docName } from 
 export { parseTextTranscript, cuesToTranscript, looksLikeTranscript, parseTimestamp, cleanSpeakerName, type Cue, type SpeakerOptions, type TranscriptResult } from './transcript';
 export { extractPdfText, type PdfJsLike, type PdfText } from './pdf';
 export { loadMammoth, type MammothLike } from './docx';
+export { pptxToText, type SlidesText } from './pptx';
+export { extractPdfPages, normalizePageLabels, pageOf, type PdfPages, type PdfPagesOptions } from './pdfPages';
+export { stripRunningLines, runningKey } from './headers';
+export { findArticleHeads, articleStructure, articleUnits } from './articles';
+export { buildUnits, paragraphSpans, unitAt, type UnitSpan } from './units';
+export { extractText, docKindOf, EXTRACTOR, TEXT_KINDS, isScan, type DocKind, type ExtractedText, type ExtractDeps } from './extract';
 // The individual readers, for callers that already hold decoded text or want one format only.
 export { htmlToText } from './html';
 export { markdownToText } from './md';
@@ -124,6 +131,10 @@ async function parse(format: ImportFormat, bytes: Uint8Array, opts: ImportOption
       // A PDF's lines are rebuilt from positions, so its layout is only read as a transcript
       // when the researcher says it is one.
       return { text: r.text, warnings: r.warnings, transcriptable: opts.transcript === 'always', kind: 'pdf' };
+    }
+    case 'pptx': {
+      const r = pptxToText(bytes);
+      return { text: r.text, warnings: r.warnings, transcriptable: false };
     }
     case 'vtt':
     case 'srt': {

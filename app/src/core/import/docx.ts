@@ -57,12 +57,12 @@ function boundedDocx(bytes: Uint8Array): Uint8Array {
   return zipSync(files, { level: 0 });
 }
 
-export async function docxToText(bytes: Uint8Array, mammoth?: MammothLike): Promise<DocxResult> {
+/** The .docx as mammoth's HTML (bounded first), with the number of images left out. */
+export async function docxToHtml(bytes: Uint8Array, mammoth?: MammothLike): Promise<{ html: string; images: number }> {
   const safe = boundedDocx(bytes);
   const m = mammoth ?? (await loadMammoth());
   let images = 0;
   const ab = safe.buffer as ArrayBuffer;
-  let html: string;
   try {
     const result = await m.convertToHtml({ arrayBuffer: ab, buffer: ab } as { arrayBuffer: ArrayBuffer }, {
       // Images would arrive as huge data: URIs; count them instead.
@@ -71,10 +71,14 @@ export async function docxToText(bytes: Uint8Array, mammoth?: MammothLike): Prom
         return Promise.resolve({ src: '' });
       }),
     });
-    html = result.value;
+    return { html: result.value, images };
   } catch (e) {
     throw new ImportError('DAMAGED', 'docx', e instanceof Error ? e.message : String(e));
   }
+}
+
+export async function docxToText(bytes: Uint8Array, mammoth?: MammothLike): Promise<DocxResult> {
+  const { html, images } = await docxToHtml(bytes, mammoth);
   const warnings = images ? [warning(WARNING.imagesSkipped, images)] : [];
   return { text: tidy(canonicalize(htmlToParagraphs(html, { literal: true }).join('\n'))), warnings };
 }
