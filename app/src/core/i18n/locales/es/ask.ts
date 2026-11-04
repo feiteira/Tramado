@@ -17,12 +17,12 @@ export const ask: Messages['ask'] = {
   postPrivate: 'Las respuestas que usan sus apuntes privados no se pueden publicar',
   postOther: 'Las respuestas que citan más de una asignatura no se pueden publicar en el chat de una asignatura',
   sent: { one: 'Enviado: su pregunta y {n} fragmento.', other: 'Enviado: su pregunta y {n} fragmentos.' },
-  seeSent: 'Ver lo que se envió',
+  seeSent: 'Ver lo que se ha enviado',
   post: 'Publicar en el chat de la asignatura',
   postConfirm: { title: '¿Publicar esta respuesta en el chat de {class}?', body: 'Sus compañeros verán su pregunta y la respuesta.', confirm: 'Publicar' },
   posted: 'Publicado en el chat de {class}.',
   copy: 'Copiar con las fuentes',
-  saveNote: 'Guardar como nota',
+  saveNote: 'Guardar como apunte',
   saved: 'Guardado en sus apuntes.',
   empty: {
     title: 'Pregunte lo que quiera sobre {class}.',
@@ -32,9 +32,9 @@ export const ask: Messages['ask'] = {
     topics: '¿Cuáles son los temas principales hasta ahora?',
   },
   off: {
-    title: 'Pregunte a sus asignaturas con IA.',
+    title: 'Haga preguntas sobre sus asignaturas con IA.',
     body: 'Configure OpenRouter con su propia clave (los modelos gratuitos funcionan) o un servicio de IA local. La búsqueda funciona sin IA.',
     setUp: 'Configurar la IA',
-    search: 'Buscar',
+    search: 'Buscar en su lugar',
   },
 };

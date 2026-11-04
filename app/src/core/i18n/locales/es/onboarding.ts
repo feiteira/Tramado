@@ -5,7 +5,7 @@ export const onboarding: Messages['onboarding'] = {
   step: 'Paso {n} de 4',
   welcome: {
     headline: 'Sus asignaturas, [m]todo en un solo lugar[/m]',
-    lead: 'Grabe y transcriba clases, guarde juntos todos los materiales y textos legales, compártalos con su clase y prepare los exámenes con una IA que le muestra de dónde sale cada respuesta.',
+    lead: 'Grabe y transcriba clases, guarde juntos todos los materiales y textos legales, compártalos con sus compañeros y prepare los exámenes con una IA que le muestra de dónde sale cada respuesta.',
     start: 'Empezar',
     example: 'Probar el ejemplo',
     promise: {
@@ -30,15 +30,15 @@ export const onboarding: Messages['onboarding'] = {
     cloudWarning: 'Esta carpeta la sincroniza {service}. Dos herramientas de sincronización sobre los mismos archivos causan conflictos. Elija una carpeta fuera de ella.',
     cloudChoose: 'Elegir otra carpeta',
     required: 'Escriba un nombre que sus compañeros reconozcan.',
-    identityError: 'Tramado está incompleto (falta el componente para compartir). Vuelva a instalar Tramado.',
+    identityError: 'Tramado está incompleto (falta el componente de sincronización). Vuelva a instalar Tramado.',
   },
   ai: {
     title: 'Ayuda de la IA (opcional)',
-    body: 'Tramado puede responder preguntas de examen a partir de sus asignaturas, explicar un pasaje, resumir una clase y encontrar cosas en sus documentos. Usa OpenRouter con su propia clave, y los modelos gratuitos funcionan.',
+    body: 'Tramado puede responder preguntas de examen a partir de sus asignaturas, explicar un fragmento, resumir una clase y encontrar cosas en sus documentos. Usa OpenRouter con su propia clave, y los modelos gratuitos funcionan.',
     keyLabel: 'Clave de OpenRouter',
     getKey: 'Consiga una clave gratuita en openrouter.ai/keys',
     age: 'OpenRouter es para mayores de 18 años. Si es menor, omita este paso: todo lo demás de Tramado funciona sin IA. También puede conectar una IA local más tarde, en Ajustes.',
-    privacy: 'Cuando pregunta algo a la IA, su pregunta y los pasajes necesarios van a OpenRouter y a la empresa que ejecuta el modelo. Tramado solo pide proveedores que no entrenan con lo que usted envía.',
+    privacy: 'Cuando pregunta algo a la IA, su pregunta y los fragmentos necesarios van a OpenRouter y a la empresa que ejecuta el modelo. Tramado solo pide proveedores que no entrenan con lo que usted envía.',
     test: 'Probar y guardar',
     skip: 'Omitir por ahora',
     checking: 'Comprobando su clave…',

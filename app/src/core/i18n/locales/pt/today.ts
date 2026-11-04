@@ -14,7 +14,7 @@ export const today: Messages['today'] = {
     whichClass: 'Em que disciplina?',
   },
   exams: {
-    title: 'Em breve',
+    title: 'Próximos exames',
     today: 'Hoje, {time}',
     tomorrow: 'Amanhã, {time}',
     inDays: { one: 'Daqui a {n} dia · {date}', other: 'Daqui a {n} dias · {date}' },
@@ -32,7 +32,7 @@ export const today: Messages['today'] = {
   unread: {
     title: 'Por ler',
     summary: { one: '{n} mensagem', other: '{n} mensagens' },
-    pins: { one: '{n} afixação nova', other: '{n} afixações novas' },
+    pins: { one: '{n} mensagem afixada nova', other: '{n} mensagens afixadas novas' },
     mentions: { one: '{n} menção', other: '{n} menções' },
   },
   empty: {

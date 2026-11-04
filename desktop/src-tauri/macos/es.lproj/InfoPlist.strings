@@ -1,2 +1,2 @@
-"NSMicrophoneUsageDescription" = "Tramado graba la clase que elija grabar con el micrófono de este ordenador. La grabación se queda en este ordenador, salvo que la comparta con su grupo de clase.";
-"NSAudioCaptureUsageDescription" = "Tramado graba una clase en línea que elija grabar, a partir de lo que reproduce este ordenador. La grabación se queda en este ordenador, salvo que la comparta con su grupo de clase.";
+"NSMicrophoneUsageDescription" = "Tramado graba la clase que elija grabar con el micrófono de este ordenador. La grabación se queda en este ordenador, salvo que la comparta con sus compañeros.";
+"NSAudioCaptureUsageDescription" = "Tramado graba una clase en línea que elija grabar, a partir de lo que reproduce este ordenador. La grabación se queda en este ordenador, salvo que la comparta con sus compañeros.";

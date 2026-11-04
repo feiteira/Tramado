@@ -18,5 +18,5 @@ export const notify: Messages['notify'] = {
   volunteerOn: 'Este ordenador ayudará a transcribir las clases de sus asignaturas cuando esté enchufado.',
   massDelete: 'El ordenador de {name} ha eliminado {n} archivos de {class}',
   folderMissing: 'Tramado no encuentra la carpeta de {class}',
-  backgroundRecording: 'Sigue grabando {class} en segundo plano.',
+  backgroundRecording: 'La grabación de {class} continúa en segundo plano.',
 };

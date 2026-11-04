@@ -14,7 +14,7 @@ export const today: Messages['today'] = {
     whichClass: '¿En qué asignatura?',
   },
   exams: {
-    title: 'Próximamente',
+    title: 'Próximos exámenes',
     today: 'Hoy, {time}',
     tomorrow: 'Mañana, {time}',
     inDays: { one: 'Dentro de {n} día · {date}', other: 'Dentro de {n} días · {date}' },

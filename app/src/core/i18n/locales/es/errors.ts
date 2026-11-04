@@ -3,7 +3,7 @@ import type { Messages } from '../en';
 
 export const errors: Messages['errors'] = {
   INVALID: 'Eso no es válido.',
-  NOT_IMPLEMENTED: 'Esto todavía no está hecho.',
+  NOT_IMPLEMENTED: 'Esto todavía no está disponible.',
   NOT_FOUND: 'Tramado no lo ha encontrado. Puede que se haya movido o eliminado.',
   PERMISSION_DENIED: 'Tramado no tiene permiso para abrir o cambiar ese archivo. Compruebe sus permisos.',
   IO_ERROR: 'No se ha podido leer ni escribir el archivo.',
@@ -30,7 +30,7 @@ export const errors: Messages['errors'] = {
   AI_UPSTREAM: 'El proveedor del modelo tiene problemas.',
   AI_UNAVAILABLE: 'Ahora mismo no hay ningún proveedor disponible para este modelo.',
   AI_TIMEOUT: 'El modelo ha tardado demasiado en responder.',
-  AI_OFFLINE: 'No tiene conexión.',
+  AI_OFFLINE: 'No tiene conexión a internet.',
   AI_LENGTH: 'El modelo no ha producido ninguna respuesta.',
   AI_HOST_NOT_ALLOWED: 'Tramado no tiene permiso para enviar solicitudes a esa dirección.',
   AI_BAD_ADDRESS: 'Esa dirección no parece correcta.',
@@ -44,12 +44,12 @@ export const errors: Messages['errors'] = {
   MODEL_UNREADABLE: 'El archivo del modelo de voz está dañado. Descárguelo de nuevo.',
   MODEL_DOWNLOAD_FAILED: 'No se ha podido descargar el modelo de voz. Compruebe su conexión y vuelva a intentarlo.',
   MODEL_INTEGRITY: 'El modelo de voz no se ha descargado correctamente. No se ha instalado nada.',
-  SYNC_UNAVAILABLE: 'El uso compartido no está funcionando.',
-  SYNC_LOCKED: 'Otra copia de Tramado está usando los datos del uso compartido.',
+  SYNC_UNAVAILABLE: 'La sincronización no está funcionando.',
+  SYNC_LOCKED: 'Otra copia de Tramado está usando los datos de sincronización.',
   SYNC_PORT: 'Otro programa está usando el puerto que necesita Tramado.',
   SYNC_FOLDER_MARKER_MISSING: 'Tramado no encuentra el marcador de la carpeta de la asignatura. ¿Se ha movido o vaciado la carpeta?',
   SYNC_INVITE_INVALID: 'Esto no parece una invitación de Tramado.',
-  SYNC_FOREIGN_WRITE: 'El ordenador de un compañero ha cambiado un archivo que pertenece a {name}. Se ha ignorado.',
+  SYNC_FOREIGN_WRITE: 'El ordenador de un compañero ha cambiado un archivo que pertenece a {name}. Se ha ignorado el cambio.',
   SYNC_IDENTITY_COPIED: 'Esto parece una copia del Tramado de otro ordenador.',
   withReason: '{message} ({code})',
 };

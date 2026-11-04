@@ -15,7 +15,7 @@ export const classes: Messages['classes'] = {
     language: 'Idioma en que se dan las clases', languageHint: 'Se usa en las transcripciones y en las respuestas de la IA.',
     languageAuto: 'Detectar automáticamente',
     share: 'Compartir con los compañeros',
-    shareOn: 'Los compañeros que invite reciben las clases, los documentos, los apuntes de la clase y el chat. Sus propios apuntes, subrayados y práctica se quedan en su ordenador.',
+    shareOn: 'Los compañeros que invite reciben las clases, los documentos, los apuntes compartidos y el chat. Sus propios apuntes, resaltados y práctica se quedan en su ordenador.',
     shareOff: 'Solo en este ordenador. Puede compartirla más adelante.',
     vocabulary: 'Vocabulario para las transcripciones',
     vocabularyHint: 'Nombres y términos que usa el profesor (por ejemplo: Kelsen, ratio decidendi). Tramado se los pasa al modelo de voz para que los escriba bien.',
@@ -51,8 +51,8 @@ export const classes: Messages['classes'] = {
     addRecording: 'Añadir una grabación…',
     addExamDate: 'Añadir una fecha de examen…',
     addExamPaper: 'Añadir un enunciado de examen…',
-    addNote: 'Nuevos apuntes',
-    addClassNote: 'Nuevos apuntes de la clase',
+    addNote: 'Nuevo apunte',
+    addClassNote: 'Nuevo apunte compartido',
     more: {
       settings: 'Ajustes de la asignatura…', invite: 'Invitar a compañeros…', share: 'Compartir esta asignatura…', notifications: 'Notificaciones',
       recentlyDeleted: 'Eliminados recientemente…', openFolder: 'Abrir la carpeta', archive: 'Archivar', unarchive: 'Desarchivar',
@@ -82,12 +82,12 @@ export const classes: Messages['classes'] = {
   },
   inviteCard: {
     title: 'Invite a sus compañeros',
-    body: 'Envíe una sola invitación al grupo de la clase. Quien se una recibirá las clases, las transcripciones, los documentos y el chat.',
+    body: 'Envíe una sola invitación al grupo de la asignatura. Quien se una recibirá las clases, las transcripciones, los documentos y el chat.',
     action: 'Invitar a compañeros',
   },
   shareTab: {
     title: 'Esta asignatura solo está en este ordenador.',
-    body: 'Compártala para tener un chat de clase, documentos compartidos y transcripciones. Sus propios apuntes y su práctica siguen siendo privados.',
+    body: 'Compártala para tener un chat de la asignatura, documentos compartidos y transcripciones. Sus propios apuntes y su práctica siguen siendo privados.',
     action: 'Compartir esta asignatura',
   },
   leave: {
@@ -103,7 +103,7 @@ export const classes: Messages['classes'] = {
     typePrompt: 'Escriba el nombre de la asignatura para confirmar',
     confirm: 'Eliminar asignatura',
   },
-  archived: '{class} se ha movido al Archivo.',
+  archived: '{class} se ha archivado.',
   unarchived: '{class} ha vuelto a sus asignaturas.',
   organiserGone: {
     notice: 'Ya nadie organiza esta asignatura.',

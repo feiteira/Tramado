@@ -13,7 +13,7 @@ export const search: Messages['search'] = {
   askAiAll: 'Preguntar a la IA: «{q}» en todas las asignaturas',
   askAiOff: 'Preguntar a la IA (configure la IA primero)',
   indexing: { one: 'Aún se está leyendo {n} archivo; los resultados pueden estar incompletos.', other: 'Aún se están leyendo {n} archivos; los resultados pueden estar incompletos.' },
-  none: { title: 'No se encontró nada para «{q}».', body: 'Pruebe con menos palabras o busque en todas las asignaturas.', all: 'Buscar en todas las asignaturas', ask: 'Preguntar a la IA' },
+  none: { title: 'No se ha encontrado nada para «{q}».', body: 'Pruebe con menos palabras o busque en todas las asignaturas.', all: 'Buscar en todas las asignaturas', ask: 'Preguntar a la IA' },
   result: '{kind}: {title}, {where}. {snippet}',
   kinds: { lecture: 'Clase', document: 'Documento', note: 'Apunte', exam: 'Pregunta de examen', chat: 'Mensaje', command: 'Comando' },
   chatWhere: '{name}, {date}',

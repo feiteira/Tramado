@@ -7,7 +7,7 @@ export const search: Messages['search'] = {
   scopeClass: 'Em {class}',
   scopeAll: 'Todas as disciplinas',
   includeArchived: 'Incluir disciplinas arquivadas',
-  groups: { lectures: 'Aulas', documents: 'Documentos', notes: 'Apontamentos', exams: 'Exames', chat: 'Chat', commands: 'Comandos', recent: 'Recentes', recentSearches: 'Pesquisas recentes' },
+  groups: { lectures: 'Aulas', documents: 'Documentos', notes: 'Apontamentos', exams: 'Exames', chat: 'Conversa', commands: 'Comandos', recent: 'Recentes', recentSearches: 'Pesquisas recentes' },
   showAll: 'Mostrar todos ({n})',
   askAi: 'Perguntar à IA: “{q}” em {scope}',
   askAiAll: 'Perguntar à IA: “{q}” em todas as disciplinas',

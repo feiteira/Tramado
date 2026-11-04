@@ -4,7 +4,7 @@ import type { Messages } from '../en';
 export const settings: Messages['settings'] = {
   title: 'Ajustes',
   nav: 'Secciones de los ajustes',
-  sections: { profile: 'Perfil', appearance: 'Idioma y apariencia', ai: 'IA', transcription: 'Transcripción', sharing: 'Compartir', notifications: 'Notificaciones', storage: 'Almacenamiento', privacy: 'Privacidad', about: 'Acerca de' },
+  sections: { profile: 'Perfil', appearance: 'Idioma y apariencia', ai: 'IA', transcription: 'Transcripción', sharing: 'Sincronización', notifications: 'Notificaciones', storage: 'Almacenamiento', privacy: 'Privacidad', about: 'Acerca de' },
   profile: {
     name: 'Su nombre', nameHint: 'Lo ven sus compañeros en todas las asignaturas que comparte.',
     device: 'Nombre de este ordenador',
@@ -32,7 +32,7 @@ export const settings: Messages['settings'] = {
     model: 'Modelo',
     fallback: 'Si está ocupado, probar',
     then: 'después',
-    reset: 'Volver a lo recomendado',
+    reset: 'Restablecer lo recomendado',
     busyPolicy: 'Cuando todos los modelos gratuitos estén ocupados', busyAsk: 'Preguntarme', busyNvidia: 'Usar los modelos gratuitos de NVIDIA (pueden entrenar con lo que envía)',
     answers: 'Respuestas',
     answerLanguage: 'Idioma', answerSame: 'El mismo que la pregunta', answerMine: 'Siempre en {language}',
@@ -123,7 +123,7 @@ export const settings: Messages['settings'] = {
     diskLow: 'Su disco está casi lleno (quedan {free}). Puede que no quepan nuevas grabaciones ni los archivos de sus compañeros.',
     leaving: 'Saliendo: a la espera de que lo reciba un compañero',
     cacheCleared: 'Caché vaciada.',
-    trashEmptied: 'Archivos eliminados quitados.',
+    trashEmptied: 'Papelera vaciada.',
     classes: 'Asignaturas en este ordenador',
   },
   about: {
