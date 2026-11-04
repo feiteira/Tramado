@@ -6,7 +6,7 @@ Tramado keeps everything for each of your classes in one place: the lectures you
 documents and law texts, your notes, past exams and the class group's chat. It runs on your computer, needs no
 account, and shares a class directly between classmates' computers.
 
-This manual is for version 0.1 (release candidate 0.1.0-rc.1). It was tested on Linux; the Windows and macOS builds have
+This manual is for version 0.1 (release candidate 0.1.0-rc.2). It was tested on Linux; the Windows and macOS builds have
 not been tested yet.
 
 ## Contents

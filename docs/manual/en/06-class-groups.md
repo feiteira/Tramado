@@ -24,10 +24,15 @@ classmates then get recordings and transcripts from you sooner. You can change t
 **Invite** (in the class header or in Members) shows the invite:
 
 - **Copy invite** copies a short message with a link and the code: paste it in your class group chat, Moodle or an
-  e-mail;
-- the **QR code** holds the same invite, for a phone to scan;
+  e-mail. The link opens Tramado's join page (`https://feiteira.github.io/Tramado/join/`) in the browser;
+- the **QR code** opens the same page on a phone that scans it;
 - **Copy code** copies the code alone, and **Save as a file…** saves a `.tramado-invite` file, which **Join a class ›
   Open an invite file…** reads.
+
+The join page shows the class and who sent the invite. On a computer with Tramado, **Open in Tramado** opens the
+invite in **Join a class**; on a phone, choose **Copy code**, send the code to your computer (by e-mail, or a chat you
+also use there) and paste it in **Join a class**. The invite is in the part of the link after `#`, which the browser never
+sends to a server: the page reads it on your device and sends nothing anywhere.
 
 Anyone who has the invite can join, through your computer or any member's computer that is online; if nobody is online,
 they wait. To approve each person first, an organiser turns on **Ask before letting people in** in Members.
@@ -37,7 +42,8 @@ they wait. To approve each person first, an organiser turns on **Ask before lett
 ![Joining: the class you were invited to, where to keep it, and whether to download recordings](../img/en/join.webp)
 
 **Join a class** (in the rail, or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>): paste the invite (the whole
-message is fine) or open an invite file, and **Continue**. Tramado shows the class and who invited you. Choose where
+message is fine) or open an invite file, and **Continue**. (A link opens the join page first: there, **Open in
+Tramado** opens this window with the invite already in it.) Tramado shows the class and who invited you. Choose where
 to keep it, whether to **also download lecture recordings** (about 11 MB per hour; you get every transcript either way)
 and agree that recordings in this class are for this class only. Then **Join class**.
 

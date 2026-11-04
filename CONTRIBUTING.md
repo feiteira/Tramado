@@ -60,14 +60,10 @@ connections go through the Rust side and its host allow-list.
 
 ## Commits
 
-Explain in the commit message what changed and why. Sign off every commit
-([Developer Certificate of Origin](https://developercertificate.org/)) to certify that you wrote it or have the right
-to submit it under the project's licence:
-
-```bash
-git commit -s -m "Explain what changed and why"
-```
+Explain in the commit message what changed and why. There is no sign-off to add and no contributor agreement to sign.
 
 ## Licence
 
-By contributing you agree that your contributions are licensed under the [Mozilla Public License 2.0](LICENSE).
+Tramado is licensed under the [Mozilla Public License 2.0](LICENSE), and contributions are accepted under that same
+licence (inbound = outbound): by opening a pull request, you agree that your contribution is licensed under MPL-2.0
+and that you have the right to submit it.

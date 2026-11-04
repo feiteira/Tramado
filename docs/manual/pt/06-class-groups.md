@@ -25,10 +25,16 @@ mudar isto em Definições › Partilha.
 **Convidar** (no cabeçalho da disciplina ou em Membros) mostra o convite:
 
 - **Copiar o convite** copia uma mensagem curta com uma ligação e o código: cole-a no grupo da turma, no Moodle ou
-  num e-mail;
-- o **código QR** contém o mesmo convite, para ler com um telemóvel;
+  num e-mail. A ligação abre no navegador a página de entrada do Tramado (`https://feiteira.github.io/Tramado/join/`);
+- o **código QR** abre a mesma página no telemóvel que o ler;
 - **Copiar o código** copia só o código, e **Guardar como ficheiro…** guarda um ficheiro `.tramado-invite`, que se abre
   em **Entrar numa disciplina › Abrir um ficheiro de convite…**.
+
+A página de entrada mostra a disciplina e quem enviou o convite. Num computador com o Tramado, **Abrir no Tramado** abre
+o convite em **Entrar numa disciplina**; num telemóvel, carregue em **Copiar o código**, envie o código para o seu
+computador (por e-mail, ou por uma conversa que também use lá) e cole-o em **Entrar numa disciplina**. O convite fica
+na parte da ligação depois do `#`, que o navegador nunca envia a um servidor: a página lê-o no seu dispositivo e não
+envia nada para lado nenhum.
 
 Quem tiver o convite pode entrar, através do seu computador ou do de qualquer membro que esteja ligado; se não
 houver ninguém ligado, fica à espera. Para autorizar cada pessoa primeiro, um organizador liga **Perguntar antes de
@@ -39,8 +45,9 @@ deixar entrar**, em Membros.
 ![Entrar: a disciplina para que foi convidado, onde a guardar e se quer transferir as gravações](../img/pt/join.webp)
 
 **Entrar numa disciplina** (na barra lateral, ou <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>): cole o convite (a
-mensagem inteira serve) ou abra um ficheiro de convite, e carregue em **Continuar**. O Tramado mostra a disciplina e
-quem o convidou. Escolha onde a guardar, se quer **transferir também as gravações das aulas** (cerca de 11 MB por hora;
+mensagem inteira serve) ou abra um ficheiro de convite, e carregue em **Continuar**. (Uma ligação abre primeiro a
+página de entrada: aí, **Abrir no Tramado** abre esta janela já com o convite.) O Tramado mostra a disciplina e quem o
+convidou. Escolha onde a guardar, se quer **transferir também as gravações das aulas** (cerca de 11 MB por hora;
 recebe sempre todas as transcrições) e aceite que as gravações desta disciplina são só para ela. Depois, **Entrar na
 disciplina**.
 
