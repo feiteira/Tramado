@@ -334,7 +334,13 @@
   white-space: normal;
 }
 .ask .empty {
+  justify-content: center;
   min-height: 100%;
+  max-width: none;
+  border-radius: var(--r-lg);
+}
+.ask .empty__body {
+  max-width: 460px;
 }
 
 /* Composer */
@@ -412,8 +418,18 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s-1) var(--s-3);
+  gap: 0 var(--s-1);
+}
+.ask__cost .costline {
+  min-width: 0;
+}
+/* The model is the CostLine's last part, as a menu (UX §3.11: "… · Gemma 4 31B (free) ▾"). */
+.ask__model.btn {
+  height: 24px;
+  padding-inline: var(--s-1);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 540;
 }
 
 @media (max-width: 1180px) {

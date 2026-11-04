@@ -19,8 +19,11 @@ import { MenuButton, type MenuEntry } from '../../ui/components/Menu';
 import { useToast } from '../../ui/components/Toast';
 import { useI18n } from '../../ui/i18n';
 import { cx } from '../../ui/cx';
+import { useErrorMessage } from '../ask/AiErrorNotice';
 import { countdown, daysUntil, examWhen, paperMeta } from './format';
 import './exams.css';
+
+const MARKS = ['right', 'partly', 'wrong'] as const;
 
 export default function Tab({ classId, services }: { classId: ClassId; services: AppServices }) {
   const i18n = useI18n();
@@ -29,6 +32,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   const dialogs = useDialogs();
   const confirm = useConfirm();
   const toast = useToast();
+  const errorMessage = useErrorMessage(services);
   const exams = services.forClass(classId).exams;
   const list = useStore(exams.list);
   const classes = useStore(services.library.classes);
@@ -66,7 +70,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
             await exams.remove(d.examId);
             toast.show(t('exams.deleted', { title: d.title }));
           } catch (e) {
-            toast.show(String((e as Error).message ?? e));
+            toast.show(errorMessage(e));
           }
         },
       },
@@ -184,9 +188,13 @@ function PaperRow({ p, onOpen, onPractise }: { p: ExamPaperView; onOpen(): void;
           ) : (
             <>
               {paperMeta(i18n, p)}
-              {marks.right ? <span className="exam-mark exam-mark--right" aria-label={t('exams.answers.status.right')}> · ✓{marks.right}</span> : null}
-              {marks.partly ? <span className="exam-mark exam-mark--partly" aria-label={t('exams.answers.status.partly')}> ~{marks.partly}</span> : null}
-              {marks.wrong ? <span className="exam-mark exam-mark--wrong" aria-label={t('exams.answers.status.wrong')}> ✗{marks.wrong}</span> : null}
+              {MARKS.map((m) => (marks[m] ? (
+                <span key={m} className={`exam-mark exam-mark--${m}`}>
+                  {m === MARKS.find((x) => marks[x]) ? ' · ' : ' '}
+                  <span aria-hidden>{{ right: '✓', partly: '~', wrong: '✗' }[m]}</span>{marks[m]}
+                  <span className="visually-hidden"> {t(`exams.answers.status.${m}`)}</span>
+                </span>
+              ) : null))}
             </>
           )}
         </span>

@@ -47,6 +47,15 @@ export function useAiErrorText(services: AppServices): (code: ErrorCode) => stri
   };
 }
 
+/** A failure as the student reads it: the sentence of its error code (never a raw English message), else its text. */
+export function useErrorMessage(services: AppServices): (e: unknown) => string {
+  const text = useAiErrorText(services);
+  return (e) => {
+    const code = (e as { code?: unknown } | null)?.code;
+    return typeof code === 'string' && code ? text(code as ErrorCode) : String((e as Error | null)?.message ?? e);
+  };
+}
+
 export function AiErrorNotice({ services, code, onRetry, onBusyFallback, ...rest }: AiErrorNoticeProps) {
   const { t } = useI18n();
   const { go } = useRouter();

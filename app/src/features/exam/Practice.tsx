@@ -5,7 +5,7 @@
 // 2 = Got it, ← = previous, Esc ends. The end and the empty queue say what comes next.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DateTime } from 'luxon';
-import { ArrowLeft, CalendarClock, Check, Eye, PartyPopper, RotateCcw, X } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Check, Eye, FilePlus2, PartyPopper, RotateCcw, X } from 'lucide-react';
 import type { ClassId } from '../../core/model/ids';
 import { practiceQueue } from '../../services/exams';
 import type { AppServices } from '../../services/types/common';
@@ -14,6 +14,7 @@ import type { Route } from '../../shell/routes';
 import { Missing } from '../../shell/Placeholder';
 import { useRouter } from '../../shell/router';
 import { ScreenHeader } from '../../shell/ScreenHeader';
+import { useDialogs } from '../../shell/useDialogs';
 import { useStore } from '../../shell/useStore';
 import { Button } from '../../ui/components/Button';
 import { EmptyState, Kbd, ProgressBar } from '../../ui/components/Feedback';
@@ -60,6 +61,7 @@ export function PracticeSession({ services, classId, examId }: { services: AppSe
   const i18n = useI18n();
   const { t, tp } = i18n;
   const { go, replace, back, canGoBack } = useRouter();
+  const dialogs = useDialogs();
   const exams = services.forClass(classId).exams;
   const list = useStore(exams.list);
   const classes = useStore(services.library.classes);
@@ -166,14 +168,24 @@ export function PracticeSession({ services, classId, examId }: { services: AppSe
         {!done && !empty && queue.length ? (
           <ProgressBar value={i} max={queue.length} label={title} className="practice__bar" data-testid="practice-progress" />
         ) : null}
-        {empty ? (
+        {empty && !papers.some((p) => p.questions.length) ? (
+          // No paper with questions at all: "Practise all questions" would come back here, so guide to adding one.
+          <EmptyState
+            icon={FilePlus2}
+            title={t('exams.practice.noPapers')}
+            data-testid="practice-empty"
+            actions={<Button variant="primary" icon={FilePlus2} onClick={() => dialogs.open('exam-paper', { classId })} data-testid="practice-add-paper">{t('exams.tab.empty.addPaper')}</Button>}
+          >
+            {t('exams.practice.noPapersBody')}
+          </EmptyState>
+        ) : empty ? (
           <EmptyState
             icon={CalendarClock}
             title={t('exams.practice.nothing')}
             data-testid="practice-empty"
             actions={<Button variant="primary" icon={RotateCcw} onClick={() => restart(true)} data-testid="practice-again-all">{t('exams.practice.all')}</Button>}
           >
-            {tp('exams.practice.nothingBody', inPractice, { n: inPractice })}
+            {inPractice ? tp('exams.practice.nothingBody', inPractice, { n: inPractice }) : t('exams.practice.nothingNone')}
           </EmptyState>
         ) : done ? (
           <EmptyState

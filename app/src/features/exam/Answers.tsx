@@ -30,7 +30,7 @@ import { cx } from '../../ui/cx';
 import { AiCard } from '../../ui/tramado/AiCard';
 import { CostLine, costBlocked } from '../../ui/tramado/CostLine';
 import { AiAnswer } from '../ask/AiAnswer';
-import { AiErrorNotice } from '../ask/AiErrorNotice';
+import { AiErrorNotice, useErrorMessage } from '../ask/AiErrorNotice';
 import { copyWithSources } from '../ask/turns';
 import { useQuota } from '../ask/useQuota';
 import { pointsLabel, questionStatus, type QuestionStatus } from '../exams/format';
@@ -69,6 +69,7 @@ export function Answers({ services, classId, examId, questionId }: { services: A
   const dialogs = useDialogs();
   const confirm = useConfirm();
   const toast = useToast();
+  const errorMessage = useErrorMessage(services);
   const exams = services.forClass(classId).exams;
   const paper = useStore(exams.open(examId))!;
   const settings = useStore(services.ai.settings);
@@ -160,7 +161,7 @@ export function Answers({ services, classId, examId, questionId }: { services: A
           go({ name: 'class', classId, tab: 'exams' });
           toast.show(t('exams.deleted', { title: paper.title }));
         } catch (e) {
-          toast.show(String((e as Error).message ?? e));
+          toast.show(errorMessage(e));
         }
       },
     },
@@ -348,7 +349,7 @@ function QuestionDetail({ services, classId, paper, q, aiOn, tryFirst, answering
     number: q.number, points: q.points !== null ? pointsLabel(i18n, paper.scale, q.points) : '', kind: t(`exams.questionKinds.${q.kind}`),
   }).replace(/ ·  · /, ' · ');
   const group = q.group ? paper.questions.filter((x) => x.group?.id === q.group!.id).map((x) => x.number) : [];
-  const deepWanted = !!q.ai && (q.ai.insufficient || q.ai.grounded < 0.5 || (settings.quota?.limit ?? 0) >= 1000);
+  const deepWanted = !!q.ai && !q.ai.insufficient && (q.ai.grounded < 0.5 || (settings.quota?.limit ?? 0) >= 1000);
   const blocked = costBlocked(settings.quota, model);
 
   return (

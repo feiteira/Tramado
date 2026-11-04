@@ -137,11 +137,17 @@ export function fakeReply(req: AiPipeRequest): FakeReply {
   }
   const lead = { pt: ['Segundo os materiais da cadeira,', 'Além disso,', 'Por fim,'], es: ['Según los materiales de la asignatura,', 'Además,', 'Por último,'], en: ['According to the class materials,', 'Also,', 'Finally,'] }[lang];
   const hint = /hint|pista|orientadoras/i.test(system);
+  if (hint) {
+    // A guiding question, never the answer: each source named once with all its refs ("Reread X [S1, S2].").
+    const byLabel = new Map<string, string[]>();
+    for (const s of sources) byLabel.set(s.label, [...(byLabel.get(s.label) ?? []), s.ref]);
+    const say = { pt: ['Releia', 'O que dizem estes excertos sobre a pergunta?'], es: ['Relea', '¿Qué dicen estos fragmentos sobre la pregunta?'], en: ['Reread', 'What do these passages say about the question?'] }[lang];
+    const look = [...byLabel].map(([label, refs]) => `${label} [${refs.join(', ')}]`).join('; ');
+    return { kind: 'text', text: `${say[0]} ${look}. ${say[1]}`, model, reasoning: '', heartbeats: 1 };
+  }
   const sentences = sources.map((s, i) => {
     const first = (s.text.split(/(?<=[.!?])\s/)[0] ?? s.text).slice(0, 220).replace(/[.!?]?$/, '');
-    return hint
-      ? `${{ pt: 'Veja o que diz', es: 'Mire lo que dice', en: 'Look at what' }[lang]} ${s.label} [${s.ref}].`
-      : `${lead[Math.min(i, lead.length - 1)]} ${first.charAt(0).toLowerCase()}${first.slice(1)} [${s.ref}].`;
+    return `${lead[Math.min(i, lead.length - 1)]} ${first.charAt(0).toLowerCase()}${first.slice(1)} [${s.ref}].`;
   });
   const choice = /fixed options|opções fixas|opciones fijas/.test(system) ? `${{ pt: 'Resposta', es: 'Respuesta', en: 'Answer' }[lang]}: B\n` : '';
   return { kind: 'text', text: `${choice}${sentences.join(' ')}`, model, reasoning: '', heartbeats: 1 };

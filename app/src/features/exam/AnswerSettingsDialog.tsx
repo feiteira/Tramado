@@ -63,6 +63,8 @@ export default function AnswerSettingsDialog({ props, services, close }: { props
     }
   };
   const nowCount = over && left !== null ? Math.max(0, left - 1) : n;
+  // "Answer {left} now" only when some can be answered now (never "Answer 0 now" on a spent quota).
+  const some = over && !blocked && nowCount > 0;
 
   return (
     <Dialog
@@ -76,7 +78,7 @@ export default function AnswerSettingsDialog({ props, services, close }: { props
         <>
           <Button onClick={close} data-testid="answer-cancel">{t('common.cancel')}</Button>
           <Button type="submit" variant="primary" icon={Sparkles} busy={busy} disabled={!aiOn || blocked || n === 0 || nowCount === 0} data-testid="answer-start">
-            {over ? t('exams.settings.answerSome', { n: nowCount }) : existing ? t('exams.settings.answerAgain') : tp('exams.settings.start', n, { n })}
+            {some ? t('exams.settings.answerSome', { n: nowCount }) : existing ? t('exams.settings.answerAgain') : tp('exams.settings.start', n, { n })}
           </Button>
         </>
       }
@@ -108,7 +110,7 @@ export default function AnswerSettingsDialog({ props, services, close }: { props
             <span>{t('exams.settings.cost', { n: requests, q: n, left: left ?? '—', model: model.label })}</span>
           </p>
         ) : null}
-        {aiOn && over && !blocked && settings.quota ? (
+        {aiOn && some && settings.quota ? (
           <Notice tone="warning" data-testid="answer-over">{t('exams.settings.overQuota', { left: nowCount, time: reset(settings.quota) })}</Notice>
         ) : null}
       </div>

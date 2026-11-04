@@ -2,7 +2,7 @@
 // modal. It names the models tried, offers [Try again] (with a countdown when the provider said when), NVIDIA's free
 // models for this one request, "Always use them when busy" (AiService.setBusyPolicy → the native confirmation, the
 // same as the "may train" privacy level), and [Change model]. The footnote says NVIDIA's free models may train.
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { CloudOff, RefreshCw, Settings2, Zap } from 'lucide-react';
 import type { AppServices } from '../../services/types/common';
 import { useRouter } from '../../shell/router';
@@ -29,6 +29,7 @@ export function BusyChooser({ services, onRetry, onOnce, retryAfterS = null, ...
   const settings = useStore(services.ai.settings);
   const [left, setLeft] = useState<number>(retryAfterS && retryAfterS > 0 ? Math.ceil(retryAfterS) : 0);
   const [busy, setBusy] = useState(false);
+  const titleId = useId();
   useEffect(() => {
     if (left <= 0) return;
     const id = window.setTimeout(() => setLeft((s) => s - 1), 1000);
@@ -36,11 +37,11 @@ export function BusyChooser({ services, onRetry, onOnce, retryAfterS = null, ...
   }, [left]);
   const tried = settings.chain.map((id) => triedLabel(services.ai.label(id).label)).join(', ');
   return (
-    <section className="busy" role="status" aria-labelledby="busy-title" data-testid={rest['data-testid'] ?? 'ai-busy-chooser'}>
+    <section className="busy" role="status" aria-labelledby={titleId} data-testid={rest['data-testid'] ?? 'ai-busy-chooser'}>
       <div className="busy__head">
         <CloudOff size={18} strokeWidth={1.75} aria-hidden className="busy__icon" />
         <div>
-          <p className="busy__title" id="busy-title">{t('ai.busy.title')}</p>
+          <p className="busy__title" id={titleId}>{t('ai.busy.title')}</p>
           {tried ? <p className="busy__tried t-small">{t('ai.busy.tried', { models: tried })}</p> : null}
         </div>
       </div>

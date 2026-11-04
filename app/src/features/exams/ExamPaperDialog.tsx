@@ -3,7 +3,7 @@
 // questions]; Name (pre-filled from the file), Kind, Year; the CostLine ("Reading this uses about 3 AI requests (2 pages
 // to read + 1 to find the questions)…"). With AI off the line says finding the questions needs AI and the button
 // becomes [Type the questions]. [Find the questions] starts the import and opens the extracting screen.
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ClipboardType, FileUp, Image as ImageIcon, FileText, Sparkles, X } from 'lucide-react';
 import type { ExamFile } from '../../core/model/files';
 import type { Picked } from '../../platform/types';
@@ -19,7 +19,7 @@ import { Select, TextArea, TextField } from '../../ui/components/Field';
 import { useI18n } from '../../ui/i18n';
 import { cx } from '../../ui/cx';
 import { CostLine, costBlocked } from '../../ui/tramado/CostLine';
-import { useAiErrorText } from '../ask/AiErrorNotice';
+import { useErrorMessage } from '../ask/AiErrorNotice';
 import { useQuota } from '../ask/useQuota';
 import { KINDS } from './format';
 import './exams.css';
@@ -47,7 +47,7 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
   const exams = services.forClass(props.classId).exams;
   const aiOn = settings.enabled && (settings.key.set || !!settings.customHost);
   useQuota(services, aiOn);
-  const errorText = useAiErrorText(services);
+  const errorMessage = useErrorMessage(services);
   const [picks, setPicks] = useState<Picked[]>(() => (props.picked ?? []).filter((p) => !p.isDir && extOk(p.name)));
   const [typed, setTyped] = useState<string | null>(null);
   const [name, setName] = useState(() => (props.picked?.[0]?.name ?? '').replace(/\.[^.]+$/, ''));
@@ -58,6 +58,20 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
   const [error, setError] = useState<string | null>(null);
   const [over, setOver] = useState(false);
   const cost = useMemo(() => paperCost(picks), [picks]);
+  const named = useRef({ name, nameEdited });
+  named.current = { name, nameEdited };
+  const add = (got: readonly Picked[]) => {
+    const ok = got.filter((p) => !p.isDir && extOk(p.name));
+    if (!ok.length) return;
+    setPicks((cur) => [...cur, ...ok.filter((p) => !cur.some((c) => c.token === p.token))]);
+    setTyped(null);
+    if (!named.current.nameEdited && !named.current.name) setName(ok[0]!.name.replace(/\.[^.]+$/, ''));
+  };
+  // Files dropped on the window while this dialog is open are for it (desktop drag and drop arrives as tokens, D-4).
+  useEffect(() => services.ctx.platform.events.onDrop((e) => {
+    if (!busy && aiOn) add(e.picked);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [services, busy, aiOn]);
   const model = services.ai.label(settings.chain[0] ?? settings.model);
   const typing = typed !== null;
   const blocked = !typing && aiOn && costBlocked(settings.quota, model);
@@ -72,14 +86,9 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
 
   const choose = async () => {
     try {
-      const got = await services.ctx.platform.dialogs.pickFiles({ title: t('exams.paper.title'), filters: [{ name: t('exams.paper.filter'), extensions: PAPER_EXTENSIONS }], multiple: true });
-      const ok = got.filter((p) => !p.isDir && extOk(p.name));
-      if (!ok.length) return;
-      setPicks((cur) => [...cur, ...ok]);
-      setTyped(null);
-      if (!nameEdited && !name) setName(ok[0]!.name.replace(/\.[^.]+$/, ''));
+      add(await services.ctx.platform.dialogs.pickFiles({ title: t('exams.paper.title'), filters: [{ name: t('exams.paper.filter'), extensions: PAPER_EXTENSIONS }], multiple: true }));
     } catch (e) {
-      setError(String((e as Error).message ?? e));
+      setError(errorMessage(e));
     }
   };
 
@@ -98,8 +107,7 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
       close();
       go({ name: 'exam', classId: props.classId, examId: id, mode: 'extracting' });
     } catch (e) {
-      const code = (e as { code?: string }).code;
-      setError(code ? errorText(code as never) : String((e as Error).message ?? e));
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -144,7 +152,8 @@ export default function ExamPaperDialog({ props, services, close }: { props: Dia
             data-autofocus
             data-testid="exam-paper-text"
           />
-        ) : (
+        ) : !aiOn ? null : (
+          // Without AI a file can't be read (UX §3.9.4): the notice below and [Type the questions] are the way.
           <div
             className={cx('exam-drop', 'paper-grid', over && 'exam-drop--over')}
             onDragOver={(e) => {

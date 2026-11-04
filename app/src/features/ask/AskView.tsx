@@ -32,7 +32,7 @@ import { ClassChip } from '../../ui/tramado/ClassChip';
 import { CostLine, costBlocked } from '../../ui/tramado/CostLine';
 import { AiCard } from '../../ui/tramado/AiCard';
 import { AiAnswer } from './AiAnswer';
-import { AiErrorNotice } from './AiErrorNotice';
+import { AiErrorNotice, useErrorMessage } from './AiErrorNotice';
 import { openPaletteWith } from './cite';
 import { useQuota } from './useQuota';
 import { answerNote, citesPrivate, copyWithSources, turnView } from './turns';
@@ -67,6 +67,7 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
   const { go } = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
+  const errorMessage = useErrorMessage(services);
   const settings = useStore(services.ai.settings);
   const classes = useStore(services.library.classes);
   const cls = classId ? classes.find((c) => c.id === classId) ?? null : null;
@@ -127,12 +128,15 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
   const send = useCallback(async (text: string, opts: AskOptions = {}, into: string | null = current) => {
     const q = text.trim();
     if (!q) return;
+    // The composer empties at once (a second Enter must not send the question twice); it comes back on a failure.
+    const fromComposer = text === draft;
+    if (fromComposer) setDraft('');
     try {
       const id = await source.ask(into, q, requestScope(), { general, privateNotes: scope.mine, ...(model ? { model } : {}), ...opts });
       if (id !== into) select(id);
-      if (text === draft) setDraft('');
     } catch (e) {
-      toast.show(String((e as Error).message ?? e));
+      if (fromComposer) setDraft((d) => d || text);
+      toast.show(errorMessage(e));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, current, scope, general, model, draft]);
@@ -175,6 +179,12 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
   ];
 
   const header = cls ? t('ask.empty.title', { class: cls.name }) : t('ask.empty.titleAll');
+  // Enter or leaving the field keeps the new title (an empty or unchanged one changes nothing); Escape cancels.
+  const commitRename = (id: string, title: string, before: string) => {
+    setRenaming(null);
+    const clean = title.trim();
+    if (clean && clean !== before) void source.renameThread(id, clean).catch((e: unknown) => toast.show(errorMessage(e)));
+  };
 
   return (
     <div className={cx('ask', !aiOn && 'ask--off')}>
@@ -193,15 +203,20 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
                     className="ask__rename"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      void source.renameThread(th.threadId, renaming.title).then(() => setRenaming(null), () => setRenaming(null));
+                      commitRename(th.threadId, renaming.title, th.title);
                     }}
                   >
                     <TextField
                       label={t('ask.renameThread')}
                       value={renaming.title}
                       onChange={(v) => setRenaming({ id: th.threadId, title: v })}
-                      onKeyDown={(e) => e.key === 'Escape' && setRenaming(null)}
-                      onBlur={() => setRenaming(null)}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Escape') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRenaming(null);
+                      }}
+                      onBlur={() => commitRename(th.threadId, renaming.title, th.title)}
                       autoFocus
                       size="sm"
                       maxLength={60}
@@ -321,8 +336,16 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
               <IconButton type="submit" icon={SendHorizontal} label={t('ask.send')} variant="secondary" disabled={!draft.trim() || blocked} className="ask__send" data-testid="ask-send" />
             </form>
             <div className="ask__cost">
-              <CostLine requests={requests} quota={settings.quota} model={modelLabel} data-testid="ask-cost" />
-              <MenuButton items={modelItems} label={modelLabel.label} variant="ghost" size="sm" align="end" data-testid="ask-model" />
+              {blocked ? (
+                <CostLine requests={requests} quota={settings.quota} model={modelLabel} data-testid="ask-cost" />
+              ) : (
+                // UX §3.11: "✦ 1–2 requests · 37 free left today · Gemma 4 31B (free) ▾" — the model is the line's menu.
+                <p className="costline" data-testid="ask-cost" data-model={modelLabel.id} data-requests={requests}>
+                  <Sparkles size={13} strokeWidth={2} aria-hidden className="costline__icon" />
+                  <span>{settings.quota && modelLabel.free ? tp('ai.cost.line', requests, { n: requests, left: settings.quota.remaining }) : tp('ai.cost.noQuota', requests, { n: requests })} ·</span>
+                </p>
+              )}
+              <MenuButton items={modelItems} label={modelLabel.label} variant="ghost" size="sm" align="start" className="ask__model" data-testid="ask-model" />
             </div>
           </div>
         ) : null}
@@ -364,8 +387,10 @@ interface TurnProps {
 function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
   const i18n = useI18n();
   const { t, tp } = i18n;
+  const { go } = useRouter();
   const toast = useToast();
   const confirm = useConfirm();
+  const errorMessage = useErrorMessage(services);
   const settings = useStore(services.ai.settings);
   const classes = useStore(services.library.classes);
   const [showSent, setShowSent] = useState(false);
@@ -387,7 +412,7 @@ function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
       else await services.forClass(postClass.id).ask.postTurn(turn);
       toast.show(t('ask.posted', { class: postClass.shortName }));
     } catch (e) {
-      toast.show(String((e as Error).message ?? e));
+      toast.show(errorMessage(e));
     }
   };
   const copy = async () => {
@@ -404,12 +429,13 @@ function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
       const notes = services.forClass(target).notes;
       const path = await notes.create('private', turn.question.slice(0, 80));
       await notes.save('private', path, answerNote(turn.question, view, i18n, DateTime.fromMillis(services.ctx.clock.now())));
-      toast.show({ message: t('ask.saved'), action: { label: t('common.open'), run: () => undefined, testId: 'ask-saved-open' } });
+      toast.show({ message: t('ask.saved'), action: { label: t('common.open'), run: () => go({ name: 'note', classId: target, relPath: path, private: true }), testId: 'ask-saved-open' } });
     } catch (e) {
-      toast.show(String((e as Error).message ?? e));
+      toast.show(errorMessage(e));
     }
   };
-  const deepWanted = view.insufficient || view.grounded < 0.5 || (settings.quota?.limit ?? 0) >= 1000;
+  // The insufficient notice carries [Deep answer (4–8 requests)]; the footer does not repeat it then.
+  const deepWanted = !view.insufficient && (view.grounded < 0.5 || (settings.quota?.limit ?? 0) >= 1000);
   const sent = turn.sent ?? [];
 
   return (

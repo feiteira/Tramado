@@ -15,6 +15,7 @@ import { Notice } from '../../ui/components/Feedback';
 import { Select, TextArea, TextField } from '../../ui/components/Field';
 import { useToast } from '../../ui/components/Toast';
 import { useI18n } from '../../ui/i18n';
+import { useErrorMessage } from '../ask/AiErrorNotice';
 import { KINDS, examWhen } from './format';
 import './exams.css';
 
@@ -30,6 +31,7 @@ export default function ExamDateDialog({ props, services, close }: { props: Dial
   const i18n = useI18n();
   const { t } = i18n;
   const toast = useToast();
+  const errorMessage = useErrorMessage(services);
   const exams = services.forClass(props.classId).exams;
   const list = useStore(exams.list);
   const classes = useStore(services.library.classes);
@@ -86,7 +88,7 @@ export default function ExamDateDialog({ props, services, close }: { props: Dial
       }
       close();
     } catch (e) {
-      setError(String((e as Error).message ?? e));
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }

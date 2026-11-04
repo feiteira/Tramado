@@ -1140,7 +1140,10 @@
         "expect": "practice-empty"
       },
       {
-        "expect": "practice-again-all"
+        "expect": "practice-add-paper"
+      },
+      {
+        "expect-not": "practice-again-all"
       }
     ]
   },

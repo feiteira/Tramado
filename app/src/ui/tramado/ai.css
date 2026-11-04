@@ -338,7 +338,6 @@
 }
 .srow--hallucinated .srow__title {
   color: var(--ink-3);
-  text-decoration: line-through;
 }
 
 /* ── QuotaMeter (UX §3.14.3) ────────────────────────────────────────────────────────────── */

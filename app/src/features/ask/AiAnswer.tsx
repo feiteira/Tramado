@@ -78,7 +78,8 @@ export function AiAnswer({ services, view, classId, classOf, title, state = 'don
   return (
     <div className="ai-answer" data-testid={rest['data-testid'] ?? 'ai-answer'} data-mode={view.mode}>
       <AiCard
-        title={title ?? (view.mode === 'hint' ? t('exams.answers.hintTitle') : tp('ai.card.from', k, { n: k }))}
+        // "from 0 of your sources" says nothing: an answer with no valid source has no such title.
+        title={title ?? (view.mode === 'hint' ? t('exams.answers.hintTitle') : k ? tp('ai.card.from', k, { n: k }) : null)}
         model={view.model}
         {...(view.fallback ? { fallbackOf: view.requested.label } : {})}
         {...(named ? { askedBy: named } : {})}

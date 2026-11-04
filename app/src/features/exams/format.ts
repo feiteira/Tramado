@@ -7,10 +7,12 @@ export const KINDS = ['quiz', 'test', 'midterm', 'final', 'resit', 'special', 'o
 export const QUESTION_KINDS = ['case', 'essay', 'short', 'multiple_choice', 'true_false', 'comment', 'calculation', 'other'] as const;
 
 /** "Thu 12 Nov, 10:00" (or "Thu 12 Nov" for an all-day date). */
-export function examWhen(i18n: Pick<I18n, 'date' | 'time'>, at: string, allDay: boolean): string {
+export function examWhen(i18n: Pick<I18n, 'date' | 'time' | 'meta'>, at: string, allDay: boolean): string {
   const dt = DateTime.fromISO(at, { setZone: false });
   if (!dt.isValid) return at;
-  const day = i18n.date(dt, 'weekday');
+  let day = i18n.date(dt, 'weekday');
+  // Some locales (pt-PT) write a short day and month as "12/11": spell the month out ("quinta, 12 de novembro").
+  if (/\d\/\d/.test(day)) day = dt.setLocale(i18n.meta.bcp47).toLocaleString({ weekday: 'short', day: 'numeric', month: 'long' });
   return allDay ? day : `${day}, ${i18n.time(dt)}`;
 }
 

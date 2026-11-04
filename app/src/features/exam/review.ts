@@ -139,17 +139,18 @@ export function ungroup(qs: readonly Question[], containerId: string): Question[
   return qs.filter((x) => x.id !== containerId).map((x) => (x.parent === containerId ? { ...x, parent: null } : x));
 }
 
-/** Inline problems of the Review screen: duplicate numbers and empty texts (containers need no text). */
-export function problemsOf(qs: readonly Question[]): Map<string, Array<{ kind: 'dup'; n: string } | { kind: 'empty' }>> {
-  const out = new Map<string, Array<{ kind: 'dup'; n: string } | { kind: 'empty' }>>();
-  const push = (id: string, p: { kind: 'dup'; n: string } | { kind: 'empty' }) => out.set(id, [...(out.get(id) ?? []), p]);
+/** Inline problems of the Review screen: duplicate or missing numbers and empty texts (containers need no text). */
+export type ReviewProblem = { kind: 'dup'; n: string } | { kind: 'empty' } | { kind: 'number' };
+export function problemsOf(qs: readonly Question[]): Map<string, ReviewProblem[]> {
+  const out = new Map<string, ReviewProblem[]>();
+  const push = (id: string, p: ReviewProblem) => out.set(id, [...(out.get(id) ?? []), p]);
   const seen = new Map<string, string>();
   for (const q of qs) {
     const n = q.number.trim();
     if (n && seen.has(n)) push(q.id, { kind: 'dup', n });
     else if (n) seen.set(n, q.id);
     if (q.kind !== 'container' && !q.text.trim()) push(q.id, { kind: 'empty' });
-    if (!n) push(q.id, { kind: 'empty' });
+    if (!n) push(q.id, { kind: 'number' });
   }
   return out;
 }

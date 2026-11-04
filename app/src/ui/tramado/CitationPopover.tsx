@@ -74,7 +74,7 @@ export function CitationPopover({ citation, anchor, onClose, onOpen, ...rest }: 
           <blockquote className="cite-block cpop__quote">
             {src.quote.prefix ? `…${src.quote.prefix}` : null}
             <mark className="cite">{src.quote.exact}</mark>
-            {src.quote.suffix ? `${src.quote.suffix}…` : null}
+            {src.quote.suffix ? `${src.quote.suffix}${/[.!?…]\s*$/.test(src.quote.suffix) ? '' : '…'}` : null}
           </blockquote>
         ) : null}
         {note ? <p className="cpop__note" data-testid="cite-note">{note}</p> : null}

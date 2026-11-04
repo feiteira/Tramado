@@ -18,7 +18,7 @@ export const ask: Messages['ask'] = {
   postOther: 'As respostas que citam mais do que uma disciplina não podem ser publicadas no chat de uma disciplina',
   sent: { one: 'Enviado: a sua pergunta e {n} excerto.', other: 'Enviado: a sua pergunta e {n} excertos.' },
   seeSent: 'Ver o que foi enviado',
-  post: 'Publicar no chat da turma',
+  post: 'Publicar no chat da disciplina',
   postConfirm: { title: 'Publicar esta resposta no chat de {class}?', body: 'Os colegas veem a sua pergunta e a resposta.', confirm: 'Publicar' },
   posted: 'Publicado no chat de {class}.',
   copy: 'Copiar com as fontes',
@@ -28,7 +28,7 @@ export const ask: Messages['ask'] = {
     title: 'Pergunte o que quiser sobre {class}.',
     titleAll: 'Pergunte o que quiser sobre as suas disciplinas.',
     summarise: 'Resumir {lecture}',
-    quiz: 'Fazer-me perguntas sobre {exam}',
+    quiz: 'Faça-me perguntas sobre {exam}',
     topics: 'Quais são os temas principais até agora?',
   },
   off: {

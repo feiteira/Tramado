@@ -51,9 +51,9 @@ export const ai: Messages['ai'] = {
     changedNote: 'Este archivo cambió después de escribirse la respuesta. El fragmento se volvió a encontrar por su texto.',
   },
   cost: {
-    line: { one: 'Unas {n} solicitud · {left} gratuitas hoy', other: 'Unas {n} solicitudes · {left} gratuitas hoy' },
-    lineRange: '{min}–{max} solicitudes · {left} gratuitas hoy',
-    noQuota: { one: 'Unas {n} solicitud', other: 'Unas {n} solicitudes' },
+    line: { one: '{n} solicitud · quedan {left} gratuitas hoy', other: 'Unas {n} solicitudes · quedan {left} gratuitas hoy' },
+    lineRange: '{min}–{max} solicitudes · quedan {left} gratuitas hoy',
+    noQuota: { one: '{n} solicitud', other: 'Unas {n} solicitudes' },
     exhausted: 'Ha usado las {limit} solicitudes gratuitas a la IA de hoy. Se renuevan a las {time}.',
   },
   quota: {

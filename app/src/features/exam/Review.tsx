@@ -24,6 +24,7 @@ import { useToast } from '../../ui/components/Toast';
 import { useI18n, type I18n } from '../../ui/i18n';
 import { cx } from '../../ui/cx';
 import { pointsLabel, QUESTION_KINDS } from '../exams/format';
+import { useErrorMessage } from '../ask/AiErrorNotice';
 import { OriginalPreview } from './OriginalPreview';
 import { add, editGroup, makeGroup, mergeNext, move, optionsText, parseOptions, problemsOf, remove, splitAt, ungroup } from './review';
 
@@ -36,6 +37,7 @@ export function Review({ services, classId, draftId, examId }: { services: AppSe
   const dialogs = useDialogs();
   const toast = useToast();
   const { record } = useUndo();
+  const errorMessage = useErrorMessage(services);
   const exams = services.forClass(classId).exams;
   const settings = useStore(services.ai.settings);
   const classes = useStore(services.library.classes);
@@ -107,7 +109,7 @@ export function Review({ services, classId, draftId, examId }: { services: AppSe
       if (answer) dialogs.open('answer-settings', { classId, examId: id, qids: answerable.map((q) => q.id) });
       else toast.show(t('exams.review.saved'));
     } catch (e) {
-      setError(String((e as Error).message ?? e));
+      setError(errorMessage(e));
     } finally {
       setBusy(null);
     }
@@ -178,7 +180,7 @@ export function Review({ services, classId, draftId, examId }: { services: AppSe
         {q.kind === 'multiple_choice' || q.options.length ? (
           <TextArea label={t('exams.review.options')} hint={t('exams.review.optionsHint')} value={optionsText(q.options)} onChange={(v) => update(q.id, { options: parseOptions(v) })} autoGrow minHeight={60} maxHeight={240} disabled={readOnly} data-testid="review-options" />
         ) : null}
-        {p.map((x, i) => <ErrorText key={i}>{x.kind === 'dup' ? t('exams.review.dupNumber', { n: x.n }) : t('exams.review.emptyText')}</ErrorText>)}
+        {p.map((x, i) => <ErrorText key={i}>{x.kind === 'dup' ? t('exams.review.dupNumber', { n: x.n }) : x.kind === 'number' ? t('exams.review.emptyNumber') : t('exams.review.emptyText')}</ErrorText>)}
         {!readOnly ? (
           <div className="rq__actions">
             <Button
@@ -315,14 +317,14 @@ function GroupEditor({ qs, container, i18n, onSave, onCancel }: { qs: Question[]
   const [choose, setChoose] = useState(String(container.choose ?? members.length));
   return (
     <div className="rgroup__editor" data-testid="review-group-editor">
-      <TextField label={t('exams.review.choose')} size="sm" type="number" min={1} max={Math.max(1, members.length)} value={choose} onChange={setChoose} data-testid="review-group-choose" />
+      <TextField label={t('exams.review.choose')} size="sm" type="number" min={1} max={Math.max(1, members.length)} value={choose} onChange={setChoose} fieldClassName="rgroup__choose" data-testid="review-group-choose" />
       <fieldset className="rgroup__members">
         <legend className="field__label">{t('exams.review.members')}</legend>
         {candidates.map((c) => (
           <label key={c.id} className="rgroup__member">
             <input type="checkbox" checked={members.includes(c.id)} onChange={(e) => setMembers((cur) => (e.target.checked ? [...cur, c.id] : cur.filter((x) => x !== c.id)))} />
             <span>{c.number}</span>
-            <span className="t-muted">{c.text.slice(0, 60)}</span>
+            <span className="t-muted">{c.text}</span>
           </label>
         ))}
       </fieldset>

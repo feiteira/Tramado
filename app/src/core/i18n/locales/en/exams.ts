@@ -90,6 +90,7 @@ export const exams = {
     add: 'Add a question',
     dupNumber: 'Another question already has number {n}.',
     emptyText: 'Write the question’s text.',
+    emptyNumber: 'Give the question a number.',
     shared: 'Your corrections are shared with the class.',
     confirm: 'Looks right — answer them',
     save: 'Save without answers',
@@ -179,6 +180,9 @@ export const exams = {
     space: 'Space',
     prev: 'Previous',
     noAnswer: 'No answer yet. Write yours, or show the AI’s answer, in the exam paper.',
+    nothingNone: 'Questions you add to practice come back here. You can still practise any paper.',
+    noPapers: 'Nothing to practise yet.',
+    noPapersBody: 'Add a past exam paper or practice questions, then practise them here.',
   },
   // UI-EXAMS additions (not in UX §5.11)
   deleteConfirm: {

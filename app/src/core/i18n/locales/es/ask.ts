@@ -18,7 +18,7 @@ export const ask: Messages['ask'] = {
   postOther: 'Las respuestas que citan más de una asignatura no se pueden publicar en el chat de una asignatura',
   sent: { one: 'Enviado: su pregunta y {n} fragmento.', other: 'Enviado: su pregunta y {n} fragmentos.' },
   seeSent: 'Ver lo que se envió',
-  post: 'Publicar en el chat de la clase',
+  post: 'Publicar en el chat de la asignatura',
   postConfirm: { title: '¿Publicar esta respuesta en el chat de {class}?', body: 'Sus compañeros verán su pregunta y la respuesta.', confirm: 'Publicar' },
   posted: 'Publicado en el chat de {class}.',
   copy: 'Copiar con las fuentes',
