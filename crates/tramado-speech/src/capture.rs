@@ -200,9 +200,23 @@ where
     )
 }
 
+/// Blocks of about 50 ms. PulseAudio otherwise hands a recording stream its default fragment
+/// (about 2 s): the mixer would pad the gaps with silence by the clock and then drop the late
+/// audio as "ahead" (measured: a second of every two lost).
+fn small_blocks(supported: &cpal::SupportedStreamConfig, rate: u32) -> cpal::BufferSize {
+    let want = (rate / 20).max(64);
+    match supported.buffer_size() {
+        cpal::SupportedBufferSize::Range { min, max } => {
+            cpal::BufferSize::Fixed(want.clamp(*min, (*max).max(*min)))
+        }
+        _ => cpal::BufferSize::Default,
+    }
+}
+
 fn open_on(
     device: &cpal::Device,
     loopback: bool,
+    low_latency: bool,
     track: usize,
     tx: mpsc::Sender<Block>,
     live: &Arc<[TrackLive; 2]>,
@@ -213,8 +227,11 @@ fn open_on(
         device.default_input_config()
     }
     .map_err(|e| cpal_code(&e))?;
-    let config = supported.config();
+    let mut config = supported.config();
     let rate = config.sample_rate;
+    if low_latency {
+        config.buffer_size = small_blocks(&supported, rate);
+    }
     let l = live.clone();
     let stream = match supported.sample_format() {
         SampleFormat::F32 => build::<f32>(device, &config, track, tx, l),
@@ -354,11 +371,13 @@ impl Capture {
             .name("tramado-capture".into())
             .spawn(move || {
                 let h = host();
+                let low_latency = is_pulse(&h);
                 let mut streams = Vec::new();
                 let mut rates = [None, None];
                 if let Some(id) = &spec2.mic {
                     match mic_device(&h, id.as_deref()) {
-                        Some(d) => match open_on(&d, false, MIC, audio_tx.clone(), &l) {
+                        Some(d) => match open_on(&d, false, low_latency, MIC, audio_tx.clone(), &l)
+                        {
                             Ok((s, r)) => {
                                 streams.push(s);
                                 rates[MIC] = Some(r);
@@ -371,7 +390,7 @@ impl Capture {
                 if spec2.system {
                     match system_device(&h) {
                         Some((d, loopback)) => {
-                            match open_on(&d, loopback, SYSTEM, audio_tx.clone(), &l) {
+                            match open_on(&d, loopback, low_latency, SYSTEM, audio_tx.clone(), &l) {
                                 Ok((s, r)) => {
                                     streams.push(s);
                                     rates[SYSTEM] = Some(r);
