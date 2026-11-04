@@ -16,7 +16,7 @@
 // crates/tramado-speech/src/registry.rs (a Rust unit test compares them).
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
+import { constants, copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -105,7 +105,8 @@ async function fetchFile(f, url, destDir) {
   if (from) {
     console.log(`speech: copying ${f.file} from ${from}`);
     rmSync(part, { force: true });
-    copyFileSync(join(from, f.file), part);
+    // A copy-on-write clone where the file system allows it (no second 574 MB on disk).
+    copyFileSync(join(from, f.file), part, constants.COPYFILE_FICLONE);
   } else {
     console.log(`speech: downloading ${f.file} (${Math.round(f.size / 1e6)} MB)`);
     await download(url, part, f);

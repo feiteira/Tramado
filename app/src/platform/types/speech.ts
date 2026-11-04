@@ -37,7 +37,13 @@ export interface FinishedRecording {
   speakers: Array<{ index: number; speaker: 'lecture' | 'me' | 'class' }>;
   pauses: Array<{ atMs: number; wallFrom: Instant; wallTo: Instant }>;
   markers: Marker[]; state: 'stopped' | 'recovered'; recoveredLostMs: number | null;
+  // Additive (R-SPEECH): the audio was already published or imported, but its lecture.json was not written yet
+  // (the webview went away in between): write the manifest from this instead of publishing again.
+  audio?: PublishedAudio;
+  import?: ImportInfo;                      // an imported file (lecture.json mode "import", import{…})
 }
+// Additive (R-SPEECH): lecture.json `import` (folder spec §8.6) plus the lecture directory the audio went to.
+export interface ImportInfo { fileName: string; mime: string; hadVideo: boolean; lectureDir: ClassPath }
 export type AudioSource = { kind: 'class'; classId: ClassId; path: ClassPath } | { kind: 'private'; recordingId: Ulid };
 export type ShareMode = 'audio+transcript' | 'transcript-only' | 'none';
 export interface PublishRequest { recordingId: Ulid; classId: ClassId; lectureDir: ClassPath; share: ShareMode }

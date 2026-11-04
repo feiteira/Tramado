@@ -272,6 +272,25 @@ pub struct FinishedRecording {
     pub markers: Vec<Marker>,
     pub state: FinishedState,
     pub recovered_lost_ms: Option<u64>,
+    /// Additive (R-SPEECH): set when the audio was already published (or imported) but no
+    /// `lecture.json` exists yet in its lecture directory (the webview went away in between):
+    /// TS writes the manifest from it instead of publishing again.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio: Option<PublishedAudio>,
+    /// Additive (R-SPEECH): an imported file (`lecture.json` `mode: "import"`, `import`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub import: Option<ImportInfo>,
+}
+
+/// Additive (R-SPEECH): `lecture.json` `import` (folder spec §8.6).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportInfo {
+    pub file_name: String,
+    pub mime: String,
+    pub had_video: bool,
+    /// The lecture directory the audio was placed in.
+    pub lecture_dir: String,
 }
 
 /// TS `AudioSource`: `{"kind":"class",classId,path}` | `{"kind":"private",recordingId}`.
