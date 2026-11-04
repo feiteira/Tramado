@@ -2415,9 +2415,9 @@ Invite code (it's long — copy and paste it, don't type it)
   Or open Tramado → Join a class and paste this code:
   {code}
   ```
-  `{link}` is `{JOIN_PAGE}#{code}` when the build constant `JOIN_PAGE` is set (§8 OQ1; it stays `''` until the page is live), otherwise `tramado://join/{code}`.
+  `{link}` is `{JOIN_PAGE}#{code}`, i.e. `https://feiteira.github.io/Tramado/join/#{code}` (the build constant `JOIN_PAGE`, §8 OQ1; the page is live), or `tramado://join/{code}` in a build with `JOIN_PAGE = ''`.
   Toast "Invite copied. Paste it in your class group."
-- **QR**: `QrCode` of the **reduced** invite (first device, ≤ 2 addresses; about 450 characters) as `{JOIN_PAGE}#{reduced code}`, or `tramado://join/{reduced code}` when there is no page (sync spec §7.2): error correction M, version 15–17, 340 px with a 4-module quiet zone.
+- **QR**: `QrCode` of the **reduced** invite (first device, ≤ 2 addresses; about 400–750 characters with the page address) as `{JOIN_PAGE}#{reduced code}`, or `tramado://join/{reduced code}` when there is no page (sync spec §7.2): error correction M, version 16–22, 340 px with a 4-module quiet zone. A phone that scans it opens the join page, which shows the class and [Copy code] (no [Open in Tramado] on phones) and links to the GitHub Releases page to get Tramado.
 - **[Save as a file…]** writes `{short}.tramado-invite` in the format of sync spec §7.2 (line 1 the link, line 2 the sentence "Open this file with Tramado to join {class}."). Opening such a file (drag onto the window, or the file association, architecture §18.3) opens the Join dialog.
 - Generating the code requires Syncthing to be running. While it starts, the dialog shows a Spinner "Getting your computer ready to share…". On failure: the sync error (§3.15.2).
 
@@ -2691,6 +2691,7 @@ Remove recordings I made, once transcribed   ○ Never  ○ After 30 days  ○ A
 |---|---|---|
 | Nothing set up | Nothing. Tramado makes no connection of its own. | — |
 | You share or join a class | Class files, chat and your name and computer's name, encrypted between your classmates' computers. Your computer's ID and IP address go to Syncthing's discovery and relay servers so classmates can find you. | Your classmates' computers; Syncthing's public discovery and relay servers |
+| You open an invite link in a browser (or scan an invite's QR code) | Your browser loads Tramado's invite page from GitHub Pages: GitHub sees your IP address and browser details, as for any web page. The invite code stays in the part of the link after "#", which is never sent; the page reads it on your device. | GitHub (USA), which hosts the invite page |
 | You ask the AI (Ask, @AI, Explain, exam answers, summaries) | Your question and the passages it needs (with their file names and timestamps). Never whole folders, private notes (unless you include My notes), chat history or other classes. | OpenRouter (USA) and the company running the model |
 | You read a scanned exam or document with AI | The page images | OpenRouter and the model's provider |
 | You transcribe with OpenRouter | The recording, in pieces of up to 30 seconds | OpenRouter and the speech model's provider |
@@ -4453,6 +4454,7 @@ export const privacy = {
   rows: {
     nothing: { when: 'Nothing set up', what: 'Nothing. Tramado makes no connection of its own.', to: '—' },
     sharing: { when: 'You share or join a class', what: 'Class files, chat and your name and computer’s name, encrypted between your classmates’ computers. Your computer’s ID and IP address go to Syncthing’s discovery and relay servers so classmates can find you.', to: 'Your classmates’ computers; Syncthing’s public discovery and relay servers' },
+    joinPage: { when: 'You open an invite link in a browser (or scan an invite’s QR code)', what: 'Your browser loads Tramado’s invite page from GitHub Pages: GitHub sees your IP address and browser details, as for any web page. The invite code stays in the part of the link after “#”, which is never sent; the page reads it on your device.', to: 'GitHub (USA), which hosts the invite page' },
     ai: { when: 'You ask the AI (Ask, @AI, Explain, exam answers, summaries)', what: 'Your question and the passages it needs (with their file names and timestamps). Never whole folders, private notes (unless you include My notes), chat history or other classes.', to: 'OpenRouter (USA) and the company running the model' },
     ocr: { when: 'You read a scanned exam or document with AI', what: 'The page images', to: 'OpenRouter and the model’s provider' },
     cloudSpeech: { when: 'You transcribe with OpenRouter', what: 'The recording, in pieces of up to 30 seconds', to: 'OpenRouter and the speech model’s provider' },
@@ -4935,7 +4937,7 @@ shared, members ana, bruno, carla, organisers [ana]). Its consent record: record
 
 | # | Question | Default to build | Owner of the final call |
 |---|---|---|---|
-| OQ1 | Is there a static join page, and where? | Yes: `https://feiteira.github.io/Tramado/join/`, built from `site/join/index.html` in the repo (GitHub Pages). It reads `location.hash` and shows the code with [Copy], [Open in Tramado] (`tramado://join/<code>`) and download links. No scripts from other origins, no analytics. The build constant `JOIN_PAGE` holds the URL; when it is empty, links use `tramado://`. | maintainer |
+| OQ1 | Is there a static join page, and where? | Yes, live: `https://feiteira.github.io/Tramado/join/`, built from `site/join/index.html` in the repo (GitHub Pages, `.github/workflows/pages.yml`). It reads `location.hash` and shows the code with [Copy code], [Open in Tramado] (`tramado://join/<code>`; hidden on phones) and a [Get Tramado] link to `https://github.com/feiteira/Tramado/releases`. No scripts from other origins, no analytics, no request of its own (CSP `default-src 'none'`). The build constant `JOIN_PAGE` holds the URL; when it is empty, links use `tramado://`. Opening it is a row of Settings › Privacy (`joinPage`). | maintainer |
 | OQ2 | Can members other than the recorder rename a lecture? (`lecture.json` has one writer) | No, in 0.1. The menu item is disabled with the tooltip "Only {name}’s computer can rename it". v1.1: a `mod/<dev>.jsonl` "rename" entry honoured from organisers. | data-format spec |
 | OQ3 | Shared comments and highlights on transcripts and documents | v1.1, in the format of folder spec §8.17 (`.tramado/annotations/<deviceId>/<YYYY-MM>.jsonl`), anchored as in `audio-pipeline §5.5`, shown read-only with the author's name (`[annotation-shared]`). 0.1 keeps them private (X3). | closed |
 | OQ4 | How the "Thank" reaction is stored | A chat line `{type:'thanks', lectureId, to: memberId}` in the thanker's own chat log. Older apps that don't know the type show nothing. If the chat schema cannot take it, post the plain message "Thanks for transcribing {lecture}, {name}!" instead. | data-format spec |

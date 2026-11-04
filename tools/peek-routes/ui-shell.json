@@ -897,7 +897,7 @@
         "expect": "privacy-table"
       },
       {
-        "expect": "privacy-flow:9"
+        "expect": "privacy-flow:10"
       },
       {
         "expect": "privacy-ai-log"

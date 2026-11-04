@@ -15,7 +15,8 @@ describe('mesh: invite and join', () => {
     const inv = await ana.services.sync.invite(classId);
     expect(inv.code.startsWith('tri1_')).toBe(true);
     expect(inv.link).toBe(`tramado://join/${inv.code}`);
-    expect(inv.qrText.startsWith('tramado://join/tri1_')).toBe(true);
+    expect(inv.web).toBe(`https://feiteira.github.io/Tramado/join/#${inv.code}`);
+    expect(inv.qrText.startsWith('https://feiteira.github.io/Tramado/join/#tri1_')).toBe(true);
     expect(inv.fileText.split('\n')[1]).toContain('Direito Constitucional I');
     const preview = await bruno.services.sync.parseCode(`Junta-te: ${inv.link}`);
     expect(preview.classId).toBe(classId);

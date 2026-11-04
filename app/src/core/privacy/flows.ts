@@ -7,6 +7,9 @@
 //   sharing     Syncthing (crates/tramado-sync): started only once a class is shared or joined (C6); global
 //               discovery, relays, NAT traversal and local announcements unless "Local network only"; usage
 //               reporting (urAccepted -1), crash reporting and auto-upgrade are off (managed.rs).
+//   joinPage    not Tramado itself: a browser opening an invite's web link or QR code (core/sync/invite.ts JOIN_PAGE)
+//               loads site/join/index.html from GitHub Pages; the code stays in the '#' fragment, never sent, and the
+//               page makes no request of its own (its CSP is default-src 'none').
 //   keyCheck    AiService `GET key` (free requests left; the key only) when the AI pill starts and again after 15 min
 //               away, and when a key is tested; `GET models` (the catalog) at most once a day — only with a key and AI on.
 //   ai          AiClient `chat/completions` through Rust's AiPipe: the question and the passages it needs
@@ -19,7 +22,7 @@ import type { Messages } from '../i18n/catalogs';
 import { catalogs } from '../i18n/catalogs';
 import { UI_LOCALES, UI_LOCALE_META, type UiLocale } from '../i18n/languages';
 
-export const FLOW_IDS = ['nothing', 'sharing', 'keyCheck', 'ai', 'ocr', 'cloudSpeech', 'customAi', 'model', 'never'] as const;
+export const FLOW_IDS = ['nothing', 'sharing', 'joinPage', 'keyCheck', 'ai', 'ocr', 'cloudSpeech', 'customAi', 'model', 'never'] as const;
 export type FlowId = (typeof FLOW_IDS)[number];
 
 export interface Flow {
@@ -33,6 +36,7 @@ export interface Flow {
 export const FLOWS: readonly Flow[] = [
   { id: 'nothing', trigger: 'none', hosts: [] },
   { id: 'sharing', trigger: 'setting', hosts: ['classmates’ computers', 'discovery-v4.syncthing.net', 'relays.syncthing.net', 'Syncthing STUN servers', 'local network'] },
+  { id: 'joinPage', trigger: 'action', hosts: ['feiteira.github.io (GitHub Pages)'] },
   { id: 'keyCheck', trigger: 'setting', hosts: ['openrouter.ai'] },
   { id: 'ai', trigger: 'action', hosts: ['openrouter.ai', 'the model’s provider'] },
   { id: 'ocr', trigger: 'action', hosts: ['openrouter.ai', 'the model’s provider'] },
