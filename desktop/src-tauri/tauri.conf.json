@@ -40,12 +40,16 @@
         "name": "Tramado invite",
         "description": "Tramado class invite",
         "mimeType": "text/x-tramado-invite",
-        "role": "Viewer"
+        "role": "Viewer",
+        "contentTypes": ["eu.thehumanloop.tramado.invite"],
+        "exportedType": { "identifier": "eu.thehumanloop.tramado.invite", "conformsTo": ["public.plain-text"] }
       }
     ],
     "category": "Education",
     "shortDescription": "Organise your classes: lectures, documents, exams and class groups",
     "longDescription": "Tramado keeps each class in a plain folder: record and transcribe lectures on your own computer, add documents, keep notes, practise past exams with AI answers that cite your materials, and share a class with classmates through Syncthing, with no server and no account.",
+    "publisher": "Tramado contributors",
+    "homepage": "https://github.com/feiteira/Tramado",
     "copyright": "© Tramado contributors",
     "license": "MPL-2.0",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
@@ -64,7 +68,7 @@
     },
     "windows": {
       "webviewInstallMode": { "type": "downloadBootstrapper" },
-      "nsis": { "languages": ["English", "Portuguese", "Spanish"], "displayLanguageSelector": true }
+      "nsis": { "installMode": "currentUser", "languages": ["English", "Portuguese", "Spanish"], "displayLanguageSelector": true }
     }
   },
   "plugins": { "deep-link": { "desktop": { "schemes": ["tramado"] } } }

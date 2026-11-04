@@ -466,6 +466,23 @@ pub async fn class_forget(shared: State<'_, Shared>, class_id: String) -> AppRes
     blocking(move || registry.remove(&e.class_id)).await
 }
 
+/// Moves `path` to the OS trash. macOS: through `NSFileManager`, not the trash crate's default (`osascript` telling
+/// Finder), which needs Automation permission and, under the hardened runtime, an Apple Events entitlement the app
+/// does not have, so it would fail with -1743 ("not authorized to send Apple events").
+pub(crate) fn move_to_trash(path: &std::path::Path) -> Result<(), trash::Error> {
+    #[cfg(target_os = "macos")]
+    {
+        use trash::macos::{DeleteMethod, TrashContextExtMacos};
+        let mut ctx = trash::TrashContext::default();
+        ctx.set_delete_method(DeleteMethod::NsFileManager);
+        ctx.delete(path)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        trash::delete(path)
+    }
+}
+
 /// Moves the class folder to the OS trash, then forgets it.
 #[tauri::command]
 pub async fn class_trash(shared: State<'_, Shared>, class_id: String) -> AppResult<()> {
@@ -474,7 +491,7 @@ pub async fn class_trash(shared: State<'_, Shared>, class_id: String) -> AppResu
     let registry = shared.registry.clone();
     blocking(move || {
         if std::fs::symlink_metadata(&e.path).is_ok() {
-            trash::delete(&e.path).map_err(|err| {
+            move_to_trash(&e.path).map_err(|err| {
                 AppError::new(
                     Code::IoError,
                     format!("cannot move the class to the trash: {err}"),

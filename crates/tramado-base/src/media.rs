@@ -308,7 +308,6 @@ pub fn resolve_class(fs: &ClassFs, class_id: &str, path: &str) -> Result<PathBuf
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
 
     fn file_of(n: usize) -> (tempfile::TempDir, PathBuf, Vec<u8>) {
         let dir = tempfile::tempdir().unwrap();
@@ -466,6 +465,7 @@ mod tests {
     fn symlink_refused() {
         use crate::paths::Paths;
         use crate::registry::{ClassEntry, ClassRegistry};
+        use std::sync::Arc;
         let dir = tempfile::tempdir().unwrap();
         let secret = dir.path().join("id_rsa");
         fs::write(&secret, b"secret").unwrap();

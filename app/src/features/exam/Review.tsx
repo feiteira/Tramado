@@ -26,7 +26,7 @@ import { cx } from '../../ui/cx';
 import { pointsLabel, QUESTION_KINDS } from '../exams/format';
 import { useErrorMessage } from '../ask/AiErrorNotice';
 import { OriginalPreview } from './OriginalPreview';
-import { add, editGroup, makeGroup, mergeNext, move, optionsText, parseOptions, problemsOf, remove, splitAt, ungroup } from './review';
+import { add, editGroup, makeGroup, mergeNext, move, optionsText, parseOptions, problemsOf, remove, splitAt, ungroup } from './reviewOps';
 
 type Meta = Partial<Pick<ExamFile, 'title' | 'type' | 'academicYear' | 'rules' | 'durationMin' | 'extraPoints' | 'scale'>>;
 

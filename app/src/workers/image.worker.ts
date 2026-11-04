@@ -2,6 +2,7 @@
 // `createImageBitmap(…, { imageOrientation: 'from-image' })`, the long side scaled down to `maxSide`,
 // JPEG at `quality`) and PdfRender (pdf.js pages drawn on an OffscreenCanvas in this thread, for OCR
 // of scanned exam pages). No DOM: OffscreenCanvas only.
+import './streamIteration';
 import { PlatformError } from '../core/errors';
 import { serveRpc } from './rpc';
 

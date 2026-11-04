@@ -1,0 +1,21 @@
+{
+  "$comment": "Reviewed exceptions to the 14-day rule (architecture §18.6, D59), read by tools/check-versions.mjs. Each entry matches one exact locked version and nothing else. Add one only after reading the published source: download the .crate (or npm tarball) of this version and of the previous one into an empty scratch directory, never build or run it, diff them, and look at build scripts, new dependencies, process, network and file system access, unsafe or obfuscated code and bundled binaries. The check reports an entry as stale once its version is no longer locked or is old enough: remove it then.",
+  "exceptions": [
+    {
+      "ecosystem": "crates",
+      "name": "ctutils",
+      "version": "0.4.4",
+      "reviewed": "2026-11-04",
+      "reason": "Security fix: the first release without RUSTSEC-2026-0385 (non-constant-time masks and u128 comparisons; patched >= 0.4.4, every earlier release is affected). An advisory beats the cooldown. Pulled in by digest 0.11 (sha2, hmac, ed25519-dalek); no digest 0.11 release avoids ctutils 0.4. 14 days old on 2026-11-06.",
+      "review": "Diff of the published 0.4.3 and 0.4.4 crates (checksum 12218662… matches Cargo.lock): src/choice.rs builds the to_u*_mask values from to_u8() (a black_box barrier) instead of the raw field, and adds a two-halves u128 less-than (and less-or-equal through it) for 32-bit targets; ct_gt.rs and ct_lt.rs implement u128 through it; new unit and proptest cases; CHANGELOG, Cargo.toml metadata (homepage replaced by a documentation link, exclude = [\"checkct\"]) and the crate's own unused Cargo.lock (dev-dependency bumps). No build script (build = false), the same dependencies (cmov 0.5.3; optional subtle 2.6; dev proptest 1.11), no unsafe (#![forbid(unsafe_code)]), no process, network or file system access, no binaries. Re-checked by the REL reviewer on 2026-11-04 (fresh download, both checksums match the crates.io index)."
+    },
+    {
+      "ecosystem": "crates",
+      "name": "opusic-sys",
+      "version": "0.7.6",
+      "reviewed": "2026-11-04",
+      "reason": "The lab-verified exact pin of Cargo.toml (research/audio-pipeline.md). 0.7.5 (2026-08-06) is old enough but passes libopus NEON options under names libopus 1.6.1's CMake does not read (OPUS_ARM_PRESUME_NEON instead of OPUS_PRESUME_NEON), so the Apple-silicon half of the universal Mac app would lose the presumed NEON code. 14 days old on 2026-11-09.",
+      "review": "Diff of the published 0.7.5 and 0.7.6 crates (checksum 8534a2ed… matches Cargo.lock): the bundled libopus 1.6.1 source and every other file are byte-identical; build.rs renames the two NEON CMake definitions for aarch64 and arm (OPUS_PRESUME_NEON, OPUS_MAY_HAVE_NEON) and drops a TODO comment; the version in Cargo.toml and the crate's own unused Cargo.lock change. Same dependencies (build: cmake 0.1, optional bindgen 0.72). build.rs otherwise unchanged: it drives CMake over the bundled source and runs `ninja --version` to pick a generator; no network access, no bundled binaries. x86-64 builds (Linux, Windows, Intel Macs) are identical to 0.7.5. Re-checked by the REL reviewer on 2026-11-04 (fresh download, both checksums match the crates.io index)."
+    }
+  ]
+}

@@ -277,6 +277,24 @@ pre-release `x.y.z-rc.n` uses `vx.y.z.md`). Before tagging: `npm run check:versi
 the three systems come from CI, only when asked: `gh workflow run ci.yml --ref main -f release=build` (artifacts) or
 `-f release=publish` (also a draft GitHub release). Never trigger the Windows or macOS builds otherwise.
 
+- **14-day rule (D59) and reviewed exceptions.** `npm run check:versions` refuses a locked crate or npm package
+  younger than 14 days. First look for an older version that satisfies the constraints (and, for a security fix, is
+  outside the advisory's affected range). Only when there is none, add an exact `{ecosystem, name, version, reviewed,
+  reason, review}` entry to `tools/check-versions.exceptions.json` after reading the published source: download the
+  `.crate` (`https://static.crates.io/crates/<name>/<name>-<version>.crate`) or npm tarball of that version and of the
+  previous one into a new empty scratch folder, never build or run them, unpack and diff; check build scripts, new
+  dependencies, process, network and file system access, `unsafe` or obfuscated code and bundled binaries, and write
+  what you saw in `review`. Never except a suspicious diff. The check shows such rows as `excepted`; remove an entry
+  once it is reported as stale (no longer locked, or old enough). `--no-exceptions` shows the raw state.
+- **Windows and macOS** are built only in CI (unsigned NSIS; universal dmg signed ad hoc, not notarised): the release
+  job checks the Mac `Info.plist`, signature, entitlements and slices and runs `tools/desktop-e2e/startup.mjs` on both
+  (the app must log "webview ready" in a throwaway `TRAMADO_DATA_DIR`, the bundled Syncthing must answer). Before
+  that, `cargo check --target x86_64-pc-windows-msvc|aarch64-apple-darwin|x86_64-apple-darwin --workspace
+  --all-targets --no-default-features` catches most platform code mistakes on Linux (C dependencies need stub
+  compilers: whisper.cpp's generated bindings cannot be cross-checked). File and module names must not differ only in
+  letter case (the `web` job checks). A pre-release `.deb` is rewritten to `x.y.z~rc.n` so the final release upgrades
+  it.
+
 ## Never commit secrets
 
 This repository is public. Never commit an OpenRouter key (or any fragment of one), account ids (`user_id`),

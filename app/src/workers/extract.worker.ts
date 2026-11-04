@@ -1,6 +1,7 @@
 // The extraction worker (architecture §11.7, critique G9): pdf.js page by page (`isEvalSupported:
 // false`, running in this worker's own thread: no nested worker), mammoth lazily, pptx; ONE file at a
 // time (≈ 80 MB for 800 pages), progress events, cancel by job id. Returns a TextCache.
+import './streamIteration';
 import { PlatformError } from '../core/errors';
 import { extractText, type DocKind } from '../core/import/extract';
 import type { PdfJsLike } from '../core/import/pdf';

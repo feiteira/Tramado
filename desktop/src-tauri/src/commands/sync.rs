@@ -42,7 +42,8 @@ impl SyncSink for TauriSink {
     }
 
     fn trash(&self, path: &Path) -> AppResult<()> {
-        trash::delete(path).map_err(|e| AppError::new(Code::IoError, format!("trash: {e}")))
+        super::classes::move_to_trash(path)
+            .map_err(|e| AppError::new(Code::IoError, format!("trash: {e}")))
     }
 }
 

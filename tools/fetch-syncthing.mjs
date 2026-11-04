@@ -10,7 +10,8 @@
 //
 //   node tools/fetch-syncthing.mjs [--target=<triple> | --all] [--gpg] [--force]
 //
-// Default target: the host triple (`rustc -vV`). Archives are cached in tools/.cache/ and
+// Default target: the host triple (`rustc -vV`); `universal-apple-darwin` also fetches both Mac architectures,
+// which a universal build needs too. Archives are cached in tools/.cache/ and
 // checked against the SHA-256 below; TRAMADO_SYNCTHING_FROM=<dir> copies them from a local
 // folder instead of downloading (offline builds, CI caches). A binary already in place whose
 // `.sha256` stamp matches the pinned archive hash is kept. `--gpg` also checks the release's
@@ -208,6 +209,11 @@ async function fetchTarget(triple, opts) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const targets = opts.all ? Object.keys(ASSETS) : opts.targets.length ? opts.targets : [hostTriple()];
+  // A universal Mac build compiles each architecture on its own, and tauri-build looks for that half's sidecar
+  // (binaries/tramado-syncthing-<arch>-apple-darwin) before the bundler takes the universal one.
+  if (targets.includes('universal-apple-darwin')) {
+    for (const t of ['aarch64-apple-darwin', 'x86_64-apple-darwin']) if (!targets.includes(t)) targets.push(t);
+  }
   for (const t of targets) await fetchTarget(t, opts);
 }
 
