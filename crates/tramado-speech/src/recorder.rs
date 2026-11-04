@@ -583,6 +583,7 @@ fn run(
         j.ms = duration_ms;
         j.duration_ms = Some(duration_ms);
     })?;
+    sh.stopping.store(true, Ordering::Relaxed);
     if let Some((reason, code, message)) = &failure {
         log::warn!("recording stopped: {message}");
         sh.sink.send(RecorderEvent::Stopped {
