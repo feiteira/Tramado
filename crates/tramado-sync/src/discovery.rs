@@ -98,18 +98,13 @@ fn dedupe(v: impl IntoIterator<Item = String>) -> Vec<String> {
 }
 
 impl Discovery {
-    /// §11.1, every 10 s. `member_addrs` = addresses from the device's member files (policy).
-    pub fn tick(
-        &mut self,
-        ctx: &Ctx,
-        started: Instant,
-        off: bool,
-        lookuper: &dyn Lookuper,
-        member_addrs: &dyn Fn(&str) -> Vec<String>,
-    ) {
+    /// §11.1 phase 1 (under the lock, no network): notes connected peers and returns the
+    /// disconnected ones whose lookup is due. Each returned device is not due again for 5 min
+    /// unless [`record`](Self::record) says otherwise.
+    pub fn due(&mut self, ctx: &Ctx, started: Instant, off: bool) -> Vec<String> {
         let now = ctx.now.mono;
         let Ok(folders) = ctx.c.folders() else {
-            return;
+            return Vec::new();
         };
         let peers: BTreeSet<String> = folders
             .iter()
@@ -118,6 +113,7 @@ impl Discovery {
             .filter(|d| d != ctx.me)
             .collect();
         let conns = ctx.c.connections().unwrap_or(Value::Null);
+        let mut out = Vec::new();
         for d in peers {
             if conns[&d]["connected"].as_bool().unwrap_or(false) {
                 self.last_connected.insert(d.clone(), now);
@@ -134,30 +130,58 @@ impl Discovery {
             if self.next_lookup.get(&d).is_some_and(|t| now < *t) {
                 continue;
             }
-            match lookuper.lookup(&d) {
-                Lookup::Found(addrs) => {
-                    let all = dedupe(
-                        addrs
-                            .iter()
-                            .cloned()
-                            .chain(member_addrs(&d))
-                            .chain(std::iter::once("dynamic".to_string())),
-                    );
-                    let _ = ctx
-                        .writer
-                        .run(|| ctx.c.patch_device(&d, &json!({ "addresses": all })));
-                    self.discovered.insert(d.clone(), addrs);
-                    self.next_lookup.insert(d, now + AFTER_FOUND);
-                }
-                Lookup::Unknown(retry) => {
-                    let wait =
-                        Duration::from_secs(retry.unwrap_or(300)).clamp(MIN_RETRY, MAX_RETRY);
-                    self.next_lookup.insert(d, now + wait);
-                }
-                Lookup::Failed => {
-                    self.next_lookup.insert(d, now + AFTER_FOUND);
-                }
+            self.next_lookup.insert(d.clone(), now + AFTER_FOUND);
+            out.push(d);
+        }
+        out
+    }
+
+    /// §11.1 phase 2: applies one lookup's answer (PATCH of the addresses on success).
+    pub fn record(
+        &mut self,
+        ctx: &Ctx,
+        d: &str,
+        answer: Lookup,
+        member_addrs: &dyn Fn(&str) -> Vec<String>,
+    ) {
+        let now = ctx.now.mono;
+        match answer {
+            Lookup::Found(addrs) => {
+                let all = dedupe(
+                    addrs
+                        .iter()
+                        .cloned()
+                        .chain(member_addrs(d))
+                        .chain(std::iter::once("dynamic".to_string())),
+                );
+                let _ = ctx
+                    .writer
+                    .run(|| ctx.c.patch_device(d, &json!({ "addresses": all })));
+                self.discovered.insert(d.to_string(), addrs);
+                self.next_lookup.insert(d.to_string(), now + AFTER_FOUND);
             }
+            Lookup::Unknown(retry) => {
+                let wait = Duration::from_secs(retry.unwrap_or(300)).clamp(MIN_RETRY, MAX_RETRY);
+                self.next_lookup.insert(d.to_string(), now + wait);
+            }
+            Lookup::Failed => {
+                self.next_lookup.insert(d.to_string(), now + AFTER_FOUND);
+            }
+        }
+    }
+
+    /// Both phases in one call (tests; the engine runs the lookups without holding its lock).
+    pub fn tick(
+        &mut self,
+        ctx: &Ctx,
+        started: Instant,
+        off: bool,
+        lookuper: &dyn Lookuper,
+        member_addrs: &dyn Fn(&str) -> Vec<String>,
+    ) {
+        for d in self.due(ctx, started, off) {
+            let answer = lookuper.lookup(&d);
+            self.record(ctx, &d, answer, member_addrs);
         }
     }
 }

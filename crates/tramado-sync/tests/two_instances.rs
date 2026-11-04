@@ -439,3 +439,121 @@ fn mass_delete_is_paused_then_restored() {
     assert_eq!(ca.folder(&class).unwrap().unwrap()["paused"], false);
     assert_eq!(kept, 30, "the peer never applied the deletions");
 }
+
+#[test]
+#[ignore]
+fn recently_deleted_restores_for_everyone() {
+    let (a, b, class) = pair();
+    let doc = "Documentos/Código Civil.pdf";
+    a.fs.write(&class, doc, b"%PDF-1.7 fictional", false)
+        .unwrap();
+    assert!(wait_until(MINUTE, || b.file(&class, doc).is_some()));
+    a.fs.remove(&class, doc, false).unwrap();
+    assert!(wait_until(MINUTE, || b.file(&class, doc).is_none()));
+    // Bruno's trashcan kept the incoming deletion (sync spec §22.1)
+    let mut versions = Vec::new();
+    assert!(wait_until(MINUTE, || {
+        versions = b.engine.versions(&class).unwrap();
+        versions.iter().any(|v| v.path == doc)
+    }));
+    let v = versions.iter().find(|v| v.path == doc).unwrap().clone();
+    assert!(
+        v.version_time.ends_with('Z') && v.version_time.len() == 24,
+        "an Instant: {}",
+        v.version_time
+    );
+    assert_eq!(v.size, 18);
+    let info = b.engine.file_info(&class, &[doc.to_string()]).unwrap();
+    assert!(info[0].global_deleted);
+    b.engine
+        .restore(
+            &class,
+            &[tramado_sync::RestoreItem {
+                path: doc.into(),
+                version_time: v.version_time.clone(),
+            }],
+        )
+        .unwrap();
+    assert_eq!(
+        b.file(&class, doc).as_deref(),
+        Some(b"%PDF-1.7 fictional".as_slice())
+    );
+    assert!(
+        wait_until(MINUTE, || a.file(&class, doc).is_some()),
+        "re-synced to everyone"
+    );
+    // an unknown version answers NOT_FOUND
+    let e = b
+        .engine
+        .restore(
+            &class,
+            &[tramado_sync::RestoreItem {
+                path: "nope.md".into(),
+                version_time: v.version_time,
+            }],
+        )
+        .unwrap_err();
+    assert_eq!(e.code(), Code::NotFound);
+}
+
+#[test]
+#[ignore]
+fn snapshot_status_and_diagnostics_projections() {
+    let (a, b, class) = pair();
+    let snap = a.engine.snapshot().unwrap();
+    assert_eq!(snap.status.state, SyncState::Running);
+    assert_eq!(snap.status.device_id.as_deref(), Some(a.id.as_str()));
+    assert_eq!(snap.status.version.as_deref(), Some("v2.1.7"));
+    let f = snap
+        .folders
+        .iter()
+        .find(|f| f.class_id == class)
+        .expect("the class folder");
+    assert!(f.devices.contains(&b.id));
+    assert!(f.completion.contains_key(&b.id));
+    assert!(!f.paused);
+    let peer = snap
+        .devices
+        .iter()
+        .find(|d| d.device_id == b.id)
+        .expect("the peer");
+    assert!(peer.folders.contains(&class));
+    assert!(wait_until(MINUTE, || a
+        .engine
+        .snapshot()
+        .unwrap()
+        .devices
+        .iter()
+        .any(|d| d.device_id == b.id && d.connected)));
+    let fv = a.engine.folder_status(&class).unwrap();
+    assert_eq!(fv.class_id, class);
+    let stats = a.engine.device_stats().unwrap();
+    assert!(stats.contains_key(&b.id));
+    let ids = a
+        .engine
+        .normalize_ids(&[b.id.to_lowercase().replace('-', ""), "bad".into()])
+        .unwrap();
+    assert_eq!(ids, vec![Some(b.id.clone()), None]);
+    let own = a.engine.own_addresses().unwrap();
+    assert!(
+        own.iter().any(|x| x.starts_with("tcp://127.0.0.1:")),
+        "{own:?}"
+    );
+    let d = a.engine.diagnostics().unwrap();
+    assert!(d.ports.gui_open);
+    assert!(d.ports.sync.is_some());
+    assert!(d.connections >= 1);
+    assert!(!d.listeners.is_empty());
+    assert!(!d.log_tail.is_empty());
+    let text = serde_json::to_string(&d).unwrap();
+    assert!(
+        !text.contains(&b.id) && !text.contains(&a.id),
+        "device IDs truncated to ShortIds: {text}"
+    );
+    // pause / resume a class, remembered
+    a.engine.pause_class(&class, true).unwrap();
+    assert!(a.engine.folder_status(&class).unwrap().paused);
+    a.engine.pause_class(&class, false).unwrap();
+    assert!(!a.engine.folder_status(&class).unwrap().paused);
+    assert!(a.engine.folder_errors(&class).unwrap().is_empty());
+}

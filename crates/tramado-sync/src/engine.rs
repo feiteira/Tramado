@@ -136,11 +136,7 @@ impl Inner {
     pub fn new(cfg: SyncConfig, sink: Arc<dyn SyncSink>) -> Arc<Inner> {
         let home = cfg.paths.syncthing_home();
         let dev_isolated = cfg.paths.dev_isolated;
-        let lookup_url = std::env::var("TRAMADO_DISCOVERY_URL")
-            .ok()
-            .filter(|u| !u.is_empty() && dev_isolated)
-            .unwrap_or_else(|| LOOKUP_URL.to_string());
-        let lookuper: Box<dyn Lookuper> = Box::new(HttpLookup::new(&cfg.version, &lookup_url));
+        let lookuper: Box<dyn Lookuper> = Box::new(HttpLookup::new(&cfg.version, LOOKUP_URL));
         let s2 = sink.clone();
         Arc::new_cyclic(|weak| Inner {
             policy: PolicyStore::load(&home),
@@ -1115,6 +1111,10 @@ impl Inner {
         let _ = std::thread::Builder::new()
             .name("tramado-sync-work".into())
             .spawn(move || worker(w));
+        let w = self.weak.clone();
+        let _ = std::thread::Builder::new()
+            .name("tramado-sync-discovery".into())
+            .spawn(move || discovery_loop(w));
     }
 
     fn tick(&self, n: u64) {
@@ -1144,27 +1144,6 @@ impl Inner {
             if n.is_multiple_of(5) {
                 self.check_joining(ctx);
             }
-            if n.is_multiple_of(10) {
-                let s = self.settings();
-                let off = s.local_only || s.paused || self.dev_isolated;
-                let policies = self.policy.all();
-                let addrs = |d: &str| -> Vec<String> {
-                    policies
-                        .values()
-                        .flat_map(|p| p.roster.iter())
-                        .filter(|r| r.device_id == d)
-                        .flat_map(|r| r.addresses.clone())
-                        .collect()
-                };
-                let started = self.started_mono();
-                self.disc.lock().unwrap_or_else(|e| e.into_inner()).tick(
-                    ctx,
-                    started,
-                    off,
-                    &*self.lookuper,
-                    &addrs,
-                );
-            }
             if n.is_multiple_of(60) {
                 for e in ctx.shared_classes() {
                     self.reconcile_one(ctx, &e.class_id);
@@ -1176,6 +1155,44 @@ impl Inner {
             }
             Ok(())
         });
+    }
+
+    /// §11.1 every 10 s, on its own thread: a slow public lookup never delays admission.
+    fn discovery_round(&self) {
+        let s = self.settings();
+        let off = s.local_only || s.paused || self.dev_isolated;
+        let started = self.started_mono();
+        let due = self
+            .with_ctx(|ctx| {
+                Ok(self
+                    .disc
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .due(ctx, started, off))
+            })
+            .unwrap_or_default();
+        if due.is_empty() {
+            return;
+        }
+        let policies = self.policy.all();
+        let addrs = |d: &str| -> Vec<String> {
+            policies
+                .values()
+                .flat_map(|p| p.roster.iter())
+                .filter(|r| r.device_id == d)
+                .flat_map(|r| r.addresses.clone())
+                .collect()
+        };
+        for d in due {
+            let answer = self.lookuper.lookup(&d);
+            let _ = self.with_ctx(|ctx| {
+                self.disc
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .record(ctx, &d, answer, &addrs);
+                Ok(())
+            });
+        }
     }
 
     fn run_task(&self, t: Task) {
@@ -1902,8 +1919,11 @@ impl Inner {
         }
     }
 
+    /// Copied by people into support requests: every device ID is truncated to its ShortId
+    /// (sync spec §23), the status's own included.
     pub fn diagnostics(&self) -> AppResult<SyncDiagnostics> {
-        let status = self.status();
+        let mut status = self.status();
+        status.device_id = status.device_id.map(|d| ids::short_id(&d).to_string());
         let (key, port) = {
             let r = self.lock_run();
             (r.api_key.clone(), r.sync_port)
@@ -2020,6 +2040,21 @@ fn ticker(weak: Weak<Inner>) {
         }
         if inner.client().is_some() {
             inner.tick(n);
+        }
+    }
+}
+
+fn discovery_loop(weak: Weak<Inner>) {
+    loop {
+        std::thread::sleep(Duration::from_secs(10));
+        let Some(inner) = weak.upgrade() else {
+            return;
+        };
+        if inner.is_shutdown() {
+            return;
+        }
+        if inner.client().is_some() {
+            inner.discovery_round();
         }
     }
 }
