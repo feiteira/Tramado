@@ -88,14 +88,30 @@ pub fn compute(
     Ok(bucketize(&blocks, buckets))
 }
 
+/// `cache/peaks/<sha256>-<buckets>.json` (architecture §13.1).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct PeaksFile {
+    format: String,
+    version: u32,
+    buckets: Vec<u8>,
+}
+
+const FORMAT: &str = "tramado.peaks";
+
 /// The cached peaks, if any.
 pub fn read_cached(path: &Path) -> Option<Vec<u8>> {
     let b = files::read_optional(path).ok()??;
-    serde_json::from_slice(&b).ok()
+    let f: PeaksFile = serde_json::from_slice(&b).ok()?;
+    (f.format == FORMAT && f.version == 1).then_some(f.buckets)
 }
 
 pub fn write_cached(path: &Path, peaks: &[u8]) -> AppResult<()> {
-    files::write_atomic(path, &serde_json::to_vec(peaks)?)
+    let f = PeaksFile {
+        format: FORMAT.into(),
+        version: 1,
+        buckets: peaks.to_vec(),
+    };
+    files::write_atomic(path, &serde_json::to_vec(&f)?)
 }
 
 #[cfg(test)]
@@ -143,5 +159,10 @@ mod tests {
         assert_eq!(read_cached(&p), None);
         write_cached(&p, &[1, 2, 255]).unwrap();
         assert_eq!(read_cached(&p), Some(vec![1, 2, 255]));
+        let v: serde_json::Value = serde_json::from_slice(&std::fs::read(&p).unwrap()).unwrap();
+        assert_eq!(
+            v,
+            serde_json::json!({"format": "tramado.peaks", "version": 1, "buckets": [1, 2, 255]})
+        );
     }
 }
