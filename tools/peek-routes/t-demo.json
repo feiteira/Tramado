@@ -1,0 +1,634 @@
+[
+  {
+    "name": "welcome",
+    "query": "demo=empty",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "expect-not": "rail"
+      }
+    ]
+  },
+  {
+    "name": "onboarding-ai",
+    "query": "demo=empty&ai=fake",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "expect-not": "rail"
+      }
+    ]
+  },
+  {
+    "name": "today",
+    "query": "route=today&sync=fake&ai=fake",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect": "rail-class:3"
+      },
+      {
+        "expect-text": "rail=Direito Constitucional I"
+      },
+      {
+        "expect-text": "rail=Biology 101"
+      },
+      {
+        "expect-text": "rail=Estadística I"
+      },
+      {
+        "click": "rail-archive"
+      },
+      {
+        "expect": "rail-class:4"
+      },
+      {
+        "expect-text": "rail-archive-list=História do Direito Português"
+      }
+    ]
+  },
+  {
+    "name": "class-lectures",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-lectures"
+      },
+      {
+        "expect-text": "screen-class=Prof.ª Marta Reis"
+      },
+      {
+        "expect-text": "screen-class=2026/27 · 1.º semestre"
+      }
+    ]
+  },
+  {
+    "name": "lecture",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "screen-lecture"
+      },
+      {
+        "expect-text": "screen-lecture=\"at\": 2472000"
+      },
+      {
+        "expect-attr": "lecture-transcript:data-testid=lecture-transcript"
+      }
+    ]
+  },
+  {
+    "name": "lecture-dark",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "screen-lecture",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "screen-lecture"
+      },
+      {
+        "expect-attr": "lecture-transcript:data-testid=lecture-transcript"
+      }
+    ]
+  },
+  {
+    "name": "lecture-ai",
+    "query": "route=lecture&class=law&lecture=l6&ai=fake",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "screen-lecture"
+      },
+      {
+        "expect-attr": "lecture-transcript:data-testid=lecture-transcript"
+      }
+    ]
+  },
+  {
+    "name": "record-dialog",
+    "query": "route=class&class=law&speech=fake&dialog=record",
+    "ready": "record-dialog",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "recording",
+    "query": "route=lecture&class=law&lecture=l7&speech=fake&recording=1",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "documents",
+    "query": "route=class&class=law&tab=documents",
+    "ready": "doc-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-documents"
+      }
+    ]
+  },
+  {
+    "name": "document-pdf",
+    "query": "route=document&class=law&doc=lf&page=9&quote=nunca%20podem%20atingir",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-text": "screen-document=Lei Fundamental de Exemplo (texto fictício).pdf"
+      },
+      {
+        "expect-text": "screen-document=\"page\": 9"
+      },
+      {
+        "expect-text": "screen-document=nunca podem atingir"
+      }
+    ]
+  },
+  {
+    "name": "exam-review",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "exam-answers"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "exam-practice",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "chat",
+    "query": "route=class&class=law&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-chat"
+      }
+    ]
+  },
+  {
+    "name": "ask",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-ask"
+      }
+    ]
+  },
+  {
+    "name": "members",
+    "query": "route=class&class=law&tab=members&sync=fake&join=ask",
+    "ready": "member-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-members"
+      }
+    ]
+  },
+  {
+    "name": "invite",
+    "query": "route=class&class=law&tab=members&sync=fake&dialog=invite",
+    "ready": "invite-dialog",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "join",
+    "query": "route=today&sync=fake&dialog=join&code=tri1_fictional-demo-code",
+    "ready": "join-dialog",
+    "steps": []
+  },
+  {
+    "name": "palette",
+    "query": "route=class&class=law",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "press": "Control+K"
+      },
+      {
+        "expect": "palette"
+      },
+      {
+        "type": "palette-input=conteúdo essencial"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "steps": []
+  },
+  {
+    "name": "settings-transcription",
+    "query": "route=settings&section=transcription&model=downloading",
+    "ready": "settings-transcription",
+    "steps": []
+  },
+  {
+    "name": "settings-sharing",
+    "query": "route=settings&section=sharing&sync=fake",
+    "ready": "settings-sharing",
+    "steps": []
+  },
+  {
+    "name": "settings-privacy",
+    "query": "route=settings&section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "steps": []
+  },
+  {
+    "name": "empty-class",
+    "query": "route=class&class=stats&tab=lectures",
+    "ready": "class-lectures",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect": "class-share-open"
+      },
+      {
+        "expect-not": "class-invite"
+      }
+    ]
+  },
+  {
+    "name": "ai-busy",
+    "query": "route=class&class=law&tab=ask&ai=busy",
+    "ready": "ask-thread",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-lecture-l7",
+    "query": "route=lecture&class=law&lecture=l7",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-lecture-l8",
+    "query": "route=lecture&class=law&lecture=l8",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-lecture-b3",
+    "query": "route=lecture&class=bio&lecture=b3",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-lecture-b4",
+    "query": "route=lecture&class=bio&lecture=b4",
+    "ready": "screen-lecture",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-slides6",
+    "query": "route=document&doc=slides6",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-resumo",
+    "query": "route=document&doc=resumo",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-acordao",
+    "query": "route=document&doc=acordao",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-calendario",
+    "query": "route=document&doc=calendario",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-esquemas",
+    "query": "route=document&doc=esquemas",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-primer",
+    "query": "route=document&doc=primer",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-slides3",
+    "query": "route=document&doc=slides3",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-lab2",
+    "query": "route=document&doc=lab2",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-cell",
+    "query": "route=document&doc=cell",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-doc-apuntes",
+    "query": "route=document&doc=apuntes",
+    "ready": "screen-document",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-note-mine6",
+    "query": "route=note&note=mine6",
+    "ready": "screen-note",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-note-class8",
+    "query": "route=note&note=class8",
+    "ready": "screen-note",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "key-exam-freq",
+    "query": "route=exam&exam=freq",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-exam-final",
+    "query": "route=exam&exam=final",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-exam-quiz1",
+    "query": "route=exam&exam=quiz1",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-exam-parcial",
+    "query": "route=exam&exam=parcial",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-exam-pquiz",
+    "query": "route=exam&exam=pquiz",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-pquiz-q3",
+    "query": "route=exam&exam=pquiz&q=3",
+    "ready": "exam-answers",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-attr": "question-list:data-testid=question-list"
+      }
+    ]
+  },
+  {
+    "name": "key-class-bio",
+    "query": "route=class&class=bio&tab=chat&sync=fake",
+    "ready": "chat-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      },
+      {
+        "expect-text": "screen-class=Dr. Sam Okafor"
+      }
+    ]
+  },
+  {
+    "name": "key-class-hist",
+    "query": "route=class&class=hist",
+    "ready": "class-lectures",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "flags-unverified-conflict",
+    "query": "route=class&class=law&tab=notes&unverified=1&conflict=1&join=ask",
+    "ready": "note-list",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "law-pt",
+    "query": "route=class&class=law&tab=lectures",
+    "ready": "class-lectures",
+    "lang": "pt",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  },
+  {
+    "name": "bio-es-dark",
+    "query": "route=class&class=bio&tab=documents",
+    "ready": "doc-list",
+    "lang": "es",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect-not": "missing-item"
+      }
+    ]
+  }
+]
