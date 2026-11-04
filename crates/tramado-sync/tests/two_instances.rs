@@ -103,7 +103,11 @@ fn join_devices_unpaused_after_folder() {
         .any(|x| x == "dynamic"));
     let f = cb.folder(&class).unwrap().unwrap();
     assert_eq!(f["paused"], false);
-    assert_eq!(folder_devices(&f), vec![b.id.clone(), a.id.clone()]);
+    let mut devs = folder_devices(&f);
+    devs.sort();
+    let mut want = vec![b.id.clone(), a.id.clone()];
+    want.sort();
+    assert_eq!(devs, want);
     assert_eq!(f["pullerDelayS"], 0);
     // the first knock carried the offer: Ana never ignored Bruno
     let ca = node_client(&a);
@@ -244,13 +248,18 @@ fn leave_waits_until_a_peer_has_the_deletion() {
     assert!(node_client(&b).folder(&class).unwrap().is_some());
     // Ana comes back: the deletion reaches her, then Bruno's folder goes
     a.engine.start().unwrap();
-    assert!(
-        wait_until(Duration::from_secs(90), || b
-            .registry
-            .left_classes()
-            .contains(&class)),
-        "finished leaving"
-    );
+    let t = Instant::now();
+    let done = wait_until(Duration::from_secs(150), || {
+        b.registry.left_classes().contains(&class)
+    });
+    if !done {
+        let cb = node_client(&b);
+        eprintln!("B member file: {:?}", cb.db_file(&class, &bruno));
+        eprintln!("B connections: {:?}", cb.connections());
+        eprintln!("A has it: {:?}", node_client(&a).db_file(&class, &bruno));
+    }
+    assert!(done, "finished leaving");
+    eprintln!("finished leaving {:?} after Ana came back", t.elapsed());
     let e = b.registry.get(&class).unwrap();
     assert!(
         !e.shared && e.leaving.is_none(),

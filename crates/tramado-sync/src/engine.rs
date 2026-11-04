@@ -40,6 +40,8 @@ pub type PickResolver = Arc<dyn Fn(&str) -> AppResult<PathBuf> + Send + Sync>;
 pub(crate) struct Run {
     pub want: bool,
     pub gen: u64,
+    /// The generation whose REST API answered `/rest/noauth/health`.
+    pub ready_gen: u64,
     pub state: SyncState,
     pub pid: Option<u32>,
     pub client: Option<Client>,
@@ -147,6 +149,7 @@ impl Inner {
             run: Mutex::new(Run {
                 want: false,
                 gen: 0,
+                ready_gen: 0,
                 state: SyncState::Stopped,
                 pid: None,
                 client: None,
@@ -336,9 +339,11 @@ impl Inner {
         self.emit_status();
     }
 
+    /// The client of the current instance once its REST API is up (from the readiness check
+    /// on: the event loops must listen before the start-up routine resumes the folders).
     pub fn client(&self) -> Option<Client> {
         let r = self.lock_run();
-        if r.state == SyncState::Running {
+        if r.ready_gen == r.gen && r.state != SyncState::Error {
             r.client.clone()
         } else {
             None
@@ -439,16 +444,21 @@ impl Inner {
     }
 
     pub fn exited(&self, gen: u64, code: Option<i32>) {
-        {
+        let restarting = {
             let mut r = self.lock_run();
             if r.gen == gen {
                 r.pid = None;
                 r.client = None;
                 r.forbidden = None;
             }
-        }
-        let _ = code;
+            r.want && r.state == SyncState::Running
+        };
+        log::info!("sync: Syncthing (generation {gen}) exited with {code:?}");
         self.run_cv.notify_all();
+        if restarting {
+            // not running any more: the UI must not show "running" during a backoff
+            self.set_state(SyncState::Restarting);
+        }
     }
 
     pub fn sleep_unless_stopped(&self, d: Duration) -> bool {
@@ -507,6 +517,11 @@ impl Inner {
                 return;
             }
             if client.health() {
+                let mut r = self.lock_run();
+                if r.gen != gen {
+                    return;
+                }
+                r.ready_gen = gen;
                 break;
             }
             if start.elapsed() > supervisor::READY_TIMEOUT {
