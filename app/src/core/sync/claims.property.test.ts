@@ -247,8 +247,12 @@ function simulate(seed: number): void {
   }
 }
 
+// About 25 ms a run on the reference machine: 2000 runs (test:property) take ~50 s alone, more beside other test files,
+// so the limit grows with the runs instead of the global 60 s.
+const TIMEOUT_MS = Math.max(60_000, RUNS * 100);
+
 describe('claims property (sync spec §14.9)', () => {
   it('at most one working per component; eventually one done claim and one transcript writer', () => {
     fc.assert(fc.property(fc.integer(), (seed) => simulate(seed)), { numRuns: RUNS });
-  });
+  }, TIMEOUT_MS);
 });
