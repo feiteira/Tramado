@@ -85,6 +85,13 @@ threads (D3; critique C5). The OpenRouter key and the Syncthing API key never re
 
 ### 1.1 Release scope: what 0.1 does not build (v1.1)
 
+> **Scope change, 2026-11-04 (user decision):** transcript corrections — edit mode, the owner's fold, fold claims and
+> owner hand-over (sync spec §14.8), speaker relabelling, and annotations/highlights/markers whose anchors survive a
+> correction — are **in 0.1**. They are no longer in the table below. Owners: T-LECTURES (`core/transcript` edit ops,
+> fold and anchor remapping; `LectureService.edit`), T-SYNC (fold claims and hand-over, reusing the claim machinery),
+> UI-LECTURES (edit mode, `[transcript-edit]`, `[transcript-segment-*]`, "Speakers…"). They need no new Tauri command:
+> edit lines are appended through the existing class-file commands. New TS signatures are additive contract changes.
+
 Formats stay in the specs, readers in 0.1 tolerate and (where stated) honour them, and the UI hides the entry points.
 These commands, Platform methods and UI pieces are **not** part of the 0.1 contract: M0 does not register them and
 `Platform` does not declare them.
@@ -93,7 +100,6 @@ These commands, Platform methods and UI pieces are **not** part of the 0.1 contr
 |---|---|---|
 | Class rotation ("Start a fresh class without…") | sync spec §18.2 | `sync_rotate_class`, `sync_accept_rotation`, `core/sync/rotate.ts`, `SyncService.rotate`, `[member-fresh-class]` |
 | Pairing a second computer, removing one of your computers | sync spec §19 | `GlobalPolicy` push from TS (Rust keeps `ownDevices = []`), pair dialog, `SyncService.pairing`, `[pair-show]`, `[pair-dialog]`, Settings "Your computers" list beyond this computer |
-| Transcript corrections (edit mode, fold, fold claims, speaker relabelling) | folder spec §8.9, §8.10 fold, sync spec §14.8 | `LectureService.edit`, edit mode and `[transcript-edit]`, `[transcript-segment-*]`, "Speakers…" |
 | Exam edits by members other than the importer | folder spec §8.13 | non-importers see exam details read-only |
 | Shared markers | folder spec §8.11 | `LectureService.markers.share` |
 | Chat reactions, pins, hides; the moderation log; organiser audio removal | folder spec §8.16 reactions, §8.18 | `ChatService.react/pin/hide`, `PinsStrip`, `[chat-react]`, `[chat-pin]`, pins in `ClassView.pins` (always `[]`) |

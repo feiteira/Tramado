@@ -75,7 +75,7 @@ names it and gives the default to build.
 | X9 | `product-ux §7.2`: "Existing Syncthing found → [Use it]" | Never offered | Critique C29/G1. |
 | X10 | `product-ux §3.3` "Practice due" uses FSRS | MVP practice is a **session queue** with Again / Got it. FSRS scheduling is v1.1 | D52. |
 | X11 | `trama-ui §2.7`: `InviteCodeField` grouped as `XXXX-XXXX-…` | A multi-line monospace code field. No short codes | Critique G17: a real 3-device invite is about 1,000 characters (sync spec §7.2). Pretending otherwise would mislead. |
-| X12 | Several flows of this document | Rotation ("Start a fresh class without…"), pairing a second computer, transcript corrections and speaker relabelling, exam edits by non-importers, shared markers, chat reactions, pins and hides, the "Since you were away" digest, AI title suggestions, the exam-date chip in chat and relocating a moved folder are **v1.1** | Architecture §1.1 (scope of 0.1). The sections stay for v1.1; 0.1 hides their entry points and test ids. |
+| X12 | Several flows of this document | Rotation ("Start a fresh class without…"), pairing a second computer, exam edits by non-importers, shared markers, chat reactions, pins and hides, the "Since you were away" digest, AI title suggestions, the exam-date chip in chat and relocating a moved folder are **v1.1** | Architecture §1.1 (scope of 0.1). The sections stay for v1.1; 0.1 hides their entry points and test ids. |
 
 ---
 
@@ -1678,7 +1678,7 @@ lecture-notes, lecture-note, lecture-note-add, lecture-notes-open, lecture-ai, l
 lecture-terms-run, lecture-annotate, lecture-annotate-run, lecture-study-notes, lecture-study-notes-run, lecture-explain, explain-chip,
 lecture-markers, lecture-marker, lecture-duplicate-hint, transcription-card, transcribe-here, transcribe-cloud, transcribe-notify,
 transcribe-takeover, transcribe-release, transcribe-thank, model-prompt, model-choice-turbo, model-choice-small, model-choice-large-v3,
-model-prompt-download, model-prompt-classmate, model-prompt-cloud`. (v1.1: `transcript-edit`, `transcript-segment-input`, `transcript-segment-menu`.)
+model-prompt-download, model-prompt-classmate, model-prompt-cloud`. (0.1, scope change 2026-11-04: `transcript-edit`, `transcript-segment-input`, `transcript-segment-menu`.)
 
 ### 3.6 Recording flow (`features/record/`)
 
@@ -4949,4 +4949,4 @@ shared, members ana, bruno, carla, organisers [ana]). Its consent record: record
 | OQ12 | Check-word lists | 256 adjectives + 256 animal names, ASCII, 3–7 letters, reviewed for offensive combinations, committed once in `docs/spec/check-words-v1.txt` (M0) and imported by `core/sync/checkWords.ts`. Never translated. | closed |
 | OQ13 | Model display names | The catalog `name` with the leading "Vendor: " removed ("Google: Gemma 4 31B (free)" → "Gemma 4 31B (free)"). Without a catalog: the id after `/`, with `:free` → " (free)". | — |
 | OQ14 | When is "Deep answer" offered by default | When the quick answer is insufficient or grounded < 0.5, or always when `GET /key` reports a daily free limit of at least 1000 (C17). It is always reachable from the AiCard's ⋯ menu. | — |
-| OQ15 | Speaker relabelling ("Speakers…") | v1.1 with transcript corrections: a `label_speaker` line (`speakerId`, `label` ≤ 40 chars; folder spec §8.9). Hidden in 0.1. | closed |
+| OQ15 | Speaker relabelling ("Speakers…") | **0.1** (scope change 2026-11-04) with transcript corrections: a `label_speaker` line (`speakerId`, `label` ≤ 40 chars; folder spec §8.9). Hidden in 0.1. | closed |

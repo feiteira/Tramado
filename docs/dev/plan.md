@@ -12,6 +12,8 @@
 `$LAB` = `tools/lab` in the repository after M0 (before M0: `/tmp/claude-1000/-home-feiteira-Tramado/b5f09de1-3d54-4f8a-b9ef-589b61ef04d2/scratchpad/lab`).
 Scope: architecture §1.1 lists what 0.1 does **not** build (v1.1); no work package builds those items.
 
+**Scope change, 2026-11-04 (user decision): transcript corrections are in 0.1** — edit mode, fold, fold claims/hand-over (sync spec §14.8), speaker relabelling, and anchors (highlights, comments, markers, citations) that survive a correction. T-LECTURES owns the core + `LectureService.edit`, T-SYNC the fold claims, UI-LECTURES the edit mode (UX §3.5.1 "Edit"). See arch §1.1.
+
 ---
 
 ## 0. Overview
@@ -986,8 +988,8 @@ namespaces `lectures, record, speech` (PT/ES), services `lectures.ts`, `recordin
 **Build**: UX §3.4 lectures tab (grouped list, `TranscriptionState` rendering incl. waiting-audio, claimed/quiet/stale
 with take over, local job, done, failed, unavailable); UX §3.5 lecture view (layout, `Player` over
 `platform.media.url` with Blob fallback and stereo down-mix, `Timeline` over `speech.peaks`, `TranscriptView` with
-follow-along, click-to-seek, find, legal-reference links, AI annotations, highlights via `AnnotationService` (no edit
-mode: v1.1), side panel Notes / AI (summary, key terms, Annotate with AI, Make study notes via `AskService`) / Markers,
+follow-along, click-to-seek, find, legal-reference links, AI annotations, highlights via `AnnotationService`, **edit mode
+(transcript corrections, speaker relabelling — in 0.1 since the 2026-11-04 scope change)**, side panel Notes / AI (summary, key terms, Annotate with AI, Make study notes via `AskService`) / Markers,
 transcription status card incl. `arriving`, duplicate and untrusted states, states and test ids of §3.5.6–§3.5.7);
 UX §3.6 recording flow (record dialog with versioned consent sentences, dock row with `LevelMeter` and
 `MarkerButton`s 1 important / 2 confused / 3 exam / 4 todo / N note, not firing in text fields, live input meter,
