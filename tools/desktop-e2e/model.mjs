@@ -84,7 +84,7 @@ export default async function model(h) {
   });
 
   let resumedFrom = null;
-  await h.step('restart: "small" shows the partial download; Resume continues from the .part', async () => {
+  await h.step('restart: "small" shows the partial download; Resume continues from the .part; a webview reload re-attaches', async () => {
     await a.start();
     await a.present('rail', 60_000);
     await openModels(a);
@@ -95,12 +95,24 @@ export default async function model(h) {
     await a.click('speech-model-resume');
     resumedFrom = await a.until('the first progress', 'return window.__e2eFirst', [], 60_000);
     assert(resumedFrom >= partBytes - 1 && resumedFrom > 0, `the download restarted at ${resumedFrom}, the .part held ${partBytes}`);
+    // The webview reloads while Rust keeps downloading: the row re-attaches (speech_model_attach, D-7) and moves on.
+    await sleep(3000);
+    const before = a.logged('webview ready').length;
+    await a.js('setTimeout(() => location.reload(), 50); return true');
+    await waitFor('"webview ready" again', () => a.logged('webview ready').length > before, 30_000, 250);
+    await a.present('rail', 30_000);
+    await openModels(a);
+    const p1 = await a.until('the download shown again', `const d = window.__tramadoE2E.models.downloads.get().small; return d && d.done > 0 ? d.done : null`, [], 30_000).catch(() => null);
+    await sleep(3000);
+    const p2 = await a.run(`return window.__tramadoE2E.models.downloads.get().small?.done ?? null`);
+    const reattached = p1 !== null && p2 !== null && p2 > p1 ? `re-attached after the reload (${(p1 / 1e6).toFixed(1)} → ${(p2 / 1e6).toFixed(1)} MB)` : `after the reload: ${p1} → ${p2} (${await rowState(a)})`;
+    assert(p1 !== null || (await rowState(a)) === 'ready', `the download was not shown again after the reload (row ${await rowState(a)})`);
     const t0 = Date.now();
     await waitFor('the model ready', async () => {
       await audit();
       return (await rowState(a)) === 'ready';
     }, 15 * 60_000, 1000);
-    return `resumed at ${(resumedFrom / 1e6).toFixed(1)} MB (the .part held ${(partBytes / 1e6).toFixed(1)} MB); ready ${((Date.now() - t0) / 1000).toFixed(0)} s later`;
+    return `resumed at ${(resumedFrom / 1e6).toFixed(1)} MB (the .part held ${(partBytes / 1e6).toFixed(1)} MB); ${reattached}; ready ${((Date.now() - t0) / 1000).toFixed(0)} s later`;
   });
 
   await h.step('the file on disk: size and SHA-256 of the pinned model; no .part left', async () => {

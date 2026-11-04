@@ -260,8 +260,11 @@ print(sent)
 // ── The harness ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 export class Harness {
-  constructor({ suite, bin, keep, artifacts }) {
+  constructor({ suite, bin, keep, artifacts, shots = false }) {
     this.suite = suite;
+    /** A screenshot of every running instance after each step (not only on failure). */
+    this.shots = shots;
+    this.stepN = 0;
     this.bin = bin;
     /** The app process's executable name (an AppImage's AppRun execs usr/bin/tramado-desktop). */
     this.exe = basename(bin) === 'AppRun' ? 'tramado-desktop' : basename(bin);
@@ -308,6 +311,8 @@ export class Harness {
       if (note) say(`    ${typeof note === 'string' ? note : JSON.stringify(note)}`);
       this.timings.push([name, Date.now() - t]);
       say(`    ok (${since(t)})`);
+      this.stepN += 1;
+      if (this.shots) for (const a of this.apps) if (a.session && a.isMapped()) await a.screenshot(`${String(this.stepN).padStart(2, '0')} ${name.slice(0, 60)}`);
       return note;
     } catch (e) {
       warn(`    ✗ ${e.message}`);

@@ -64,6 +64,7 @@ appears.
 |---|---|
 | `TRAMADO_BIN` | the app to test (default `target/release/tramado-desktop`) |
 | `TRAMADO_E2E_KEEP=1` / `--keep` | keep the data folders |
+| `TRAMADO_E2E_SHOTS=1` / `--shots` | a screenshot of every visible instance after each step, in the artifacts folder |
 | `TRAMADO_E2E_ARTIFACTS` | where screenshots go (default: inside the run's temporary folder, kept only on failure) |
 | `TRAMADO_E2E_TIMEOUT_MS` | watchdog for the whole run (25 min; 40 for `hidden`) |
 | `TRAMADO_SPEECH_FROM`, `TRAMADO_E2E_SPEECH_DIR` | a folder with the turbo model |

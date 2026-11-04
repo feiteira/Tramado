@@ -8,7 +8,7 @@
 // See README.md. Every instance runs in a throwaway TRAMADO_DATA_DIR on a private Xvfb display; nothing touches the
 // person's own Tramado, Syncthing, keychain or autostart.
 //
-//   node tools/desktop-e2e/run.mjs --suite=smoke|sync-two|sync-three|media|model|hidden [--bin=<path>] [--keep]
+//   node tools/desktop-e2e/run.mjs --suite=smoke|sync-two|sync-three|media|model|hidden [--bin=<path>] [--keep] [--shots]
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Harness, ROOT, say, since, warn } from './lib.mjs';
@@ -68,7 +68,7 @@ if (bin.endsWith('.AppImage')) {
   }
   appBin = join(extracted, 'squashfs-root/AppRun');
 }
-const h = new Harness({ suite, bin: appBin, keep: opts.keep === 'true' || process.env.TRAMADO_E2E_KEEP === '1', artifacts: process.env.TRAMADO_E2E_ARTIFACTS });
+const h = new Harness({ suite, bin: appBin, keep: opts.keep === 'true' || process.env.TRAMADO_E2E_KEEP === '1', artifacts: process.env.TRAMADO_E2E_ARTIFACTS, shots: opts.shots === 'true' || process.env.TRAMADO_E2E_SHOTS === '1' });
 const deadline = Number(process.env.TRAMADO_E2E_TIMEOUT_MS ?? (suite === 'hidden' ? 40 : 25) * 60_000);
 const watchdog = setTimeout(() => {
   warn(`✗ the run took longer than ${deadline / 60000} min`);
