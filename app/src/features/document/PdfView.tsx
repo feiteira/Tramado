@@ -62,6 +62,8 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
   const live = useRef(props);
   live.current = props;
   const revealQuote = useRef<{ page: number; quote: string } | null>(null);
+  /** The reader moved (scroll, keys, toolbar): the opening position is not put back once the pages settle. */
+  const moved = useRef(false);
 
   /** Draws the cited passage and the highlights of one page over its text layer. */
   const decorate = (pageNumber: number, scrollToCite: boolean) => {
@@ -132,11 +134,19 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
 
   useImperativeHandle(ref, () => ({
     goTo(page) {
+      moved.current = true;
       if (viewer.current && page >= 1 && page <= viewer.current.pagesCount) viewer.current.currentPageNumber = page;
     },
-    zoomIn: () => viewer.current?.increaseScale(),
-    zoomOut: () => viewer.current?.decreaseScale(),
+    zoomIn() {
+      moved.current = true;
+      viewer.current?.increaseScale();
+    },
+    zoomOut() {
+      moved.current = true;
+      viewer.current?.decreaseScale();
+    },
     fit() {
+      moved.current = true;
       if (viewer.current) viewer.current.currentScaleValue = 'page-width';
     },
     actualSize() {
@@ -149,9 +159,11 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
       bus.current?.dispatch('findbarclose', { source: null });
     },
     goToDest(dest) {
+      moved.current = true;
       void link.current?.goToDestination(dest as string);
     },
     reveal(page, quote) {
+      moved.current = true;
       revealQuote.current = { page, quote };
       if (viewer.current) viewer.current.currentPageNumber = page;
       const pv = viewer.current?.getPageView(page - 1) as { textLayer?: { div?: HTMLDivElement } } | undefined;
@@ -164,6 +176,10 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
     let cancelled = false;
     let task: { destroy(): Promise<void> } | null = null;
     let resize: ResizeObserver | null = null;
+    let offInput: (() => void) | null = null;
+    let anchor: { page: number; frac: number } | null = null;
+    let anchorTimer: ReturnType<typeof setTimeout> | null = null;
+    moved.current = false;
     const { services, classId, path } = props;
     const platform = services.ctx.platform;
     void (async () => {
@@ -190,6 +206,17 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
             el.dataset.index = String(n - 1);
           });
         };
+        /** The opening position: the cited passage, else the asked page at the top of the view. */
+        const settle = () => {
+          if (viewer.current !== pdfViewer || moved.current) return;
+          const c = live.current.cite;
+          const first = c?.page ?? live.current.initialPage;
+          if (!first || first < 1 || first > pdfViewer.pagesCount) return;
+          pdfViewer.scrollPageIntoView({ pageNumber: first });
+          // The cited passage, centred, when its page's text is laid out (else when it is: `textlayerrendered`).
+          const pv = pdfViewer.getPageView(first - 1) as { textLayer?: { div?: HTMLDivElement } } | undefined;
+          if (c && pv?.textLayer?.div?.childElementCount) decorateRef.current(first, true);
+        };
         eventBus.on('pagesinit', () => {
           tagPages();
           pdfViewer.currentScaleValue = 'auto';
@@ -198,28 +225,62 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
             pdfViewer.currentPageNumber = first;
             // Once the scale has laid the pages out, put the page at the top again.
             requestAnimationFrame(() => {
-              if (viewer.current === pdfViewer && !live.current.cite) pdfViewer.scrollPageIntoView({ pageNumber: first });
+              if (!live.current.cite) settle();
             });
           }
         });
+        // Pages 2… get their own sizes after `pagesinit` (pdf.js gives every page the first page's size until it
+        // has read them), which moves everything below a differently sized first page: open at the page again.
+        eventBus.on('pagesloaded', () => requestAnimationFrame(settle));
+        const box_ = box.current;
+        const markMoved = () => {
+          moved.current = true;
+        };
+        box_.addEventListener('wheel', markMoved, { passive: true });
+        box_.addEventListener('pointerdown', markMoved);
+        box_.addEventListener('keydown', markMoved);
+        offInput = () => {
+          box_.removeEventListener('wheel', markMoved);
+          box_.removeEventListener('pointerdown', markMoved);
+          box_.removeEventListener('keydown', markMoved);
+        };
         // The container changed size (side panel, window): a preset scale (auto, fit width) is applied again.
         resize = new ResizeObserver(() => {
           const v = viewer.current;
           if (!v || !v.pagesCount) return;
           const preset = v.currentScaleValue;
           if (preset !== 'auto' && preset !== 'page-width' && preset !== 'page-fit') return;
-          // Keep the reader where they were: the point at the middle of the view, by page and fraction.
-          const at = middle();
+          if (!moved.current) {
+            // Not moved since opening (the pages may still be taking their sizes): open at the asked place again.
+            v.currentScaleValue = preset;
+            requestAnimationFrame(settle);
+            if (anchorTimer) clearTimeout(anchorTimer);
+            anchorTimer = setTimeout(() => {
+              anchorTimer = null;
+              settle();
+            }, 150);
+            return;
+          }
+          // Keep the reader where they were: the point at the middle of the view, by page and fraction. A panel
+          // opening resizes the view several times in a row: the place read before the first resize is kept until
+          // the resizing stops (a middle measured during a rescale would point anywhere).
+          anchor ??= middle();
           v.currentScaleValue = preset;
+          const at = anchor;
+          if (anchorTimer) clearTimeout(anchorTimer);
+          anchorTimer = setTimeout(() => {
+            anchorTimer = null;
+            restore();
+            anchor = null;
+          }, 150);
           if (!at) return;
-          const restore = () => {
+          function restore() {
             const b = box.current;
-            const el = inner.current?.querySelector<HTMLElement>(`.page[data-page-number="${at.page}"]`);
-            if (viewer.current !== v || !b || !el) return;
+            const el = at ? inner.current?.querySelector<HTMLElement>(`.page[data-page-number="${at.page}"]`) : null;
+            if (!at || viewer.current !== v || !b || !el) return;
             b.scrollTop = Math.max(0, el.offsetTop + at.frac * el.offsetHeight - b.clientHeight / 2);
-          };
+          }
           requestAnimationFrame(restore);
-          setTimeout(restore, 120);
         });
         resize.observe(box.current);
         eventBus.on('pagerendered', tagPages);
@@ -228,7 +289,8 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
         eventBus.on('textlayerrendered', (e: { pageNumber: number }) => {
           const p = live.current;
           const isCite = (!!p.cite && p.cite.page === e.pageNumber) || revealQuote.current?.page === e.pageNumber;
-          decorateRef.current(e.pageNumber, isCite && !scrolled.has(e.pageNumber));
+          // Until the reader moves, a cited page laid out again (a rescale) centres the passage again.
+          decorateRef.current(e.pageNumber, isCite && (!scrolled.has(e.pageNumber) || !moved.current));
           if (isCite) scrolled.add(e.pageNumber);
         });
         const scrolled = new Set<number>();
@@ -249,7 +311,10 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
           const initial = await platform.fs.readRange(classId, path, 0, RANGE_CHUNK);
           class Transport extends lib.PDFDataRangeTransport {
             override requestDataRange(begin: number, end: number) {
-              void platform.fs.readRange(classId, path, begin, end - begin).then((chunk) => this.onDataRange(begin, chunk), () => undefined);
+              // A failed read would leave pdf.js waiting for the bytes forever: show the error state instead.
+              void platform.fs.readRange(classId, path, begin, end - begin).then((chunk) => this.onDataRange(begin, chunk), (e: unknown) => {
+                if (!cancelled) live.current.onError('other', String((e as Error)?.message ?? e));
+              });
             }
           }
           src = { range: new Transport(st.size, initial), length: st.size, rangeChunkSize: RANGE_CHUNK, disableAutoFetch: true, disableStream: true };
@@ -289,6 +354,8 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
     return () => {
       cancelled = true;
       resize?.disconnect();
+      if (anchorTimer) clearTimeout(anchorTimer);
+      offInput?.();
       void task?.destroy().catch(() => undefined);
       viewer.current?.cleanup?.();
       viewer.current = null;

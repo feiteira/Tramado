@@ -94,7 +94,9 @@ export const timeLink = (lectureId: string, ms: number) => `[${clock(ms)}](trama
 /** `[Lei Fundamental, p. 9](tramado:doc/<urlencoded relPath>?page=9)` (UX §3.8). */
 export function docLink(relPath: string, title: string, page: number | null, pageWord: (n: number) => string): string {
   const label = page ? `${title}, ${pageWord(page)}` : title;
-  return `[${label.replace(/[[\]]/g, '')}](tramado:doc/${encodeURIComponent(relPath)}${page ? `?page=${page}` : ''})`;
+  // Parentheses are encoded too: a ")" in a file name would end the Markdown link early.
+  const path = encodeURIComponent(relPath).replace(/\(/g, '%28').replace(/\)/g, '%29');
+  return `[${label.replace(/[[\]]/g, '')}](tramado:doc/${path}${page ? `?page=${page}` : ''})`;
 }
 
 /** A `tramado:` link of a note as a route target. */

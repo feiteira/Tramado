@@ -62,6 +62,7 @@ export interface SearchContext {
 }
 
 const RECENT_ITEMS_KEY = 'tramado.search.recentItems';
+const SHOW_ALL_MAX = 50;
 /** How long a query waits for a class that is still reading its files. */
 const SETTLE_WAIT_MS = 4000;
 
@@ -261,7 +262,8 @@ export default function provider(services: AppServices) {
         const items = g.rows.map((r) => item(query, r, all, go));
         return {
           id: GROUP_ID[g.kind], kind: g.kind, label: t(`search.groups.${GROUP_ID[g.kind]}`), items: items.slice(0, PER_GROUP), total: items.length,
-          ...(items.length > PER_GROUP ? { more: () => items } : {}),
+          // "Show all {n}" expands in place, up to 50 (UX §3.13).
+          ...(items.length > PER_GROUP ? { more: () => items.slice(0, SHOW_ALL_MAX) } : {}),
         };
       });
       if (!out.length) {

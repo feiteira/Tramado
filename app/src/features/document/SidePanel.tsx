@@ -55,7 +55,7 @@ export function SidePanel({ services, classId, doc, tab, onTab, highlights, onJu
 }) {
   const { t } = useI18n();
   return (
-    <aside className="docside" aria-label={t('documents.view.sideToggle')} data-testid="doc-side">
+    <aside className="docside" aria-label={t('documents.view.sideToggle')}>
       <Tabs
         value={tab}
         onChange={onTab}
@@ -133,6 +133,9 @@ function Ask({ services, classId, doc, explain, askSeed, onOpenCitation }: {
   const [threadId, setThreadId] = useState<Ulid | null>(() => readThread(classId, doc.path));
   const turns = useStore(threadId ? cls.ask.thread(threadId) : NO_TURNS);
   const [draftKey, setDraftKey] = useState(0);
+  /** The selection quoted by "Ask" goes with the next question only (`n` of the seed it was used for). */
+  const [usedSeed, setUsedSeed] = useState<number | null>(null);
+  const seed = askSeed && askSeed.n !== usedSeed ? askSeed : null;
   const notesDir = cls.store.dir('notes');
   const on = ai.enabled && ai.key.set;
   const searchable = doc.extraction === 'ready';
@@ -144,6 +147,10 @@ function Ask({ services, classId, doc, explain, askSeed, onOpenCitation }: {
   const ask = async (text: string) => {
     const q = text.trim();
     if (!q) return;
+    if (seed) {
+      setUsedSeed(seed.n);
+      setDraftKey((k) => k + 1);
+    }
     try {
       const id = await cls.ask.ask(threadId, q, { kinds: ['document'], docPath: doc.path });
       setThreadId(id);
@@ -204,8 +211,8 @@ function Ask({ services, classId, doc, explain, askSeed, onOpenCitation }: {
       </div>
       <Composer
         key={draftKey}
-        placeholder={askSeed ? `“${askSeed.text.slice(0, 120)}” — ${t('documents.view.askPlaceholder')}` : t('documents.view.askPlaceholder')}
-        onSend={(text) => void ask(askSeed ? `“${askSeed.text}”\n\n${text}` : text)}
+        placeholder={seed ? `“${seed.text.slice(0, 120)}” — ${t('documents.view.askPlaceholder')}` : t('documents.view.askPlaceholder')}
+        onSend={(text) => void ask(seed ? `“${seed.text}”\n\n${text}` : text)}
         mentions={[]}
         disabled={!on ? t('documents.view.askOff') : !searchable ? t('documents.view.askNoText') : undefined}
         className="docask__composer"
@@ -221,9 +228,10 @@ function Info({ services, classId, doc, onOcr, ocrOffer, textLabel }: { services
   const size = useMemo(() => formatSize(doc.size, t), [doc.size, t]);
   const rows: Array<[string, React.ReactNode]> = [
     [t('documents.view.info.type'), t(`documents.view.kinds.${doc.kind}`)],
-    ...(doc.pages !== null ? [[doc.kind === 'pptx' ? t('documents.tab.columns.pages') : t('documents.tab.columns.pages'), doc.kind === 'pptx' ? tp('common.count.slides', doc.pages) : tp('common.count.pages', doc.pages)] as [string, React.ReactNode]] : []),
+    ...(doc.pages !== null ? [[doc.kind === 'pptx' ? t('documents.view.info.slides') : t('documents.tab.columns.pages'), doc.kind === 'pptx' ? tp('common.count.slides', doc.pages) : tp('common.count.pages', doc.pages)] as [string, React.ReactNode]] : []),
     [t('documents.view.info.size'), size],
-    [t('documents.view.info.location'), <span className="docinfo__path" key="p">{doc.path}</span>],
+    // The folders of the path may break after each "/" (never inside a name).
+    [t('documents.view.info.location'), <span className="docinfo__path" key="p">{doc.path.split('/').map((part, i, all) => <React.Fragment key={i}>{part}{i < all.length - 1 ? <>/<wbr /></> : null}</React.Fragment>)}</span>],
     [t('documents.view.info.hash'), doc.sha256 ? <code key="h">{doc.sha256.slice(0, 12)}</code> : '—'],
     [t('documents.view.info.text'), textLabel],
     [t('documents.view.info.addedBy'), doc.localOnly || doc.addedBy?.self ? t('common.you') : doc.addedBy?.name ?? '—'],

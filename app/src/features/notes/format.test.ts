@@ -41,6 +41,12 @@ describe('links', () => {
     expect(parseTramadoLink('https://example.org')).toBeNull();
   });
 
+  it('encodes parentheses of a file name so the Markdown link does not end early', () => {
+    const md = docLink('Documentos/Lei (texto fictício).pdf', 'Lei', 9, (n) => `p. ${n}`);
+    expect(md).toBe('[Lei, p. 9](tramado:doc/Documentos%2FLei%20%28texto%20fict%C3%ADcio%29.pdf?page=9)');
+    expect(parseTramadoLink(md.slice(md.indexOf('(') + 1, -1))).toEqual({ kind: 'doc', path: 'Documentos/Lei (texto fictício).pdf', page: 9 });
+  });
+
   it('formats and parses clock times', () => {
     expect(clock(725_000)).toBe('12:05');
     expect(clock(3_900_000)).toBe('1:05:00');

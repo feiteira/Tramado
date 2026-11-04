@@ -395,6 +395,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         setDragging(false);
       }}
     >
+      {nothing ? null : (
       <div className="docs-toolbar">
         <div className="docs-toolbar__start">
           <Button variant="primary" icon={Plus} onClick={() => void importer.pick(mode === 'folders' ? folder : docsDir)} data-testid="doc-add">{t('documents.tab.add')}</Button>
@@ -413,8 +414,9 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
           />
         </div>
       </div>
+      )}
 
-      {mode === 'folders' ? (
+      {mode === 'folders' && !nothing ? (
         <nav className="docs-crumbs" aria-label={t('documents.tab.breadcrumb')} data-testid="doc-breadcrumb">
           <ol>
             {trail.map((c, i) => (
@@ -468,7 +470,12 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         <EmptyState
           icon={Files}
           title={t('documents.tab.empty.title')}
-          actions={<Button variant="primary" icon={Plus} onClick={() => void importer.pick(docsDir)} data-testid="documents-empty-add">{t('documents.tab.empty.action')}</Button>}
+          actions={
+            <>
+              <Button variant="primary" icon={Plus} onClick={() => void importer.pick(docsDir)} data-testid="documents-empty-add">{t('documents.tab.empty.action')}</Button>
+              <Button icon={FolderPlus} onClick={() => setModal({ kind: 'newFolder' })} data-testid="doc-new-folder">{t('documents.tab.newFolder')}</Button>
+            </>
+          }
           className="docs-empty"
           data-testid="documents-empty"
         >

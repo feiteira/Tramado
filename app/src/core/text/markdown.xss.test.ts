@@ -139,8 +139,9 @@ describe('markdown XSS corpus', () => {
   it('keeps the payload text visible as text (escaped, not dropped)', () => {
     const html = renderHtml(parseMarkdown('<script>alert(1)</script>'));
     expect(html).toBe('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
-    // The link syntax ends at the first ')', so the rest of the target stays as text.
-    expect(renderHtml(parseMarkdown('[click](javascript:alert(1))'))).toBe('<p>click)</p>');
+    // The target (balanced parentheses included) is refused whole: only the label stays, as text.
+    expect(renderHtml(parseMarkdown('[click](javascript:alert(1))'))).toBe('<p>click</p>');
+    expect(renderHtml(parseMarkdown('[click](javascript:alert((1)))'))).toBe('<p>[click](javascript:alert((1)))</p>');
     expect(renderHtml(parseMarkdown('![a pixel](https://tracker.example/p.png)'))).toBe('<p>a pixel</p>');
   });
 

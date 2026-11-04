@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DateTime } from 'luxon';
 import {
-  ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Ellipsis, ExternalLink, FileQuestion, FolderOpen, PanelRight, ScanText, Search,
+  ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CloudDownload, Ellipsis, ExternalLink, FileQuestion, FolderOpen, PanelRight, ScanText, Search,
   Sparkles, TableOfContents, Trash2, X, ZoomIn, ZoomOut, Lock, MoveHorizontal,
 } from 'lucide-react';
 import { toPlatformError } from '../../core/errors';
@@ -139,7 +139,8 @@ function DocArriving({ name, from }: { name: string; from: string }) {
     <>
       <ScreenHeader title={name} />
       <div className="docview" data-testid="screen-document">
-        <EmptyState icon={FileQuestion} title={t('documents.view.arriving', { name: from || t('documents.view.unknownAuthor'), percent: 0 })} data-testid="doc-arriving">
+        {/* No per-file progress is known, so no "0 %" (UX §3.7.2 shows one when there is). */}
+        <EmptyState icon={CloudDownload} title={t('documents.view.arrivingSoon', { name: from || t('documents.view.unknownAuthor') })} data-testid="doc-arriving">
           <ProgressBar value={null} label={t('common.arriving')} />
         </EmptyState>
       </div>
@@ -242,6 +243,15 @@ function DocumentView({ route, services, doc, moved }: { route: DocRoute; servic
     ? articles.map((a) => ({ ...a, depth: 0 }))
     : outline.map((o) => ({ label: o.title, page: o.page, depth: o.depth, dest: o.dest }));
   const showNav = isPdf && navItems.length > 0;
+  const navRef = useRef<HTMLOListElement>(null);
+  // The article (or outline entry) of the page being read stays visible in the index.
+  useEffect(() => {
+    const list = navRef.current;
+    const here = list?.querySelector<HTMLElement>('.docnav__item--here');
+    if (!list || !here) return;
+    const top = here.offsetTop;   // .docnav__list is the offset parent
+    if (top < list.scrollTop || top + here.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = Math.max(0, top - list.clientHeight / 3);
+  }, [page, showNav, articlesOpen, navItems.length]);
 
   const labelOf = (p: number) => labels?.[p - 1] ?? String(p);
   const goPage = (p: number) => {
@@ -635,12 +645,13 @@ function DocumentView({ route, services, doc, moved }: { route: DocRoute; servic
           {showNav && articlesOpen ? (
             <nav className="docnav" aria-label={articles.length ? t('documents.view.articles') : t('documents.view.outline')} data-testid="doc-articles">
               <h2 className="docnav__title">{articles.length ? t('documents.view.articles') : t('documents.view.outline')}</h2>
-              <ol className="docnav__list">
+              <ol className="docnav__list" ref={navRef}>
                 {navItems.map((a, i) => (
                   <li key={i}>
                     <button
                       type="button"
                       className={cx('docnav__item', a.page === page && 'docnav__item--here')}
+                      aria-current={a.page === page ? 'location' : undefined}
                       style={{ paddingInlineStart: `calc(var(--s-2) + ${a.depth * 12}px)` }}
                       onClick={() => (a.dest !== undefined && !a.page ? pdf.current?.goToDest(a.dest) : a.page ? goPage(a.page) : undefined)}
                       data-testid="doc-article"
@@ -799,7 +810,7 @@ function DocumentView({ route, services, doc, moved }: { route: DocRoute; servic
           open
           onClose={() => setOcrConfirm(false)}
           title={t('documents.view.ocrConfirm')}
-          size="sm"
+          size="md"
           data-testid="doc-ocr-confirm"
           footer={
             <>

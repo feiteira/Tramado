@@ -331,10 +331,17 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
         // Deleted for everyone first (the deletion must reach the index before the ignore line hides the path)…
         const bytes = await platform.fs.read(classId, path);
         await store.remove(path);
-        await scan(path);
-        // …then ignored here and written back: Syncthing never announces it again (folder spec §11.2).
-        await setIgnores((cur) => (cur.includes(path) ? cur : [...cur, path]));
-        await platform.fs.write(classId, path, bytes, { own: false });
+        try {
+          await scan(path);
+          // …then ignored here and written back: Syncthing never announces it again (folder spec §11.2).
+          await setIgnores((cur) => (cur.includes(path) ? cur : [...cur, path]));
+          await platform.fs.write(classId, path, bytes, { own: false });
+        } catch (e) {
+          // Never lose the file: whatever failed after the delete, the bytes go back (shared again if the ignore
+          // line could not be added; the caller reports the error).
+          if (!(await platform.fs.stat(classId, path).catch(() => null))) await platform.fs.write(classId, path, bytes, { own: false }).catch(() => undefined);
+          throw e;
+        }
       } else {
         await setIgnores((cur) => (cur.includes(path) ? cur : [...cur, path]));
       }

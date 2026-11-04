@@ -82,7 +82,8 @@ export function ConflictDialog({ services, classId, path, title, onClose, onReso
             <span><span className="conflict__key conflict__key--del" aria-hidden /> {t('notes.conflictLegend.mine')}</span>
             <span><span className="conflict__key conflict__key--add" aria-hidden /> {t('notes.conflictLegend.theirs')}</span>
           </div>
-          <div className="conflict__grid" role="table" aria-label={t('notes.conflict.title', { title })} data-testid="conflict-diff">
+          {/* A scrolling region: focusable so the keyboard can scroll it (axe scrollable-region-focusable). */}
+          <div className="conflict__grid" role="table" tabIndex={0} aria-label={t('notes.conflict.title', { title })} data-testid="conflict-diff">
             <div className="conflict__head" role="row">
               <span role="columnheader">{t('notes.conflict.mine')}</span>
               <span role="columnheader">{t('notes.conflict.theirsUnknown')}</span>

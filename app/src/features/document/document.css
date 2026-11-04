@@ -168,6 +168,16 @@
     grid-template-columns: 168px minmax(0, 1fr) 272px;
   }
 }
+/* A small window with the side panel open: the page keeps the room, the index steps aside (closing the panel
+   brings it back). */
+@media (max-width: 1080px) {
+  .docview__body--nav.docview__body--side {
+    grid-template-columns: minmax(0, 1fr) 272px;
+  }
+  .docview__body--nav.docview__body--side > .docnav {
+    display: none;
+  }
+}
 .docview__main {
   position: relative;
   min-width: 0;
@@ -199,6 +209,7 @@
   color: var(--ink-3);
 }
 .docnav__list {
+  position: relative;
   flex: 1;
   margin: 0;
   padding: 0 var(--s-1) var(--s-2);
@@ -470,6 +481,10 @@
   padding: var(--s-3);
   overflow: auto;
 }
+/* The column scrolls; its parts keep their size (a description below never shrinks the image's frame). */
+.docimg > * {
+  flex: none;
+}
 .docimg__bar {
   display: flex;
   justify-content: flex-end;
@@ -661,8 +676,12 @@
   overflow-wrap: anywhere;
 }
 .docinfo__path {
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+/* Composer (ui/tramado) puts its class on the text area, not on the field around it: the field takes the width. */
+.docask__composer > .field {
+  flex: 1;
+  min-width: 0;
 }
 .docinfo__actions {
   display: flex;
