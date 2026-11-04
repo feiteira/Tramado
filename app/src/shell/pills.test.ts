@@ -30,6 +30,12 @@ describe('syncPillState (UX §2.4, first match wins)', () => {
     expect(syncPillState(s({}), [cls({})], true).id).toBe('waiting');
     expect(syncPillState(s({}), [cls({ onlineMembers: 2 })], true)).toEqual({ id: 'upToDate', n: 2 });
   });
+  it('counts distinct classmates over every shared class, and conflicts as attention', () => {
+    const s = { ...EMPTY_SYNC_STATE, status: status({}) };
+    // Bruno online in law, Jamie in bio: "2 online", not the largest class's 1.
+    expect(syncPillState(s, [cls({ id: 'law', onlineMembers: 1 }), cls({ id: 'bio', onlineMembers: 1 })], true, { online: 2, conflicts: 0 })).toEqual({ id: 'upToDate', n: 2 });
+    expect(syncPillState(s, [cls({ onlineMembers: 1 })], true, { online: 1, conflicts: 1 })).toEqual({ id: 'attention', n: 1 });
+  });
 });
 
 describe('aiPillState (UX §2.5)', () => {

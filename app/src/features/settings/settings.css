@@ -1,0 +1,331 @@
+/* Settings (UX §3.14): a 200 px section list and a content column of at most 760 px; Trama's Group/Row cards. */
+
+.settings-screen {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: var(--s-6);
+  padding: var(--s-5) var(--s-6) var(--s-7);
+  min-height: 0;
+  align-items: start;
+}
+
+.settings-screen__nav {
+  position: sticky;
+  top: calc(var(--header-h) + var(--s-4));
+}
+
+.settings-screen__nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-screen__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 34px;
+  padding: var(--s-1) var(--s-3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-2);
+  text-align: left;
+  line-height: 1.25;
+}
+
+.settings-screen__item svg {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.settings-screen__item:hover {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+
+.settings-screen__item--current,
+.settings-screen__item--current:hover {
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-1);
+}
+
+.settings-screen__item--current svg {
+  color: var(--accent-text);
+}
+
+.settings-screen__body {
+  min-width: 0;
+  max-width: 760px;
+}
+
+.settings-screen__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-7);
+  color: var(--ink-3);
+}
+
+@media (max-width: 760px) {
+  .settings-screen {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-screen__nav {
+    position: static;
+  }
+}
+
+/* A section: its title, then groups */
+.set-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.set-section__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.set-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.set-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.set-group__title {
+  font-size: var(--fs-lg);
+  font-weight: 620;
+}
+
+.set-group__description {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  max-width: 64ch;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.set-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-5);
+  padding: var(--s-3) var(--s-4);
+  min-height: 52px;
+}
+
+.set-row + .set-row {
+  border-top: 1px solid var(--rule-faint);
+}
+
+.set-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.set-row__text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.set-row__label {
+  font-weight: 560;
+}
+
+.set-row__hint {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.set-row__control {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.set-row--stack .set-row__control {
+  align-items: stretch;
+}
+
+.set-row__control > .input,
+.set-row__control > .field,
+.set-row__control .set-select {
+  min-width: 240px;
+}
+
+.set-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.set-note svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--success-text);
+}
+
+.set-checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.set-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-3);
+}
+
+.set-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.set-class__name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.set-class__size {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.set-path {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.set-path__value {
+  flex: 1;
+  min-width: 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--paper-sunk);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.set-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+
+.set-empty {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-5) var(--s-4);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.set-table-wrap {
+  overflow-x: auto;
+}
+
+.set-table-wrap .table-wrap {
+  max-height: none;
+}
+
+.privacy-when {
+  font-weight: 560;
+  min-width: 11rem;
+}
+
+.privacy-to {
+  min-width: 10rem;
+  color: var(--ink-2);
+}
+
+.privacy-code {
+  margin-left: var(--s-2);
+}
+
+/* Profile: the avatar beside the colours */
+.profile-colour {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+/* Appearance: each font option in its own face */
+.font-sample--default {
+  font-family: 'Figtree Variable', 'Figtree', system-ui, sans-serif;
+}
+
+.font-sample--atkinson {
+  font-family: 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
+}
+
+.font-sample--dyslexic {
+  font-family: 'OpenDyslexic', system-ui, sans-serif;
+}
+
+/* About */
+.about-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.about-hero__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.about-hero__tagline {
+  color: var(--ink-2);
+}
+
+.about-hero__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--s-1);
+}

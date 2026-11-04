@@ -8,7 +8,7 @@ import './errorboundary.css';
  * went wrong and where, as selectable text the researcher can copy into a report: the desktop
  * app has no developer console, so this is the only place the error can be seen.
  */
-export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null; where: string; copied: boolean }> {
+export class ErrorBoundary extends Component<{ children: ReactNode; /** Render nothing on a crash (an overlay or a dialog must not cover the app). */ quiet?: boolean }, { error: Error | null; where: string; copied: boolean }> {
   override state = { error: null as Error | null, where: '', copied: false };
 
   static getDerivedStateFromError(error: Error) {
@@ -23,6 +23,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
   override render() {
     const { error, where, copied } = this.state;
     if (!error) return this.props.children;
+    if (this.props.quiet) return null;
     const { t } = i18nStatic();
     const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
     const details = [

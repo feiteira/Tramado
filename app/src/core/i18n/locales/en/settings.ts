@@ -106,6 +106,7 @@ export const settings = {
     exams: 'an exam date is added or changed',
     model: 'the speech model finishes downloading',
     perClass: 'Each class can change this in its ⋯ menu › Notifications.',
+    classes: 'Your classes',
   },
   storage: {
     root: 'Classes are kept in',
@@ -120,6 +121,10 @@ export const settings = {
     retentionNever: 'Never', retention30: 'After 30 days', retention90: 'After 90 days',
     retentionHint: 'The transcript stays. In shared classes the recording is removed for everyone.',
     diskLow: 'Your disk is almost full ({free} left). New recordings and classmates’ files may not fit.',
+    leaving: 'Leaving — waiting for a classmate to receive it',
+    cacheCleared: 'Cache cleared.',
+    trashEmptied: 'Deleted files removed.',
+    classes: 'Classes on this computer',
   },
   about: {
     version: 'Tramado {version}',
@@ -134,5 +139,6 @@ export const settings = {
     mediaFail: 'Playback doesn’t work in this window: {detail}. Tramado will use a slower fallback.',
     licences: 'Licences',
     component: 'Component', licence: 'Licence',
+    mediaTesting: 'Testing playback…',
   },
 };

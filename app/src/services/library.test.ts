@@ -57,6 +57,22 @@ describe('library', () => {
     s.dispose();
   });
 
+  it('keeps the rail order in prefs and follows the notification level (UI-SHELL)', async () => {
+    const { ctx } = await createTestContext({ name: 'Ana Ribeiro' });
+    const s = createServices(ctx);
+    const a = await s.library.create({ name: 'Álgebra', colour: '#e5484d', icon: 'calculator', language: 'pt-PT', share: false });
+    const b = await s.library.create({ name: 'Biologia', colour: '#30a46c', icon: 'dna', language: 'pt-PT', share: false });
+    expect(s.library.classes.get().map((c) => c.id)).toEqual([a, b]);
+    await s.library.setOrder([b, a, 'unknown']);
+    expect(s.library.classes.get().map((c) => c.id)).toEqual([b, a]);
+    expect(JSON.parse(ctx.prefs.get('ui.classOrder'))).toEqual([b, a]);
+    await s.library.load();
+    expect(s.library.classes.get().map((c) => c.id)).toEqual([b, a]);
+    await ctx.prefs.set(`notify.class.${a}`, 'all');
+    expect(s.library.classes.get().find((c) => c.id === a)!.notify).toBe('all');
+    s.dispose();
+  });
+
   it('notification preferences (UX §3.14.6)', () => {
     const prefs = (m: Record<string, string>) => ({ get: (k: string) => m[k] ?? ({ 'notify.system': '1', 'notify.default': 'important', 'notify.joins': '1', 'notify.transcripts': '1', 'notify.exams': '1', 'notify.model': '1' } as Record<string, string>)[k] ?? '' });
     expect(allowed(prefs({}), 'mention', 'c1')).toBe(true);

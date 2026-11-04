@@ -30,6 +30,7 @@ export const onboarding = {
     cloudWarning: 'This folder is synced by {service}. Two sync tools on the same files cause conflicts. Choose a folder outside it.',
     cloudChoose: 'Choose another folder',
     required: 'Enter a name classmates will recognise.',
+    identityError: 'Tramado is incomplete (the sharing component is missing). Reinstall Tramado.',
   },
   ai: {
     title: 'AI help (optional)',
@@ -45,6 +46,10 @@ export const onboarding = {
     okBusy: 'Your key works. The free model is busy right now (that’s common). Tramado will try {fallback} when that happens.',
     bad: 'OpenRouter didn’t accept this key. Check that you copied all of it (it starts with “sk-or-”).',
     offline: 'You seem to be offline. The key is saved; Tramado will check it when you’re online.',
+    okNoQuota: 'Works. {model} is your model.',
+    failed: 'The key could not be checked: {message}',
+    showKey: 'Show the key',
+    hideKey: 'Hide the key',
   },
   ready: {
     title: 'You’re set, {name}.',
@@ -54,5 +59,16 @@ export const onboarding = {
     join: 'Paste an invite a classmate sent you.',
     model: 'The speech model for transcribing lectures ({size}) downloads the first time you need it.',
     finish: 'Go to Today',
+  },
+  specimen: {
+    lawTab: 'LAW', lawName: 'Constitutional Law I', lawLine: 'Prof. Marta Reis · Tue and Thu 10:00',
+    chemTab: 'CHEM', chemName: 'Organic Chemistry', chemLine: 'Lab on Fridays · exam on 14 Jan',
+    artTab: 'ART', artName: 'History of Art', artLine: 'Renaissance to Baroque',
+    lectures: { one: '{n} lecture', other: '{n} lectures' },
+    docs: { one: '{n} document', other: '{n} documents' },
+    aiBadge: 'AI draft · from your sources',
+    aiQuestion: 'May the law restrict fundamental rights?',
+    aiAnswerA: 'Only where the Constitution allows it, limited to what is necessary',
+    aiAnswerB: ', and never reaching the essential content of the right',
   },
 };

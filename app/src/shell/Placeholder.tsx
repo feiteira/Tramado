@@ -30,15 +30,18 @@ export function missingKindOf(route: Route): MissingWhat {
   }
 }
 
-/** `recentlyDeleted`: the shared class whose Recently deleted dialog may bring it back. */
-export function Missing({ what, recentlyDeleted }: { what: MissingWhat; recentlyDeleted?: string }) {
+/**
+ * `recentlyDeleted`: the shared class whose Recently deleted dialog may bring it back. `inline`: inside a screen or
+ * dialog that already has its title (no top bar).
+ */
+export function Missing({ what, recentlyDeleted, inline }: { what: MissingWhat; recentlyDeleted?: string; inline?: boolean }) {
   const { t } = useI18n();
   const { go, back, canGoBack } = useRouter();
   const dialogs = useDialogs();
   return (
     <>
-      <ScreenHeader title={t(`app.missing.${what}`)} />
-      <div className="placeholder" data-testid="missing" data-missing={what}>
+      {inline ? null : <ScreenHeader title={t(`app.missing.${what}`)} />}
+      <div className="missing" data-testid="missing" data-missing={what}>
         <EmptyState
           icon={FileQuestion}
           title={t(`app.missing.${what}`)}

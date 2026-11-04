@@ -1,0 +1,251 @@
+/* The class screen frame (UX §3.3.2) and the class dialog (§3.3.1). Class colours only in divider roles. */
+
+.class-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The top bar has no title here (the class header is the title): keep it slim. */
+.class-screen > .screen-header {
+  min-height: 44px;
+  border-bottom: 0;
+}
+
+.class-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  padding: 0 var(--s-6) var(--s-3);
+  background: var(--paper);
+}
+
+.class-header__titles {
+  min-width: 0;
+}
+
+.class-header__title {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: var(--fs-2xl);
+  font-variation-settings: 'opsz' 32;
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.class-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--s-2);
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.class-header__dot {
+  color: var(--ink-4);
+}
+
+.class-header__members {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.class-header__avatars {
+  display: inline-flex;
+}
+
+.class-header__avatars > .avatar + .avatar {
+  margin-left: -6px;
+}
+
+.class-header__avatars > .avatar {
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.class-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+.class-header__busy {
+  display: inline-flex;
+  border-radius: var(--r-md);
+}
+
+.class-header__chips {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+@media (max-width: 1240px) {
+  .class-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .class-header__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .class-header__chips {
+    grid-column: 1 / -1;
+  }
+}
+
+.class-screen > .newer-format {
+  margin: 0 var(--s-6) var(--s-3);
+}
+
+.class-tabs-host {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 var(--s-6) var(--s-6);
+}
+
+.class-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.class-tabs > .tabs__list {
+  position: sticky;
+  top: 44px;
+  z-index: 4;
+  background: var(--paper);
+}
+
+.class-tabs > .tabs__panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  min-height: 0;
+}
+
+.class-tabs .tabs__badge .badge {
+  margin-left: 2px;
+}
+
+.class-tabs-host__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-7);
+  color: var(--ink-3);
+}
+
+.class-missing {
+  padding: var(--s-4) var(--s-6);
+}
+
+.class-drop {
+  position: absolute;
+  inset: 0 var(--s-6) var(--s-6);
+  z-index: 6;
+}
+
+/* "Invite your classmates" */
+.invite-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+}
+
+.invite-card__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--c-soft);
+  color: var(--c-text);
+}
+
+.invite-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-card__title {
+  font-size: var(--fs-md);
+  font-weight: 620;
+}
+
+.invite-card__body {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* The Share tab */
+.class-share-tab {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--s-5);
+}
+
+.class-share-tab > .empty {
+  width: min(560px, 100%);
+}
+
+/* ── New class / Class settings ──────────────────────────────────────────────────────── */
+
+.class-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.class-form__short {
+  max-width: 240px;
+}
+
+.class-form__icons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.class-form__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-3);
+}
+
+.class-form__danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.class-form__danger-title {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  color: var(--danger-text);
+}

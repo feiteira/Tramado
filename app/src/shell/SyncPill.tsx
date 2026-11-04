@@ -1,19 +1,24 @@
-// The sync pill and its popover (UX §2.4). M0: the states come from SyncService.state and the class
-// views (placeholder data until T-SYNC); UI-SHELL owns this file in wave 2. Sync never blocks anything.
+// The sync pill and its popover (UX §2.4): what sharing is doing, one line per shared class, the problems that need
+// a decision (each with its action), Pause sharing, and links to Settings › Sharing. The data is SyncService's and
+// PresenceService's (UI-GROUP); this file only renders and counts it. Sync never blocks anything.
 import React, { useEffect, useRef, useState } from 'react';
 import { CircleCheck, CirclePause, HardDrive, RefreshCw, TriangleAlert, Users, WifiOff, type LucideIcon } from 'lucide-react';
 import type { AppServices } from '../services/types/common';
 import type { ClassView } from '../services/types/viewModels';
 import { Popover } from '../ui/components/Popover';
+import { Button } from '../ui/components/Button';
 import { Switch } from '../ui/components/Choice';
+import { Notice } from '../ui/components/Feedback';
 import { Tooltip } from '../ui/components/Tooltip';
+import { useToast } from '../ui/components/Toast';
 import { ClassTab } from '../ui/tramado/ClassTab';
+import { formatBytes } from '../ui/format';
 import { useI18n, type I18n } from '../ui/i18n';
 import { cx } from '../ui/cx';
 import { useRouter } from './router';
 import { useStore } from './useStore';
-import { useAppState } from './AppState';
 import { syncPillState, type SyncPillState } from './pills';
+import { useSyncFacts } from './syncFacts';
 
 const ICON: Record<SyncPillState['id'], { icon: LucideIcon; tone: string; spin?: boolean }> = {
   local: { icon: HardDrive, tone: 'muted' },
@@ -34,16 +39,20 @@ export function syncPillLabel(s: SyncPillState, { t, tp }: Pick<I18n, 't' | 'tp'
     case 'syncing':
       return s.n === null ? t('sync.pill.syncingUnknown') : tp('sync.pill.syncing', s.n);
     case 'upToDate':
-      return t('sync.pill.upToDate', { n: s.n });
+      return s.n > 0 ? t('sync.pill.upToDate', { n: s.n }) : t('sync.pill.upToDateNone');
     default:
       return t(`sync.pill.${s.id}`);
   }
 }
 
-function classLine(c: ClassView, { t, tp }: Pick<I18n, 't' | 'tp'>): string {
+export function classLine(c: ClassView, i18n: Pick<I18n, 't' | 'tp' | 'meta'>): string {
+  const { t, tp } = i18n;
   switch (c.sync.kind) {
     case 'syncing':
-      return c.sync.files === null ? t('sync.pill.syncingUnknown') : tp('sync.pill.syncing', c.sync.files);
+      if (c.sync.files === null) return t('sync.pill.syncingUnknown');
+      return c.sync.bytesLeft !== null
+        ? t('sync.popover.classSyncing', { files: tp('common.count.files', c.sync.files), size: formatBytes(t, i18n.meta.bcp47, c.sync.bytesLeft) })
+        : tp('sync.pill.syncing', c.sync.files);
     case 'waiting':
       return t('sync.popover.classWaiting');
     case 'relay':
@@ -55,7 +64,7 @@ function classLine(c: ClassView, { t, tp }: Pick<I18n, 't' | 'tp'>): string {
     case 'problems':
       return tp('sync.pill.attention', c.sync.count);
     default:
-      return t('sync.popover.classUpToDate', { n: c.onlineMembers });
+      return c.onlineMembers > 0 ? t('sync.popover.classUpToDate', { n: c.onlineMembers }) : t('sync.pill.upToDateNone');
   }
 }
 
@@ -75,20 +84,42 @@ function useOnline(): boolean {
 
 export function SyncPill({ services, compact }: { services: AppServices; compact?: boolean }) {
   const i18n = useI18n();
-  const { t } = i18n;
+  const { t, tp } = i18n;
   const { go } = useRouter();
-  const { prefsStore, setPref } = useAppState();
+  const toast = useToast();
   const sync = useStore(services.sync.state);
   const classes = useStore(services.library.classes);
   const online = useOnline();
-  const state = syncPillState(sync, classes, online);
+  const facts = useSyncFacts(services, classes);
+  const conflicts = Object.values(facts.conflicts).reduce((a, b) => a + b, 0);
+  const state = syncPillState(sync, classes, online, { online: facts.online, conflicts });
   const label = syncPillLabel(state, i18n);
   const look = ICON[state.id];
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
-  const tip = state.id === 'waiting' ? `${label}. ${t('sync.pill.waitingTooltip')}` : label;
+  const tip = state.id === 'waiting' ? `${label}. ${t('sync.pill.waitingTooltip')}` : state.id === 'upToDate' && facts.onlineNames.length ? `${label}: ${facts.onlineNames.join(', ')}` : label;
   const shared = classes.filter((c) => c.shared && !c.archived);
-  const paused = prefsStore?.get('sync.paused') === '1';
+  const nameOf = (id: string) => classes.find((c) => c.id === id);
+  const paused = !!sync.status?.paused;
+  const started = !!sync.status && sync.status.state !== 'stopped';
+  const errorCode = sync.status?.error ?? null;
+  const close = () => setOpen(false);
+  const goClass = (classId: string, tab?: 'members' | 'notes' | 'documents') => {
+    close();
+    go({ name: 'class', classId, ...(tab ? { tab } : {}) });
+  };
+  const run = async (f: () => Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await f();
+    } catch (e) {
+      toast.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const folderErrors = Object.values(sync.folders).filter((f) => f.error || f.pullErrors > 0);
   return (
     <>
       <Tooltip label={tip} side="right">
@@ -107,37 +138,106 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
           <span className="pill__label rail__label">{label}</span>
         </button>
       </Tooltip>
-      <Popover open={open} onClose={() => setOpen(false)} anchor={ref} side="right" align="end" padded className="sync-popover" aria-label={t('sync.popover.title')} data-testid="sync-popover">
-        <h2 className="sync-popover__title">{t('sync.popover.title')}</h2>
+      <Popover open={open} onClose={close} anchor={ref} side="right" align="end" padded className="sync-popover" aria-label={t('sync.popover.title')} data-testid="sync-popover">
+        <div className="sync-popover__head">
+          <h2 className="sync-popover__title">{t('sync.popover.title')}</h2>
+          <span className={cx('sync-popover__state', `pill--${look.tone}`)}>
+            <look.icon size={14} strokeWidth={2} aria-hidden className="pill__icon" />
+            {label}
+          </span>
+        </div>
+        {state.id === 'error' ? (
+          <Notice
+            tone="danger"
+            data-testid="sync-error-card"
+            actions={
+              <>
+                <Button size="sm" busy={busy} onClick={() => void run(() => services.sync.restart())} data-testid="sync-retry">
+                  {t('sync.error.retry')}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-error-details">
+                  {t('sync.error.details')}
+                </Button>
+              </>
+            }
+          >
+            {t('sync.error.notRunning')}
+            {errorCode === 'SYNC_LOCKED' ? ` ${t('sync.error.locked')}` : errorCode === 'SYNC_PORT' ? ` ${t('sync.error.port')}` : ''}
+          </Notice>
+        ) : null}
+        {sync.massDelete.length || sync.massDeleteRemote.length || folderErrors.length || conflicts ? (
+          <ul className="sync-popover__problems" data-testid="sync-problems">
+            {sync.massDelete.map((m) => {
+              const c = nameOf(m.classId);
+              return (
+                <li key={`md-${m.classId}`} className="sync-popover__problem">
+                  <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
+                  <span className="sync-popover__problem-text">{t('sync.massDelete.title', { n: m.count, class: c?.shortName ?? '' })}</span>
+                  <Button size="sm" busy={busy} onClick={() => void run(() => services.sync.resolveMassDelete(m.classId, 'restore'))} data-testid="sync-problem-restore">
+                    {t('sync.massDelete.restore')}
+                  </Button>
+                </li>
+              );
+            })}
+            {sync.massDeleteRemote.map((m) => (
+              <li key={`mdr-${m.classId}-${m.by}`} className="sync-popover__problem">
+                <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
+                <span className="sync-popover__problem-text">{`${nameOf(m.classId)?.shortName ?? ''} · ${tp('sync.pill.attention', m.count)}`}</span>
+                <Button size="sm" onClick={() => goClass(m.classId)} data-testid="sync-problem-open">
+                  {t('common.open')}
+                </Button>
+              </li>
+            ))}
+            {folderErrors.map((f) => (
+              <li key={`fe-${f.classId}`} className="sync-popover__problem">
+                <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
+                <span className="sync-popover__problem-text">{`${nameOf(f.classId)?.shortName ?? f.label} · ${tp('sync.pill.attention', Math.max(1, f.pullErrors))}`}</span>
+                <Button size="sm" onClick={() => goClass(f.classId, 'documents')} data-testid="sync-problem-open">
+                  {t('common.open')}
+                </Button>
+              </li>
+            ))}
+            {Object.entries(facts.conflicts).map(([classId, n]) => (
+              <li key={`cf-${classId}`} className="sync-popover__problem">
+                <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
+                <span className="sync-popover__problem-text">{`${nameOf(classId)?.shortName ?? ''} · ${tp('sync.pill.attention', n)}`}</span>
+                <Button size="sm" onClick={() => goClass(classId, 'notes')} data-testid="sync-problem-open">
+                  {t('common.open')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {shared.length > 0 ? (
           <ul className="sync-popover__list">
             {shared.map((c) => (
               <li key={c.id}>
-                <button
-                  type="button"
-                  className="sync-popover__class"
-                  onClick={() => {
-                    setOpen(false);
-                    go({ name: 'class', classId: c.id, tab: 'members' });
-                  }}
-                  data-testid="sync-popover-class"
-                >
+                <button type="button" className="sync-popover__class" onClick={() => goClass(c.id, 'members')} data-testid="sync-popover-class" data-class-id={c.id}>
                   <ClassTab color={c.color} icon={c.icon} size="sm" />
                   <span className="sync-popover__name">{c.name}</span>
-                  <span className="sync-popover__line t-small t-muted">{classLine(c, i18n)}</span>
+                  <span className="sync-popover__line">{classLine(c, i18n)}</span>
                 </button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="t-small t-muted">{t('common.onlyThisComputer')}</p>
+          <p className="sync-popover__empty">{t('settings.sharing.notStarted')}</p>
         )}
-        <Switch label={t('sync.popover.pause')} description={t('sync.popover.pauseHint')} checked={paused} onChange={(v: boolean) => void setPref('sync.paused', v ? '1' : '0')} data-testid="sync-pause" />
+        {started ? (
+          <Switch
+            label={t('sync.popover.pause')}
+            description={t('sync.popover.pauseHint')}
+            checked={paused}
+            disabled={busy}
+            onChange={(v: boolean) => void run(() => services.sync.applySettings({ paused: v }))}
+            data-testid="sync-pause"
+          />
+        ) : null}
         <div className="sync-popover__links">
-          <button type="button" className="link" onClick={() => { setOpen(false); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-settings">
+          <button type="button" className="link" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-settings">
             {t('sync.popover.settings')}
           </button>
-          <button type="button" className="link" onClick={() => { setOpen(false); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-diagnostics">
+          <button type="button" className="link" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-diagnostics">
             {t('sync.popover.diagnostics')}
           </button>
         </div>

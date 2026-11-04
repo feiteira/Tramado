@@ -7,6 +7,7 @@ export const classes = {
     settingsTitle: 'Class settings',
     name: 'Name', namePlaceholder: 'e.g. Teoria Geral do Direito Civil',
     nameTaken: 'You already have a class called “{name}”.',
+    nameRequired: 'Give the class a name.',
     short: 'Short name', shortHint: 'Used in chat, notifications and tight spaces.',
     colour: 'Colour',
     icon: 'Icon', iconSuggested: 'Suggested',

@@ -14,4 +14,7 @@ export interface ClassLibrary {
   archive(classId: ClassId, archived: boolean): Promise<void>;
   forget(classId: ClassId, opts: { trash: boolean }): Promise<void>;
   suggest(name: string): { shortName: string; icon: IconName; colour: ColourHex };
+  // ── UI-SHELL (wave 2, additive) ──
+  /** The rail's manual order (prefs `ui.classOrder`, architecture §13.3): saves it and re-sorts `classes` at once. */
+  setOrder(ids: ClassId[]): Promise<void>;
 }

@@ -1,0 +1,492 @@
+/* Onboarding (UX §3.1): the step on the left (max 560 px, vertically centred), the specimen on squared paper on the
+   right (hidden below 1200 px). */
+
+.onb {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  height: 100%;
+  background: var(--paper);
+}
+
+.onb__intro {
+  display: flex;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-7) var(--s-8);
+}
+
+.onb__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  width: 100%;
+  max-width: 560px;
+  margin: auto 0 auto auto;
+}
+
+.onb__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.onb__step--welcome {
+  gap: var(--s-6);
+}
+
+.onb__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onb__wordmark {
+  font-size: var(--fs-2xl);
+}
+
+.onb__headline {
+  font-size: var(--fs-display);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  font-variation-settings: 'opsz' 72;
+  max-width: 14ch;
+}
+
+.onb__headline .hl-emph {
+  padding: 0 2px;
+}
+
+.onb__lead {
+  font-size: var(--fs-lg);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 50ch;
+}
+
+.onb__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.onb__promise {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin: 0;
+  padding: var(--s-5) 0 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.onb__promise li {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.onb__promise svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--ink-2);
+}
+
+.onb__promise b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: var(--fs-md);
+  font-weight: 620;
+}
+
+.onb__language {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.onb__language .radios__label {
+  margin: 0;
+}
+
+.onb__footnote {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* Step indicator: "Step 2 of 4" */
+.onb__steps {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+}
+
+.onb__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.onb__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rule-strong);
+}
+
+.onb__dot--done {
+  background: var(--accent-text);
+  opacity: 0.55;
+}
+
+.onb__dot--current {
+  width: 22px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+
+.onb__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 680;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'opsz' 48;
+}
+
+.onb__body {
+  color: var(--ink-2);
+  font-size: var(--fs-md);
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+.onb__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--control-h-sm);
+  color: var(--ink-2);
+}
+
+.onb__line > .field {
+  flex: 1;
+}
+
+.onb__folder svg {
+  color: var(--ink-3);
+}
+
+.onb__path {
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  background: var(--paper-sunk);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.onb__key {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+
+.onb__key > .field {
+  flex: 1;
+}
+
+.onb__key-input .input__control {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.onb__getkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: calc(-1 * var(--s-3));
+}
+
+.onb__privacy {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.onb__privacy svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--success-text);
+}
+
+.onb__checking {
+  align-items: center;
+}
+
+.onb__checking .spinner {
+  flex: none;
+  color: var(--accent-text);
+}
+
+.onb__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+
+.onb__nav-end {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+/* Step 4: two big choices */
+.onb__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.onb__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-height: 140px;
+  padding: var(--s-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  text-align: left;
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+
+.onb__card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-2);
+}
+
+.onb__card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.onb__card-title {
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+
+.onb__card-body {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.onb__model {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* ── The specimen (decorative) ──────────────────────────────────────────────────────────── */
+
+.onb__picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--rule);
+  background-position: -1px -1px;
+}
+
+.specimen {
+  position: relative;
+  flex: none;
+  width: 520px;
+  height: 560px;
+  font-size: var(--fs-md);
+}
+
+.specimen__card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 300px;
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-2);
+}
+
+.specimen__card--1 { left: 10px; top: 40px; }
+.specimen__card--2 { left: 200px; top: 120px; }
+.specimen__card--3 { left: 40px; top: 205px; }
+
+.specimen__tab {
+  position: absolute;
+  top: -12px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 7px 7px 0 0;
+  background: var(--c);
+  color: var(--c-on);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.specimen__name {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+}
+
+.specimen__line {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.specimen__meta {
+  display: flex;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+
+.specimen__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.specimen__ai {
+  position: absolute;
+  left: 150px;
+  top: 330px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 360px;
+  padding: var(--s-4) var(--s-4) var(--s-4) calc(var(--s-4) + 4px);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-3);
+}
+
+.specimen__ai::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--ai);
+}
+
+.specimen__badge {
+  align-self: flex-start;
+}
+
+.specimen__q {
+  font-weight: 650;
+}
+
+.specimen__a {
+  font-family: var(--font-text);
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.specimen__cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  background: var(--mark);
+  color: var(--mark-ink);
+  box-shadow: inset 0 -2px 0 var(--mark-strong);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 750;
+  vertical-align: 2px;
+}
+
+.specimen__swatches {
+  position: absolute;
+  left: 20px;
+  bottom: 6px;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+}
+
+.specimen__swatches span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+@media (max-width: 1199px) {
+  .onb {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .onb__picture {
+    display: none;
+  }
+  .onb__column {
+    margin: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .onb__intro {
+    padding: var(--s-6) var(--s-4);
+  }
+  .onb__promise,
+  .onb__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .onb__headline {
+    font-size: var(--fs-3xl);
+  }
+}

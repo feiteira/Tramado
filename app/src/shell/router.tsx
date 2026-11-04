@@ -87,6 +87,8 @@ export interface RouterValue {
   replace: (route: Route) => void;
   back: () => void;
   canGoBack: boolean;
+  /** Where Back goes (the header's "Back to {place}"), or null. */
+  previous: Route | null;
   /** Forgets places that no longer exist, so Back never lands on a deleted record. */
   drop: (predicate: (r: Route) => boolean) => void;
   /**
@@ -133,7 +135,7 @@ export function RouterProvider({ initial, children }: { initial: Route; children
   );
   const value = useMemo<RouterValue>(() => {
     const top = stack[stack.length - 1]!;
-    return { route: top.route, routeKey: top.key, go, replace, back, drop, takeReturnFocus, canGoBack: stack.length > 1 };
+    return { route: top.route, routeKey: top.key, go, replace, back, drop, takeReturnFocus, canGoBack: stack.length > 1, previous: stack.length > 1 ? stack[stack.length - 2]!.route : null };
   }, [stack, go, replace, back, drop, takeReturnFocus]);
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>;
 }

@@ -1,30 +1,30 @@
-// Portuguese (Portugal): NOT TRANSLATED YET — a copy of the English catalog (architecture §14).
-// The namespace owner translates it and removes `pending`; catalogs.test.ts skips the
-// "identical to English" check while `pending` is exported, and fails with TRAMADO_RELEASE=1.
+// Português europeu: `privacy` (UX §5.18). Registo "você" implícito; Disciplina, Aula, apontamentos, ficheiro.
 import type { Messages } from '../en';
 
-export const pending = true;
-
 export const privacy: Messages['privacy'] = {
-  title: 'What leaves this computer',
-  intro: 'Tramado has no server and no account. This is everything that ever leaves your computer, and when.',
-  columns: { when: 'When', what: 'What is sent', to: 'To whom' },
+  title: 'O que sai deste computador',
+  intro: 'O Tramado não tem servidor nem conta. Isto é tudo o que alguma vez sai do seu computador, e quando.',
+  columns: { when: 'Quando', what: 'O que é enviado', to: 'Para quem' },
   rows: {
-    nothing: { when: 'Nothing set up', what: 'Nothing. Tramado makes no connection of its own.', to: '—' },
-    sharing: { when: 'You share or join a class', what: 'Class files, chat and your name and computer’s name, encrypted between your classmates’ computers. Your computer’s ID and IP address go to Syncthing’s discovery and relay servers so classmates can find you.', to: 'Your classmates’ computers; Syncthing’s public discovery and relay servers' },
-    ai: { when: 'You ask the AI (Ask, @AI, Explain, exam answers, summaries)', what: 'Your question and the passages it needs (with their file names and timestamps). Never whole folders, private notes (unless you include My notes), chat history or other classes.', to: 'OpenRouter (USA) and the company running the model' },
-    ocr: { when: 'You read a scanned exam or document with AI', what: 'The page images', to: 'OpenRouter and the model’s provider' },
-    cloudSpeech: { when: 'You transcribe with OpenRouter', what: 'The recording, in pieces of up to 30 seconds', to: 'OpenRouter and the speech model’s provider' },
-    model: { when: 'You download a speech model', what: 'A download request', to: 'Hugging Face' },
-    never: { when: 'Never', what: 'No account, no telemetry, no analytics, no crash reports. Syncthing’s usage reporting is off.', to: '—' },
+    nothing: { when: 'Nada configurado', what: 'Nada. O Tramado não faz ligações por iniciativa própria.', to: '—' },
+    sharing: { when: 'Partilha ou entra numa disciplina', what: 'Os ficheiros da disciplina, a conversa, o seu nome e o nome do seu computador, cifrados entre os computadores dos seus colegas. O identificador e o endereço IP do seu computador seguem para os servidores de descoberta e de retransmissão do Syncthing, e são anunciados na sua rede local, para que os colegas o encontrem. (Definições › Partilha › Só rede local desliga os servidores.)', to: 'Os computadores dos seus colegas; os servidores públicos de descoberta, retransmissão e STUN do Syncthing' },
+    keyCheck: { when: 'Guardou uma chave do OpenRouter e a IA está ligada', what: 'A sua chave, para saber quantos pedidos gratuitos restam (quando o Tramado arranca, quando volta a ele passado algum tempo e quando testa a chave), e uma vez por dia um pedido da lista de modelos. Nenhuma pergunta nem conteúdo das disciplinas.', to: 'OpenRouter (EUA)' },
+    ai: { when: 'Faz uma pergunta à IA (Perguntar, @IA, Explicar, respostas de exame, resumos)', what: 'A sua pergunta e as passagens necessárias (com os nomes dos ficheiros e os tempos). Nunca pastas inteiras, apontamentos privados (a menos que inclua Os meus apontamentos), o histórico da conversa ou outras disciplinas.', to: 'OpenRouter (EUA) e a empresa que executa o modelo' },
+    ocr: { when: 'Lê com a IA um exame ou documento digitalizado', what: 'As imagens das páginas', to: 'OpenRouter e o fornecedor do modelo' },
+    cloudSpeech: { when: 'Transcreve com o OpenRouter', what: 'A gravação, em partes de até 30 segundos', to: 'OpenRouter e o fornecedor do modelo de voz' },
+    customAi: { when: 'Usa outro serviço de IA (Definições › IA › Outro serviço)', what: 'O mesmo que para o OpenRouter acima: a sua pergunta e as passagens necessárias, imagens de páginas para ler, gravações para transcrever.', to: 'O endereço que indicou (o seu computador, a sua rede ou o servidor da sua escola)' },
+    model: { when: 'Transfere um modelo de voz', what: 'Um pedido de transferência', to: 'Hugging Face' },
+    never: { when: 'Nunca', what: 'Sem conta, sem telemetria, sem estatísticas de utilização, sem relatórios de erros. Os relatórios de utilização do Syncthing estão desligados.', to: '—' },
   },
   log: {
-    title: 'AI activity on this computer',
-    intro: 'A private list of AI requests made from this computer. It is never sent anywhere.',
-    columns: { time: 'Time', class: 'Class', action: 'Action', model: 'Model', passages: 'Passages sent', requests: 'Requests' },
-    actions: { ask: 'Ask', chat: '@AI in chat', explain: 'Explain', summary: 'Summary', terms: 'Key terms', annotate: 'Annotate transcript', studyNotes: 'Study notes', examExtract: 'Exam: find questions', examOcr: 'Exam: read pages', examAnswer: 'Exam: answer', hint: 'Hint', deep: 'Deep answer', title: 'Lecture title', describe: 'Describe image', docOcr: 'Read a scan', cloudSpeech: 'Cloud transcription', keyCheck: 'Key check', catalog: 'Model list' },
-    clear: 'Clear the log',
-    empty: 'No AI requests yet.',
+    title: 'Atividade da IA neste computador',
+    intro: 'Uma lista privada dos pedidos à IA feitos a partir deste computador. Nunca é enviada para lado nenhum.',
+    columns: { time: 'Hora', class: 'Disciplina', action: 'Ação', model: 'Modelo', passages: 'Passagens enviadas', requests: 'Pedidos' },
+    actions: { ask: 'Perguntar', chat: '@IA na conversa', explain: 'Explicar', summary: 'Resumo', terms: 'Termos-chave', annotate: 'Anotar transcrição', studyNotes: 'Apontamentos de estudo', examExtract: 'Exame: encontrar perguntas', examOcr: 'Exame: ler páginas', examAnswer: 'Exame: responder', hint: 'Pista', deep: 'Resposta aprofundada', title: 'Título da aula', describe: 'Descrever imagem', docOcr: 'Ler uma digitalização', cloudSpeech: 'Transcrição na nuvem', keyCheck: 'Verificação da chave', catalog: 'Lista de modelos' },
+    clear: 'Limpar o registo',
+    empty: 'Ainda não houve pedidos à IA.',
+    cleared: 'O registo de atividade da IA está vazio.',
   },
-  where: { title: 'Where your data is', classes: 'Open the classes folder', private: 'Open the private data folder', models: 'Open the models folder', cache: 'Open the cache folder' },
+  where: { title: 'Onde estão os seus dados', classes: 'Abrir a pasta das disciplinas', private: 'Abrir a pasta dos dados privados', models: 'Abrir a pasta dos modelos', cache: 'Abrir a pasta da cache' },
+  whereBody: 'As suas disciplinas são pastas comuns, no sítio onde escolheu guardá-las (Definições › Armazenamento). Os dados privados do Tramado (os seus apontamentos, destaques, prática e o registo de atividade da IA), os modelos de voz e a cache ficam nas pastas do próprio Tramado neste computador e nunca são partilhados.',
 };

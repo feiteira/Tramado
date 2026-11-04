@@ -1,49 +1,45 @@
-// Portuguese (Portugal): NOT TRANSLATED YET — a copy of the English catalog (architecture §14).
-// The namespace owner translates it and removes `pending`; catalogs.test.ts skips the
-// "identical to English" check while `pending` is exported, and fails with TRAMADO_RELEASE=1.
+// Português europeu: `today` (UX §5.5). Registo "você" implícito; Disciplina, Aula, Exame, apontamentos.
 import type { Messages } from '../en';
 
-export const pending = true;
-
 export const today: Messages['today'] = {
-  title: 'Today',
-  greeting: { morning: 'Good morning, {name}', afternoon: 'Good afternoon, {name}', evening: 'Good evening, {name}' },
+  title: 'Hoje',
+  greeting: { morning: 'Bom dia, {name}', afternoon: 'Boa tarde, {name}', evening: 'Boa noite, {name}' },
   checklist: {
-    title: 'Getting started',
-    classes: 'Create or join a class',
-    lecture: 'Record or add a lecture',
-    document: 'Add a document',
-    exam: 'Add an exam date',
-    dismiss: 'Hide the checklist',
-    whichClass: 'In which class?',
+    title: 'Primeiros passos',
+    classes: 'Criar ou entrar numa disciplina',
+    lecture: 'Gravar ou adicionar uma aula',
+    document: 'Adicionar um documento',
+    exam: 'Adicionar uma data de exame',
+    dismiss: 'Ocultar a lista',
+    whichClass: 'Em que disciplina?',
   },
   exams: {
-    title: 'Coming up',
-    today: 'Today, {time}',
-    tomorrow: 'Tomorrow, {time}',
-    inDays: { one: 'In {n} day · {date}', other: 'In {n} days · {date}' },
-    practise: 'Practise ({n})',
+    title: 'Em breve',
+    today: 'Hoje, {time}',
+    tomorrow: 'Amanhã, {time}',
+    inDays: { one: 'Daqui a {n} dia · {date}', other: 'Daqui a {n} dias · {date}' },
+    practise: 'Praticar ({n})',
   },
   transcriptions: {
-    title: 'Transcriptions',
-    idle: 'This computer: idle',
-    local: 'This computer: {lecture} · {percent} %',
+    title: 'Transcrições',
+    idle: 'Este computador: sem tarefas',
+    local: 'Este computador: {lecture} · {percent} %',
     other: '{device} · {lecture} · {percent} %',
-    waiting: { one: '{n} waiting for a transcriber', other: '{n} waiting for a transcriber' },
-    here: 'Transcribe it here',
+    waiting: { one: '{n} à espera de quem transcreva', other: '{n} à espera de quem transcreva' },
+    here: 'Transcrever aqui',
   },
-  lectures: { title: 'Recent lectures' },
+  lectures: { title: 'Aulas recentes' },
   unread: {
-    title: 'Unread',
-    summary: { one: '{n} message', other: '{n} messages' },
-    pins: { one: '{n} new pin', other: '{n} new pins' },
-    mentions: { one: '{n} mention', other: '{n} mentions' },
+    title: 'Por ler',
+    summary: { one: '{n} mensagem', other: '{n} mensagens' },
+    pins: { one: '{n} afixação nova', other: '{n} afixações novas' },
+    mentions: { one: '{n} menção', other: '{n} menções' },
   },
   empty: {
-    title: 'Welcome, {name}.',
-    body: 'A class holds one subject’s lectures, documents, exams and notes, and can be shared with classmates.',
-    create: 'Create a class',
-    join: 'Join a class',
+    title: 'Boas-vindas, {name}.',
+    body: 'Uma disciplina reúne as aulas, os documentos, os exames e os apontamentos de uma cadeira, e pode ser partilhada com os colegas.',
+    create: 'Criar uma disciplina',
+    join: 'Entrar numa disciplina',
   },
-  clear: { title: 'All clear for today.', body: 'No exams in the next 3 weeks and nothing waiting.' },
+  clear: { title: 'Nada pendente para hoje.', body: 'Não há exames nas próximas 3 semanas nem nada à espera.' },
 };

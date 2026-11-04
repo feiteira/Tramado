@@ -167,6 +167,8 @@ export function createLibrary(ctx: AppContext, app: () => AppServices): ClassLib
       syncWired = true;
       app().sync.state.subscribe(publish);
       (app().sync as SyncServiceImpl).connections?.subscribe(publish);
+      // A class's notification level (`notify.class.<id>`, `notify.default`) shows at once (UI-SHELL).
+      ctx.prefs.store.subscribe(publish);
     }
     for (const e of list) if (!e.leaving) wire(e);
     publish();
@@ -255,6 +257,12 @@ export function createLibrary(ctx: AppContext, app: () => AppServices): ClassLib
         throw toPlatformError(e);
       }
       await load();
+    },
+    async setOrder(ids) {
+      const known = new Set(entries.keys());
+      order = [...new Set(ids)].filter((id) => known.has(id));
+      await ctx.prefs.set('ui.classOrder', JSON.stringify(order));
+      publish();
     },
     suggest(name) {
       const used = classes.get().filter((c) => !c.archived).map((c) => c.color);
