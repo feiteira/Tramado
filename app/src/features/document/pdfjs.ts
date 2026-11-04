@@ -4,6 +4,7 @@
 // Standard fonts, CMaps and the image-decoder wasm are bundled from pdfjs-dist as hashed assets
 // (import.meta.glob ?url) and handed to pdf.js through a BinaryDataFactory, so no Vite or package.json change is
 // needed. If the glob finds nothing (another node_modules layout), PDFs still render with system fonts.
+import '../../workers/streamIteration';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 
 type PdfLib = typeof import('pdfjs-dist/legacy/build/pdf.mjs');
