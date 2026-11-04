@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClaimFile } from '../model/files';
 import {
-  autoDelayMs, claimPath, effectiveVolunteer, health, nextClaimedAt, overlapFraction, ownerGone, reevaluateAt, rMax, seedChangedAt,
+  autoDelayMs, claimPath, effectiveVolunteer, firstHeartbeat, health, nextClaimedAt, overlapFraction, ownerGone, reevaluateAt, rMax, seedChangedAt,
   shouldDelete, STALE_MS, staleOthers, winner, type ClaimObservation,
 } from './claims';
 
@@ -44,6 +44,12 @@ describe('ranking (sync spec §14.4)', () => {
   it('a newer-version claim counts as a live working claim', () => {
     const w = winner({ observations: [obs(claim(D('A'), { claimedAt: 1 })), obs(claim(D('B'), { claimedAt: 9 }), { newer: true })], transcriptRound: null, now: 0 });
     expect(w?.claim.deviceId).toBe(D('B'));
+  });
+
+  it('a fresh claim starts above any supersedes entry naming its device', () => {
+    const taker = obs(claim(D('B'), { supersedes: [{ deviceId: D('A'), heartbeat: 13 }] }));
+    expect(firstHeartbeat([taker], D('A'))).toBe(14);
+    expect(firstHeartbeat([taker], D('C'))).toBe(0);
   });
 
   it('lists the stale claims of others', () => {

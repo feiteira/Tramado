@@ -245,9 +245,9 @@ export function createDemoSyncControls(
       const diogo = keys.members.diogo?.deviceIds[0];
       const law = keys.classes.law;
       if (diogo && law) {
-        internals.joinRequests.set(`${law}|${diogo}`, {
-          classId: law, deviceId: diogo, name: 'Diogo Santos (Diogo’s laptop)', address: '192.168.1.44:22100', at: instant(opts.now() - 120_000),
-        });
+        const request = { classId: law, deviceId: diogo, name: 'Diogo Santos (Diogo’s laptop)', address: '192.168.1.44:22100', at: instant(opts.now() - 120_000) };
+        internals.joinRequests.set(`${law}|${diogo}`, request);
+        emit({ type: 'joinRequest', request });
       }
     }
   }

@@ -100,6 +100,18 @@ export function staleOthers(input: RankInput, me: DeviceId): Array<{ deviceId: D
     .map((o) => ({ deviceId: o.claim.deviceId, heartbeat: o.claim.heartbeat }));
 }
 
+/**
+ * The heartbeat a new claim of `me` starts with: above every `supersedes` entry that names `me` (any claim of this
+ * lecture and kind), so an old take-over record can never supersede a fresh claim. Sync spec §14.5 writes
+ * `heartbeat: 0`; with 0, readers whose staleness clocks differ disagree on the winner (found by
+ * claims.property.test.ts). Requested spec change.
+ */
+export function firstHeartbeat(obs: readonly ClaimObservation[], me: DeviceId): number {
+  let h = -1;
+  for (const o of obs) for (const s of o.claim.supersedes ?? []) if (s && s.deviceId === me && s.heartbeat > h) h = s.heartbeat;
+  return h + 1;
+}
+
 /** UI health by the reader's clock (§14.6): healthy < 2 min, slow 2–10 min, stale ≥ 10 min. */
 export function health(sinceChangeMs: number): 'healthy' | 'slow' | 'stale' {
   return sinceChangeMs >= STALE_MS ? 'stale' : sinceChangeMs >= SLOW_MS ? 'slow' : 'healthy';

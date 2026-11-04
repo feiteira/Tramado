@@ -7,7 +7,7 @@ import fc from 'fast-check';
 import type { ClaimFile } from '../model/files';
 import { mulberry32 } from '../util/prng';
 import {
-  autoDelayMs, HEARTBEAT_MS, isLive, nextClaimedAt, rMax, SETTLE_MS, seedChangedAt, staleOthers, winner, type ClaimObservation, type RankInput,
+  autoDelayMs, firstHeartbeat, HEARTBEAT_MS, isLive, nextClaimedAt, rMax, SETTLE_MS, seedChangedAt, staleOthers, winner, type ClaimObservation, type RankInput,
 } from './claims';
 
 const RUNS = Number(process.env.TRAMADO_PROPERTY_RUNS) || 30;
@@ -136,7 +136,7 @@ function simulate(seed: number): void {
         write(d, claimPath(d), {
           kind: 'claim', claim: {
             format: 'tramado.claim', version: 1, kind: 'transcribe', lectureId: LECTURE, round: 1, deviceId: d.id, memberId: 'm',
-            claimedAt: nextClaimedAt(wall, seen), status: 'claimed', heartbeat: 0, updatedAt: '', audioSha256: null,
+            claimedAt: nextClaimedAt(wall, seen), status: 'claimed', heartbeat: firstHeartbeat(input.observations, d.id), updatedAt: '', audioSha256: null,
             supersedes: staleOthers(input, d.id),
           },
         }, t);

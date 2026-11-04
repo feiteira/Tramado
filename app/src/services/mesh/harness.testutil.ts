@@ -65,12 +65,14 @@ export async function settle(mesh: MemoryMesh, apps: MeshApp[], rounds = 6): Pro
       for (const v of a.services.library.classes.get()) {
         try {
           await (a.services.forClass(v.id).store as ClassStoreImpl).idle();
+          await (a.services.forClass(v.id).info as ClassServiceImpl).reload();
         } catch {
           // the class left
         }
       }
     }
     await mesh.settle();
+    await new Promise((r) => setTimeout(r, 1));
   }
 }
 

@@ -12,7 +12,7 @@ import { instant, parseRfc3339 } from '../core/model/time';
 import { shortIdOf, type ClassId, type ClassPath, type DeviceId, type Ulid } from '../core/model/ids';
 import type { ClaimFile, TranscriptFile } from '../core/model/files';
 import {
-  claimDir, claimPath, claimShapeOk, COMPLETION_WAIT_MAX_MS, eligibleClaims, health, isLive, nextClaimedAt, ownerGone, reevaluateAt, rMax,
+  claimDir, claimPath, claimShapeOk, COMPLETION_WAIT_MAX_MS, eligibleClaims, firstHeartbeat, health, isLive, nextClaimedAt, ownerGone, reevaluateAt, rMax,
   SETTLE_MS, seedChangedAt, shouldDelete, staleOthers, type ClaimKind, type ClaimObservation, type RankInput,
 } from '../core/sync/claims';
 import { sha256Hex } from '../core/util/sha256';
@@ -332,7 +332,7 @@ export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: 
       const claim: ClaimFile = {
         format: 'tramado.claim', version: 1, kind, lectureId, round: R, deviceId, memberId,
         claimedAt: nextClaimedAt(clock.now(), [...r0.observations.map((o) => o.claim.claimedAt), maxSeen.get(k) ?? 0]),
-        status: 'claimed', heartbeat: 0, updatedAt: instant(clock.now()), audioSha256: input.audioSha256,
+        status: 'claimed', heartbeat: firstHeartbeat(r0.observations, deviceId), updatedAt: instant(clock.now()), audioSha256: input.audioSha256,
         ...(input.engine ? { engine: input.engine } : {}),
         supersedes: staleOthers(r0, deviceId),
       };
