@@ -117,5 +117,4 @@ estavam.
 ### Outras ações
 
 Na lista de aulas, o menu **⋯** de uma aula permite **Mudar o nome** (só no computador que a gravou), **Transcrever de
-novo**, **Marcar como duplicado de** outra (nunca é transcrita automaticamente), **Apagar a gravação e manter a
-transcrição**, **Apagar para todos** ou **Remover só deste computador** (os colegas ficam com ela).
+novo**, **Marcar como duplicado de** outra (nunca é transcrita automaticamente), **Eliminar a gravação e manter a transcrição**, **Eliminar para todos** ou **Remover só deste computador** (os colegas ficam com ela).

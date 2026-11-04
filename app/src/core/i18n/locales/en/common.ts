@@ -8,7 +8,7 @@ export const common = {
   skip: 'Skip', change: 'Change', undo: 'Undo', redo: 'Redo', search: 'Search', filter: 'Filter', clear: 'Clear',
   copy: 'Copy', copied: 'Copied', open: 'Open', more: 'More', none: 'None', all: 'All', yes: 'Yes', no: 'No',
   tryAgain: 'Try again', retrying: 'Retrying…', loading: 'Loading…', working: 'Working…', saving: 'Saving…', saved: 'Saved',
-  untitled: 'Untitled', optional: 'optional', you: 'you', youSuffix: '{name} (you)', show: 'Show', hide: 'Hide',
+  untitled: 'Untitled', optional: 'optional', you: 'you', youObject: 'you', youSuffix: '{name} (you)', show: 'Show', hide: 'Hide',
   dismiss: 'Dismiss', showInFolder: 'Show in folder', openWithSystem: 'Open with the system app', paste: 'Paste',
   chooseFile: 'Choose a file…', chooseFolder: 'Choose a folder…', learnMore: 'Why this matters',
   onlyYou: 'Only you', sharedWithClass: 'Shared with the class', onlyThisComputer: 'Only on this computer',

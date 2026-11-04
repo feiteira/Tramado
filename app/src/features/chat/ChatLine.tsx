@@ -153,7 +153,7 @@ export function ChatLine({ row, ctx }: { row: Extract<ChatRow, { kind: 'line' }>
       className="chat-msg__ai"
       title={t('chat.ai.author')}
       model={ctx.aiLabel(m.ai.model.id)}
-      askedBy={t('chat.ai.askedBy', { name: mine ? capital(t('common.you'), i18n.meta.bcp47) : name })}
+      askedBy={t('chat.ai.askedBy', { name: mine ? t('common.youObject') : name })}
       data-testid="chat-ai-card"
       footer={m.ai.citations.length ? (
         <div className="chat-msg__sources" data-testid="chat-ai-sources">

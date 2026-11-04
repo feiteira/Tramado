@@ -31,6 +31,9 @@
     "check:leaks": "node tools/check-leaks.mjs",
     "e2e:desktop": "node tools/desktop-e2e/run.mjs --suite=smoke",
     "e2e:sync": "node tools/desktop-e2e/run.mjs --suite=sync-two",
-    "e2e:media": "node tools/desktop-e2e/run.mjs --suite=media"
+    "e2e:media": "node tools/desktop-e2e/run.mjs --suite=media",
+    "e2e:sync-three": "node tools/desktop-e2e/run.mjs --suite=sync-three",
+    "e2e:model": "node tools/desktop-e2e/run.mjs --suite=model",
+    "e2e:hidden": "node tools/desktop-e2e/run.mjs --suite=hidden"
   }
 }

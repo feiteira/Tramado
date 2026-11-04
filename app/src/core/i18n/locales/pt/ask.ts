@@ -39,5 +39,5 @@ export const ask: Messages['ask'] = {
   },
   // INT (wave 3)
   threadsShow: 'Mostrar conversas',
-  threadsHide: 'Esconder conversas',
+  threadsHide: 'Ocultar conversas',
 };

@@ -22,8 +22,8 @@ describe('library', () => {
     expect(await verifySig(member, classId, `.tramado/members/${dev}.json`, dev)).toBe(true);
     expect(await verifyPersonProof(member, classId)).toBe(true);
     const meta = JSON.parse(dec.decode(await platform.fs.read(classId, `.tramado/meta/${dev}.json`)));
-    expect(meta.fields.dirs.value).toEqual({ lectures: 'Aulas', documents: 'Documentos', exams: 'Exames', notes: 'Notas', fromChat: 'Do chat' });
-    expect((await platform.fs.list(classId, '', { recursive: false })).map((e) => e.path)).toEqual(['Aulas', 'Documentos', 'Exames', 'Notas']);
+    expect(meta.fields.dirs.value).toEqual({ lectures: 'Aulas', documents: 'Documentos', exams: 'Exames', notes: 'Apontamentos', fromChat: 'Da conversa' });
+    expect((await platform.fs.list(classId, '', { recursive: false })).map((e) => e.path)).toEqual(['Apontamentos', 'Aulas', 'Documentos', 'Exames']);
     const cls = s.forClass(classId);
     await (cls.store as unknown as { idle(): Promise<void> }).idle();
     expect(cls.store.state.get().status).toBe('ready');

@@ -322,7 +322,7 @@ follow-up queued).
 On Windows, Syncthing converts names to native separators and reports native paths: disk events
 (`filepath.FromSlash(name)`), `/rest/db/file?file=`, `/rest/folder/versions` keys, `/rest/folder/errors` paths and
 `/rest/db/need` names. `sync::client` therefore converts **every** path it receives from Syncthing to a class path
-(`\` → `/`, then Unicode NFC) and every path it sends (`file=`, `sub=`, versions-restore keys) to the native form
+(`\` → `/`; no Unicode normalisation: Syncthing already keeps names in NFC, G1 erratum) and every path it sends (`file=`, `sub=`, versions-restore keys) to the native form
 (`/` → `\` on Windows). Nothing outside `sync::client` sees a native path. Contract tests on `windows-latest`
 cover a disk-event path, `/rest/db/file` queried with both separators, `/rest/folder/versions` keys and
 `POST /rest/db/scan?sub=` with a nested path.
@@ -430,7 +430,8 @@ spec §8.1–8.2). "Share with classmates" (on by default when creating) makes i
 
 1. Start Syncthing if it is not running (§2).
 2. `POST /rest/config/folders` with the body of §6.2 and `"paused": true` and `"devices": [{"deviceID": "<myID>"}]`.
-   (Syncthing creates the directory if needed and the `.stfolder` marker ✔.)
+   (Syncthing creates the directory if needed and the `.stfolder` marker ✔, but for a folder created paused only
+   once it is resumed in step 4: until the ignores POST and the resume there is no directory or marker; G1 erratum.)
 3. `POST /rest/db/ignores?folder=<id>` with folder spec §11 (✔ works on a paused folder).
 4. `PATCH /rest/config/folders/<id>` `{"paused": false}`. (Paused first so that nothing is announced
    before the ignores are in place.)
@@ -1110,7 +1111,10 @@ try_claim(lecture, kind = "transcribe"):
   if W exists and W.deviceId != me: return                          # someone holds it (UI shows their progress)
   stale = [c for c in trusted claims if c.deviceId != me and c.status in {claimed, working} and locally_stale(c)]
   write claims/<lectureId>/<me>.json:
-    {kind, lectureId, round: R_max, deviceId: me, memberId, status: "claimed", heartbeat: 0,
+    {kind, lectureId, round: R_max, deviceId: me, memberId, status: "claimed",
+     heartbeat: firstHeartbeat(observations, me),                  # 1 + the largest heartbeat of a supersedes entry
+                                                                    # naming me, else 0 (G1 erratum: with 0, two
+                                                                    # devices could both be "working")
      claimedAt: max(now_ms(), greatest claimedAt seen for this lecture + 1),
      supersedes: [{deviceId: c.deviceId, heartbeat: c.heartbeat} for c in stale],
      audioSha256, engine, updatedAt}
@@ -1512,13 +1516,15 @@ deleted 60 files, its own `.stversions` held none of them while every peer's hel
 first `LocalChangeDetected{deleted}` kept all files on the peer (loopback); unpausing later sent every deletion.
 
 **On the deleting device.** Tramado records every path it deletes itself (for 30 s). If `LocalChangeDetected`
-reports more than 20 deletions, or more than 20 modifications of existing files, in 10 s that Tramado did not make
-(someone emptied the folder in a file manager, or a backup tool rolled it back), it pauses the folder at once
+reports more than 20 deletions in 10 s that Tramado did not make (someone emptied the folder in a file manager, or a
+backup tool rolled it back), it pauses the folder at once
 (`PATCH {"paused": true}`), remembers `guardPaused` in `appdata.json` (§2.7 keeps it paused across restarts) and
 emits `massDelete`. Deletions made while the app was closed are caught the same way, because every folder starts
 paused (§2.4 step 4) and is unpaused only after the event loops listen. The dialog says: "Did you mean to delete 143
 files from TGDC for everyone? Sharing for this class is paused. If a classmate already received the deletion, their
 Tramado can restore it." [Restore the files] [Yes, delete for everyone].
+Only deletions are counted: Syncthing reports new and modified files alike, so a mass modification cannot be told
+from a mass addition (G1 erratum).
 
 - **Restore the files** (✔ 30 of 30 back on the deleting device; the peer never applied the deletions):
   1. keep the folder paused;

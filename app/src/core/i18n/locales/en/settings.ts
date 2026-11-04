@@ -92,7 +92,7 @@ export const settings = {
     diagnostics: 'Sharing diagnostics',
     diagVersion: 'Version {version} · device ID {id} · sync port {port} · API: {api}',   // {api} = 'running' | 'stopped' (from SyncDiagnostics.ports.guiOpen)
     diagPeers: 'Classmates’ computers',
-    diagPeerConnected: '{name} — connected ({how})', diagPeerSeen: '{name} — last seen {when}',
+    diagPeerConnected: '{name} — connected ({how})', diagPeerSeen: '{name} — last seen {when}', diagPeerNever: '{name} — never connected',
     diagHowDirect: 'direct', diagHowRelay: 'relay',
     diagProblems: 'Recent problems', diagNoProblems: 'none',
     diagLog: 'Log (last 200 lines)', copyLog: 'Copy',

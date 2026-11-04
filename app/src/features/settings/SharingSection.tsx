@@ -261,7 +261,9 @@ export default function SharingSection({ services }: { services: AppServices }) 
                       <li key={id} data-device-id={id}>
                         {c?.connected
                           ? t('settings.sharing.diagPeerConnected', { name, how: c.relay ? t('settings.sharing.diagHowRelay') : t('settings.sharing.diagHowDirect') })
-                          : t('settings.sharing.diagPeerSeen', { name, when: c?.lastSeen ? i18n.relative(c.lastSeen) : t('members.list.presence.never') })}
+                          : c?.lastSeen
+                            ? t('settings.sharing.diagPeerSeen', { name, when: i18n.relative(c.lastSeen) })
+                            : t('settings.sharing.diagPeerNever', { name })}
                       </li>
                     );
                   })}

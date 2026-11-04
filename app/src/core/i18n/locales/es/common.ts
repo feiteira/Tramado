@@ -8,7 +8,7 @@ export const common: Messages['common'] = {
   skip: 'Omitir', change: 'Cambiar', undo: 'Deshacer', redo: 'Rehacer', search: 'Buscar', filter: 'Filtrar', clear: 'Borrar',
   copy: 'Copiar', copied: 'Copiado', open: 'Abrir', more: 'Más', none: 'Ninguno', all: 'Todos', yes: 'Sí', no: 'No',
   tryAgain: 'Volver a intentarlo', retrying: 'Reintentando…', loading: 'Cargando…', working: 'Trabajando…', saving: 'Guardando…', saved: 'Guardado',
-  untitled: 'Sin título', optional: 'opcional', you: 'usted', youSuffix: '{name} (usted)', show: 'Mostrar', hide: 'Ocultar',
+  untitled: 'Sin título', optional: 'opcional', you: 'usted', youObject: 'usted', youSuffix: '{name} (usted)', show: 'Mostrar', hide: 'Ocultar',
   dismiss: 'Descartar', showInFolder: 'Mostrar en la carpeta', openWithSystem: 'Abrir con la aplicación del sistema', paste: 'Pegar',
   chooseFile: 'Elegir un archivo…', chooseFolder: 'Elegir una carpeta…', learnMore: 'Por qué es importante',
   onlyYou: 'Solo para usted', sharedWithClass: 'Compartida', onlyThisComputer: 'Solo en este ordenador',

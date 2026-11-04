@@ -1756,3 +1756,122 @@ saveQuestions/running`, `ExamDraft.files`, `AskService.renameThread/postTurn`, `
     `close-recording` confirm on quit and on the tray's Quit).
 19. UI-GROUP 5a (`pills.ts` `sync.onlineMembers ??`): superseded by UI-SHELL's `syncFacts.ts` (distinct members online
     across shared classes, with names for the tooltip); both give 2 in the demo.
+
+## 19. G3 integration log (gate G3 integrator, 2026-11-04)
+
+Merged in the order INT-E2E → INT-GAPS → DOCS → L10N (INT was split in two packages), each with `git merge --no-ff`
+and the quick check after it (`typecheck`, `npm test`, `build`, `check:leaks`; after the Rust merges also
+`check:rust:lite`, `test:rust`, `cargo test -p tramado-desktop`): INT-E2E (`0a75204`, branch `49b1d59`), INT-GAPS
+(`245b6de`, `89cc98f`), DOCS (`8322645`, `85ac761`), L10N (`118431e`, `4430a9a`). Tests after each merge: 1065 → 1085 →
+1085 → 1085, all passing. Ownership (§10): every path was owned (INT: integration fixes in `app/src`, `crates`,
+`desktop`, `tools/desktop-e2e`; DOCS: its documents, `.github`, `deny.toml`, `check-versions.mjs`, `shots.mjs`, the
+`architecture.md` §21 restatement; L10N: only `locales/{pt,es}` and `es.lproj`). No branch touched `Cargo.lock`,
+`package-lock.json` or a manifest; the frozen files INT-GAPS edited are signed off in §20. `target/` was moved from the
+INT-E2E worktree; INT-GAPS' was deleted.
+
+Merge and gate fixes:
+1. **INT-E2E × INT-GAPS** (two conflicts): `ui/components/Feedback.tsx` keeps INT-GAPS' `Notice`, which passes every
+   `data-*` attribute (a superset of INT-E2E's `data-state`); `desktop/src-tauri/src/window.rs` keeps both the main
+   window built in Rust with its own webview folder in isolated runs (INT-E2E) and the drag overlay events and invite
+   drops (INT-GAPS), with both tests and one `std::path` import.
+2. **PT "por você"** (L10N 1): `common.youObject` (EN `you`, PT `si`, ES `usted`) in the lecture and document subtitles and
+   the chat @AI card ("gravada por si", "adicionado por si", "perguntado por si"; EN "asked by you", no capital).
+3. **Folder names match the tabs** (L10N 2): new classes get `Apontamentos` (PT) / `Apuntes` (ES) for notes and
+   `Da conversa` (PT) for chat files (the PT tab is "Conversa"; the badge string follows). `Notas` stays recognised
+   where a class has no `dirs` (`LEGACY_DIR_NAMES`); classes record their own names, so existing ones keep theirs. The
+   demo, folder spec §5.2 and the manuals follow.
+4. **Sharing diagnostics**: a peer never seen reads "{name} — never connected" (`settings.sharing.diagPeerNever`)
+   instead of "last seen Never connected"; PT/ES "visto pela/por última vez" (gendered) became "última
+   ligação/conexión", as in the members list.
+5. **AI pill** (L10N reviewer): `modelShort` keeps 15 characters, cut at a word ("Nemotron 3.5…", "Dots3-Note…"), so the
+   quota count after it stays visible at 1000 px in PT and ES.
+6. **PT `threadsHide`**: "Ocultar conversas" (INT-GAPS' new key used "Esconder"; the catalog says Ocultar everywhere). The
+   other INT-GAPS keys (AI rate limit, cut-off answer, "answer the rest later", stop reasons) were reviewed: kept.
+7. **Supply chain**: the cooldown (task of G3, arch §18.6) moved 45 crates back (§20 item 10); `cargo deny` then failed
+   on RUSTSEC-2026-0385 (`ctutils` < 0.4.4, non-constant-time masks), so `ctutils` is 0.4.4, the oldest fixed release.
+8. **Manual**: all 76 pictures retaken after the merges (74 changed: L10N strings, INT-GAPS screens, version
+   `0.1.0-rc.1` in the rail); the PT/ES bold labels follow L10N's catalog (37 labels, e.g. "Eliminar para todos",
+   "Praticar este enunciado", "Mantener privado (solo para usted)…", "Quando fechar a janela", "Ajustes ›
+   Sincronización" with its anchor), and the glossary's excerto/fragmento and "grupo de la asignatura" replace
+   passagem/pasaje and "grupo de clase". Two demo chat lines lost their emoji: the screenshot machine has no emoji font,
+   and the pictures showed an empty box.
+9. **Generated files**: `PRIVACY.pt.md` and `PRIVACY.es.md` regenerated after L10N (`PRIVACY.md` unchanged);
+   `tools/desktop-e2e/README.md` names the rc AppImage; AGENTS.md lists the new e2e scripts and `--lang`.
+
+**Gate G3 run (2026-11-04)**, plan §9 line by line:
+- `npm ci`, `typecheck`, `npm test` (158 files, 1085 passed, 4 opt-in live skipped), `test:property` (2000 runs),
+  `build`: pass.
+- `check:rust`, `test:rust:all` (whisper included), `lint:rust` (fmt + clippy `-D warnings`, whole workspace),
+  `test:contract` (real Syncthing 2.1.7: 18 contract + 13 two-instance tests): pass; after the `ctutils` move
+  `test:rust` and `lint:rust` again: pass.
+- `peek-matrix --axe`: 442/442 (0 errors, 0 overflow, no serious or critical axe finding); `npm run screenshots`: 77.
+- `build:desktop`: pass (5 min 34 s for the release binary); `e2e:desktop` with `TRAMADO_AI_LIVE=1` (Gemma 4 31B busy,
+  `dots-studio/dots-3-note-preview:free` answered with a citation of art. 3.º; the key in no file but the secrets store
+  and in no log), `e2e:sync`, `e2e:sync-three`, `e2e:media`: pass. On the final build again: smoke on the extracted
+  AppImage (live Ask, `--shots`) and sync-two: pass. Speech suites used `TRAMADO_E2E_SPEECH_DIR=/home/feiteira/Trama/
+  desktop/src-tauri/resources/speech` (§20 item 12).
+- `check:versions`: **fails until 2026-11-09 22:39 UTC** (3 crates, §20 item 10; `--now=2026-11-10` passes);
+  `cargo deny check` (advisories, bans with `wildcards = "deny"`, licences, sources): pass; `npm audit --omit=dev`:
+  0 vulnerabilities; `check:leaks`: clean.
+- `gen:privacy && git diff --exit-code PRIVACY.md`: pass.
+- Join page: not live → `JOIN_PAGE = ''` kept.
+
+Packages: `Tramado_0.1.0-rc.1_amd64.AppImage` 115,382,776 B, `Tramado_0.1.0-rc.1_amd64.deb` 28,698,816 B (installed
+55,817 KiB: `/usr/bin/tramado-desktop`, `/usr/bin/tramado-syncthing`, the `.desktop` file and
+`/usr/share/mime/packages/tramado.xml`), binary 21,647,024 B, Syncthing sidecar 34,022,872 B.
+
+## 20. G3 contract changes (gate G3 integrator, 2026-11-04)
+
+As in §13, §15 and §18: the documents above are not rewritten; this list overrides them where they differ.
+
+**Applied by the integrator**
+1. `Cargo.toml` `[workspace.package] publish = false` and `publish.workspace = true` in the five crate manifests;
+   `deny.toml` `wildcards = "deny"` (DOCS 1).
+2. Root `package.json`: `e2e:sync-three`, `e2e:model`, `e2e:hidden` (INT-E2E 1).
+3. `common.youObject` in EN/PT/ES (L10N 1, item 2 of §19).
+4. `core/model/dirs.ts`: PT `notes: 'Apontamentos'`, `fromChat: 'Da conversa'`; ES `notes: 'Apuntes'`;
+   `LEGACY_DIR_NAMES` read by `classStore.ts`; folder spec §5.2 (L10N 2).
+5. `tools/peek-matrix.mjs --lang=en|pt|es`: every entry in that language, PNGs in `out/<lang>/`, an entry's
+   `expect-text` steps dropped when it was written for another language (L10N 3; §8.3's acceptance now runs).
+6. `settings.sharing.diagPeerNever` (EN/PT/ES); `shell/pills.ts` `modelShort` ≤ 15 characters.
+7. Spec errata folded into the text, each marked "G1 erratum" (DOCS 2; §15 items 8 and 10): sync spec §3.6 (separators
+   only), §6.1 (no directory or marker before the resume), §14.5 (`heartbeat: firstHeartbeat(observations, me)`),
+   §22.2 (deletions only); folder spec §6.2 rule 3 (a same-round writer change when the new writer's `done` claim wins;
+   the fold case is no longer "v1.1").
+8. Architecture §14 glossary (L10N 5: Compañeros / grupo de la asignatura; Apontamentos / Apuntes; Nota; Destaque /
+   Resaltado; Enunciado; Excerto / Fragmento; Partilha / Sincronización; Eliminar / Remover / Quitar), §21.5 (errata now
+   in the specs), §21.6 (cooldown state).
+9. Versions `0.1.0-rc.1` (arch §18.6): `tauri.conf.json`, `Cargo.toml`, the three `package.json` files (the root one gains
+   a `version`), `package-lock.json`, and the memory platform's own version (the demo's About and rail).
+10. `Cargo.lock` cooldown (arch §18.6, D59): 45 crates moved back to the newest semver-compatible release published at
+    least 14 days ago (through a throw-away member crate with exact pins, removed again): aes 0.9.3, async-executor
+    1.13.3, async-lock 3.4.2, brotli 9.0.0, brotli-decompressor 6.0.1 (brotli 9.0 needs `~6.0`), cc 1.9.0, crc32fast
+    1.5.3, der 0.8.2, erased-serde 0.4.10, icu_* 2.3.0 (icu_provider 2.3.1), jiff/jiff-static 0.2.38, jiff-core 0.1.1,
+    js-sys/web-sys 0.3.106, wasm-bindgen* 0.2.129, wasm-bindgen-futures 0.4.79, log 0.4.34, notify-types 2.1.0, open
+    5.4.4, rfd 0.16.0, rustix 1.1.5, smallvec 1.16.3, tao 0.37.1, tinystr 0.8.4, tokio 1.53.3, utf8_iter 1.0.4
+    (`utf_types` gone), uuid 1.28.0, webpki-roots 1.0.10, wry 0.57.0, yoke 0.8.3, zcheapstr 1.1.0, zerovec 0.11.8,
+    zerovec-derive 0.11.6; `ctutils` 0.4.4 (advisory, §19 item 7). Left younger, with reasons: `ureq =3.5.0` and
+    `opusic-sys =0.7.6` are exact pins of D-5 (14 days old on 2026-11-04 18:15 UTC and 2026-11-09 22:39 UTC), `ctutils`
+    0.4.4 (2026-11-06 01:04 UTC). `rust-ini` stays at 0.21.1 (§13 item 3). No npm package was too young.
+11. Docs: AGENTS.md command list; the three manuals and their 76 pictures (§19 item 8).
+12. Gate environment (INT-E2E 2): §1.1's `TRAMADO_SPEECH_FROM=/home/feiteira/Tramado/.tramado-dev/models` does not exist;
+    the speech suites take `TRAMADO_E2E_SPEECH_DIR=/home/feiteira/Trama/desktop/src-tauri/resources/speech` (turbo
+    model + VAD).
+
+**Accepted as delivered** (frozen files edited by wave-3 packages): INT-E2E `services/types/class.ts` (`writeFork`
+calls `platform.classes.fork` itself) and the strict memory fork; INT-GAPS `Platform.storage.diskFree()` +
+`storage_free`, `speech.recorder.mark(kind, note?, atMs?)` (`MarkRequest.at_ms`), `unmark` +
+`speech_recorder_unmark`, `onDrag` / `app:drag` (invite files leave `app:drop`), `ClassEntry.localIncludes`
+(`local_includes`, `class_update` patch) + `managed::ignore_lines_with`, `RecordingService.mark → Promise<Marker|void>`,
+`removeMarker`, `stopReason`, `importAudio(…, { subtitles })`, `LectureService.fetchAudio`, `ExamService.answerLater/
+cancelLater/later/dispose` (private `exams-later.json`), `services/index.ts` calling `exams.dispose?.()`, `AskTurn.cut/
+retryAfterS`, `AskOptions.moreRoom`, testKey `busy`, settings route `diagnostics`, `Toasts.update`, the core helpers
+(`locatorLabel(…, printed?)`, `rowOf(…, pageLabels?)`, `modelBusy`, `BUNDLED_LABELS`, `transcriptFromCues`), `util.rs
+not_implemented` removed (no `NOT_IMPLEMENTED` is reachable; the plan's two greps are empty), `features/placeholder.tsx`
+deleted, the tramado-speech exports, `tauri.conf.json` deb `files`, and the demo options, hooks and flags.
+
+**Not applied** (for the lead)
+13. L10N 4 (Today heading "Próximos exames" / "Próximos exámenes"): optional; "Em breve" / "Próximamente" stay.
+14. DOCS 3 (a privacy row for the phone loading the join page): the join page is not live, `JOIN_PAGE = ''`.
+15. Repository settings and policy: GitHub private vulnerability reporting is off (SECURITY.md has a fallback); GitHub
+    Pages is not switched on; CONTRIBUTING's DCO sign-off is undecided; no GitHub release was created.

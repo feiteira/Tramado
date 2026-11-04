@@ -458,7 +458,7 @@ function DocumentView({ route, services, doc, moved }: { route: DocRoute; servic
   // ── Header ──
   const kindLabel = t(`documents.view.kinds.${doc.kind}`);
   const count = (pages ?? doc.pages) !== null ? (doc.kind === 'pptx' ? tp('common.count.slides', (pages ?? doc.pages)!) : tp('common.count.pages', (pages ?? doc.pages)!)) : null;
-  const addedBy = doc.localOnly || doc.addedBy?.self ? t('common.you') : doc.addedBy?.name ?? null;
+  const addedBy = doc.localOnly || doc.addedBy?.self ? t('common.youObject') : doc.addedBy?.name ?? null;
   const when = i18n.date(DateTime.fromMillis(doc.mtimeMs), 'medium');
   const subtitle = (
     <span className="docview__subtitle" data-testid="doc-subtitle">

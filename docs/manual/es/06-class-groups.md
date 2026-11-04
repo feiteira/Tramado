@@ -1,4 +1,4 @@
-# 6. Grupos de clase
+# 6. Grupo de la asignatura
 
 [Índice](index.md) · Anterior: [Exámenes](05-exams.md) · Siguiente: [IA](07-ai.md)
 
@@ -16,7 +16,7 @@ descubrimiento y de retransmisión de Syncthing; véase [Ajustes y privacidad](0
 Active **Compartir con los compañeros** al crear una asignatura, o más tarde use la pestaña **Compartir** de la
 asignatura (o **⋯ › Compartir esta asignatura…**). La primera vez, Tramado pregunta si quiere **seguir compartiendo en
 segundo plano** al cerrar la ventana: así los compañeros reciben antes sus grabaciones y transcripciones. Puede
-cambiarlo en Ajustes › Compartir.
+cambiarlo en Ajustes › Sincronización.
 
 ## Invitar a compañeros
 
@@ -24,7 +24,7 @@ cambiarlo en Ajustes › Compartir.
 
 **Invitar** (en la cabecera de la asignatura o en Miembros) muestra la invitación:
 
-- **Copiar la invitación** copia un mensaje corto con un enlace y el código: péguelo en el grupo de clase, en Moodle o
+- **Copiar la invitación** copia un mensaje corto con un enlace y el código: péguelo en el grupo de la asignatura, en Moodle o
   en un correo;
 - el **código QR** contiene la misma invitación, para escanearla con un móvil;
 - **Copiar el código** copia solo el código, y **Guardar como archivo…** guarda un archivo `.tramado-invite`, que se
@@ -57,7 +57,7 @@ La pestaña **Miembros** muestra:
 - **Esperando para entrar** (cuando la asignatura pregunta primero): **Dejar entrar**, **Ahora no** o **Rechazar**.
   Compare antes las palabras de verificación.
 - **Personas**, con quién está en línea, qué está haciendo (por ejemplo transcribiendo una clase) y sus ordenadores.
-  Los organizadores pueden **Hacer organizador** y **Quitar de la asignatura…**: el Tramado de todos deja de compartir
+  Los organizadores pueden **Hacer organizador/a** y **Quitar de la asignatura…**: el Tramado de todos deja de compartir
   la asignatura con los ordenadores de esa persona (conserva lo que ya tiene), y a partir de entonces quien llegue
   tiene que ser aprobado.
 - **Ayudantes de transcripción**: quién transcribe automáticamente las clases de la asignatura, y con qué modelo.
@@ -88,9 +88,9 @@ Cuando dos personas cambian el mismo archivo a la vez, se guardan las dos versio
 en conflicto*). En **⋯ › Eliminados recientemente…** de una asignatura se pueden restaurar los archivos eliminados
 durante 30 días.
 
-## Ajustes › Compartir
+## Ajustes › Sincronización
 
-![Ajustes › Compartir: estado, compartir en segundo plano, solo red local, límites de velocidad y diagnóstico](../img/es/settings-sharing.webp)
+![Ajustes › Sincronización: estado, compartir en segundo plano, solo red local, límites de velocidad y diagnóstico](../img/es/settings-sharing.webp)
 
 - **Estado**: si la sincronización está funcionando, con **Reiniciar la sincronización** y **Pausar la
   sincronización**.

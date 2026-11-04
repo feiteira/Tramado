@@ -18,26 +18,26 @@ llegado:
 
 Tramado se da cuenta cuando un compañero ya ha añadido el mismo archivo, y propone organizar los archivos de la
 asignatura en carpetas (*Diapositivas*, *Lecturas*, *Legislación*, *Exámenes anteriores*). En una asignatura
-compartida, el menú de un archivo tiene **Mantener privado (solo usted)…** (pasa a *Solo en este ordenador*), **Quitar
+compartida, el menú de un archivo tiene **Mantener privado (solo para usted)…** (pasa a *Solo en este ordenador*), **Quitar
 solo de este ordenador…** y **Eliminar para todos…** (se puede restaurar durante 30 días desde *Eliminados
 recientemente*).
 
 ## Leer un documento
 
-![Un texto legal abierto en la página que cita una respuesta, con el pasaje marcado y la lista de artículos](../img/es/document-pdf.webp)
+![Un texto legal abierto en la página que cita una respuesta, con el fragmento marcado y la lista de artículos](../img/es/document-pdf.webp)
 
 Los PDF se abren dentro de Tramado, con navegación por **página**, **zoom**, **Ajustar al ancho** y **Buscar en el
 documento**. Los textos legales tienen la lista de sus **Artículos** a la izquierda. Seleccione texto y elija
 **Resaltar** (los resaltados se quedan en este ordenador), **Explicar**, **Preguntar** o **Copiar con la
 fuente** (*«…» — Constitución, art. 18, p. 9*). **Preguntar sobre este documento** abre Preguntar con este documento
-como fuente; **Abrir con…** abre el archivo en otra aplicación. Cuando una respuesta de la IA cita un pasaje, el
-documento se abre en esa página con el pasaje marcado.
+como fuente; **Abrir con…** abre el archivo en otra aplicación. Cuando una respuesta de la IA cita un fragmento, el
+documento se abre en esa página con el fragmento marcado.
 
 ## Apuntes
 
 La pestaña **Apuntes** tiene dos tipos, los dos archivos Markdown:
 
-- **Mis apuntes · solo usted**: solo en este ordenador;
+- **Mis apuntes · solo para usted**: solo en este ordenador;
 - **Apuntes compartidos · con todos los compañeros**: en la carpeta de la asignatura, todos pueden leerlos y editarlos.
 
 La barra de herramientas tiene negrita, cursiva, títulos, listas, listas de comprobación y enlaces, y además **enlaces a

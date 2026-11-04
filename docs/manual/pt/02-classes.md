@@ -41,8 +41,8 @@ disciplina só neste computador tem **Partilhar** em vez de Conversa e Membros).
 
 ## A pasta da disciplina
 
-A pasta de uma disciplina tem `Aulas`, `Documentos`, `Exames` e `Notas` (com os nomes no idioma de quem criou a
-disciplina: `Lectures`, `Documents`, `Exams`, `Notes` em inglês; `Clases`, `Documentos`, `Exámenes`, `Notas` em
+A pasta de uma disciplina tem `Aulas`, `Documentos`, `Exames` e `Apontamentos` (com os nomes no idioma de quem criou a
+disciplina: `Lectures`, `Documents`, `Exams`, `Notes` em inglês; `Clases`, `Documentos`, `Exámenes`, `Apuntes` em
 espanhol), e uma pasta oculta `.tramado` com os registos da própria disciplina (membros, conversa, pedidos de
 transcrição, correções…). Cada aula é uma pasta com a gravação (`audio.webm`) e a transcrição (`transcript.md`,
 `transcript.vtt`). Pode mudar o nome destas pastas no gestor de ficheiros: o Tramado encontra os seus ficheiros pelo

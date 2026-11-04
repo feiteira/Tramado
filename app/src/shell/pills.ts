@@ -51,9 +51,14 @@ export function modelLabelOf(id: string): string {
 }
 
 /** The label without "(free)", at most 18 characters (UX §2.5). */
+/** The model's name for the pill: at most 15 characters, cut at a word where it can be ("Nemotron 3.5 Super" →
+ *  "Nemotron 3.5…"), so the quota count after it stays visible at 1000 px in every language (G3, L10N review). */
 export function modelShort(label: string): string {
   const s = label.replace(/\s*\(free\)\s*$/i, '').trim();
-  return s.length > 18 ? `${s.slice(0, 17)}…` : s;
+  if (s.length <= 15) return s;
+  const head = s.slice(0, 14);
+  const space = head.lastIndexOf(' ');
+  return `${(space >= 6 ? head.slice(0, space) : head).trimEnd()}…`;
 }
 
 export function aiPillState(s: AiSettingsView & { enabled: boolean }, lastCode: string | null = null): AiPillState {

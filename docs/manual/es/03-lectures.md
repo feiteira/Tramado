@@ -17,7 +17,7 @@ que recuerda sus respuestas para cada asignatura.
   consentimiento, o usar una grabación para algo más de lo que autorizó, puede ser ilegal: pregunte al principio de la
   primera clase; la mayoría de los profesores acepta si es para estudiar. Con *Recordar para esta asignatura*, el
   permiso queda registrado en la asignatura, visible para todos en Miembros.
-- **Compartir con la clase**: *Grabación y transcripción*, *Solo la transcripción* (la grabación se queda en este
+- **Compartir con los compañeros**: *Grabación y transcripción*, *Solo la transcripción* (la grabación se queda en este
   ordenador) o *Nada por ahora — lo decidiré después*.
 
 Si un compañero ya está grabando la misma clase, Tramado se lo dice: solo se transcribe una grabación para el grupo,

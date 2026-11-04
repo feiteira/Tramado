@@ -9,14 +9,14 @@ O Tramado não tem servidor nem conta. Isto é tudo o que alguma vez sai do seu 
 | Quando | O que é enviado | Para quem |
 |---|---|---|
 | Nada configurado | Nada. O Tramado não faz ligações por iniciativa própria. | — |
-| Partilha ou entra numa disciplina | Os ficheiros da disciplina, a conversa, o seu nome e o nome do seu computador, cifrados entre os computadores dos seus colegas. O identificador e o endereço IP do seu computador seguem para os servidores de descoberta e de retransmissão do Syncthing, e são anunciados na sua rede local, para que os colegas o encontrem. (Definições › Partilha › Só rede local desliga os servidores.) | Os computadores dos seus colegas; os servidores públicos de descoberta, retransmissão e STUN do Syncthing |
-| Guardou uma chave do OpenRouter e a IA está ligada | A sua chave, para saber quantos pedidos gratuitos restam (quando o Tramado arranca, quando volta a ele passado algum tempo e quando testa a chave), e uma vez por dia um pedido da lista de modelos. Nenhuma pergunta nem conteúdo das disciplinas. | OpenRouter (EUA) |
-| Faz uma pergunta à IA (Perguntar, @IA, Explicar, respostas de exame, resumos) | A sua pergunta e as passagens necessárias (com os nomes dos ficheiros e os tempos). Nunca pastas inteiras, apontamentos privados (a menos que inclua Os meus apontamentos), o histórico da conversa ou outras disciplinas. | OpenRouter (EUA) e a empresa que executa o modelo |
+| Partilha ou entra numa disciplina | Os ficheiros da disciplina, a conversa, o seu nome e o nome do seu computador, cifrados entre os computadores dos seus colegas. O identificador e o endereço IP do seu computador seguem para os servidores de descoberta e de retransmissão do Syncthing, e são anunciados na sua rede local, para que os colegas encontrem o seu computador. (Definições › Partilha › Só rede local desativa os servidores.) | Os computadores dos seus colegas; os servidores públicos de descoberta, retransmissão e STUN do Syncthing |
+| Guardou uma chave do OpenRouter e a IA está ativada | A sua chave, para saber quantos pedidos gratuitos restam (quando o Tramado arranca, quando volta a ele passado algum tempo e quando testa a chave), e uma vez por dia um pedido da lista de modelos. Nenhuma pergunta nem conteúdo das disciplinas. | OpenRouter (EUA) |
+| Faz uma pergunta à IA (Perguntar, @IA, Explicar, respostas de exame, resumos) | A sua pergunta e os excertos necessários (com os nomes dos ficheiros e os tempos). Nunca pastas inteiras, apontamentos privados (a menos que inclua Os meus apontamentos), o histórico da conversa ou outras disciplinas. | OpenRouter (EUA) e a empresa que executa o modelo |
 | Lê com a IA um exame ou documento digitalizado | As imagens das páginas | OpenRouter e o fornecedor do modelo |
 | Transcreve com o OpenRouter | A gravação, em partes de até 30 segundos | OpenRouter e o fornecedor do modelo de voz |
-| Usa outro serviço de IA (Definições › IA › Outro serviço) | O mesmo que para o OpenRouter acima: a sua pergunta e as passagens necessárias, imagens de páginas para ler, gravações para transcrever. | O endereço que indicou (o seu computador, a sua rede ou o servidor da sua escola) |
+| Usa outro serviço de IA (Definições › IA › Outro serviço) | O mesmo que para o OpenRouter acima: a sua pergunta e os excertos necessários, imagens de páginas para ler, gravações para transcrever. | O endereço que indicou (o seu computador, a sua rede ou o servidor da sua escola) |
 | Transfere um modelo de voz | Um pedido de transferência | Hugging Face |
-| Nunca | Sem conta, sem telemetria, sem estatísticas de utilização, sem relatórios de erros. Os relatórios de utilização do Syncthing estão desligados. | — |
+| Nunca | Sem conta, sem telemetria, sem estatísticas de utilização, sem relatórios de erros. Os relatórios de utilização do Syncthing estão desativados. | — |
 
 ## Atividade da IA neste computador
 

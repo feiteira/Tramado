@@ -17,26 +17,26 @@ o texto, para que a pesquisa e a IA o possam usar. A coluna do texto mostra até
 
 O Tramado repara quando um colega já adicionou o mesmo ficheiro, e propõe organizar os ficheiros da disciplina em
 pastas (*Diapositivos*, *Leituras*, *Legislação*, *Exames anteriores*). Numa disciplina partilhada, o menu de um
-ficheiro tem **Manter privado (só você)…** (passa para *Só neste computador*), **Remover só deste computador…** e
+ficheiro tem **Manter privado (só para si)…** (passa para *Só neste computador*), **Remover só deste computador…** e
 **Eliminar para todos…** (pode ser reposto durante 30 dias em *Eliminados recentemente*).
 
 ## Ler um documento
 
-![Um texto legal aberto na página que uma resposta cita, com a passagem destacada e a lista de artigos](../img/pt/document-pdf.webp)
+![Um texto legal aberto na página que uma resposta cita, com o excerto destacado e a lista de artigos](../img/pt/document-pdf.webp)
 
 Os PDF abrem dentro do Tramado, com navegação por **página**, **zoom**, **Ajustar à largura** e **Procurar no
 documento**. Os textos legais têm a lista dos **Artigos** à esquerda. Selecione texto para o **Destacar** (os
 destaques ficam neste computador), **Explicar**, **Perguntar** sobre ele ou **Copiar com a fonte** (*"…" —
 Constituição, art. 18.º, p. 9*). **Perguntar sobre este documento** abre o Perguntar com este documento como fonte;
-**Abrir com…** abre o ficheiro noutra aplicação. Quando uma resposta da IA cita uma passagem, o documento abre nessa
-página com a passagem marcada.
+**Abrir com…** abre o ficheiro noutra aplicação. Quando uma resposta da IA cita um excerto, o documento abre nessa
+página com o excerto marcado.
 
 ## Apontamentos
 
 O separador **Apontamentos** tem dois tipos, ambos ficheiros Markdown:
 
-- **Os meus apontamentos · só você**: apenas neste computador;
-- **Apontamentos da turma · partilhados com a turma**: na pasta da disciplina, todos os podem ler e editar.
+- **Os meus apontamentos · só para si**: apenas neste computador;
+- **Apontamentos da turma · partilhados com todos**: na pasta da disciplina, todos os podem ler e editar.
 
 A barra de ferramentas tem negrito, itálico, títulos, listas, listas de verificação e ligações, e ainda **ligações a um
 momento de uma aula** ou **a uma página de um documento**, que abrem logo ali. O menu de uns apontamentos passa-os de um

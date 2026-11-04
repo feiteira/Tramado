@@ -41,7 +41,7 @@ computer has **Share** instead of Chat and Members).
 ## The class folder
 
 A class folder holds `Lectures`, `Documents`, `Exams` and `Notes` (named in the language of whoever created the class:
-`Aulas`, `Documentos`, `Exames`, `Notas` in Portuguese; `Clases`, `Documentos`, `Exámenes`, `Notas` in Spanish), plus
+`Aulas`, `Documentos`, `Exames`, `Apontamentos` in Portuguese; `Clases`, `Documentos`, `Exámenes`, `Apuntes` in Spanish), plus
 a hidden `.tramado` folder with the class's own records (members, chat, transcription claims, corrections…). Each
 lecture is a folder with its recording (`audio.webm`) and its transcript (`transcript.md`, `transcript.vtt`). You can
 rename these folders in your file manager; Tramado finds its files by what they contain, not by their names. Leave

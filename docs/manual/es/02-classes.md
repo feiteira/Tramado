@@ -17,7 +17,7 @@ abrir, copiar o incluir en una copia de seguridad como cualquier otra.
   automáticamente*);
 - **Compartir con los compañeros**: activado, los compañeros a los que invite reciben las clases, los documentos, los
   apuntes compartidos y el chat; desactivado, la asignatura se queda solo en este ordenador, y puede compartirla más
-  tarde (véase [Grupos de clase](06-class-groups.md));
+  tarde (véase [Grupo de la asignatura](06-class-groups.md));
 - **Vocabulario para las transcripciones**: nombres y términos que usa el profesor (por ejemplo *Gomes Canotilho, quid
   iuris*), para que el modelo de voz los escriba bien.
 
@@ -42,8 +42,8 @@ asignatura solo en este ordenador tiene **Compartir** en lugar de Chat y Miembro
 
 ## La carpeta de la asignatura
 
-La carpeta de una asignatura contiene `Clases`, `Documentos`, `Exámenes` y `Notas` (con los nombres en el idioma de
-quien creó la asignatura: `Lectures`, `Documents`, `Exams`, `Notes` en inglés; `Aulas`, `Documentos`, `Exames`, `Notas`
+La carpeta de una asignatura contiene `Clases`, `Documentos`, `Exámenes` y `Apuntes` (con los nombres en el idioma de
+quien creó la asignatura: `Lectures`, `Documents`, `Exams`, `Notes` en inglés; `Aulas`, `Documentos`, `Exames`, `Apontamentos`
 en portugués), y una carpeta oculta `.tramado` con los registros propios de la asignatura (miembros, chat, reservas de
 transcripción, correcciones…). Cada clase es una carpeta con su grabación (`audio.webm`) y su transcripción
 (`transcript.md`, `transcript.vtt`). Puede cambiar el nombre de estas carpetas en el gestor de archivos: Tramado

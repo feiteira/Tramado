@@ -46,7 +46,9 @@ describe('aiPillState (UX §2.5)', () => {
   it('derives the label', () => {
     expect(modelLabelOf('google/gemma-4-31b-it:free')).toBe('Gemma 4 31B');
     expect(modelShort('Gemma 4 31B (free)')).toBe('Gemma 4 31B');
-    expect(modelShort('A very long model name indeed')).toHaveLength(18);
+    expect(modelShort('A very long model name indeed').length).toBeLessThanOrEqual(15);
+    expect(modelShort('Nemotron 3.5 Super (free)')).toBe('Nemotron 3.5…');
+    expect(modelShort('Supercalifragilisticexpialidocious')).toBe('Supercalifragi…');
   });
   it('picks the state', () => {
     expect(aiPillState({ ...base, enabled: false }).id).toBe('off');

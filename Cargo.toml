@@ -17,6 +17,7 @@ rust-version = "1.90"
 license = "MPL-2.0"
 repository = "https://github.com/feiteira/Tramado"
 authors = ["Tramado contributors"]
+publish = false                     # never published to crates.io (cargo-deny: path wildcards allowed)
 
 [workspace.dependencies]
 tramado-base   = { path = "crates/tramado-base" }

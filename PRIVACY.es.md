@@ -9,12 +9,12 @@ Tramado no tiene servidor ni cuenta. Esto es todo lo que sale de su ordenador, y
 | Cuándo | Qué se envía | A quién |
 |---|---|---|
 | Nada configurado | Nada. Tramado no establece conexiones por su cuenta. | — |
-| Comparte una asignatura o se une a una | Los archivos de la asignatura, el chat, su nombre y el nombre de su ordenador, cifrados entre los ordenadores de sus compañeros. El identificador y la dirección IP de su ordenador van a los servidores de descubrimiento y de retransmisión de Syncthing, y se anuncian en su red local, para que sus compañeros lo encuentren. (Ajustes › Compartir › Solo red local desactiva los servidores.) | Los ordenadores de sus compañeros; los servidores públicos de descubrimiento, retransmisión y STUN de Syncthing |
+| Comparte una asignatura o se une a una | Los archivos de la asignatura, el chat, su nombre y el nombre de su ordenador, cifrados entre los ordenadores de sus compañeros. El identificador y la dirección IP de su ordenador van a los servidores de descubrimiento y de retransmisión de Syncthing, y se anuncian en su red local, para que sus compañeros encuentren su ordenador. (Ajustes › Sincronización › Solo red local desactiva los servidores.) | Los ordenadores de sus compañeros; los servidores públicos de descubrimiento, retransmisión y STUN de Syncthing |
 | Ha guardado una clave de OpenRouter y la IA está activada | Su clave, para saber cuántas solicitudes gratuitas le quedan (al iniciar Tramado, al volver a él pasado un rato y al probar la clave), y una vez al día una solicitud de la lista de modelos. Ninguna pregunta ni contenido de las asignaturas. | OpenRouter (EE. UU.) |
-| Pregunta a la IA (Preguntar, @IA, Explicar, respuestas de examen, resúmenes) | Su pregunta y los pasajes necesarios (con los nombres de los archivos y los tiempos). Nunca carpetas enteras, apuntes privados (salvo que incluya Mis apuntes), el historial del chat ni otras asignaturas. | OpenRouter (EE. UU.) y la empresa que ejecuta el modelo |
+| Pregunta a la IA (Preguntar, @IA, Explicar, respuestas de examen, resúmenes) | Su pregunta y los fragmentos necesarios (con los nombres de los archivos y los tiempos). Nunca carpetas enteras, apuntes privados (salvo que incluya Mis apuntes), el historial del chat ni otras asignaturas. | OpenRouter (EE. UU.) y la empresa que ejecuta el modelo |
 | Lee con la IA un examen o documento escaneado | Las imágenes de las páginas | OpenRouter y el proveedor del modelo |
 | Transcribe con OpenRouter | La grabación, en fragmentos de hasta 30 segundos | OpenRouter y el proveedor del modelo de voz |
-| Usa otro servicio de IA (Ajustes › IA › Otro servicio) | Lo mismo que para OpenRouter: su pregunta y los pasajes necesarios, imágenes de páginas para leer, grabaciones para transcribir. | La dirección que indicó (su ordenador, su red o el servidor de su centro) |
+| Usa otro servicio de IA (Ajustes › IA › Otro servicio) | Lo mismo que para OpenRouter: su pregunta y los fragmentos necesarios, imágenes de páginas para leer, grabaciones para transcribir. | La dirección que indicó (su ordenador, su red o el servidor de su centro) |
 | Descarga un modelo de voz | Una solicitud de descarga | Hugging Face |
 | Nunca | Sin cuenta, sin telemetría, sin estadísticas de uso, sin informes de errores. Los informes de uso de Syncthing están desactivados. | — |
 
@@ -24,4 +24,4 @@ Una lista privada de las solicitudes a la IA hechas desde este ordenador. Nunca 
 
 ## Dónde están sus datos
 
-Sus asignaturas son carpetas corrientes, donde eligió guardarlas (Ajustes › Almacenamiento). Los datos privados de Tramado (sus propios apuntes, subrayados, práctica y el registro de actividad de la IA), los modelos de voz y la caché están en las carpetas propias de Tramado en este ordenador y nunca se comparten.
+Sus asignaturas son carpetas corrientes, donde eligió guardarlas (Ajustes › Almacenamiento). Los datos privados de Tramado (sus propios apuntes, resaltados, práctica y el registro de actividad de la IA), los modelos de voz y la caché están en las carpetas propias de Tramado en este ordenador y nunca se comparten.

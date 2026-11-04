@@ -4,7 +4,7 @@
 // own-write echo suppression. Frozen after M0; no DOM.
 import { toPlatformError, type ErrorCode } from '../core/errors';
 import { compactJson, jsonlLine, manifestJson } from '../core/json';
-import { DIR_NAMES } from '../core/model/dirs';
+import { DIR_NAMES, LEGACY_DIR_NAMES } from '../core/model/dirs';
 import { parseJsonl, type Parsed } from '../core/model/parse';
 import { classifyPath, type PathKind } from '../core/model/paths';
 import { isUlid, type ClassId, type ClassPath, type Hex64, type Ulid } from '../core/model/ids';
@@ -32,7 +32,7 @@ const PATH_TO_KIND: Partial<Record<PathKind, ChangeKind>> = {
 
 const TRUSTED: TrustVerdict = { kind: 'trusted' };
 const DEFAULT_GATE: TrustGate = { verify: async () => TRUSTED, noteOwnWrite: () => undefined };
-const NOTES_NAMES = new Set(Object.values(DIR_NAMES).map((d) => d.notes));
+const NOTES_NAMES = new Set([...Object.values(DIR_NAMES).map((d) => d.notes), ...(LEGACY_DIR_NAMES.notes ?? [])]);
 const COALESCE_MS = 500;
 const SAFETY_PASS_MS = 10 * 60_000;
 

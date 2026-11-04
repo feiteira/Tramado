@@ -78,7 +78,7 @@ export const ACORDAO: PdfPageText[] = [
   ] },
 ];
 
-/** `calendario` → Do chat/Calendário de avaliações.pdf (attached in chat by Carla on 2 Nov). */
+/** `calendario` → Da conversa/Calendário de avaliações.pdf (attached in chat by Carla on 2 Nov). */
 export const CALENDARIO: PdfPageText = { lines: [
   { text: 'Calendário de avaliações', style: 'title' },
   { text: 'Direito Constitucional I · 2026/27 · 1.º semestre', style: 'heading' },

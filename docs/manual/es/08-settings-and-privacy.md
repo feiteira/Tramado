@@ -17,12 +17,12 @@ Los **Ajustes** están en la parte inferior de la barra lateral (<kbd>Ctrl</kbd>
   la calidad de la grabación (*Estándar*, unos 11 MB por hora, o *Ahorro de espacio*, unos 7 MB por hora), cuánto
   retroceden los marcadores y los atajos de los marcadores que funcionan desde cualquier aplicación. Véase
   [Clases](03-lectures.md#transcripción).
-- **Compartir**: véase [Grupos de clase](06-class-groups.md#ajustes--compartir).
+- **Sincronización**: véase [Grupo de la asignatura](06-class-groups.md#ajustes--sincronización).
 - **Notificaciones**: notificaciones del sistema, y de qué quiere enterarse (una transcripción que espera, alguien que
   entra, una fecha de examen añadida o cambiada, un modelo de voz descargado). Cada asignatura puede cambiarlo en su
   menú **⋯ › Notificaciones**.
 - **Almacenamiento**: dónde se crean las nuevas asignaturas; el tamaño de cada asignatura (grabaciones, y archivos
-  eliminados guardados durante 30 días) con **Vaciar la papelera de la asignatura** y **Sin audio**; los modelos de
+  eliminados guardados durante 30 días) con **Vaciar la papelera** y **Sin audio**; los modelos de
   voz; la caché (texto para buscar, índices), que se reconstruye sola; y si quiere quitar las grabaciones que hizo una
   vez transcritas (nunca, a los 30 o a los 90 días; la transcripción se queda).
 - **Privacidad**: véase abajo.
@@ -43,7 +43,7 @@ cuándo. La misma tabla está en el repositorio en [PRIVACY.es.md](../../../PRIV
   cifrados, a los ordenadores de los compañeros. El identificador y la dirección IP de su ordenador van a los
   servidores de descubrimiento y de retransmisión de Syncthing y se anuncian en la red local, para que los compañeros
   le encuentren (*Solo red local* desactiva los servidores).
-- **La IA** envía su pregunta y los pasajes que necesita a OpenRouter y a la empresa que gestiona el modelo (o al
+- **La IA** envía su pregunta y los fragmentos que necesita a OpenRouter y a la empresa que gestiona el modelo (o al
   servicio que haya configurado). Con una clave guardada y la IA activada, Tramado también comprueba cuántas
   solicitudes gratuitas quedan y, una vez al día, obtiene la lista de modelos.
 - **Transcribir con OpenRouter** envía la grabación en fragmentos de hasta 30 segundos; **leer un escaneo con IA** envía
@@ -51,7 +51,7 @@ cuándo. La misma tabla está en el repositorio en [PRIVACY.es.md](../../../PRIV
 - **Descargar un modelo de voz** envía una solicitud de descarga a Hugging Face.
 
 La **Actividad de la IA en este ordenador** es un registro privado de todas las solicitudes a la IA hechas desde aquí
-(hora, asignatura, acción, modelo, pasajes enviados). Nunca se envía a ningún sitio; **Vaciar el registro** lo borra.
+(hora, asignatura, acción, modelo, fragmentos enviados). Nunca se envía a ningún sitio; **Vaciar el registro** lo borra.
 
 ## Dónde están sus archivos
 

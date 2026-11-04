@@ -299,8 +299,11 @@ is allowed: discovery (§5.3) does not depend on names.
 | `lectures` | `Lectures` | `Aulas` | `Clases` |
 | `documents` | `Documents` | `Documentos` | `Documentos` |
 | `exams` | `Exams` | `Exames` | `Exámenes` |
-| `notes` | `Notes` | `Notas` | `Notas` |
-| `fromChat` (inside `documents`) | `From chat` | `Do chat` | `Del chat` |
+| `notes` | `Notes` | `Apontamentos` | `Apuntes` |
+| `fromChat` (inside `documents`) | `From chat` | `Da conversa` | `Del chat` |
+
+Classes created before 0.1.0-rc.1 may carry `Notas` (PT-PT, ES) and `Do chat` (PT-PT); their `dirs` record them, and
+a reader without `dirs` still recognises `Notas` as the notes directory.
 
 Lecture directory names: `<YYYY-MM-DD HHmm> <title>`, using the recorder's local date and time when
 recording started, then the sanitised title (§5.4). Exam directory names: the sanitised exam title.
@@ -416,7 +419,10 @@ Refinements:
    writer only when one of these holds:
    - the new file's `round` is greater than the pinned one and a trusted transcribe claim of that round by the
      new writer exists (re-transcription, sync spec §14.7);
-   - (v1.1, transcript corrections) the new writer won a fold claim (§8.10) **and** the reader itself sees the
+   - the new file's `round` equals the pinned one and the new writer's `done` claim wins that round (a partition
+     healed: without this, readers pinned to the losing side would refuse the winner's transcript forever; G1
+     erratum);
+   - (transcript corrections) the new writer won a fold claim (§8.10) **and** the reader itself sees the
      fold trigger of sync spec §14.8 (the previous owner `left()`, or was last seen more than 7 days ago).
 4. **Deletions are checked like writes.** A deletion of a machine file takes effect only if its
    `modifiedBy` (`GET /rest/db/file` → `local.deleted == true` and `local.modifiedBy`) equals the writer's

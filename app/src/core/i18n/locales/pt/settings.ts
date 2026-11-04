@@ -92,7 +92,7 @@ export const settings: Messages['settings'] = {
     diagnostics: 'Diagnóstico da partilha',
     diagVersion: 'Versão {version} · identificador do dispositivo {id} · porta de sincronização {port} · API: {api}',
     diagPeers: 'Computadores dos colegas',
-    diagPeerConnected: '{name} — ligado ({how})', diagPeerSeen: '{name} — visto pela última vez {when}',
+    diagPeerConnected: '{name} — ligado ({how})', diagPeerSeen: '{name} — última ligação {when}', diagPeerNever: '{name} — nunca se ligou',
     diagHowDirect: 'direto', diagHowRelay: 'retransmissão',
     diagProblems: 'Problemas recentes', diagNoProblems: 'nenhum',
     diagLog: 'Registo (últimas 200 linhas)', copyLog: 'Copiar',

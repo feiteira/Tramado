@@ -35,7 +35,7 @@ export const LAW: DemoClass = {
     { key: 'slides6', path: 'Slides/Aula 6 — Restrições (slides).pptx', asset: 'slides6.pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', addedBy: 'bruno', addedAt: '2026-10-20T13:05', pages: null },
     { key: 'resumo', path: 'Leituras/Resumo — Direitos, liberdades e garantias.docx', asset: 'resumo.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', addedBy: 'carla', addedAt: '2026-10-25T16:40', pages: null },
     { key: 'acordao', path: 'Leituras/Acórdão fictício n.º 12-2026.pdf', asset: 'acordao.pdf', mime: 'application/pdf', addedBy: 'carla', addedAt: '2026-10-22T11:15', pages: 2 },
-    { key: 'calendario', path: 'Do chat/Calendário de avaliações.pdf', asset: 'calendario.pdf', mime: 'application/pdf', addedBy: 'carla', addedAt: '2026-11-02T10:06', pages: 1 },
+    { key: 'calendario', path: 'Da conversa/Calendário de avaliações.pdf', asset: 'calendario.pdf', mime: 'application/pdf', addedBy: 'carla', addedAt: '2026-11-02T10:06', pages: 1 },
     { key: 'esquemas', path: 'Os meus esquemas.pdf', asset: 'esquemas.pdf', mime: 'application/pdf', addedBy: 'ana', addedAt: '2026-10-29T22:10', pages: 3, localOnly: true },
   ],
   lectures: [
@@ -188,7 +188,7 @@ export const LAW: DemoClass = {
     { n: 1, at: '2026-10-29T18:40', by: 'carla', kind: 'message', text: 'Alguém sabe se a frequência continua no dia 10?' },
     { n: 2, at: '2026-10-29T19:05', by: 'bruno', kind: 'message', text: 'Mudou! Frequência a 12 nov., anfiteatro 1.02. Vou afixar.', pinnedBy: 'bruno' },
     { n: 3, at: '2026-11-02T10:02', by: 'bruno', kind: 'message', text: 'Alguém tem os slides da aula 6?' },
-    { n: 4, at: '2026-11-02T10:05', by: 'carla', kind: 'message', text: 'Estão nos documentos 👍', replyTo: 3 },
+    { n: 4, at: '2026-11-02T10:05', by: 'carla', kind: 'message', text: 'Estão nos documentos!', replyTo: 3 },
     { n: 5, at: '2026-11-02T10:06', by: 'carla', kind: 'message', text: 'E deixo aqui o calendário de avaliações.', attachment: 'calendario' },
     { n: 6, at: '2026-11-02T10:09', by: 'bruno', kind: 'message', text: '{@ai} o que disse a professora sobre o conteúdo essencial?', mentions: ['ai'] },
     {
@@ -204,7 +204,7 @@ export const LAW: DemoClass = {
     },
     { n: 8, at: '2026-11-02T10:30', by: 'bruno', kind: 'thanks', thanks: { lecture: 'l7', to: 'ana' } },
     { n: 9, at: '2026-11-03T11:30', by: 'ana', kind: 'message', text: 'Obrigada, Bruno!' },
-    { n: 10, at: '2026-11-03T11:40', by: 'carla', kind: 'message', text: 'A aula de hoje já está a ser transcrita pelo Bruno 🙌' },
+    { n: 10, at: '2026-11-03T11:40', by: 'carla', kind: 'message', text: 'A aula de hoje já está a ser transcrita pelo Bruno!' },
     { n: 11, at: '2026-11-03T12:15', by: 'bruno', kind: 'message', text: '{@ana} tens os apontamentos da aula 7? Faltei à segunda parte.', mentions: ['ana'] },
     { n: 12, at: '2026-11-03T12:20', by: 'carla', kind: 'message', text: 'Eu também agradecia!' },
   ],

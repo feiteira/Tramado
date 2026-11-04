@@ -368,9 +368,9 @@ describe('seedDemo (UX §7.3 as files)', async () => {
     expect(keys.members.carla!.deviceIds).toHaveLength(2);
     expect(keys.lectures.l6).toMatchObject({ classKey: 'law', citeAtMs: 2_472_000, citeSegmentId: 's_l6d00', citeQuote: 'nunca pode atingir o conteúdo essencial do direito' });
     expect(keys.docs.lf).toEqual({ classKey: 'law', relPath: 'Documentos/Legislação/Lei Fundamental de Exemplo (texto fictício).pdf' });
-    expect(keys.docs.calendario!.relPath).toBe('Documentos/Do chat/Calendário de avaliações.pdf');
+    expect(keys.docs.calendario!.relPath).toBe('Documentos/Da conversa/Calendário de avaliações.pdf');
     expect(keys.notes.mine6).toEqual({ classKey: 'law', relPath: 'notes/Notas — Aula 6.md', private: true });
-    expect(keys.notes.class8).toEqual({ classKey: 'law', relPath: 'Notas/Resumo partilhado — Semana 8.md', private: false });
+    expect(keys.notes.class8).toEqual({ classKey: 'law', relPath: 'Apontamentos/Resumo partilhado — Semana 8.md', private: false });
   });
 
   it('resolves every route of UX §7.4 and every key of UX §7.2', () => {
@@ -431,7 +431,7 @@ describe('seedDemo (UX §7.3 as files)', async () => {
       expect(roster).toBe(1 + def.members.length);
     }
     const meta = json<MetaFile>(files(platform, law).get(`.tramado/meta/${platform.mem.deviceId}.json`)!.bytes);
-    expect(meta.fields.dirs?.value).toEqual({ lectures: 'Aulas', documents: 'Documentos', exams: 'Exames', notes: 'Notas', fromChat: 'Do chat' });
+    expect(meta.fields.dirs?.value).toEqual({ lectures: 'Aulas', documents: 'Documentos', exams: 'Exames', notes: 'Apontamentos', fromChat: 'Da conversa' });
     expect(meta.fields.askBeforeAdmit).toBeUndefined();
     expect(meta.organiserOps.map((o) => o.memberId)).toEqual([PEOPLE.ana.memberId]);
   });
@@ -496,7 +496,7 @@ describe('seedDemo (UX §7.3 as files)', async () => {
     expect(working).toMatchObject({ status: 'working', progress: 0.4, etaMs: 1_500_000 });
     const presence = json<PresenceFile>(all.get(`.tramado/presence/${PEOPLE.bruno.devices[0]!.deviceId}.json`)!.bytes);
     expect(presence.activity.transcribing).toMatchObject({ lectureId: keys.lectures.l8!.lectureId, progress: 0.4 });
-    expect(presence.activity.editing?.path).toBe('Notas/Resumo partilhado — Semana 8.md');
+    expect(presence.activity.editing?.path).toBe('Apontamentos/Resumo partilhado — Semana 8.md');
     expect(await platform.cache.read(`peaks/${json<LectureFile>([...all.entries()].find(([p]) => p.endsWith('/lecture.json'))![1].bytes).audio!.sha256}-1200.json`)).not.toBeNull();
   });
 
@@ -577,7 +577,7 @@ describe('seedDemo (UX §7.3 as files)', async () => {
     expect(all.map((x) => x.l.type)).toEqual(['message', 'message', 'message', 'message', 'message', 'message', 'ai', 'thanks', 'message', 'message', 'message', 'message']);
     const msg = (i: number) => all[i]!.l as Extract<ChatLine, { type: 'message' }>;
     expect(msg(3).replyTo).toEqual({ deviceId: all[2]!.dev, id: all[2]!.l.id });
-    expect(msg(4).attachments?.[0]).toMatchObject({ path: 'Documentos/Do chat/Calendário de avaliações.pdf', mime: 'application/pdf' });
+    expect(msg(4).attachments?.[0]).toMatchObject({ path: 'Documentos/Da conversa/Calendário de avaliações.pdf', mime: 'application/pdf' });
     expect(msg(5)).toMatchObject({ text: '<@ai> o que disse a professora sobre o conteúdo essencial?', mentions: ['ai'] });
     expect(msg(10)).toMatchObject({ text: `<@${PEOPLE.ana.memberId}> tens os apontamentos da aula 7? Faltei à segunda parte.`, mentions: [PEOPLE.ana.memberId] });
     const ai = all[6]!.l as Extract<ChatLine, { type: 'ai' }>;
@@ -626,7 +626,7 @@ describe('seedDemo (UX §7.3 as files)', async () => {
     expect(note).toContain(`[41:12](tramado:lecture/${l6}?t=2472000)`);
     expect(note).toContain(`[12:05](tramado:lecture/${l6}?t=725000)`);
     expect(note).toContain(`(tramado:doc/${encodeURIComponent('Documentos/Legislação/Lei Fundamental de Exemplo (texto fictício).pdf')}?page=9)`);
-    const classNote = dec.decode(files(platform, law).get('Notas/Resumo partilhado — Semana 8.md')!.bytes);
+    const classNote = dec.decode(files(platform, law).get('Apontamentos/Resumo partilhado — Semana 8.md')!.bytes);
     expect(classNote.split(/\s+/).length).toBeGreaterThan(150);
     expect(classNote.split(/\s+/).length).toBeLessThan(260);
   });
@@ -673,12 +673,12 @@ describe('seedDemo flags (UX §7.2)', () => {
 
   it('conflict=1 adds a sync-conflict sibling of class8', async () => {
     const { platform, keys } = await seeded({ conflict: true });
-    const names = [...files(platform, keys.classes.law!).keys()].filter((p) => p.startsWith('Notas/')).map((p) => p.slice('Notas/'.length));
+    const names = [...files(platform, keys.classes.law!).keys()].filter((p) => p.startsWith('Apontamentos/')).map((p) => p.slice('Apontamentos/'.length));
     const conflict = names.map(parseConflictName).find(Boolean);
     expect(conflict?.original).toBe('Resumo partilhado — Semana 8.md');
     expect(names).toHaveLength(2);
     const plain = await seeded();
-    expect([...files(plain.platform, plain.keys.classes.law!).keys()].filter((p) => p.startsWith('Notas/'))).toHaveLength(1);
+    expect([...files(plain.platform, plain.keys.classes.law!).keys()].filter((p) => p.startsWith('Apontamentos/'))).toHaveLength(1);
   });
 
   it('ai=off leaves AI without a key', async () => {

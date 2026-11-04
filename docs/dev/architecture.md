@@ -2866,18 +2866,24 @@ Markdown labels (`core/transcript/labels.ts`), AI prompts (`core/ai/prompts/*`).
 strings with versioned keys (`record.dialog.consent.v1`, `record.dialog.consentShare.v1`, UX §5.8); the key is stored
 as `textId` and the shown text verbatim (folder spec §8.5); changing a sentence means adding `….v2`.
 
-Glossary (critique D51, C27; extends Trama's):
+Glossary (critique D51, C27; extends Trama's; rows from the wave-3 L10N review added at G3):
 
 | EN | PT-PT | ES |
 |---|---|---|
 | Class | Disciplina (search keywords: cadeira, UC) | Asignatura |
-| Class group (the people) | Turma | Grupo de clase |
+| Class group (the people) | Turma | Compañeros; grupo de la asignatura |
 | Lecture | Aula | Clase |
 | Exam / Test | Exame / Teste | Examen / Prueba |
 | Organiser | Organizador(a) | Organizador/a |
 | Classmate | Colega | Compañero/a |
 | Recording / Transcript | Gravação / Transcrição | Grabación / Transcripción |
-| Notes (class / mine) | Notas (da turma / minhas) | Notas (de la clase / mías) |
+| Notes (class / mine) | Apontamentos (da turma / os meus) | Apuntes (compartidos / mis apuntes) |
+| Timestamped note (in a lecture) | Nota | Nota |
+| Highlight / Practise | Destaque / Praticar | Resaltado / Practicar |
+| Exam paper / Resit | Enunciado / Exame de recurso | Enunciado / Convocatoria extraordinaria |
+| Passage / Speech model | Excerto / Modelo de voz | Fragmento / Modelo de voz |
+| Sharing (the service) | Partilha | Sincronización |
+| Delete / Remove | Eliminar / Remover | Eliminar / Quitar |
 | Invite code | Código de convite | Código de invitación |
 | Shared | Partilhado | Compartido |
 | File / Folder | Ficheiro / Pasta | Archivo / Carpeta |
@@ -3311,8 +3317,8 @@ the items below. Plan references are given as (P§n.m) = plan section n, item m.
 ### 21.5 Spec decisions and errata
 
 In the spec text: the organiser departure stamp (folder spec §8.2, sync spec §17; P§16.1); `utcOffsetMin`,
-`labelHlc` and the one-space merge (folder spec §8.6, §8.8, §8.9; P§16.2). Accepted at G1 but **not yet in the spec
-text** (the integrator folds them in):
+`labelHlc` and the one-space merge (folder spec §8.6, §8.8, §8.9; P§16.2). Accepted at G1 and folded into the
+spec text at G3 (each marked "G1 erratum" there):
 
 - sync spec §14.5: a new claim starts at `heartbeat: firstHeartbeat(observations, me)` = 1 + the largest heartbeat of a
   `supersedes` entry naming me, else 0 (the text says 0); the 2000-run property test found two `working` devices
@@ -3329,8 +3335,12 @@ Still open: the `.st*` name rule is case-sensitive in TS and Rust, as the folder
 
 ### 21.6 Release scope
 
-The v1.1 list of §1.1 is unchanged. On 2026-11-04, 47 locked crates were younger than 14 days (the youngest turns 14
-days old on 2026-11-16), so `npm run check:versions`, and with it the CI release gate, fails until then (P§13.10).
+The v1.1 list of §1.1 is unchanged. On 2026-11-04, 47 locked crates were younger than 14 days. At G3, 45 of them were
+moved back to the newest semver-compatible release at least 14 days old (P§20). Three stay younger: the exact pins
+of `Cargo.toml` (D-5) `ureq =3.5.0` (14 days old on 2026-11-04, 18:15 UTC) and `opusic-sys =0.7.6`, the lab-verified
+version (2026-11-09, 22:39 UTC); and `ctutils 0.4.4` (2026-11-06), the oldest release without RUSTSEC-2026-0385
+(an advisory beats the cooldown). `npm run check:versions`, and with it the CI release gate, passes from
+2026-11-10.
 
 ### 21.7 Wave 3: documents, CI and supply chain (DOCS)
 

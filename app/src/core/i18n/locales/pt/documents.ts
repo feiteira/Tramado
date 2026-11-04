@@ -59,7 +59,7 @@ export const documents: Messages['documents'] = {
     create: 'Criar estas',
     noThanks: 'Não é preciso',
     slides: 'Diapositivos', readings: 'Leituras', legislation: 'Legislação', pastExams: 'Exames anteriores', other: 'Outros',
-    fromChat: 'Do chat',
+    fromChat: 'Da conversa',
     lectures: 'Aulas', documents: 'Documentos', exams: 'Exames', notes: 'Apontamentos',
   },
   menu: {

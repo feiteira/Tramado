@@ -58,7 +58,7 @@ O separador **Membros** mostra:
 - **À espera de entrar** (quando a disciplina pergunta primeiro): **Deixar entrar**, **Agora não** ou **Recusar**.
   Compare primeiro as palavras de verificação.
 - **Pessoas**, com quem está ligado, o que está a fazer (por exemplo a transcrever uma aula) e os seus computadores.
-  Os organizadores podem **Tornar organizador** e **Remover da disciplina…**: o Tramado de todos deixa de partilhar a
+  Os organizadores podem **Tornar organizador(a)** e **Remover da disciplina…**: o Tramado de todos deixa de partilhar a
   disciplina com os computadores dessa pessoa (ela fica com o que já tem), e a partir daí quem chegar tem de ser
   autorizado.
 - **Ajudantes de transcrição**: quem transcreve automaticamente as aulas da disciplina, e com que modelo.
@@ -73,8 +73,7 @@ Se a disciplina ficar sem organizadores (saíram todos), qualquer membro pode ca
 
 Escreva à turma em **Conversa**. Responda a uma mensagem, mencione alguém com **@**, ou pergunte à **@IA**: o Tramado
 responde a partir das aulas e documentos da disciplina, com a sua chave de IA, citando as fontes, e todos veem a
-resposta (as chaves dos colegas nunca são partilhadas). Os ficheiros que anexar ficam também em **Documentos › Do
-chat**. Uma mensagem mostra **✓ Enviada** quando pelo menos o computador de um colega a recebeu; até lá, fica guardada à
+resposta (as chaves dos colegas nunca são partilhadas). Os ficheiros que anexar ficam também em **Documentos › Da conversa**. Uma mensagem mostra **✓ Enviada** quando pelo menos o computador de um colega a recebeu; até lá, fica guardada à
 espera.
 
 ## Sincronização e problemas
@@ -96,7 +95,7 @@ durante 30 dias.
 - **Estado**: se a partilha está a funcionar, com **Reiniciar a partilha** e **Pausar a partilha**.
 - **Os seus computadores**: este computador e as suas palavras de verificação. (Juntar um segundo computador seu está
   previsto para uma versão posterior.)
-- **Quando fecha a janela**: continuar a partilhar em segundo plano (na área de notificação) e abrir o Tramado quando
+- **Quando fechar a janela**: continuar a partilhar em segundo plano (na área de notificação) e abrir o Tramado quando
   inicia sessão.
 - **Só rede local**: sem retransmissões nem descoberta pela internet (muitas vezes não funciona na eduroam).
 - **Limites de velocidade** de envio e de receção.

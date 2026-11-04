@@ -616,7 +616,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
   const now = DateTime.fromMillis(services.ctx.clock.now());
   const subtitle = (
     <>
-      {t('lectures.view.subtitle', { date: rowDate(view.startedAt, now, i18n), duration: duration(view.durationMs, i18n), who: view.recordedBy.self ? t('common.you') : view.recordedBy.memberName })}
+      {t('lectures.view.subtitle', { date: rowDate(view.startedAt, now, i18n), duration: duration(view.durationMs, i18n), who: view.recordedBy.self ? t('common.youObject') : view.recordedBy.memberName })}
       {' · '}
       {shared ? t('common.sharedWithClass') : t('common.onlyThisComputer')}
     </>

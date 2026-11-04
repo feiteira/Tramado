@@ -35,7 +35,7 @@ npm run test:rust:all            # every crate
 npm run lint:rust                # cargo fmt --check + clippy -D warnings, whole workspace
 npm run lint:rust:lite           # the same for the light crates
 npm run test:contract            # real Syncthing contract and two-instance tests (Linux)
-npm run e2e:desktop              # desktop e2e through tauri-driver under Xvfb (tools/desktop-e2e; also e2e:sync, e2e:media)
+npm run e2e:desktop              # desktop e2e through tauri-driver under Xvfb (tools/desktop-e2e; also e2e:sync, e2e:sync-three, e2e:media, e2e:model, e2e:hidden)
 npm run fetch:syncthing          # the pinned Syncthing binary (v2.1.7), checked by SHA-256 (--gpg also checks the signature)
 npm run fetch:speech             # the Silero VAD; --model=small|turbo|large-v3 [--dest=.tramado-dev/models] for tests
 npm run gen:privacy              # PRIVACY.md (+ .pt, .es) from app/src/core/privacy/flows.ts; check:privacy in CI
@@ -46,7 +46,7 @@ node .github/scripts/check-links.mjs   # every relative link and picture of the 
 npm run peek -- --route=<r> --query='…' --ready=<testid> --axe [--lang=pt] [--theme=dark] [--scale=1.25] \
      [--click=<id>] [--press=<key>] [--type=<id>=<text>] [--expect=<id>[:n]] [--expect-not=<id>] \
      [--expect-text=<id>=<s>] [--expect-attr=<id>:<attr>=<v|null>] --out=<png>
-node tools/peek-matrix.mjs [--only=m0] [--name=<entry>,…] [--axe] [--jobs=N]   # every entry of tools/peek-routes/*.json
+node tools/peek-matrix.mjs [--only=m0] [--name=<entry>,…] [--axe] [--jobs=N] [--lang=pt|es]   # every entry of tools/peek-routes/*.json
 npm run screenshots              # the manual's pictures, en/pt/es (see "Manual screenshots")
 node tools/desktop-smoke.mjs [--flow=g1] [--media-selftest]             # the real debug app under Xvfb
 ```

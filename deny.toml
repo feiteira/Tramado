@@ -55,10 +55,9 @@ allow = ["Apache-2.0 WITH LLVM-exception"]
 [bans]
 # Several versions of one crate are common in the tauri graph (windows-sys, bitflags, …): reported, not fatal.
 multiple-versions = "warn"
-# The only wildcards are the path dependencies between the workspace crates (`tramado-base.workspace = true`).
-# cargo-deny allows those only in crates marked `publish = false`, which the manifests do not say yet (requested at
-# G3); until then they are reported, not fatal. Any other wildcard is still visible in the report.
-wildcards = "warn"
+# The only wildcards are the path dependencies between the workspace crates (`tramado-base.workspace = true`), allowed
+# because every manifest says `publish = false` (G3). Any other wildcard fails the check.
+wildcards = "deny"
 allow-wildcard-paths = true
 highlight = "all"
 
