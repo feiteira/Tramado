@@ -62,8 +62,8 @@ fn sync_dir(_dir: &Path) {}
 
 /// `fs::rename` over an existing file. On Windows the target can be open for a moment in a
 /// process that did not allow deletion (Syncthing hashing it, a virus scanner, a preview): the
-/// rename then fails with a sharing violation or access denied, so it is retried for about a
-/// second before the error is returned.
+/// rename then fails with a sharing violation or access denied, so it is retried (seven attempts,
+/// 0.63 s of waits in all) before the error is returned.
 fn rename_replacing(from: &Path, to: &Path) -> std::io::Result<()> {
     #[cfg(windows)]
     {

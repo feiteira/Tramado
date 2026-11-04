@@ -379,8 +379,14 @@ jobs:
           uti = 'eu.thehumanloop.tramado.invite'
           if not any('tramado-invite' in d.get('CFBundleTypeExtensions', []) or uti in d.get('LSItemContentTypes', []) for d in p.get('CFBundleDocumentTypes', [])):
               problems.append('no .tramado-invite document type')
-          if uti not in [t.get('UTTypeIdentifier') for t in p.get('UTExportedTypeDeclarations', [])]:
+          exported = [t for t in p.get('UTExportedTypeDeclarations', []) if t.get('UTTypeIdentifier') == uti]
+          if not exported:
               problems.append(f'{uti} is not an exported type')
+          else:
+              # LSItemContentTypes wins over CFBundleTypeExtensions: only this tag maps the file name to the type.
+              ext = exported[0].get('UTTypeTagSpecification', {}).get('public.filename-extension', [])
+              if 'tramado-invite' not in ([ext] if isinstance(ext, str) else ext):
+                  problems.append(f'{uti} does not claim the .tramado-invite extension (UTTypeTagSpecification)')
           for x in problems:
               print(f'::error::Info.plist: {x}')
           sys.exit(1 if problems else 0)
