@@ -30,7 +30,7 @@ npm run check:leaks              # secrets and account ids must never be committ
 npm run peek -- --route=<r> --query='…' --ready=<testid> --axe [--lang=pt] [--theme=dark] [--scale=1.25] \
      [--click=<id>] [--press=<key>] [--type=<id>=<text>] [--expect=<id>[:n]] [--expect-not=<id>] \
      [--expect-text=<id>=<s>] [--expect-attr=<id>:<attr>=<v|null>] --out=<png>
-node tools/peek-matrix.mjs [--only=m0]   # every entry of tools/peek-routes/*.json; PNGs in tools/peek/out/
+node tools/peek-matrix.mjs --axe [--only=m0] [--jobs=4] [--name=a,b]   # every entry of tools/peek-routes/*.json; PNGs in tools/peek/out/
 npm run screenshots              # manual screenshots (UX §7.4), en/pt/es
 ```
 

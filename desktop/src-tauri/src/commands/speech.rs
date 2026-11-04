@@ -359,3 +359,215 @@ pub async fn speech_peaks(state: State<'_, SpeechState>, req: PeaksRequest) -> A
     let sp = speech(&state);
     blocking(move || sp.peaks(&req.source, req.buckets)).await
 }
+
+#[cfg(test)]
+mod live_tests {
+    //! G2: the live cloud speech-to-text check through the **real** `PipeStt` → `AiPipe::request_blocking`
+    //! (key from the secret store, `provider` from the privacy level, the activity log), not a stand-in
+    //! transport (`crates/tramado-speech/tests/live.rs` has that one). Ignored and **paid** (about US$0.0001
+    //! for the 9 s clip with `openai/whisper-large-v3-turbo`); the cost is measured with `GET /key` (through
+    //! the pipe too) before and after. The key is read at run time from `OPENROUTER_API_KEY` or
+    //! `~/.openrouter.key` into a throw-away secret store and never printed.
+    //!
+    //! ```text
+    //! cargo test -p tramado-desktop --lib live_tests -- --ignored --nocapture
+    //! ```
+    use super::*;
+    use crate::commands::app::tests::TempDir;
+    use std::sync::{Condvar, Mutex};
+    use tramado_base::classfs::ClassFs;
+    use tramado_base::error::Code;
+    use tramado_base::paths::Paths;
+    use tramado_base::registry::{ClassEntry, ClassRegistry};
+    use tramado_net::activity::ActivityLog;
+    use tramado_net::hosts::HostList;
+    use tramado_net::privacy::PrivacyStore;
+    use tramado_net::secrets::Secrets;
+    use tramado_speech::{AudioSource, ChannelMode, TranscribeEngine};
+
+    const CLASS: &str = "tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const ME: &str = "AB4Z76W-GA7E7XY-6YXM3ZP-CLW473T-RYRB5Q6-KTOC53U-HT4S232-ZWB42Q2";
+
+    fn key() -> Option<String> {
+        if let Some(k) = std::env::var("OPENROUTER_API_KEY")
+            .ok()
+            .filter(|k| !k.trim().is_empty())
+        {
+            return Some(k.trim().to_string());
+        }
+        let home = std::env::var_os("HOME")?;
+        let k =
+            std::fs::read_to_string(std::path::Path::new(&home).join(".openrouter.key")).ok()?;
+        let k: String = k.chars().filter(|c| !c.is_whitespace()).collect();
+        (!k.is_empty()).then_some(k)
+    }
+
+    struct Collect {
+        events: Mutex<Vec<TranscribeEvent>>,
+        cv: Condvar,
+    }
+
+    impl Sink<TranscribeEvent> for Collect {
+        fn send(&self, e: TranscribeEvent) -> bool {
+            self.events.lock().unwrap().push(e);
+            self.cv.notify_all();
+            true
+        }
+    }
+
+    /// `data.usage` of `GET /key`, through the pipe (it strips `user_id`).
+    fn usage(pipe: &AiPipe) -> Option<f64> {
+        let req = AiRequest {
+            request_id: format!("usage-{}", tramado_base::ids::random_lower_alnum(8)),
+            base: AiBase::OpenRouter,
+            method: Method::Get,
+            path: "key".into(),
+            body: None,
+            stream: false,
+            privacy_override: None,
+            busy_fallback: false,
+            activity: None,
+            internal: true,
+        };
+        let (status, body) = pipe.request_blocking(req, Duration::from_secs(30)).ok()?;
+        if status != 200 {
+            return None;
+        }
+        let v: serde_json::Value = serde_json::from_slice(&body).ok()?;
+        v.pointer("/data/usage").and_then(serde_json::Value::as_f64)
+    }
+
+    #[test]
+    #[ignore]
+    fn transcribes_through_pipe_stt_live() {
+        let Some(key) = key() else {
+            println!("not run: no OpenRouter key");
+            return;
+        };
+        let dir = TempDir::new();
+        let (config, data) = (dir.path().join("config"), dir.path().join("data"));
+        std::fs::create_dir_all(&config).unwrap();
+        std::fs::create_dir_all(&data).unwrap();
+        let secrets = Arc::new(Secrets::new(&config, true));
+        secrets.set("openrouter", &key).unwrap();
+        drop(key);
+        let pipe = Arc::new(AiPipe::new(
+            secrets,
+            Arc::new(HostList::load(&config)),
+            Arc::new(PrivacyStore::new(&config)),
+            Arc::new(ActivityLog::new(&data)),
+            "live-test".into(),
+        ));
+        let before = usage(&pipe);
+
+        let paths = Arc::new(Paths::resolve_with(
+            |_| None,
+            config.clone(),
+            data.clone(),
+            dir.path().join("cache"),
+            dir.path().join("home"),
+            None,
+        ));
+        let reg = Arc::new(ClassRegistry::load(&paths.config).unwrap());
+        let root = dir.path().join("classes").join("Direito Constitucional");
+        std::fs::create_dir_all(root.join(".tramado")).unwrap();
+        reg.insert(ClassEntry::new(CLASS, root.clone())).unwrap();
+        let fs = Arc::new(ClassFs::new(paths.clone(), reg));
+        fs.set_device(ME);
+        let speech = Speech::new(SpeechConfig {
+            paths,
+            fs,
+            stt: Arc::new(PipeStt::new(pipe.clone())),
+            version: "live-test".into(),
+        });
+
+        let bytes = std::fs::read(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../app/test-fixtures/tramado/audio/speech-en.webm"),
+        )
+        .unwrap();
+        std::fs::create_dir_all(root.join("Lectures/Week 1")).unwrap();
+        std::fs::write(root.join("Lectures/Week 1/audio.webm"), &bytes).unwrap();
+        let model = std::env::var("TRAMADO_STT_MODEL")
+            .unwrap_or_else(|_| "openai/whisper-large-v3-turbo".into());
+        let sink = Arc::new(Collect {
+            events: Mutex::new(Vec::new()),
+            cv: Condvar::new(),
+        });
+        speech
+            .transcribe_start(
+                TranscribeRequest {
+                    job_id: "job-live".into(),
+                    lecture_id: tramado_base::ids::new_ulid(tramado_base::time::now_ms()),
+                    source: AudioSource::Class {
+                        class_id: CLASS.into(),
+                        path: "Lectures/Week 1/audio.webm".into(),
+                    },
+                    expect_sha256: tramado_base::ids::sha256_hex(&bytes),
+                    engine: TranscribeEngine::Cloud {
+                        model: model.clone(),
+                    },
+                    language: "en".into(),
+                    channels: ChannelMode::Mix,
+                    initial_prompt: Some("separation of powers".into()),
+                    claim: None,
+                    resume: false,
+                },
+                sink.clone(),
+            )
+            .unwrap();
+        let end = {
+            let deadline = std::time::Instant::now() + Duration::from_secs(300);
+            let mut ev = sink.events.lock().unwrap();
+            loop {
+                if let Some(e) = ev.iter().find(|e| {
+                    matches!(
+                        e,
+                        TranscribeEvent::Done { .. } | TranscribeEvent::Failed { .. }
+                    )
+                }) {
+                    break e.clone();
+                }
+                let now = std::time::Instant::now();
+                assert!(now < deadline, "the cloud job did not finish in 5 min");
+                ev = sink.cv.wait_timeout(ev, deadline - now).unwrap().0;
+            }
+        };
+        if let TranscribeEvent::Failed { code, message } = &end {
+            if *code == Code::AiNoCredit {
+                println!("not run: no credit ({message})");
+                return;
+            }
+            panic!("{code}: {message}");
+        }
+        let r = speech.take_result("job-live").unwrap();
+        let text = r.tracks[0]
+            .segments
+            .iter()
+            .map(|s| s.text.to_lowercase())
+            .collect::<Vec<_>>()
+            .join(" ");
+        println!(
+            "model {model} through PipeStt, language {}: {text}",
+            r.language
+        );
+        assert!(text.contains("class") || text.contains("powers"), "{text}");
+        // Usage is booked a little later.
+        let mut after = None;
+        for _ in 0..10 {
+            std::thread::sleep(Duration::from_secs(3));
+            after = usage(&pipe);
+            if after.is_some() && after != before {
+                break;
+            }
+        }
+        match (before, after) {
+            (Some(b), Some(a)) => {
+                // Only the difference: the key's running totals are never printed or committed.
+                println!("cost: US${:.6}", a - b);
+                assert!(a - b <= 0.05, "over the US$0.05 budget");
+            }
+            _ => println!("cost: usage not readable"),
+        }
+    }
+}

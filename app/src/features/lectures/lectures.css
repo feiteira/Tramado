@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: var(--s-4);
   min-width: 0;
+  padding-top: var(--s-4);   /* G2: the toolbar sits where the other class tabs' do */
   padding-bottom: var(--s-6);
 }
 .lectures-tab__bar {
@@ -35,11 +36,11 @@
   gap: var(--s-1);
 }
 .lecture-group__title {
-  padding: 0 var(--s-3);
+  padding: 0;   /* G2: aligned with the rows, as the other class tabs' section headings */
   font-family: var(--font-ui);
   font-size: var(--fs-xs);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-3);
 }

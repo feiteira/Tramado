@@ -124,6 +124,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
 
   return (
     <div className="settings-transcription" data-testid="settings-transcription">
+      <h2 className="set-section__title">{t('settings.sections.transcription')}</h2>
       <Section title={t('settings.transcription.models')} data-testid="speech-models">
         {!speech ? <Notice tone="info" data-testid="speech-unavailable">{t('speech.unavailable')}</Notice> : null}
         {!cpuOk ? (

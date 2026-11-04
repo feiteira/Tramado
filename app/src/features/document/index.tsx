@@ -254,6 +254,11 @@ function DocumentView({ route, services, doc, moved }: { route: DocRoute; servic
   }, [page, showNav, articlesOpen, navItems.length]);
 
   const labelOf = (p: number) => labels?.[p - 1] ?? String(p);
+  // The page labels arrive after the first page ("i", "ii", "1"…): show the current page's label once they do.
+  useEffect(() => {
+    if (labels && document.activeElement !== pageInput.current) setPageText(labels[page - 1] ?? String(page));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [labels]);
   const goPage = (p: number) => {
     if (!pages) return;
     const n = Math.max(1, Math.min(pages, p));

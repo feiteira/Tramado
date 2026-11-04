@@ -253,7 +253,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   };
 
   const chip = (d: DocSummary) => {
-    const c = textChip(d, d.sha256 ? extraction.progress?.[d.sha256] : undefined);
+    const c = textChip(d, d.sha256 ? extraction.progress?.[d.sha256] : undefined, shared);
     switch (c.kind) {
       case 'searchable': return <span className="doc-chip doc-chip--ok" data-testid="doc-text-state" data-state="ready"><CircleCheck size={14} aria-hidden />{t('documents.text.searchable')}</span>;
       case 'reading': return (

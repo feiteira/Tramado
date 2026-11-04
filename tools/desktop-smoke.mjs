@@ -21,12 +21,12 @@
 //                       as the bindings do) and check their answers: class files, private data, cache, media over the
 //                       scheme, class:changed, dialogs and confirmations through the e2e answer queue, secrets, AI
 //                       refusals, registry operations (create, update, fork, forget)
-//   --flow=g1           gate G1 (plan §5): drive the real app through onboarding (clicks and typing in the welcome
-//                       and name steps), create a local class, import a PDF (a fictional regulation, through the e2e
-//                       dialog queue), wait for extraction and indexing in the webview's workers, then open the
-//                       palette (Ctrl+K), type a word of the PDF and wait for a `palette-result`; the screenshot is
-//                       taken with the palette open. The class and import go through the services (window.__tramadoE2E,
-//                       set only when AppInfo.e2e) because their screens are wave-2 placeholders.
+//   --flow=g1           gate G1 (plan §5), on the real screens since G2: onboarding (welcome, name, "Not now" for AI,
+//                       "Create a class"), the New class dialog (sharing off), Add › Documents… (a fictional
+//                       regulation through the e2e dialog queue), extraction and indexing in the webview's workers,
+//                       the palette (rail search) with a word of the PDF, and the hit opened: the PDF page with the
+//                       passage marked. The services (window.__tramadoE2E, only when AppInfo.e2e) are only read, to
+//                       wait for the index. The screenshot shows the document at the passage.
 //   --skip-build        do not build the frontend nor the app (use what is there)
 //   --skip-frontend     do not run `npm run build` (the app is still built)
 //   --timeout=<s>       how long to wait for "webview ready" (default 30)
@@ -279,41 +279,60 @@ const FLOW_SCRIPT = String.raw`(async () => {
       throw e;
     }
   };
+  const field = (id) => { const n = el(id); return n && (n.matches('input, textarea') ? n : n.querySelector('input, textarea')); };
+  const click = async (id, ms) => (await until(id, () => { const b = el(id); return b && !b.disabled ? b : null; }, ms)).click();
   let s, classId;
   try {
-    await step('onboarding: welcome', async () => (await until('onboarding-start', () => el('onboarding-start'))).click());
+    // G2: every action goes through the real screens; the services (window.__tramadoE2E) are only read to wait.
+    await step('onboarding: welcome', async () => click('onboarding-start'));
     await step('onboarding: name', async () => {
-      type(await until('onboarding-name-input', () => el('onboarding-name-input')), 'Ana Ribeiro');
+      type(await until('onboarding-name-input', () => field('onboarding-name-input')), 'Ana Ribeiro');
       await sleep(50);
-      (await until('enabled continue', () => { const b = el('onboarding-name-continue'); return b && !b.disabled ? b : null; })).click();
+      await click('onboarding-name-continue');
       s = await until('the ready phase', () => window.__tramadoE2E);
       return { identity: !!s.ctx.identity.get() };
     });
-    await step('create a local class', async () => {
-      classId = await s.library.create({ name: 'Regulamento de Avaliação', colour: '#12a594', icon: 'scale', language: 'pt-PT', share: false });
-      await until('the class in the library', () => s.library.classes.get().some((c) => c.id === classId));
-      return { classId };
+    await step('onboarding: AI later, then "Create a class"', async () => {
+      await click('onboarding-ai-skip');
+      await click('onboarding-create');
     });
-    await step('import the PDF', async () => {
-      const picks = await s.ctx.platform.dialogs.pickFiles({ title: 'Add documents', filters: [{ name: 'PDF', extensions: ['pdf'] }], multiple: true });
-      const res = await s.forClass(classId).documents.import(picks);
-      if (res.length !== 1 || !res[0].path || res[0].error) throw new Error('import: ' + JSON.stringify(res));
-      return { path: res[0].path };
+    await step('new class dialog (local)', async () => {
+      type(await until('class-name', () => field('class-name')), 'Regulamento de Avaliação');
+      const share = await until('class-share', () => el('class-share'));
+      if (share.getAttribute('aria-checked') === 'true') share.click();
+      await sleep(50);
+      await click('class-dialog-save');
+      await until('the class screen', () => el('screen-class'));
+      classId = await until('the class in the library', () => s.library.classes.get().find((c) => c.name === 'Regulamento de Avaliação')?.id);
+      return { classId, shared: s.library.classes.get().find((c) => c.id === classId).shared };
+    });
+    await step('Add › Documents… (e2e dialog queue)', async () => {
+      await click('class-add');
+      await click('class-add-documents');
+      await until('the documents tab', () => el('class-documents'));
+      const row = await until('the imported row', () => el('doc-item'), 30000);
+      return { row: (row.textContent || '').slice(0, 80) };
     });
     await step('extract and index (webview workers)', async () => {
       const st = await until('index settled', async () => {
         const v = await s.search.settled(classId);
         return v.docs >= 1 && v.pending === 0 ? v : null;
       }, 60000);
-      const hits = await s.search.passages(classId, ${JSON.stringify(FLOW_QUERY)}, { limit: 5 });
-      if (!hits.length) throw new Error('no passage for the query');
-      return { docs: st.docs, chars: st.chars, first: hits[0].label };
+      return { docs: st.docs, chars: st.chars };
     });
     await step('palette search hit', async () => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true }));
-      type(await until('palette-input', () => el('palette-input')), ${JSON.stringify(FLOW_QUERY)});
+      await click('rail-search');
+      type(await until('palette-input', () => field('palette-input')), ${JSON.stringify(FLOW_QUERY)});
       const row = await until('palette-result', () => el('palette-result'), 15000);
       return { label: row.textContent.slice(0, 160) };
+    });
+    await step('open the hit: the PDF at its passage', async () => {
+      el('palette-result').click();
+      await until('the document screen', () => el('screen-document'), 15000);
+      await until('a rendered PDF page', () => el('doc-pdf-page'), 30000);
+      // pdf.js draws the passage as boxes over the text layer (mark.cite) and a margin bar.
+      await until('the passage marked', () => document.querySelector('[data-testid="doc-pdf-page"] mark.cite, [data-testid="doc-pdf-page"] .cite-mark'), 15000);
+      return { page: el('doc-page').value, marks: document.querySelectorAll('[data-testid="doc-pdf-page"] mark.cite').length };
     });
     await log({ ok: true, steps });
   } catch (e) {

@@ -6,6 +6,17 @@
 .sync-card p + p {
   margin-top: var(--s-1);
 }
+/* Compact (the sync popover, 340 px): the buttons go under the text, aligned with it. */
+.sync-card--compact {
+  flex-wrap: wrap;
+}
+.sync-card--compact .notice__content {
+  flex: 1 1 calc(100% - 24px);
+}
+.sync-card--compact .notice__actions {
+  flex: 1 1 100%;
+  padding-inline-start: 24px;
+}
 
 /* Folder missing card (shown by the class screen in place of the tabs). */
 .folder-missing {
@@ -129,14 +140,27 @@
 .sharing {
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
+  gap: var(--s-6);
   max-width: 760px;
+}
+/* G2: the rows sit in a card, as the other Settings sections' (UI-SHELL's set-card). */
+.sharing__card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
 }
 .sharing__row {
   display: grid;
   grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
   gap: var(--s-2) var(--s-4);
   align-items: start;
+  padding: var(--s-3) var(--s-4);
+}
+.sharing__row + .sharing__row {
+  border-top: 1px solid var(--rule-faint);
 }
 .sharing__label {
   color: var(--ink-2);

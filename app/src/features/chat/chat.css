@@ -360,6 +360,11 @@
   gap: 2px;
   width: 100%;
 }
+/* AiCard puts its footer in a right-aligned actions box (UI-EXAMS); a chat answer's footer is its source list. */
+.chat-msg__ai .aicard__foot-actions {
+  flex: 1 1 100%;
+  margin-inline-start: 0;
+}
 .chat-msg__ai-working {
   display: inline-flex;
   align-items: center;

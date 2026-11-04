@@ -104,11 +104,12 @@ export type TextChip =
   | { kind: 'searchable' } | { kind: 'reading'; percent: number } | { kind: 'scan' } | { kind: 'somePages'; n: number }
   | { kind: 'failed' } | { kind: 'none' } | { kind: 'arriving' };
 
-export function textChip(d: DocSummary, progress: number | undefined): TextChip {
+export function textChip(d: DocSummary, progress: number | undefined, shared = true): TextChip {
   switch (d.extraction) {
     case 'ready': return d.imagePages ? { kind: 'somePages', n: d.imagePages } : { kind: 'searchable' };
     case 'running': return { kind: 'reading', percent: Math.round((progress ?? 0) * 100) };
-    case 'pending': return d.sha256 ? { kind: 'reading', percent: 0 } : { kind: 'arriving' };
+    // Not hashed yet: still arriving from a classmate, or (in a class only here, or added by me) about to be read.
+    case 'pending': return d.sha256 || !shared || d.addedBy?.self ? { kind: 'reading', percent: 0 } : { kind: 'arriving' };
     case 'scan': return { kind: 'scan' };
     case 'failed': return { kind: 'failed' };
     case 'unsupported': return { kind: 'none' };

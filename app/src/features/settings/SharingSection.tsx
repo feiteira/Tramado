@@ -103,8 +103,9 @@ export default function SharingSection({ services }: { services: AppServices }) 
 
   return (
     <section className="sharing" data-testid="settings-sharing" aria-labelledby="settings-sharing-title">
-      <h2 id="settings-sharing-title" className="settings-section__title">{t('settings.sections.sharing')}</h2>
+      <h2 id="settings-sharing-title" className="set-section__title">{t('settings.sections.sharing')}</h2>
 
+      <div className="sharing__card">
       <div className="sharing__row" data-testid="sharing-status">
         <span className="sharing__label">{t('settings.sharing.status')}</span>
         <div className="sharing__value">
@@ -213,6 +214,7 @@ export default function SharingSection({ services }: { services: AppServices }) 
             data-testid="sharing-limit-down"
           />
         </div>
+      </div>
       </div>
 
       {existing ? (

@@ -1,17 +1,28 @@
 /* Settings › AI (UX §3.14.3). Kept with the Ask feature (UI-EXAMS) because features/settings/*.css belongs to UI-SHELL. */
 .settings-ai {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
   max-width: 900px;
 }
+/* G2: the rows sit in a card, as the other Settings sections' (UI-SHELL's set-card). */
 .sai__rows {
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
 }
 .sai__row {
   display: grid;
   grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
   gap: var(--s-3) var(--s-5);
-  padding: var(--s-4) 0;
+  padding: var(--s-4);
   border-bottom: 1px solid var(--rule-faint);
+}
+.sai__row:last-child {
+  border-bottom: 0;
 }
 .sai__label {
   padding-top: 6px;

@@ -118,7 +118,8 @@ export default function AiSection({ services }: { services: AppServices }) {
 
   return (
     <div className="settings-ai" data-testid="settings-ai">
-      <Section title={t('settings.sections.ai')} description={s.enabled ? undefined : t('settings.ai.offHint')}>
+      <h2 className="set-section__title">{t('settings.sections.ai')}</h2>
+      <Section description={s.enabled ? undefined : t('settings.ai.offHint')}>
         {!s.enabled ? (
           <Notice tone="info" data-testid="ai-disabled" actions={<Button variant="primary" icon={Power} onClick={() => void run('on', () => services.ai.setEnabled(true))} data-testid="ai-on">{t('settings.ai.on')}</Button>}>
             {t('ai.pill.off')}

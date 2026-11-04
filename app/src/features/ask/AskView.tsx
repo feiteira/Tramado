@@ -79,7 +79,7 @@ export function AskView({ services, classId, threadId: routeThread, query, focus
   const [current, setCurrent] = useState<string | null>(routeThread ?? null);
   useEffect(() => setCurrent(routeThread ?? null), [routeThread]);
   // Opening Ask shows the latest conversation (unless a question is pre-filled); [New] starts an empty one.
-  const opened = useRef(!!routeThread || !!query);
+  const opened = useRef(!!routeThread || !!query || !!focus);   // "Ask about this lecture" starts a new conversation
   useEffect(() => {
     if (opened.current || !threads.length) return;
     opened.current = true;
