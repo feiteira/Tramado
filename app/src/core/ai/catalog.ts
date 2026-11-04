@@ -59,6 +59,25 @@ export function parseModels(body: unknown): CatalogEntry[] {
   });
 }
 
+/**
+ * INT: whether a model is busy now, from `GET models/<id>/endpoints` (free: it uses no request of the quota). Busy =
+ * every endpoint is down (`status` < 0) or failing most requests of the last 5 minutes (rate limits count). Null when
+ * the body says nothing.
+ */
+export function modelBusy(body: unknown): boolean | null {
+  const eps = (body as { data?: { endpoints?: unknown } } | null)?.data?.endpoints;
+  if (!Array.isArray(eps) || eps.length === 0) return null;
+  const healthy = (e: unknown) => {
+    const x = (e ?? {}) as { status?: unknown; uptime_last_5m?: unknown; uptime_last_30m?: unknown };
+    if (typeof x.status === 'number' && x.status < 0) return false;
+    const up = typeof x.uptime_last_5m === 'number' ? x.uptime_last_5m : typeof x.uptime_last_30m === 'number' ? x.uptime_last_30m : null;
+    return up === null || up >= BUSY_UPTIME;
+  };
+  return !eps.some(healthy);
+}
+/** Below this uptime (percent, last 5 minutes) an endpoint counts as busy. */
+const BUSY_UPTIME = 60;
+
 export function capsOf(m: CatalogEntry): ModelCaps {
   const params = m.supported_parameters ?? [];
   const inputs = m.architecture?.input_modalities ?? [];

@@ -4,7 +4,7 @@
 // It also exports the storage → view mappings of AI answers shared by exams, Ask and chat (UX §3.9.1, §4.1).
 import { PlatformError, errorCode, toPlatformError } from '../core/errors';
 import { createAiClient, type AiClient, type ClientSettings, type RunOptions, type RunResult } from '../core/ai/client';
-import { CATALOG_KEY, createCatalog, isFresh, levelsOf, modelLabel, parseModels, readCatalogCache, validateChain, type Catalog, type CatalogCache } from '../core/ai/catalog';
+import { CATALOG_KEY, createCatalog, isFresh, levelsOf, modelBusy, modelLabel, parseModels, readCatalogCache, validateChain, type Catalog, type CatalogCache } from '../core/ai/catalog';
 import { chainFor, defaultFallbacks, DEFAULT_MODEL } from '../core/ai/defaults';
 import { estimateRequests } from '../core/ai/cost';
 import { grounding, isInsufficient, parseCitations } from '../core/ai/citations';
@@ -215,7 +215,13 @@ export function createAiService(ctx: AppContext, app: () => AppServices): AiServ
         if (q) quota = { value: q, at: ctx.clock.now() };
         key = await platform.secrets.status('openrouter').catch(() => key);
         refresh();
-        return { ok: true, ...(q ? { remaining: q.remaining } : {}) };
+        // INT (UX §3.1 "OK but default busy"): the endpoints' recent uptime, a free GET (no request of the quota).
+        let busy = false;
+        const first = settings.get().chain[0];
+        if (first && !first.includes('..') && /^[\w.-]+\/[\w.:-]+$/.test(first)) {
+          busy = await base.get(`models/${first}/endpoints`, { classId: null, action: 'keyCheck', passages: 0 }).then((b) => modelBusy(b) === true, () => false);
+        }
+        return { ok: true, ...(q ? { remaining: q.remaining } : {}), ...(busy ? { busy: true } : {}) };
       } catch (e) {
         return { ok: false, code: errorCode(e) };
       }

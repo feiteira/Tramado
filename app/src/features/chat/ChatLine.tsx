@@ -336,3 +336,25 @@ function AiLocal({ state, m, ctx }: { state: ChatAiLocal; m: ChatMessageView; ct
 }
 
 const capital = (s: string, locale: string) => (s ? s.charAt(0).toLocaleUpperCase(locale) + s.slice(1) : s);
+
+/**
+ * INT (5 000 messages): a line re-renders only when its message, its place in a group, or what the list's state means
+ * for it changes (editing it, its flash, focus, find hits, delivery tick, @AI notice). The callbacks of `ctx` must be
+ * stable (the chat tab passes ref-backed ones).
+ */
+function sameLine(a: { row: Extract<ChatRow, { kind: 'line' }>; ctx: LineContext }, b: { row: Extract<ChatRow, { kind: 'line' }>; ctx: LineContext }): boolean {
+  const m = a.row.message;
+  if (m !== b.row.message || a.row.first !== b.row.first || a.row.last !== b.row.last) return false;
+  const x = a.ctx;
+  const y = b.ctx;
+  const id = m.id;
+  const editText = (c: LineContext) => (c.editing?.id === id ? c.editing.text : null);
+  const tabStop = (c: LineContext) => (c.focusId ?? c.defaultFocus) === id;
+  return x.me === y.me && x.people === y.people && x.allNames === y.allNames && x.lectures === y.lectures && x.folder === y.folder && x.classId === y.classId
+    && x.services === y.services && editText(x) === editText(y) && tabStop(x) === tabStop(y)
+    && (x.flash === id) === (y.flash === id) && (x.match === id) === (y.match === id) && x.matches.has(id) === y.matches.has(id)
+    && (x.lastMine === id) === (y.lastMine === id) && x.aiLocal[id] === y.aiLocal[id]
+    && x.aiLabel === y.aiLabel && x.nameOf === y.nameOf && x.reply === y.reply;
+}
+
+export const ChatLineMemo = React.memo(ChatLine, sameLine);

@@ -2030,7 +2030,11 @@ impl Inner {
             return;
         }
         let ignores_changed = before
-            .is_none_or(|b| b.skip_audio != a.skip_audio || b.local_ignores != a.local_ignores);
+            .is_none_or(|b| {
+                b.skip_audio != a.skip_audio
+                    || b.local_ignores != a.local_ignores
+                    || b.local_includes != a.local_includes
+            });
         if ignores_changed && before.is_some() {
             // synchronously: "Remove from this computer only" adds the line, then deletes the
             // local copy (folder spec §11.2); the deletion must not be scanned first

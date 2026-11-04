@@ -22,12 +22,19 @@ export interface AskTurn { id: Ulid; question: string; scope: { kinds: Array<Sou
   // ── Additive (UI-EXAMS, wave 2) ──
   /** Ask across classes: the class of each cited ref (absent: the thread's class). */
   classOf?: Record<string, ClassId>;
+  // ── Additive (INT, wave 3) ──
+  /** The model stopped at its length limit (`finish_reason: "length"`): the answer is cut off ([Answer again with more room]). */
+  cut?: boolean;
+  /** A rate limit that said when to come back (429/503 `Retry-After`), in seconds from `at`. */
+  retryAfterS?: number;
 }
 
 /** Additive options of `ask` (T-AI): the [Allow general knowledge] chip, the per-thread model, Deep answer, the busy chooser. */
 export interface AskOptions { general?: boolean; model?: string; mode?: 'quick' | 'deep'; busyFallback?: boolean
   /** UI-EXAMS (additive): the "My notes" scope chip; false keeps private notes out of what is sent (default true). */
-  privateNotes?: boolean }
+  privateNotes?: boolean;
+  /** INT: twice the room for the answer (the [Answer again with more room] of a cut-off answer). */
+  moreRoom?: boolean }
 export type ExplainStyle = 'simpler' | 'example' | 'translate' | 'detail' | 'exam';
 
 export interface AskService {

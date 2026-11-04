@@ -452,6 +452,26 @@ pub async fn storage_usage(shared: State<'_, Shared>) -> AppResult<StorageUsage>
     blocking(move || Ok(appfiles::storage_usage(&paths, &registry))).await
 }
 
+/// The smallest free space among the volumes that hold `dirs` (`None` when no OS answer).
+pub fn free_bytes(dirs: &[PathBuf]) -> Option<u64> {
+    dirs.iter()
+        .filter_map(|d| tramado_speech::available_space(d))
+        .min()
+}
+
+/// INT (wave 3): `storage_free` — the bytes free where Tramado writes: the smaller of the app
+/// data volume (recordings, speech models) and the classes root's; `null` when the OS cannot
+/// tell. The record pre-flight, the model prompt and Settings › Storage read it.
+#[tauri::command]
+pub async fn storage_free(shared: State<'_, Shared>) -> AppResult<Option<u64>> {
+    let data = shared.paths.data.clone();
+    let root = shared
+        .registry
+        .root_dir()
+        .unwrap_or_else(|| shared.paths.default_classes_root.clone());
+    blocking(move || Ok(free_bytes(&[data, root]))).await
+}
+
 /// Deletes the cache except `models-catalog.json`.
 pub fn clear_cache(cache: &Path) -> AppResult<()> {
     let Ok(entries) = std::fs::read_dir(cache) else {
@@ -745,5 +765,16 @@ pub(crate) mod tests {
             .collect();
         assert_eq!(left, vec![std::ffi::OsString::from("models-catalog.json")]);
         clear_cache(&dir.path().join("missing")).unwrap();
+    }
+
+    #[test]
+    fn free_space_is_the_smallest_volume() {
+        let dir = TempDir::new();
+        let one = free_bytes(&[dir.path().to_path_buf()]);
+        assert!(one.is_some_and(|f| f > 0));
+        // A classes root not made yet is measured on its nearest existing folder.
+        let both = free_bytes(&[dir.path().to_path_buf(), dir.path().join("Tramado/x")]);
+        assert!(both.is_some());
+        assert_eq!(free_bytes(&[]), None);
     }
 }

@@ -62,5 +62,10 @@ export interface LectureService {
    * stored at the class root cannot be ignored on its own).
    */
   removeLocal(id: Ulid): Promise<void>;
+  /**
+   * INT (wave 3, UX §3.5.2 "Get the recording"): this device skips audio files in the class, but fetches this one
+   * lecture's `audio.webm` (`classes.json` `localIncludes`, emitted before the skip-audio ignore line).
+   */
+  fetchAudio(id: Ulid): Promise<void>;
 }
 

@@ -42,6 +42,7 @@ export function createAppBindings(): Pick<Platform, 'info' | 'log' | 'appFiles' 
     storage: {
       usage: () => call<StorageUsage>('storage_usage'),
       reveal: (which, classId) => call<void>('app_reveal', { which, ...(classId ? { classId } : {}) }),
+      diskFree: () => call<number | null>('storage_free'),
     },
   };
 }

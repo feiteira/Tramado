@@ -119,22 +119,18 @@ function ClassFrame({ cls, route, services }: { cls: ClassView; route: Extract<R
       toast.error(e);
     }
   };
-  const runAction = (load: () => Promise<{ default: (s: AppServices, classId: string) => Promise<void> }>, fallback: ClassTabId) =>
+  const runAction = (load: () => Promise<{ default: (s: AppServices, classId: string) => Promise<void> }>) =>
     void load()
       .then((m) => m.default(services, cls.id))
-      .catch((e: unknown) => {
-        // A screen not built yet answers NOT_IMPLEMENTED: open its tab instead of failing silently.
-        if ((e as { code?: string })?.code === 'NOT_IMPLEMENTED') replace({ name: 'class', classId: cls.id, tab: fallback });
-        else toast.error(e);
-      });
+      .catch((e: unknown) => toast.error(e));
 
   const addItems: MenuEntry[] = [
-    { id: 'documents', label: t('classes.header.addDocuments'), icon: FilePlus2, onSelect: () => runAction(ACTIONS.importDocuments, 'documents'), testId: 'class-add-documents' },
+    { id: 'documents', label: t('classes.header.addDocuments'), icon: FilePlus2, onSelect: () => runAction(ACTIONS.importDocuments), testId: 'class-add-documents' },
     { id: 'recording', label: t('classes.header.addRecording'), icon: FileAudio, onSelect: () => dialogs.open('import', { classId: cls.id }), testId: 'class-add-recording' },
     { id: 'exam-date', label: t('classes.header.addExamDate'), icon: CalendarDays, onSelect: () => dialogs.open('exam-date', { classId: cls.id }), testId: 'class-add-exam-date' },
     { id: 'exam-paper', label: t('classes.header.addExamPaper'), icon: ClipboardCheck, onSelect: () => dialogs.open('exam-paper', { classId: cls.id }), testId: 'class-add-exam-paper' },
     { kind: 'separator' },
-    { id: 'note', label: t('classes.header.addNote'), icon: NotebookPen, onSelect: () => runAction(ACTIONS.newNote, 'notes'), testId: 'class-add-note' },
+    { id: 'note', label: t('classes.header.addNote'), icon: NotebookPen, onSelect: () => runAction(ACTIONS.newNote), testId: 'class-add-note' },
     ...(cls.shared ? [{ id: 'class-note', label: t('classes.header.addClassNote'), icon: NotebookPen, onSelect: () => replace({ name: 'class', classId: cls.id, tab: 'notes' }), testId: 'class-add-class-note' }] : []),
   ];
   const notifyItems: MenuEntry[] = (['important', 'all', 'none'] as const).map((v) => ({

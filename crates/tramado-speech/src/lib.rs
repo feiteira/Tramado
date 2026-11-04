@@ -73,6 +73,20 @@ pub struct SpeechConfig {
     pub version: String,
 }
 
+/// INT (wave 3): the bytes free on the volume that holds `dir` (its nearest existing ancestor
+/// when it does not exist yet); `None` when the OS cannot tell. `storage_free` (architecture
+/// §6.1) uses it for the record pre-flight, the model prompt and Settings › Storage.
+pub fn available_space(dir: &Path) -> Option<u64> {
+    let mut p = Some(dir);
+    while let Some(d) = p {
+        if d.exists() {
+            return fs4::available_space(d).ok();
+        }
+        p = d.parent();
+    }
+    None
+}
+
 /// The engine version shown in Settings and written to transcripts.
 pub fn engine_version() -> String {
     if cfg!(feature = "local-whisper") {
@@ -163,6 +177,7 @@ impl Speech {
         let dir = cfg.paths.transcribe_dir();
         jobs::sweep(&dir);
         let restored = jobs::restore(&dir);
+        jobs::resume_heartbeats(&cfg.fs, &dir, &restored, heartbeat::EVERY);
         let speeds = load_speeds(&cfg.paths);
         Speech {
             journals: JournalPaths::new(cfg.paths.recordings_dir()),
@@ -544,6 +559,21 @@ impl Speech {
 
     pub fn recorder_mark(&self, kind: MarkerKind, note: Option<String>) -> AppResult<Marker> {
         self.with_recorder(|r| r.mark(kind, note))
+    }
+
+    /// INT (wave 3): `mark` stamped at an earlier audio time (`atMs`, a note's field opening).
+    pub fn recorder_mark_at(
+        &self,
+        kind: MarkerKind,
+        note: Option<String>,
+        at_ms: Option<u64>,
+    ) -> AppResult<Marker> {
+        self.with_recorder(|r| r.mark_at(kind, note, at_ms))
+    }
+
+    /// INT (wave 3): removes a marker of the running recording (the toast's Undo).
+    pub fn recorder_unmark(&self, marker_id: &str) -> AppResult<()> {
+        self.with_recorder(|r| r.unmark(marker_id))
     }
 
     pub fn recorder_stop(&self) -> AppResult<FinishedRecording> {
@@ -1047,4 +1077,16 @@ fn run_import(
         }),
     })?;
     Ok(audio)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn free_space_of_a_folder_not_made_yet() {
+        let dir = tempfile::tempdir().unwrap();
+        let free = available_space(&dir.path().join("not").join("yet"));
+        assert!(free.is_some_and(|f| f > 0));
+    }
 }

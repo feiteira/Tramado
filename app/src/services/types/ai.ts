@@ -18,7 +18,9 @@ export interface AiSettingsView {
 export interface AiService {
   settings: ReadableStore<AiSettingsView & { enabled: boolean; busyRelax: boolean; generalDefault: boolean } & AiSettingsExtra>;
   client: AiClient;                                         // core/ai/client.ts instance over platform.ai
-  setKey(value: string): Promise<void>; clearKey(): Promise<void>; testKey(): Promise<{ ok: boolean; code?: ErrorCode; remaining?: number }>;
+  setKey(value: string): Promise<void>; clearKey(): Promise<void>; testKey(): Promise<{ ok: boolean; code?: ErrorCode; remaining?: number;
+    /** INT: the key works but the first model of the chain is busy right now (its endpoints' recent uptime). */
+    busy?: boolean }>;
   setModel(id: string): Promise<void>; setFallbacks(ids: string[]): Promise<void>;
   setPrivacy(level: PrivacyLevel): Promise<boolean>; setCustomHost(base: string | null): Promise<void>;
   setEnabled(on: boolean): Promise<void>;                   // "Turn off AI on this computer" (prefs ai.enabled)

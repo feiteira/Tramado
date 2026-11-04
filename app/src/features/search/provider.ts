@@ -234,7 +234,23 @@ export default function provider(services: AppServices) {
       }
       if (signal.aborted) return [];
       const lang = services.ctx.prefs.get('ui.locale') || 'en';
-      const rows = passages.map((p) => rowOf(p, lang)).filter((r): r is ResultRow => !!r && classIds.includes(r.classId));
+      // The printed page labels of the PDFs among the hits (their text caches; one read per document).
+      const labels = new Map<string, Array<string | null> | null>();
+      for (const p of passages) {
+        if (p.source.kind !== 'document' || !/\.pdf$/i.test(p.source.path)) continue;
+        const k = `${p.classId}|${p.source.path}`;
+        if (labels.has(k)) continue;
+        labels.set(k, null);
+        try {
+          labels.set(k, (await services.forClass(p.classId).documents.text(p.source.path)).pageLabels ?? null);
+        } catch {
+          // not extracted (yet): physical pages
+        }
+        if (signal.aborted) return [];
+      }
+      const rows = passages
+        .map((p) => rowOf(p, lang, p.source.kind === 'document' ? labels.get(`${p.classId}|${p.source.path}`) : null))
+        .filter((r): r is ResultRow => !!r && classIds.includes(r.classId));
       // An exam paper's original file ("Exames/Frequência 2025-26/enunciado.pdf") is named after its exam folder.
       for (const r of rows) {
         if (r.route.name !== 'document') continue;

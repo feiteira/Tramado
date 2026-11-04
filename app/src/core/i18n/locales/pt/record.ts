@@ -136,4 +136,6 @@ export const record: Messages['record'] = {
     unsupported: 'O formato de áudio deste ficheiro não é suportado. Converta-o para MP3 ou M4A (AAC-LC) e tente de novo.',
     vttLater: 'Ainda não é possível usar as legendas (“{file}”) como transcrição: o Tramado transcreve a própria gravação.',
   },
+  // INT (wave 3)
+  stopReason: { diskFull: 'o disco está cheio', device: 'o microfone deixou de funcionar' },
 };

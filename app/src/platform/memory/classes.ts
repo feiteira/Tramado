@@ -76,7 +76,7 @@ export function createClassRegistry(deps: { now: () => number; root: string; fil
         files.drop(classId);
         return view(next);
       },
-      async update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[] }): Promise<ClassEntry> {
+      async update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[]; localIncludes?: ClassPath[] }): Promise<ClassEntry> {
         const e = get(classId);
         const next = { ...e, ...patch };
         entries.set(e.classId, next);

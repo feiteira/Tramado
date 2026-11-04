@@ -46,7 +46,7 @@ export interface DemoFlags {
   mode: 'extracting' | 'review' | 'answers' | 'practice' | null;
   section: SettingsSection | null;
   /** `real` (architecture §10): OpenRouter from the browser with the key typed in Settings, kept for the session only. */
-  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real';
+  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real' | 'ratelimit' | 'cut';
   speech: 'fake' | null;
   model: 'ready' | 'missing' | 'downloading';
   sync: 'fake' | 'offline' | 'error' | 'local';
@@ -88,7 +88,7 @@ export function parseDemoFlags(search: string): DemoFlags {
     q: str(q.get('q')),
     mode: maybe(q.get('mode'), ['extracting', 'review', 'answers', 'practice'] as const),
     section: maybe(q.get('section'), SETTINGS_SECTIONS),
-    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey', 'real'] as const, 'fake'),
+    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey', 'real', 'ratelimit', 'cut'] as const, 'fake'),
     speech: q.get('speech') === 'fake' ? 'fake' : null,
     model: oneOf(q.get('model'), ['ready', 'missing', 'downloading'] as const, 'ready'),
     sync: oneOf(q.get('sync'), ['fake', 'offline', 'error', 'local'] as const, 'fake'),

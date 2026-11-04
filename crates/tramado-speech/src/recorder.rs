@@ -344,7 +344,18 @@ impl Recorder {
     }
 
     pub fn mark(&self, kind: MarkerKind, note: Option<String>) -> AppResult<Marker> {
-        let raw_ms = self.shared.audio_ms();
+        self.mark_at(kind, note, None)
+    }
+
+    /// A marker stamped at `at_ms` of audio time when given (a note is stamped when its field
+    /// opened, UX §2.7), never later than now; the reflex offset applies as for any marker.
+    pub fn mark_at(
+        &self,
+        kind: MarkerKind,
+        note: Option<String>,
+        at_ms: Option<u64>,
+    ) -> AppResult<Marker> {
+        let raw_ms = marker_raw_ms(self.shared.audio_ms(), at_ms);
         let note = note
             .map(|n| n.trim().chars().take(500).collect::<String>())
             .filter(|n| !n.is_empty());
@@ -361,6 +372,19 @@ impl Recorder {
             .sink
             .send(RecorderEvent::Marker { marker: m.clone() });
         Ok(m)
+    }
+
+    /// Removes a marker of this recording (the toast's Undo); `NOT_FOUND` when it has none
+    /// with this id.
+    pub fn unmark(&self, id: &str) -> AppResult<()> {
+        let mut found = false;
+        self.shared
+            .write_journal(|j| found = remove_marker(&mut j.markers, id))?;
+        if found {
+            Ok(())
+        } else {
+            Err(AppError::not_found("no such marker"))
+        }
     }
 
     fn finish(&mut self) -> AppResult<FinishedRecording> {
@@ -639,9 +663,40 @@ fn warnings(sh: &Shared, w: &mut Warned) {
     w.battery = low_battery;
 }
 
+/// The raw audio time of a new marker: `at_ms` when given, but never past what was recorded.
+fn marker_raw_ms(audio_ms: u64, at_ms: Option<u64>) -> u64 {
+    at_ms.map_or(audio_ms, |a| a.min(audio_ms))
+}
+
+/// Drops the marker with this id; false when there is none.
+fn remove_marker(markers: &mut Vec<Marker>, id: &str) -> bool {
+    let before = markers.len();
+    markers.retain(|m| m.id != id);
+    markers.len() != before
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn markers_are_stamped_and_removed() {
+        assert_eq!(marker_raw_ms(41_000, None), 41_000);
+        assert_eq!(marker_raw_ms(41_000, Some(39_500)), 39_500);
+        assert_eq!(marker_raw_ms(41_000, Some(90_000)), 41_000);
+        let m = |id: &str| Marker {
+            id: id.into(),
+            at_ms: 1,
+            raw_ms: 1,
+            kind: MarkerKind::Exam,
+            note: None,
+        };
+        let mut v = vec![m("a"), m("b")];
+        assert!(remove_marker(&mut v, "a"));
+        assert!(!remove_marker(&mut v, "a"));
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0].id, "b");
+    }
 
     #[test]
     fn modes_choose_tracks_and_speakers() {

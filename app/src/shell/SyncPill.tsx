@@ -20,6 +20,7 @@ import { syncPillState, type SyncPillState } from './pills';
 import { useSyncFacts } from './syncFacts';
 import { IdentityCopiedCard, SyncErrorCard, syncErrorOf } from '../features/sync/cards';
 import { requestDiagnostics } from '../features/sync/diagnosticsFlag';
+import { windowsNameProblems } from '../features/sync/windowsNames';
 
 const ICON: Record<SyncPillState['id'], { icon: LucideIcon; tone: string; spin?: boolean }> = {
   local: { icon: HardDrive, tone: 'muted' },
@@ -43,6 +44,15 @@ export function syncPillLabel(s: SyncPillState, { t, tp }: Pick<I18n, 't' | 'tp'
       return s.n > 0 ? t('sync.pill.upToDate', { n: s.n }) : t('sync.pill.upToDateNone');
     default:
       return t(`sync.pill.${s.id}`);
+  }
+}
+
+/** The documents of a class whose names can't be saved on Windows computers (UX §3.15.9). */
+function windowsNamesOf(services: AppServices, classId: string): string[] {
+  try {
+    return windowsNameProblems(services.forClass(classId).documents.list.get().map((d) => d.path));
+  } catch {
+    return [];
   }
 }
 
@@ -126,6 +136,8 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
     }
   };
   const folderErrors = Object.values(sync.folders).filter((f) => f.error || f.pullErrors > 0);
+  // UX §3.15.9 (sync spec §22.4): files of a shared class whose names a Windows computer cannot save.
+  const windowsNames = open ? shared.map((c) => ({ classId: c.id, names: windowsNamesOf(services, c.id) })).filter((w) => w.names.length > 0) : [];
   return (
     <>
       <Tooltip label={tip} side="right">
@@ -156,7 +168,7 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
         {state.id === 'error' && !sync.identityCopied ? (
           <SyncErrorCard services={services} code={syncErrorOf(sync.status) ?? 'SYNC_UNAVAILABLE'} compact onDetails={openDiagnostics} />
         ) : null}
-        {sync.massDelete.length || sync.massDeleteRemote.length || folderErrors.length || conflicts ? (
+        {sync.massDelete.length || sync.massDeleteRemote.length || folderErrors.length || conflicts || windowsNames.length ? (
           <ul className="sync-popover__problems" data-testid="sync-problems">
             {sync.massDelete.map((m) => {
               const c = nameOf(m.classId);
@@ -175,6 +187,15 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
                 <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
                 <span className="sync-popover__problem-text">{`${nameOf(m.classId)?.shortName ?? ''} · ${tp('sync.pill.attention', m.count)}`}</span>
                 <Button size="sm" onClick={() => goClass(m.classId)} data-testid="sync-problem-open">
+                  {t('common.open')}
+                </Button>
+              </li>
+            ))}
+            {windowsNames.map((w) => (
+              <li key={`wn-${w.classId}`} className="sync-popover__problem" data-testid="sync-problem-windows-name">
+                <TriangleAlert size={14} strokeWidth={2} aria-hidden className="sync-popover__warn" />
+                <span className="sync-popover__problem-text">{`${nameOf(w.classId)?.shortName ?? ''} · ${tp('sync.popover.windowsName', w.names.length)}`}</span>
+                <Button size="sm" onClick={() => goClass(w.classId, 'documents')} data-testid="sync-problem-open">
                   {t('common.open')}
                 </Button>
               </li>

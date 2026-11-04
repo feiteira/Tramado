@@ -45,7 +45,7 @@ export function serveRpc(port: PortLike, handlers: Record<string, (args: unknown
     const progress = (p: number) => port.postMessage({ id: req.id, progress: p } satisfies RpcReply);
     Promise.resolve()
       .then(() => {
-        if (!handler) throw new PlatformError('NOT_IMPLEMENTED', `worker method ${req.method}`);
+        if (!handler) throw new PlatformError('INVALID', `no worker method ${req.method}`);
         return handler(req.args, progress);
       })
       .then(

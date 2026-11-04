@@ -1,6 +1,6 @@
 // window.__tramadoDemo (UX §7.2): the hooks the screenshot steps and the e2e tests call, delegating to
-// DemoControls. A hook whose fake is not built yet rejects with NOT_IMPLEMENTED. Frozen after M0.
-import { notImplemented, type ErrorCode } from '../core/errors';
+// DemoControls. A hook whose fake is off in this demo (no `sync=fake`, `speech=fake` or AI fake) rejects with INVALID.
+import { PlatformError, type ErrorCode } from '../core/errors';
 import type { DialogAnswer } from '../platform/memory';
 import type { DemoControls } from './controls';
 
@@ -27,10 +27,11 @@ declare global {
 }
 
 export function makeHooks(c: DemoControls): TramadoDemoHooks {
+  const off = (what: string) => new PlatformError('INVALID', `demo.${what} needs its fake (sync=fake, speech=fake or an AI mode) in this demo`);
   const missing = (what: string) => {
-    throw notImplemented(`demo.${what}`);
+    throw off(what);
   };
-  const reject = (what: string) => Promise.reject(notImplemented(`demo.${what}`));
+  const reject = (what: string) => Promise.reject(off(what));
   return {
     addFile: (classKey, relPath, base64) => c.files.addFile(classKey, relPath, base64),
     queueAnswer: (a) => c.files.queueAnswer(a),

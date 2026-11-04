@@ -64,6 +64,8 @@ export interface FakeSpeech extends Speech {
   script(lectureId: Ulid | '*', result: ResultScript): void;
   /** The next operation of that kind fails with `code`. */
   failNext(what: 'transcribe' | 'download' | 'import' | 'recorder' | 'publish', code: ErrorCode): void;
+  /** INT: the recording ends on its own (`stopped` with that reason; what was recorded stays pending). */
+  endRecording(reason: 'error' | 'diskFull', code?: ErrorCode): void;
   controls(keys: FakeSpeechKeys): FakeSpeechControls;
   /** What was asked of the fake (tests). */
   requests: { transcribe: TranscribeRequest[]; publish: PublishRequest[]; cancel: Array<{ jobId: string; keepPartial: boolean }>; peaks: number };
@@ -353,6 +355,13 @@ export function createFakeSpeech(opts: FakeSpeechOptions = {}): FakeSpeech {
     failNext(what, code) {
       failures.set(what, code);
     },
+    endRecording(reason, code) {
+      const r = rec;
+      if (!r) return;
+      rec = null;
+      pending.push(finished(r, 'stopped'));
+      r.onEvent({ type: 'stopped', reason, ...(code ? { code } : {}) });
+    },
     async info(): Promise<SpeechInfo> {
       return {
         cpuOk: opts.cpuOk ?? true, localWhisper: true, vad: true, engineVersion: 'whisper.cpp 1.8.3 (simulated)', defaultModel: 'turbo',
@@ -445,13 +454,19 @@ export function createFakeSpeech(opts: FakeSpeechOptions = {}): FakeSpeech {
         }
         return status()!;
       },
-      async mark(kind: MarkerKind, note?: string) {
+      async mark(kind: MarkerKind, note?: string, atMs?: number) {
         if (!rec) throw new PlatformError('NOT_FOUND', 'not recording');
-        const raw = rec.status.ms;
+        const raw = atMs === undefined ? rec.status.ms : Math.max(0, Math.min(Math.round(atMs), rec.status.ms));
         const marker: Marker = { id: newUlid(now(), rand), atMs: Math.max(0, raw - rec.req.markerOffsetMs), rawMs: raw, kind, ...(note ? { note } : {}) };
         rec.markers.push(marker);
         rec.onEvent({ type: 'marker', marker });
         return marker;
+      },
+      async unmark(markerId: string) {
+        if (!rec) throw new PlatformError('NOT_FOUND', 'not recording');
+        const i = rec.markers.findIndex((m) => m.id === markerId);
+        if (i < 0) throw new PlatformError('NOT_FOUND', 'no such marker');
+        rec.markers.splice(i, 1);
       },
       async stop() {
         if (!rec) throw new PlatformError('NOT_FOUND', 'not recording');

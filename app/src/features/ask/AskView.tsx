@@ -464,7 +464,13 @@ function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
         <p className="ask-q__text">{turn.question}</p>
       </div>
       {turn.status === 'error' && turn.error ? (
-        <AiErrorNotice services={services} code={turn.error} onRetry={() => onRetry(turn)} onBusyFallback={() => onRetry(turn, { busyFallback: true })} />
+        <AiErrorNotice
+          services={services}
+          code={turn.error}
+          onRetry={() => onRetry(turn)}
+          onBusyFallback={() => onRetry(turn, { busyFallback: true })}
+          {...(turn.retryAfterS ? { retryAt: Date.parse(turn.at) + turn.retryAfterS * 1000 } : {})}
+        />
       ) : turn.status === 'running' && !turn.answer ? (
         <AiCard title={t('ai.card.streaming')} model={services.ai.label(turn.model ?? settings.chain[0] ?? settings.model)} state="streaming" data-testid="ai-answer">
           {null}
@@ -476,7 +482,7 @@ function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
             view={view}
             classId={home}
             classOf={classOfCite}
-            state={turn.status === 'running' ? 'streaming' : 'done'}
+            state={turn.status === 'running' ? 'streaming' : turn.cut ? 'cut' : 'done'}
             actions={
               turn.status === 'ok' ? (
                 <>
@@ -501,6 +507,12 @@ function Turn({ services, turn, classId, cls, threadId, onRetry }: TurnProps) {
               ) : undefined
             }
           />
+          {turn.status === 'ok' && turn.cut ? (
+            // INT: `finish_reason: "length"` — the model ran out of room; the same question again with twice the room.
+            <Notice tone="warning" data-testid="ask-cut" actions={<Button size="sm" icon={RefreshCw} onClick={() => onRetry(turn, { mode: turn.mode ?? 'quick', moreRoom: true })} data-testid="ask-more-room">{t('ai.cutoff.moreRoom')}</Button>}>
+              {t('ai.cutoff.hint')}
+            </Notice>
+          ) : null}
           {turn.status === 'ok' && view.insufficient ? (
             <Notice tone="info" data-testid="ask-insufficient" actions={turn.mode !== 'deep' ? <Button size="sm" icon={Telescope} onClick={() => onRetry(turn, { mode: 'deep' })} data-testid="ai-deep">{t('ai.card.deepCost', { min: 4, max: 8 })}</Button> : undefined}>
               {t('exams.answers.insufficient')}

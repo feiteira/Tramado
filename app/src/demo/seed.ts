@@ -52,7 +52,7 @@ export interface SeedOptions {
   /** `conflict=1`: a sync-conflict sibling of the class note `class8`. */
   conflict?: boolean;
   /** `ai=`: every mode but `off` has a (fictional) OpenRouter key stored, so AI shows as set up. */
-  ai?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey';
+  ai?: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'ratelimit' | 'cut';
   /** Reads a committed binary of demo/assets/ (default: fetched next to this module, or read from disk in Node). */
   assets?: (name: string) => Promise<Uint8Array>;
 }

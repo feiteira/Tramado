@@ -186,4 +186,8 @@ export const exams: Messages['exams'] = {
     confirm: 'Eliminar para todos',
   },
   deleted: 'Eliminou “{title}”.',
+  // INT (wave 3)
+  later: {
+    notice: { one: 'Mais {n} resposta começa às {time}, quando os pedidos gratuitos voltarem.', other: 'Mais {n} respostas começam às {time}, quando os pedidos gratuitos voltarem.' },
+  },
 };

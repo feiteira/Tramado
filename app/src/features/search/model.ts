@@ -136,7 +136,7 @@ function hitQuote(p: PassageLike): string | undefined {
 }
 
 /** A passage as a palette row (UX §3.13 row layout and keys). */
-export function rowOf(p: PassageLike, lang: string): ResultRow | null {
+export function rowOf(p: PassageLike, lang: string, pageLabels?: ReadonlyArray<string | null> | null): ResultRow | null {
   const src = p.source;
   const snippet = snippetOf(p.text, p.hits);
   const quote = hitQuote(p);
@@ -148,7 +148,7 @@ export function rowOf(p: PassageLike, lang: string): ResultRow | null {
         name: 'document', classId: p.classId, relPath: src.path, sha256: src.sha256,
         ...(page ? { page } : {}), ...(p.locator.type === 'slide' ? { slide: p.locator.slide } : {}), ...q,
       };
-      return { id: p.id, kind: 'document', classId: p.classId, title: p.title || src.path.slice(src.path.lastIndexOf('/') + 1), locator: locatorText(p.locator, lang), snippet, private: false, route, altRoute: route };
+      return { id: p.id, kind: 'document', classId: p.classId, title: p.title || src.path.slice(src.path.lastIndexOf('/') + 1), locator: locatorText(p.locator, lang, pageLabels), snippet, private: false, route, altRoute: route };
     }
     case 'lecture': {
       const at = p.locator.type === 'segment' ? p.locator.startMs : undefined;
@@ -171,9 +171,10 @@ export function rowOf(p: PassageLike, lang: string): ResultRow | null {
   }
 }
 
-function locatorText(loc: Locator, lang: string): string {
+function locatorText(loc: Locator, lang: string, pageLabels?: ReadonlyArray<string | null> | null): string {
   if (loc.type === 'whole' || loc.type === 'text') return '';
-  return locatorLabel(loc, lang);
+  // INT: the printed page labels of the PDF ("p. 4", not the physical "p. 6"), as the document view's pager.
+  return locatorLabel(loc, lang, pageLabels ? (n) => pageLabels[n - 1] : undefined);
 }
 
 /** Groups rows in UX order, the best first; each group keeps up to MAX_PER_GROUP rows. */

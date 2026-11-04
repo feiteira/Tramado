@@ -39,6 +39,8 @@ export interface LocalSyncInternals {
   peers: Map<DeviceId, { name: string; relay: boolean; lastSeen: number | null }>;
   policies: Map<ClassId, ClassPolicy>;
   joinRequests: Map<string, { classId: ClassId; deviceId: DeviceId; name: string; address: string; at: string }>;
+  /** INT: files a classmate added that have not arrived here yet, `classId|path` → the adder's ShortId (doc-arriving). */
+  arriving: Map<string, string>;
   /** Installed by createDemoSyncControls: the class files (for fileInfo). */
   files: ((classId: ClassId) => Map<ClassPath, { bytes: Uint8Array; mtimeMs: number; modifiedBy: string }>) | null;
   emit: ((e: SyncEvent) => void) | null;
@@ -69,7 +71,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
   const startedAt = instant(Date.now());
   const internals: LocalSyncInternals = {
     deps, online: new Set(), peers: new Map(), policies: new Map(), joinRequests: new Map(), files: null, emit: null, now: () => Date.now(),
-    writeAs: null, versions: new Map(), missing: new Set(),
+    writeAs: null, versions: new Map(), missing: new Set(), arriving: new Map(),
   };
   const anyShared = () => [...deps.registry.entries.values()].some((e) => e.shared);
   const status = (): SyncStatus => ({
@@ -78,7 +80,8 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     localOnly: false, paused: false, startedAt: mode === 'fake' || mode === 'offline' ? startedAt : null, restarts: 0,
     error: mode === 'error' ? 'SYNC_UNAVAILABLE' : null,
   });
-  const notHere = (name: string) => () => Promise.reject(new PlatformError(mode === 'error' ? 'SYNC_UNAVAILABLE' : 'NOT_IMPLEMENTED', `sync.${name} needs a peer (memory platform)`));
+  // Without a classmate's computer (no mesh, no demo peer) there is nobody to sync with: sharing is unavailable.
+  const notHere = (name: string) => () => Promise.reject(new PlatformError('SYNC_UNAVAILABLE', `sync.${name} needs a peer (memory platform)`));
   const identity = { deviceId: deps.deviceId, shortId: shortIdOf(deps.deviceId), syncPort: 22100 };
   const sharedIds = () => [...deps.registry.entries.values()].filter((e) => e.shared).map((e) => e.classId);
   const folderView = (classId: ClassId): FolderView => {
@@ -183,7 +186,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     },
     async joinClass(req) {
       if (mode === 'error') throw new PlatformError('SYNC_UNAVAILABLE', 'sharing is not available in this demo mode');
-      if (mode === 'local' || !internals.emit) throw new PlatformError('NOT_IMPLEMENTED', 'sync.joinClass needs a peer (memory platform)');
+      if (mode === 'local' || !internals.emit) throw new PlatformError('SYNC_UNAVAILABLE', 'sync.joinClass needs a peer (memory platform)');
       let decoded;
       try {
         decoded = decodeInvite(req.code, Math.floor(internals.now() / 1000));
@@ -233,10 +236,19 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
     }),
     ownAddresses: async () => (mode === 'fake' || mode === 'offline' ? ['tcp://192.168.1.20:22100'] : []),
     async fileInfo(classId: ClassId, paths: ClassPath[]): Promise<FileSyncInfo[]> {
-      if (!internals.files) throw new PlatformError('NOT_IMPLEMENTED', 'sync.fileInfo needs the demo controls (memory platform)');
+      // Without the demo controls (Vitest) no Syncthing holds the class: callers fall back to signatures (trust §6.3).
+      if (!internals.files) throw new PlatformError('SYNC_UNAVAILABLE', 'no Syncthing holds this class here (memory platform)');
       const files = internals.files(classId);
       return paths.map((path) => {
         const f = files.get(path);
+        // INT demo fixture: a file a classmate added that has not reached this computer yet (doc-arriving).
+        const coming = f ? undefined : internals.arriving.get(`${classId}|${path}`);
+        if (coming) {
+          return {
+            path, localModifiedBy: null, localDeleted: true, localSize: null, localBlocksHash: null, localModified: null, localVersion: [], localSequence: null,
+            globalModifiedBy: coming, globalDeleted: false, availability: [],
+          };
+        }
         let writer: DeviceId | null = null;
         if (f) {
           let parsed: unknown = null;

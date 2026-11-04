@@ -136,4 +136,6 @@ export const record: Messages['record'] = {
     unsupported: 'El formato de audio de este archivo no es compatible. Conviértalo a MP3 o M4A (AAC-LC) y vuelva a intentarlo.',
     vttLater: 'Todavía no se pueden usar los subtítulos («{file}») como transcripción: Tramado transcribe la propia grabación.',
   },
+  // INT (wave 3)
+  stopReason: { diskFull: 'el disco está lleno', device: 'el micrófono dejó de funcionar' },
 };

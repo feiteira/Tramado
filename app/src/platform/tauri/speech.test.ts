@@ -68,20 +68,24 @@ describe('speech bindings', () => {
     await s.recorder.pause();
     await s.recorder.resume();
     await s.recorder.mark('important');
+    await s.recorder.unmark(LECTURE);
+    await s.recorder.mark('note', 'rever', 41_000.4);
     await s.recorder.stop();
     await s.recorder.pending();
     await s.recorder.publish({ recordingId: LECTURE, classId: CLASS, lectureDir: 'Aulas/Aula 7', share: 'transcript-only' });
     await s.recorder.discard(LECTURE);
     expect(calls.map((c) => c.cmd)).toEqual([
       'speech_recorder_start', 'speech_recorder_attach', 'speech_recorder_pause', 'speech_recorder_resume',
-      'speech_recorder_mark', 'speech_recorder_stop', 'speech_recordings_pending', 'speech_recording_publish',
-      'speech_recording_discard',
+      'speech_recorder_mark', 'speech_recorder_unmark', 'speech_recorder_mark', 'speech_recorder_stop', 'speech_recordings_pending',
+      'speech_recording_publish', 'speech_recording_discard',
     ]);
     expect(calls[0]!.args!['req']).toEqual(req);
     // No `note` key at all when there is no note (Rust `Option` skipped).
     expect(calls[4]!.args).toEqual({ m: { kind: 'important' } });
-    expect(calls[7]!.args).toEqual({ req: { recordingId: LECTURE, classId: CLASS, lectureDir: 'Aulas/Aula 7', share: 'transcript-only' } });
-    expect(calls[8]!.args).toEqual({ recordingId: LECTURE });
+    expect(calls[5]!.args).toEqual({ markerId: LECTURE });
+    expect(calls[6]!.args).toEqual({ m: { kind: 'note', note: 'rever', atMs: 41_000 } });
+    expect(calls[9]!.args).toEqual({ req: { recordingId: LECTURE, classId: CLASS, lectureDir: 'Aulas/Aula 7', share: 'transcript-only' } });
+    expect(calls[10]!.args).toEqual({ recordingId: LECTURE });
     channelOf<RecorderEvent>(0).onmessage({ type: 'warning', code: 'silentMic' });
     channelOf<RecorderEvent>(1).onmessage({ type: 'stopped', reason: 'diskFull', code: 'DISK_FULL' });
     expect(events.map((e) => e.type)).toEqual(['warning', 'stopped']);

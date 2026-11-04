@@ -731,5 +731,132 @@ pub fn restore(dir: &Path) -> HashMap<String, Arc<TranscribeJob>> {
     out
 }
 
+/// INT (wave 3, R-SPEECH gap of plan §15 item 18): a finished, untaken result found after a
+/// restart keeps its claim alive. Its heartbeat starts again — `working` at `progress: 1.0`,
+/// every `every` — until TS takes the result or cancels the job, so a webview that waits for
+/// the class to catch up never lets a completed claim go stale. Only a claim file of ours that
+/// still says `working` is resumed (a `done`, `failed` or removed claim stays as it is).
+pub fn resume_heartbeats(
+    fs: &Arc<tramado_base::classfs::ClassFs>,
+    dir: &Path,
+    restored: &HashMap<String, Arc<TranscribeJob>>,
+    every: Duration,
+) {
+    for job in restored.values() {
+        let Some(st) = crate::heartbeat::read_state(dir, &job.lecture_id) else {
+            continue;
+        };
+        let (Some(class_id), Some(path)) = (st.class_id.clone(), st.claim_path.clone()) else {
+            continue;
+        };
+        let file: Option<serde_json::Value> = fs
+            .read(&class_id, &path)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok());
+        let Some(file) = file else {
+            continue;
+        };
+        if file.get("status").and_then(serde_json::Value::as_str) != Some("working") {
+            continue;
+        }
+        let claim = crate::types::ClaimRef {
+            class_id,
+            path,
+            file,
+        };
+        match Heartbeat::start(
+            fs.clone(),
+            dir.to_path_buf(),
+            st,
+            claim,
+            every,
+            Arc::new(|| Beat::Finished),
+        ) {
+            Ok(hb) => job.set_heartbeat(hb),
+            Err(e) => log::warn!("the heartbeat of a finished transcription did not restart: {e}"),
+        }
+    }
+}
+
 /// The samples per second everything here runs at (re-exported for callers' arithmetic).
 pub const RATE: u32 = SAMPLE_RATE;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value};
+    use tramado_base::classfs::ClassFs;
+    use tramado_base::paths::Paths;
+    use tramado_base::registry::{ClassEntry, ClassRegistry};
+
+    const CLASS: &str = "tramado-aaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const ME: &str = "AB4Z76W-GA7E7XY-6YXM3ZP-CLW473T-RYRB5Q6-KTOC53U-HT4S232-ZWB42Q2";
+    const LECTURE: &str = "01JBX4Q7Z5W8M2E3C9R6T0YH2K";
+    const OTHER: &str = "01JBX4Q7Z5W8M2E3C9R6T0YH3M";
+
+    #[test]
+    fn a_restored_result_keeps_its_claim_alive() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Arc::new(Paths::for_tests(dir.path()));
+        let reg = Arc::new(ClassRegistry::load(&paths.config).unwrap());
+        let root = dir.path().join("classes").join("Direito");
+        std::fs::create_dir_all(root.join(".tramado")).unwrap();
+        reg.insert(ClassEntry::new(CLASS, root)).unwrap();
+        let fs = Arc::new(ClassFs::new(paths.clone(), reg));
+        fs.set_device(ME);
+        let tdir = paths.transcribe_dir();
+        std::fs::create_dir_all(&tdir).unwrap();
+        // Two finished, untaken results: one claim still working, one already done.
+        for (lecture, status) in [(LECTURE, "working"), (OTHER, "done")] {
+            let path = format!(".tramado/claims/{lecture}/{ME}.json");
+            let claim = json!({
+                "format": "tramado.claim", "version": 1, "kind": "transcribe", "lectureId": lecture,
+                "round": 1, "deviceId": ME, "status": status, "heartbeat": 7, "progress": 1.0,
+                "updatedAt": "2026-11-03T12:10:38.157Z", "future": true
+            });
+            fs.write(CLASS, &path, &serde_json::to_vec(&claim).unwrap(), true)
+                .unwrap();
+            crate::heartbeat::write_state(
+                &tdir,
+                &LectureState {
+                    lecture_id: lecture.into(),
+                    job_id: format!("job-{lecture}"),
+                    started_at: "2026-11-03T12:00:00.000Z".into(),
+                    class_id: Some(CLASS.into()),
+                    claim_path: Some(path),
+                    last_heartbeat_wall_ms: None,
+                    taken_at_ms: None,
+                },
+            )
+            .unwrap();
+            std::fs::write(result_path(&tdir, lecture), b"{}").unwrap();
+        }
+        let restored = restore(&tdir);
+        assert_eq!(restored.len(), 2);
+        resume_heartbeats(&fs, &tdir, &restored, Duration::from_millis(30));
+        let read = |lecture: &str| -> Value {
+            let p = format!(".tramado/claims/{lecture}/{ME}.json");
+            serde_json::from_slice(&fs.read(CLASS, &p).unwrap()).unwrap()
+        };
+        let mut beat = 0;
+        for _ in 0..200 {
+            beat = read(LECTURE)["heartbeat"].as_u64().unwrap();
+            if beat >= 9 {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(beat >= 9, "the claim was not refreshed");
+        let c = read(LECTURE);
+        assert_eq!((c["status"].clone(), c["progress"].clone(), c["future"].clone()), (json!("working"), json!(1.0), json!(true)));
+        // The done claim is left alone.
+        assert_eq!(read(OTHER)["heartbeat"], 7);
+        // Taking (or cancelling) the job stops the heartbeat.
+        for j in restored.values() {
+            j.stop_heartbeat();
+        }
+        let n = read(LECTURE)["heartbeat"].as_u64().unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        assert_eq!(read(LECTURE)["heartbeat"].as_u64().unwrap(), n);
+    }
+}

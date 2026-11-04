@@ -34,7 +34,7 @@ describe('rpc + engine', () => {
     expect(parsePassageId(ps[0]!.id)).toEqual({ key: 'document:Documentos/Lei.pdf', start: 26, end: text.length });
     expect(await rpc.call('stats', ['c1'])).toEqual({ docs: 1, chars: text.length });
     expect(await rpc.call('find', ['c1', 'leis restritivas', {}])).toEqual([expect.objectContaining({ classId: 'c1', key: 'document:Documentos/Lei.pdf', match: 'leis' }), expect.objectContaining({ match: 'restritivas' })]);
-    await expect(rpc.call('nope', [])).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED' });
+    await expect(rpc.call('nope', [])).rejects.toMatchObject({ code: 'INVALID' });
     ch.close();
   });
 

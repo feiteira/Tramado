@@ -42,6 +42,10 @@ pub struct ClassEntry {
     /// class paths; tramado-sync's managed.rs emits `"(?d)/" + path`
     #[serde(default)]
     pub local_ignores: Vec<String>,
+    /// INT (wave 3): `audio.webm` class paths fetched although `skip_audio` is on ("Get the
+    /// recording", UX §3.5.2); tramado-sync emits `"!/" + path` before the skip-audio line.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub local_includes: Vec<String>,
     #[serde(default)]
     pub added_at: String,
     #[serde(default)]
@@ -63,6 +67,7 @@ impl ClassEntry {
             skip_audio: false,
             aliases: Vec::new(),
             local_ignores: Vec::new(),
+            local_includes: Vec::new(),
             added_at: crate::time::instant(crate::time::now_ms()),
             leaving: None,
             unknown: Map::new(),

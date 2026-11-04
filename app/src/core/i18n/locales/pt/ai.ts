@@ -123,4 +123,10 @@ export const ai: Messages['ai'] = {
     changePrivacy: 'Mudar o nível de privacidade…', tryAgain: 'Tentar de novo', tryAgainIn: 'Tentar de novo daqui a {s} s', useFallback: 'Usar {model}', usePaid: 'Usar um modelo pago', allowHost: 'Permitir {host}',
   },
   hostConfirm: { title: 'Permitir que o Tramado envie pedidos de IA para {host}?', body: 'As suas perguntas e os excertos de que precisam vão para este endereço.', confirm: 'Permitir' },
+  // INT (wave 3)
+  rateLimit: { text: 'Demasiados pedidos à IA em pouco tempo. Aguarde um momento e tente de novo.' },
+  cutoff: {
+    hint: 'A resposta parou antes do fim: o modelo ficou sem espaço.',
+    moreRoom: 'Responder de novo com mais espaço',
+  },
 };

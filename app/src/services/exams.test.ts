@@ -374,6 +374,31 @@ describe('ExamService: UI-EXAMS additions (wave 2)', () => {
     b.s.dispose();
   });
 
+  it('INT: answerLater keeps the rest for the quota reset (also after a restart) and answers it then', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    const qids = b.exams.list.get().papers[0]!.questions.map((q) => q.id);
+    const at = new Date(Date.now() + 3_600_000).toISOString();
+    await b.exams.answerLater(examId, qids.slice(1), 'materials', at);
+    expect(b.exams.later.get()).toEqual([{ examId, qids: qids.slice(1), scope: 'materials', at }]);
+    const saved = JSON.parse(dec.decode((await b.platform.privateFiles.read(b.classId, 'exams-later.json'))!));
+    expect(saved).toMatchObject({ format: 'tramado.exams-later', later: [{ examId, qids: qids.slice(1) }] });
+    // Cancelling forgets it; scheduling again re-arms it.
+    await b.exams.cancelLater(examId);
+    expect(b.exams.later.get()).toEqual([]);
+    expect(await b.platform.privateFiles.read(b.classId, 'exams-later.json')).toBeNull();
+    const soon = new Date(b.s.ctx.clock.now() + 60_000).toISOString();
+    await b.exams.answerLater(examId, qids.slice(1), 'materials', soon);
+    expect(chatRequests(b.ai)).toHaveLength(0);
+    b.clock.advance(61_000);
+    await until(b.exams.later, (v) => v.length === 0);
+    for (let i = 0; i < 400 && chatRequests(b.ai).length < 3; i++) await new Promise((r) => setTimeout(r, 0));
+    // 1 search-words expansion + the 2 questions left.
+    expect(chatRequests(b.ai)).toHaveLength(3);
+    await until(b.exams.running, (v) => v.length === 0);
+    b.s.dispose();
+  });
+
   it('remove(): "Delete for everyone" deletes the folder, my answers and the private marks (importer only)', async () => {
     const b = await bed();
     const examId = await paper(b);

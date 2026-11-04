@@ -1,7 +1,7 @@
 // The chat tab's pure helpers (UX §3.10.2): visible lines, day separators, author groups, mentions, ↑ to edit, find.
 import { describe, expect, it } from 'vitest';
 import type { ChatMessageView } from '../../services/types/viewModels';
-import { chatRows, dayOf, excerpt, findMatches, isFailedAi, lastEditable, mentionsMe, sameGroup, visibleItems } from './model';
+import { chatRows, chatWindow, dayOf, excerpt, findMatches, isFailedAi, lastEditable, MAX_ROWS, mentionsMe, sameGroup, slide, startFor, STEP, visibleItems, WINDOW } from './model';
 import { badgeOf } from './railBadge';
 
 const msg = (id: string, at: string, over: Partial<ChatMessageView> = {}): ChatMessageView => ({
@@ -50,5 +50,26 @@ describe('chat rows', () => {
     expect(badgeOf({ unread: 3, mentions: 0 })).toEqual({ count: 3, tone: 'neutral' });
     expect(badgeOf({ unread: 0, mentions: 0 })).toBeNull();
     expect(badgeOf(null)).toBeNull();
+  });
+});
+
+
+describe('chat window (INT: 5 000 messages)', () => {
+  it('follows the end with the last WINDOW, and slides by STEP with at most MAX_ROWS in the DOM', () => {
+    expect(chatWindow(5000, null)).toEqual({ start: 5000 - WINDOW, end: 5000, tail: true });
+    expect(chatWindow(50, null)).toEqual({ start: 0, end: 50, tail: true });
+    const earlier = slide(5000, 5000 - WINDOW, 'earlier')!;
+    expect(earlier).toBe(5000 - WINDOW - STEP);
+    expect(chatWindow(5000, earlier)).toEqual({ start: earlier, end: Math.min(5000, earlier + MAX_ROWS), tail: earlier + MAX_ROWS >= 5000 });
+    expect(chatWindow(5000, 1000)).toEqual({ start: 1000, end: 1000 + MAX_ROWS, tail: false });
+    expect(slide(5000, 1000, 'later')).toBe(1000 + STEP);
+    expect(slide(5000, 5000 - MAX_ROWS - 10, 'later')).toBeNull();
+    expect(slide(5000, 50, 'earlier')).toBe(0);
+  });
+
+  it('jumps to a message outside the window', () => {
+    expect(startFor(5000, 4990)).toBeNull();
+    expect(startFor(5000, 120)).toBe(70);
+    expect(startFor(5000, 10)).toBe(0);
   });
 });

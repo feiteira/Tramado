@@ -5,6 +5,8 @@ export interface ClassEntry {
   classId: ClassId; path: string; dirName: string;
   shared: boolean; joining: boolean; archived: boolean; skipAudio: boolean;
   aliases: ClassId[]; localIgnores: ClassPath[] /* class paths; Rust emits "(?d)/" + path */; addedAt: Instant;
+  /** INT (wave 3): `audio.webm` paths fetched although `skipAudio` ("Get the recording"); Rust emits "!/" + path first. */
+  localIncludes?: ClassPath[];
   leaving: { since: Instant; afterwards: 'keepLocal' | 'trash' } | null;   // sync spec §17 (hidden from the UI)
   available: boolean;                      // root and .tramado/class.json present (false → the folder-missing card)
 }

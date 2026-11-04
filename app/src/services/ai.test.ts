@@ -50,7 +50,13 @@ describe('AiService (architecture §11.2, UX §3.14.3)', () => {
     expect(b.s.ai.settings.get().quota).toMatchObject({ remaining: 38, limit: 50, used: 12, isFreeTier: true, creditLeft: null });
     expect(b.s.ai.estimate('exam-quick', 6)).toEqual({ requests: 7, remaining: 38 });
     expect(b.s.ai.estimate('summary', 90_000)).toEqual({ requests: 4, remaining: 38 });
-    expect(b.ai.requests.at(-1)).toMatchObject({ method: 'GET', path: 'key', activity: { action: 'keyCheck' } });
+    // INT: then the model's endpoints (a free GET), to tell "works, but the free model is busy now".
+    expect(b.ai.requests.slice(-2).map((r) => [r.method, r.path])).toEqual([['GET', 'key'], ['GET', 'models/google/gemma-4-31b-it:free/endpoints']]);
+    expect(b.ai.requests.filter((r) => r.path === 'chat/completions')).toEqual([]);
+    const busy = await bed('busy');
+    await busy.s.ai.setKey('test-key-1234');
+    expect(await busy.s.ai.testKey()).toEqual({ ok: true, remaining: 38, busy: true });
+    busy.s.dispose();
     const bad = await bed('badkey');
     expect(await bad.s.ai.testKey()).toEqual({ ok: false, code: 'AI_AUTH' });
     b.s.dispose();
@@ -91,7 +97,7 @@ describe('AiService (architecture §11.2, UX §3.14.3)', () => {
     await b.s.ai.setCustomHost(null);
     expect(b.s.ai.settings.get().customHost).toBeNull();
     await b.s.ai.testKey();
-    expect((await b.s.ai.activity(10))[0]).toMatchObject({ path: 'key', action: 'keyCheck', status: 200 });
+    expect((await b.s.ai.activity(10))[1]).toMatchObject({ path: 'key', action: 'keyCheck', status: 200 });
     await b.s.ai.clearActivity();
     expect(await b.s.ai.activity(10)).toEqual([]);
     b.s.dispose();

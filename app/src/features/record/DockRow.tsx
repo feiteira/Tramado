@@ -38,6 +38,13 @@ const TIGHT_BELOW = 1000;
 
 type Warning = { key: string; text: string; check?: boolean };
 
+/** "The recording stopped: {reason}." — the reason Rust gave (`stopped`), when it gave one. */
+function failedReason(r: { reason: 'error' | 'diskFull'; code: string | null } | null, t: ReturnType<typeof useI18n>['t']): string {
+  if (r?.reason === 'diskFull' || r?.code === 'DISK_FULL') return t('record.stopReason.diskFull');
+  if (r?.code === 'SPEECH_NO_DEVICE' || r?.code === 'SPEECH_PERMISSION') return t('record.stopReason.device');
+  return t('record.dock.failedReason');
+}
+
 export default function DockRow({ services }: { services: AppServices }) {
   const i18n = useI18n();
   const { t } = i18n;
@@ -48,6 +55,7 @@ export default function DockRow({ services }: { services: AppServices }) {
   const state = useStore(services.recording.state);
   const saving = useStore(session.saving);
   const failed = useStore(session.failed);
+  const stopReason = useStore(services.recording.stopReason);
   const starting = useStore(session.starting);
   const classes = useStore(services.library.classes);
   const [noteAt, setNoteAt] = useState<number | null>(null);
@@ -108,11 +116,16 @@ export default function DockRow({ services }: { services: AppServices }) {
         return;
       }
       try {
-        await services.recording.mark(kind);
-        const at = services.recording.state.get()?.markers.at(-1)?.atMs ?? s.status.ms;
+        const marker = await services.recording.mark(kind);
+        const at = marker?.atMs ?? services.recording.state.get()?.markers.at(-1)?.atMs ?? s.status.ms;
         setPopped(kind);
         setTimeout(() => setPopped(null), 400);
-        toast.show({ message: t('record.dock.marked', { kind: t(`record.markers.${kind}`), time: shortClock(at) }), tone: 'success' });
+        toast.show({
+          message: t('record.dock.marked', { kind: t(`record.markers.${kind}`), time: shortClock(at) }),
+          tone: 'success',
+          // UX §2.7: the marker toast has Undo (Rust `speech_recorder_unmark`).
+          ...(marker ? { action: { label: t('common.undo'), testId: 'toast-undo', run: () => services.recording.removeMarker(marker.id).catch((e: unknown) => toast.error(e)) } } : {}),
+        });
       } catch (e) {
         toast.error(e);
       }
@@ -126,8 +139,13 @@ export default function DockRow({ services }: { services: AppServices }) {
     setNote('');
     if (at === null || !text) return;
     try {
-      await services.recording.mark('note', text);
-      toast.show({ message: t('record.dock.noteSaved', { time: shortClock(at) }), tone: 'success' });
+      // UX §2.7: the note is stamped at the moment the field opened, not when Enter was pressed.
+      const marker = await services.recording.mark('note', text, at);
+      toast.show({
+        message: t('record.dock.noteSaved', { time: shortClock(at) }),
+        tone: 'success',
+        ...(marker ? { action: { label: t('common.undo'), testId: 'toast-undo', run: () => services.recording.removeMarker(marker.id).catch((e: unknown) => toast.error(e)) } } : {}),
+      });
     } catch (e) {
       toast.error(e);
     }
@@ -171,15 +189,15 @@ export default function DockRow({ services }: { services: AppServices }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [services, mark, startOrStop]);
 
-  // The OS-global marker shortcuts (Ctrl/⌘+Alt+1…4): Rust drops the marker; the app confirms it.
+  // The OS-global marker shortcuts (Ctrl/⌘+Alt+1…4): Rust only reports the press (architecture §6.5,
+  // `shortcut_set_markers`); the marker is dropped here, through `speech_recorder_mark`, with the usual toast.
   useEffect(
     () =>
       services.ctx.platform.events.onShortcut((e) => {
-        if (e.id !== 'marker') return;
-        const s = services.recording.state.get();
-        toast.show({ message: t('record.dock.marked', { kind: t(`record.markers.${e.kind}`), time: shortClock(s?.markers.at(-1)?.atMs ?? s?.status.ms ?? 0) }), tone: 'success' });
+        if (e.id !== 'marker' || e.kind === 'note' || !services.recording.state.get()) return;
+        void mark(e.kind);
       }),
-    [services, t, toast],
+    [services, mark],
   );
 
   // Palette commands (UX §2.9 `record-toggle` and friends).
@@ -260,7 +278,7 @@ export default function DockRow({ services }: { services: AppServices }) {
     return (
       <div className="dock-row dock-row--rec dock-row--failed" role="region" aria-label={t('record.dock.region')} data-testid="record-dock" data-state="failed">
         {live}
-        <span className="dock-row__text" role="alert">{t('record.dock.failed', { reason: t('record.dock.failedReason') })}</span>
+        <span className="dock-row__text" role="alert" data-testid="record-failed-reason" data-reason={stopReason?.reason ?? 'unknown'}>{t('record.dock.failed', { reason: failedReason(stopReason && (!failed.recordingId || stopReason.recordingId === failed.recordingId) ? stopReason : null, t) })}</span>
         <span className="dock-row__title">{cls?.shortName ?? ''} · {failed.title}</span>
         <span className="dock-row__spacer" />
         <Button

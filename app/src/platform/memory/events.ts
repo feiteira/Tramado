@@ -27,8 +27,9 @@ export function createEvents() {
   const shortcut = new Emitter<{ id: 'marker'; kind: MarkerKind }>();
   const tray = new Emitter<TrayAction>();
   const drop = new Emitter<{ picked: Picked[]; x: number; y: number }>();
+  const drag = new Emitter<{ state: 'enter' | 'leave'; names: string[] }>();
   return {
-    emitters: { classChanged, sync, deepLink, shortcut, tray, drop },
+    emitters: { classChanged, sync, deepLink, shortcut, tray, drop, drag },
     api: {
       onClassChanged: (cb: (e: ClassChangedEvent) => void) => classChanged.on(cb),
       onSync: (cb: (e: SyncEvent) => void) => sync.on(cb),
@@ -36,6 +37,7 @@ export function createEvents() {
       onShortcut: (cb: (e: { id: 'marker'; kind: MarkerKind }) => void) => shortcut.on(cb),
       onTray: (cb: (action: TrayAction) => void) => tray.on(cb),
       onDrop: (cb: (e: { picked: Picked[]; x: number; y: number }) => void) => drop.on(cb),
+      onDrag: (cb: (e: { state: 'enter' | 'leave'; names: string[] }) => void) => drag.on(cb),
     },
   };
 }

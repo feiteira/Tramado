@@ -146,6 +146,9 @@ pub struct MarkRequest {
     pub kind: MarkerKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
+    /// INT (wave 3): the raw audio time to stamp (default: now).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub at_ms: Option<u64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

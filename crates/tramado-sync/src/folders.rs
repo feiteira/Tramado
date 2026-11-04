@@ -18,7 +18,7 @@ use tramado_base::registry::{ClassEntry, Leaving};
 use crate::client::folder_devices;
 use crate::ctx::Ctx;
 use crate::invite::Invite;
-use crate::managed::{folder_create_body, ignore_lines};
+use crate::managed::{folder_create_body, ignore_lines, ignore_lines_for};
 use crate::reconcile::member_path;
 use crate::types::{LeaveAfterwards, LeaveOptions, SyncEvent};
 
@@ -94,7 +94,7 @@ pub fn share_class(ctx: &Ctx, class_id: &str, label: &str, unpause: bool) -> App
             label,
             &entry.path,
             &[ctx.me.to_string()],
-            &ignore_lines(entry.skip_audio, &entry.local_ignores, &existing),
+            &ignore_lines_for(&entry, &existing),
             unpause,
         )?;
     }

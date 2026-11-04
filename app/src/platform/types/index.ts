@@ -45,6 +45,8 @@ export interface Platform {
   storage: {
     usage(): Promise<StorageUsage>;
     reveal(which: 'classesRoot' | 'private' | 'models' | 'cache', classId?: ClassId): Promise<void>;
+    /** INT (wave 3, `storage_free`): bytes free where Tramado writes (app data and classes root, the smaller); null = unknown. */
+    diskFree(): Promise<number | null>;
   };
 
   classes: {                                                                         // registry (config/classes.json)
@@ -54,7 +56,7 @@ export interface Platform {
     create(req: { classId: ClassId; dirName: string; parent?: PickToken }): Promise<CreatedClass>;
     adopt(pick: PickToken): Promise<AdoptedClass>;
     fork(classId: ClassId, newClassId: ClassId): Promise<ClassEntry>;
-    update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[] }): Promise<ClassEntry>;
+    update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[]; /** INT: "Get the recording" */ localIncludes?: ClassPath[] }): Promise<ClassEntry>;
     forget(classId: ClassId): Promise<void>;
     trash(classId: ClassId): Promise<void>;
     emptyTrash(classId: ClassId): Promise<void>;
@@ -151,7 +153,10 @@ export interface Platform {
       attach(onEvent: (e: RecorderEvent) => void): Promise<RecorderStatus | null>;
       pause(): Promise<RecorderStatus>;
       resume(): Promise<RecorderStatus>;
-      mark(kind: MarkerKind, note?: string): Promise<Marker>;
+      /** `atMs` (INT, wave 3): the raw audio time to stamp (a note is stamped when its field opened); default now. */
+      mark(kind: MarkerKind, note?: string, atMs?: number): Promise<Marker>;
+      /** INT (wave 3, `speech_recorder_unmark`): removes a marker of the running recording (the toast's Undo). */
+      unmark(markerId: Ulid): Promise<void>;
       stop(): Promise<FinishedRecording>;
       pending(): Promise<FinishedRecording[]>;
       publish(req: PublishRequest): Promise<PublishedAudio>;
@@ -197,5 +202,7 @@ export interface Platform {
     onShortcut(cb: (e: { id: 'marker'; kind: MarkerKind }) => void): Unsubscribe;
     onTray(cb: (action: TrayAction) => void): Unsubscribe;
     onDrop(cb: (e: { picked: Picked[]; x: number; y: number }) => void): Unsubscribe;   // drag and drop (tokens, D-4)
+    /** INT (wave 3, `app:drag`): files dragged over the window (names only) or gone; the drop overlay follows it. */
+    onDrag(cb: (e: { state: 'enter' | 'leave'; names: string[] }) => void): Unsubscribe;
   };
 }

@@ -40,7 +40,12 @@ export function decide(
   switch (code) {
     case 'AI_FREE_LIMIT': {
       // Per-minute: wait until the reset when it is near; per-day (or unknown): stop and show the message.
-      if (st.waitedLimit || data.resetAt === undefined) return { kind: 'fail' };
+      if (st.waitedLimit) return { kind: 'fail' };
+      // INT: a 429 that says when to come back (Retry-After) is a rate limit: wait it out once when it is short.
+      if (data.resetAt === undefined) {
+        const after = data.retryAfterMs;
+        return after !== undefined && after < FREE_LIMIT_WAIT_MAX_MS ? { kind: 'retry', delayMs: after + 250 } : { kind: 'fail' };
+      }
       const wait = data.resetAt - ctx.nowMs;
       if (data.remaining === 0 && wait >= 0 && wait < FREE_LIMIT_WAIT_MAX_MS) return { kind: 'retry', delayMs: wait + 250 };
       return { kind: 'fail' };

@@ -9,14 +9,17 @@ import type { LectureFile, MarkersFile } from '../core/model/files';
 import type { ClassId, ClassPath, DeviceId, Lang, Nonce, Ulid } from '../core/model/ids';
 import { fitClassPath, lectureDirName, unique } from '../core/model/sanitize';
 import { instant, parseRfc3339 } from '../core/model/time';
-import { utcOffsetMinAt } from '../core/transcript/render';
-import type { FinishedRecording, ImportEvent, Marker, PublishedAudio, RecorderEvent, ShareMode } from '../platform/types';
+import { renderMarkdown, renderVtt, utcOffsetMinAt } from '../core/transcript/render';
+import { transcriptFromCues } from '../core/transcript/fromCues';
+import { parseVtt } from '../core/import/vtt';
+import type { TranscriptFile } from '../core/model/files';
+import type { FinishedRecording, ImportEvent, Marker, Picked, PublishedAudio, RecorderEvent, ShareMode } from '../platform/types';
 import type { AppContext } from './context';
 import { privateMarkersPath, readPrivateJson, updateLecturePrivate, writePrivateJson, type LectureServiceImpl } from './lectures';
 import { Store } from './store';
 import type { ConsentInput } from './types/class';
 import type { AppServices } from './types/common';
-import type { ImportProgress, RecordingService, RecordingState } from './types/recording';
+import type { ImportProgress, RecordingService, RecordingState, StopReason } from './types/recording';
 
 type Transcribe = 'here' | 'cloud' | 'classmate' | 'later';
 
@@ -28,6 +31,8 @@ export interface RecordingDraftFile {
   consent: Array<{ deviceId: DeviceId; id: Ulid }>;
   share: ShareMode | null; transcribe: Transcribe | null;
   import?: { fileName: string; mime: string; hadVideo: boolean; lectureDir: ClassPath };
+  /** INT: the subtitles picked with an import (UX §3.6.6), written as the transcript once the audio is in. */
+  subtitles?: { fileName: string; text: string };
 }
 export const draftPath = (id: Ulid) => `drafts/${id}.json`;
 
@@ -60,6 +65,7 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
   const pending = new Store<FinishedRecording[]>([]);
   const meter = new Store<{ mic: RecordingState['status']['tracks']['mic']; system: RecordingState['status']['tracks']['system'] } | null>(null);
   const imports = new Store<ImportProgress[]>([]);
+  const stopReason = new Store<StopReason | null>(null);
   const followUps = new Set<Promise<unknown>>();
   const track = (p: Promise<unknown>) => {
     const q = p.catch((e: unknown) => ctx.log('warn', 'recording: follow-up failed', { error: toPlatformError(e).message })).finally(() => followUps.delete(q));
@@ -114,6 +120,7 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
         if (cur) {
           state.set(null);
           void setPresence(cur.classId, null);
+          if (e.reason !== 'user') stopReason.set({ recordingId: cur.status.recordingId, classId: cur.classId, title: cur.title, reason: e.reason, code: e.code ?? null });
         }
         track(refreshPending());
         break;
@@ -142,6 +149,8 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
   async function writeLecture(input: {
     draft: RecordingDraftFile; rec: Pick<FinishedRecording, 'startedAt' | 'language' | 'speakers' | 'pauses' | 'markers'> & { mode: LectureFile['mode'] };
     title: string; audio: PublishedAudio; share: 'audio+transcript' | 'transcript-only'; lectureDir: ClassPath;
+    /** INT: the transcript to publish with the lecture (imported subtitles), written right after lecture.json. */
+    transcript?: (lecture: LectureFile) => TranscriptFile | null;
   }): Promise<Ulid> {
     const who = me();
     const { draft, rec, audio } = input;
@@ -170,6 +179,13 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
     };
     const store = classOf(draft.classId).store;
     await store.writeJson(`${input.lectureDir}/lecture.json`, lecture, { own: true, manifest: true });
+    const transcript = input.transcript?.(lecture) ?? null;
+    if (transcript) {
+      // folder spec §8.8: transcript.json first, then .md and .vtt (no claim: round 1 is the importer's).
+      await store.writeJson(`${input.lectureDir}/transcript.json`, transcript, { own: true });
+      await store.writeText(`${input.lectureDir}/transcript.md`, renderMarkdown(transcript, lecture), { own: true });
+      await store.writeText(`${input.lectureDir}/transcript.vtt`, renderVtt(transcript), { own: true });
+    }
     if (rec.markers.length) {
       const markers: MarkersFile = {
         format: 'tramado.markers', version: 1, lectureId: id, deviceId: who.deviceId, memberId: who.memberId, hlc: ctx.hlc.tick(),
@@ -230,9 +246,11 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
         reject(new PlatformError(e.code, e.message));
       } else {
         setProgress(null);
+        const subs = draft.subtitles;
         writeLecture({
           draft, title, audio: e.audio, share: 'audio+transcript', lectureDir: draft.import!.lectureDir,
           rec: { startedAt: instant(draft.startedAtMs), language: draft.language, speakers: [], pauses: [], markers: [], mode: 'import' },
+          ...(subs ? { transcript: (lecture: LectureFile) => subtitlesTranscript(lecture, subs) } : {}),
         }).then(resolve, reject);
       }
     };
@@ -240,11 +258,40 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
     return { onEvent, done };
   }
 
+  /** Imported subtitles → transcript.json (null, logged, when they hold no cue). */
+  function subtitlesTranscript(lecture: LectureFile, subs: { fileName: string; text: string }): TranscriptFile | null {
+    const identity = ctx.identity.get();
+    const device = ctx.device.get();
+    if (!identity || !device) return null;
+    const t = transcriptFromCues(parseVtt(subs.text).cues, {
+      lecture, writer: { deviceId: device.deviceId, memberId: identity.memberId, name: identity.name }, at: instant(clock.now()), rand: ctx.rand,
+    });
+    if (!t) ctx.log('warn', 'recording: the subtitles held no cue', { file: subs.fileName });
+    return t;
+  }
+
+  /** The text of a picked .vtt (≤ 4 MiB), copied through the class's ignored tmp folder (picks are tokens, D-4). */
+  async function readSubtitles(classId: ClassId, recordingId: Ulid, pick: Picked): Promise<{ fileName: string; text: string } | null> {
+    if (pick.size !== null && pick.size > 4 * 1024 * 1024) return null;
+    const tmp = `.tramado/tmp/${recordingId}.vtt`;
+    try {
+      await platform.fs.importFile(classId, pick.token, tmp);
+      const bytes = await platform.fs.read(classId, tmp);
+      return { fileName: pick.name, text: new TextDecoder().decode(bytes) };
+    } catch (e) {
+      ctx.log('warn', 'recording: the subtitles could not be read', { error: toPlatformError(e).message });
+      return null;
+    } finally {
+      await platform.fs.remove(classId, tmp).catch(() => undefined);
+    }
+  }
+
   const service: RecordingServiceImpl = {
     state,
     pending,
     meter,
     imports,
+    stopReason,
     async startMeter(req) {
       const s = speech();
       await s.meter.start(req, (e) => meter.set({ mic: e.mic, system: e.system }));
@@ -256,6 +303,7 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
     async start(input) {
       const s = speech();
       if (state.get()) throw new PlatformError('JOB_BUSY', 'already recording');
+      stopReason.set(null);
       const who = me();
       const cls = classOf(input.classId);
       const startMs = clock.now();
@@ -300,14 +348,27 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
       const cur = state.get();
       if (cur) state.set({ ...cur, status });
     },
-    async mark(kind, note) {
-      const marker: Marker = await speech().recorder.mark(kind, note);
+    async mark(kind, note, atMs) {
+      const marker: Marker = await speech().recorder.mark(kind, note, atMs);
       const cur = state.get();
       if (cur && !cur.markers.some((m) => m.id === marker.id)) state.set({ ...cur, markers: [...cur.markers, marker] });
+      return marker;
+    },
+    async removeMarker(markerId) {
+      const cur = state.get();
+      if (cur) {
+        await speech().recorder.unmark(markerId);
+        const now = state.get();
+        if (now) state.set({ ...now, markers: now.markers.filter((m) => m.id !== markerId) });
+        return;
+      }
+      // Stopped meanwhile: the marker is in the recording waiting to be saved (the Save dialog reads the pending list).
+      pending.update((xs) => xs.map((r) => (r.markers.some((m) => m.id === markerId) ? { ...r, markers: r.markers.filter((m) => m.id !== markerId) } : r)));
     },
     async stop() {
       const cur = state.get();
       const rec = await speech().recorder.stop();
+      stopReason.set(null);
       state.set(null);
       if (cur) await setPresence(cur.classId, null);
       pending.update((xs) => [...xs.filter((x) => x.recordingId !== rec.recordingId), rec]);
@@ -331,6 +392,11 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
         share: 'audio+transcript', transcribe: o.transcribe ?? 'later',
         import: { fileName: pick.name, mime: mimeOf(pick.name), hadVideo: VIDEO.test(pick.name) && opts.keepVideo, lectureDir },
       };
+      if (o.subtitles) {
+        const subs = await readSubtitles(classId, recordingId, o.subtitles);
+        // The subtitles are the transcript: nobody transcribes the recording again.
+        if (subs) Object.assign(draft, { subtitles: subs, transcribe: 'later' });
+      }
       await writeDraft(draft);
       const follow = followImport(draft, title);
       try {

@@ -12,6 +12,8 @@
 //! logged as `media selftest {…}`), and with `TRAMADO_E2E_EVAL=<file>` it runs that script
 //! (≤ 256 KiB; `tools/desktop-smoke.mjs --ipc-check` uses it to call the commands for real).
 
+use std::path::{Path, PathBuf};
+
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, DragDropEvent, Emitter, Manager, Window, WindowEvent};
 use tramado_base::error::AppResult;
@@ -28,6 +30,25 @@ pub struct DropEvent {
     pub x: f64,
     pub y: f64,
 }
+
+/// Payload of `app:drag` (INT, wave 3): files are dragged over the window (`enter`, with their
+/// names only, D-4) or left it (`leave`); the webview shows its drop overlay meanwhile.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DragEvent {
+    pub state: DragState,
+    pub names: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DragState {
+    Enter,
+    Leave,
+}
+
+/// `{ state: 'enter' | 'leave', names }`
+pub const DRAG: &str = "app:drag";
 
 pub const MAIN: &str = "main";
 
@@ -50,37 +71,79 @@ pub fn show_main(app: &AppHandle) {
 }
 
 pub fn on_window_event(window: &Window, event: &WindowEvent) {
-    if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, position }) = event {
-        let app = window.app_handle();
-        let Some(shared) = app.try_state::<Shared>() else {
-            return;
-        };
-        let picked: Vec<Picked> = paths
-            .iter()
-            .filter(|p| p.is_absolute())
-            .map(|p| {
-                let kind = if p.is_dir() {
-                    PickKind::Folder
-                } else {
-                    PickKind::Open
-                };
-                shared.picks.register(p, kind)
-            })
-            .collect();
-        if picked.is_empty() {
-            return;
+    let WindowEvent::DragDrop(drag) = event else {
+        return;
+    };
+    let app = window.app_handle();
+    match drag {
+        DragDropEvent::Enter { paths, .. } => {
+            let ev = DragEvent {
+                state: DragState::Enter,
+                names: paths.iter().filter_map(|p| file_name(p)).collect(),
+            };
+            if let Err(e) = app.emit(DRAG, &ev) {
+                log::warn!("cannot emit app:drag: {e}");
+            }
         }
-        let scale = window.scale_factor().unwrap_or(1.0);
-        let logical = position.to_logical::<f64>(scale);
-        let ev = DropEvent {
-            picked,
-            x: logical.x,
-            y: logical.y,
-        };
-        if let Err(e) = app.emit(events::DROP, &ev) {
-            log::warn!("cannot emit app:drop: {e}");
+        DragDropEvent::Leave => {
+            let ev = DragEvent {
+                state: DragState::Leave,
+                names: Vec::new(),
+            };
+            if let Err(e) = app.emit(DRAG, &ev) {
+                log::warn!("cannot emit app:drag: {e}");
+            }
         }
+        DragDropEvent::Drop { paths, position } => {
+            let Some(shared) = app.try_state::<Shared>() else {
+                return;
+            };
+            // An invite file dropped on the window opens the Join dialog (as when it is opened
+            // from the file manager); every other file becomes a pick token.
+            let (invites, files) = split_invites(paths);
+            for p in invites {
+                crate::deeplink::open_invite_file(app, p);
+            }
+            let picked: Vec<Picked> = files
+                .into_iter()
+                .map(|p| {
+                    let kind = if p.is_dir() {
+                        PickKind::Folder
+                    } else {
+                        PickKind::Open
+                    };
+                    shared.picks.register(p, kind)
+                })
+                .collect();
+            if picked.is_empty() {
+                return;
+            }
+            let scale = window.scale_factor().unwrap_or(1.0);
+            let logical = position.to_logical::<f64>(scale);
+            let ev = DropEvent {
+                picked,
+                x: logical.x,
+                y: logical.y,
+            };
+            if let Err(e) = app.emit(events::DROP, &ev) {
+                log::warn!("cannot emit app:drop: {e}");
+            }
+        }
+        _ => {}
     }
+}
+
+fn file_name(p: &Path) -> Option<String> {
+    p.file_name().map(|n| n.to_string_lossy().into_owned())
+}
+
+/// Dropped absolute paths, split into `.tramado-invite` files and everything else.
+pub fn split_invites(paths: &[PathBuf]) -> (Vec<&Path>, Vec<&Path>) {
+    paths
+        .iter()
+        .map(PathBuf::as_path)
+        .filter(|p| p.is_absolute())
+        .partition(|p| crate::deeplink::is_invite_path(p) && p.is_file())
 }
 
 /// Called when the webview logged "webview ready".
@@ -174,6 +237,32 @@ pub fn media_selftest_script(media_base: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn invite_files_are_split_from_other_drops() {
+        let dir = crate::commands::app::tests::TempDir::new();
+        let invite = dir.path().join("Direito.tramado-invite");
+        let pdf = dir.path().join("Lei.pdf");
+        std::fs::write(&invite, "tramado://join/x").unwrap();
+        std::fs::write(&pdf, "%PDF").unwrap();
+        let named_like_one = dir.path().join("folder.tramado-invite");
+        std::fs::create_dir_all(&named_like_one).unwrap();
+        let paths = vec![
+            invite.clone(),
+            pdf.clone(),
+            named_like_one.clone(),
+            PathBuf::from("relative.tramado-invite"),
+        ];
+        let (invites, files) = split_invites(&paths);
+        assert_eq!(invites, vec![invite.as_path()]);
+        assert_eq!(files, vec![pdf.as_path(), named_like_one.as_path()]);
+        let ev = serde_json::to_value(DragEvent {
+            state: DragState::Enter,
+            names: vec!["Lei.pdf".into()],
+        })
+        .unwrap();
+        assert_eq!(ev, serde_json::json!({"state": "enter", "names": ["Lei.pdf"]}));
+    }
 
     #[test]
     fn selftest_script_names_the_scheme() {

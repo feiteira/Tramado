@@ -42,6 +42,10 @@ export interface MemoryPlatform extends Platform {
     putRecording(recordingId: string, bytes: Uint8Array | null): void;
     /** G1: a stored secret's value (the demo's `?ai=real` reads the session-only key; the real platform never returns it). */
     peekSecret(name: Parameters<Platform['secrets']['status']>[0]): string | null;
+    /** INT: what `storage.diskFree()` answers (bytes; null = unknown). */
+    setDiskFree(bytes: number | null): void;
+    /** INT: files dragged over the window (`app:drag`), as the desktop shell reports them. */
+    emitDrag(e: { state: 'enter' | 'leave'; names: string[] }): void;
   };
 }
 
@@ -61,6 +65,8 @@ export interface MemoryPlatformOptions {
   syncMode?: 'fake' | 'offline' | 'error' | 'local';
   selftestUrl?: string;
   pendingLinks?: string[];
+  /** INT: bytes free on the disk (`storage.diskFree()`); default 41 GB. */
+  diskFree?: number | null;
   log?: (level: 'error' | 'warn' | 'info', message: string, data?: object) => void;
 }
 
@@ -74,6 +80,7 @@ export function createMemoryPlatform(opts: MemoryPlatformOptions = {}): MemoryPl
   const events = createEvents();
   const dialogs = createDialogs(rand);
   const recordings = new Map<string, Uint8Array>();
+  let diskFree: number | null = opts.diskFree === undefined ? 41_000_000_000 : opts.diskFree;
   const logs: Array<{ level: string; message: string; data?: object }> = [];
   // eslint-disable-next-line prefer-const
   let files: ReturnType<typeof createFileStore>;
@@ -125,6 +132,9 @@ export function createMemoryPlatform(opts: MemoryPlatformOptions = {}): MemoryPl
         return { ...base, classes };
       },
       reveal: app.api.storage.reveal,
+      async diskFree() {
+        return diskFree;
+      },
     },
     classes: registry.api,
     fs: {
@@ -176,6 +186,10 @@ export function createMemoryPlatform(opts: MemoryPlatformOptions = {}): MemoryPl
       },
       emitSync: (e) => events.emitters.sync.emit(e),
       emitClassChanged: (e) => events.emitters.classChanged.emit(e),
+      setDiskFree: (bytes) => {
+        diskFree = bytes;
+      },
+      emitDrag: (e) => events.emitters.drag.emit(e),
       addFile: (classId, path, bytes) => files.addFile(classId, path, bytes),
       queueDialog: (a) => dialogs.queue(a),
       setClock(c) {

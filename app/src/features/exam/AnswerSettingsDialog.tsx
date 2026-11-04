@@ -53,7 +53,15 @@ export default function AnswerSettingsDialog({ props, services, close }: { props
     try {
       await services.ctx.prefs.set('exam.tryFirst', tryFirst ? '1' : '0');
       const ids = qids.slice(0, count);
-      if (ids.length) exams.answer(props.examId, ids, 'quick', from === 'general' ? 'materials+general' : 'materials');
+      const scope = from === 'general' ? 'materials+general' : 'materials';
+      if (ids.length) exams.answer(props.examId, ids, 'quick', scope);
+      // UX §3.9.7: "…and the rest after {time}" — the rest waits for the quota's reset (a minute after it).
+      const rest = qids.slice(count);
+      if (rest.length && settings.quota) {
+        const reset = Date.parse(settings.quota.resetsAt);
+        const at = new Date((Number.isFinite(reset) ? reset : services.ctx.clock.now() + 86_400_000) + 60_000).toISOString();
+        await exams.answerLater(props.examId, rest, scope, at);
+      }
       close();
       if (!(route.name === 'exam' && route.examId === props.examId && (route.mode ?? 'answers') === 'answers')) {
         replace({ name: 'exam', classId: props.classId, examId: props.examId, mode: 'answers' });

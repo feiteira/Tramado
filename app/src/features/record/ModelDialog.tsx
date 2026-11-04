@@ -2,7 +2,7 @@
 // once from Hugging Face. Recommended / Draft / Most accurate, with sizes and an estimate for this lecture;
 // [Download and transcribe] (the download, then the transcription, in the dock), [Let a classmate do it]
 // (shared classes), [Use OpenRouter instead]. A processor without AVX2 and a full disk have their own texts.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toPlatformError } from '../../core/errors';
 import type { ModelId, ModelState } from '../../platform/types';
 import type { AppServices } from '../../services/types/common';
@@ -40,13 +40,27 @@ export default function ModelDialog({ props, services, close }: { props: DialogP
   const [choice, setChoice] = useState<ModelId>('turbo');
   const [busy, setBusy] = useState(false);
   const [diskFull, setDiskFull] = useState(false);
+  // INT (`storage.diskFree`): "Free space: {size}" under the choice, and the disk notice before a download that cannot fit.
+  const [free, setFree] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    void services.ctx.platform.storage.diskFree().then((b) => live && setFree(b), () => undefined);
+    return () => {
+      live = false;
+    };
+  }, [services]);
   const cpuOk = info ? info.cpuOk && info.localWhisper : true;
   const shared = !!view?.shared;
   const list = (models.length ? models : MODEL_CATALOG) as ReadonlyArray<Pick<ModelState, 'id' | 'size' | 'speedRT'>>;
   const byId = (id: ModelId) => list.find((m) => m.id === id) ?? MODEL_CATALOG.find((m) => m.id === id)!;
   const estimate = (id: ModelId) => (lecture ? t('speech.prompt.estimate', { time: duration(lecture.durationMs / (byId(id).speedRT ?? DEFAULT_SPEED[id]), i18n) }) : '');
 
+  const fits = (id: ModelId) => free === null || free >= byId(id).size * 1.05;
   const download = async (id: ModelId) => {
+    if (!fits(id)) {
+      setDiskFull(true);
+      return;
+    }
     setBusy(true);
     setDiskFull(false);
     try {
@@ -138,18 +152,21 @@ export default function ModelDialog({ props, services, close }: { props: DialogP
         ) : (
           <Notice tone="warning" data-testid="model-prompt-cpu">{t('speech.prompt.cpu')}</Notice>
         )}
+        {cpuOk && free !== null ? <p className="model-free t-muted" data-testid="model-prompt-free">{t('speech.prompt.free', { size: size(free, i18n) })}</p> : null}
         {diskFull ? (
           <Notice
             tone="danger"
             data-testid="model-prompt-disk"
             actions={
               <>
-                <Button size="sm" onClick={() => void download('small')}>{t('speech.prompt.useDraft', { size: size(byId('small').size, i18n) })}</Button>
+                {choice !== 'small' && fits('small') ? <Button size="sm" onClick={() => { setChoice('small'); void download('small'); }}>{t('speech.prompt.useDraft', { size: size(byId('small').size, i18n) })}</Button> : null}
                 <Button size="sm" variant="ghost" onClick={() => { close(); go({ name: 'settings', section: 'storage' }); }}>{t('speech.prompt.openStorage')}</Button>
               </>
             }
           >
-            {t('speech.prompt.noDiskUnknown', { size: size(byId(choice).size, i18n) })}
+            {free !== null
+              ? t('speech.prompt.noDisk', { size: size(byId(choice).size, i18n), free: size(free, i18n) })
+              : t('speech.prompt.noDiskUnknown', { size: size(byId(choice).size, i18n) })}
           </Notice>
         ) : null}
       </div>

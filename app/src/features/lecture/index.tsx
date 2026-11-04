@@ -4,7 +4,7 @@
 // transcription card takes its place. Keys (focus not in text, no modal): Space, ←/→ (Shift: 30 s), [ and ],
 // F follow, N note, 1–4 markers, E edit, Ctrl/⌘+F find.
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, CircleCheck, PanelRight, Pencil, Search, Sparkles, TriangleAlert, X, ChevronDown, ChevronUp, Ellipsis, MessageSquare, Highlighter, Copy, Lock } from 'lucide-react';
+import { ArrowDownToLine, Download, CircleCheck, PanelRight, Pencil, Search, Sparkles, TriangleAlert, X, ChevronDown, ChevronUp, Ellipsis, MessageSquare, Highlighter, Copy, Lock } from 'lucide-react';
 import { DateTime } from 'luxon';
 import type { MarkerKind, Segment } from '../../core/model/files';
 import type { ClassId, ClassPath, SegmentId, Ulid } from '../../core/model/ids';
@@ -796,7 +796,18 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
       />
       <div className="lecture-player">
         {noAudio ? (
-          <Notice tone="neutral" data-testid="player-no-audio" className="lecture-player__noaudio">
+          <Notice
+            tone="neutral"
+            data-testid="player-no-audio"
+            className="lecture-player__noaudio"
+            actions={
+              detail.view.audio?.skipped ? (
+                <Button size="sm" icon={Download} onClick={() => void cls.lectures.fetchAudio(lectureId).catch((e: unknown) => toast.error(e))} data-testid="player-get-audio">
+                  {t('lectures.player.noAudio.getIt')}
+                </Button>
+              ) : undefined
+            }
+          >
             {noAudio}
           </Notice>
         ) : (

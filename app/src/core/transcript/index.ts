@@ -1,5 +1,6 @@
 // The transcript format in TS (architecture §11.1 core/transcript): build, replay, fold, render, anchor.
 export { fromResult, transcriptLanguage, type FromResultContext } from './fromResult';
+export { transcriptFromCues, type FromCuesContext } from './fromCues';
 export { effective, findSegment, pendingOps, replay, type EditLog, type EffectiveTranscript, type ReplayInfo, type ReplayOptions } from './effective';
 export { fold, type FoldContext } from './fold';
 export {

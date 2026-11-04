@@ -1275,6 +1275,7 @@ TS types named below are defined in `app/src/platform/types/*.ts` (§9); Rust tw
 | `person_init` | — | `PersonInfo { memberId, pub }` | — | `net::person::init` (creates the person key on first call; onboarding) |
 | `person_prove` | `classId` | `PersonProof { pub, sig }` | `SYNC_UNAVAILABLE` (no device identity yet) | `net::person::prove(classId, own device ID)` (folder spec §8.3.1) |
 | `storage_usage` | — | `StorageUsage` | — | `base::appfiles::storage_usage` (walks class roots incl. `.stversions`, models, cache) |
+| `storage_free` | — | `number \| null` (bytes) | — | INT (wave 3): the smaller free space of the app data volume and the classes root's (`tramado_speech::available_space`); null when the OS cannot tell. Record pre-flight, model prompt, Settings › Storage |
 | `cache_clear` | — | `void` | — | deletes `app_cache_dir/**` except `models-catalog.json` |
 | `app_reveal` | `which: 'classesRoot' \| 'private' \| 'models' \| 'cache', classId?: ClassId` | `void` | `NOT_FOUND` | opener `reveal_item_in_dir` from Rust (private = `data/private/<classId>` or `data/private`) |
 | `private_read` | `classId, path: string` | `ArrayBuffer \| null` | `NOT_FOUND` (class) | `base::appfiles::private_path` |
@@ -1300,7 +1301,7 @@ path rules and MUST NOT start with `mirror/` (Rust-only).
 | `class_create` | `req: { classId, dirName: string, parent?: PickToken }` | `CreatedClass { entry: ClassEntry, warnings: ('cloudFolder')[] }` | `CONFLICT` (dir exists / id registered), `PERMISSION_DENIED` | mkdir `<root>/<dirName>` + `.tramado/`; register (`shared:false`) and watch. TS then writes `class.json` + meta. |
 | `class_adopt` | `pick: PickToken` (folder) | `AdoptedClass { entry: ClassEntry, foreignMembers: boolean }` | `NOT_FOUND` (no `.tramado/class.json`), `CONFLICT` | reads `classId` from `class.json`; registers; watches; `foreignMembers` = `.tramado/members/` holds files of other devices → TS forks it (sync spec §17) |
 | `class_fork` | `classId, newClassId` | `ClassEntry` | `CONFLICT` (shared, or `class.json` does not carry `newClassId`) | after TS wrote the forked `class.json` (folder spec §8.1): registry `rename_id`, `data/private/<old>` → `<new>`, re-watch, purge the old mirror |
-| `class_update` | `classId, patch: { archived?: boolean, skipAudio?: boolean, localIgnores?: string[] }` | `ClassEntry` | `NOT_FOUND` | registry; registry observers fire (tramado-sync re-applies the folder's ignores when `skipAudio`/`localIgnores` changed) |
+| `class_update` | `classId, patch: { archived?: boolean, skipAudio?: boolean, localIgnores?: string[], localIncludes?: string[] }` | `ClassEntry` | `NOT_FOUND` | registry; registry observers fire (tramado-sync re-applies the folder's ignores when `skipAudio`/`localIgnores`/`localIncludes` changed). INT: `localIncludes` = `audio.webm` paths fetched although audio is skipped ("Get the recording"), emitted as `!/` + path before the skip-audio line |
 | `class_forget` | `classId` | `void` | `CONFLICT` (still shared: leave first) | unregister + unwatch; files stay |
 | `class_trash` | `classId` | `void` | `CONFLICT` (still shared) | OS trash (`trash` crate), then forget |
 | `class_trash_empty` | `classId` | `void` | `NOT_FOUND` | deletes `<root>/.stversions/**` (the class's 30-day trashcan on this computer) |
@@ -1427,7 +1428,8 @@ decoded code, by admission, or by Rust's own pairing run).
 | `speech_recorder_attach` | `onEvent` | `RecorderStatus \| null` | | `RecorderEvent` |
 | `speech_recorder_pause` | — | `RecorderStatus` | `NOT_FOUND` | |
 | `speech_recorder_resume` | — | `RecorderStatus` | `NOT_FOUND` | |
-| `speech_recorder_mark` | `m: { kind: MarkerKind, note?: string }` | `Marker` | `NOT_FOUND` | |
+| `speech_recorder_mark` | `m: { kind: MarkerKind, note?: string, atMs?: number }` | `Marker` | `NOT_FOUND` | INT: `atMs` = raw audio time to stamp (≤ now) |
+| `speech_recorder_unmark` | `markerId: Ulid` | `void` | `NOT_FOUND` | INT (wave 3): removes a marker of the running recording (the toast's Undo) |
 | `speech_recorder_stop` | — | `FinishedRecording` | `NOT_FOUND` | |
 | `speech_recordings_pending` | — | `FinishedRecording[]` | | |
 | `speech_recording_publish` | `req: PublishRequest` | `PublishedAudio` | `CONFLICT`, `DISK_FULL` | |
@@ -1454,7 +1456,8 @@ decoded code, by admission, or by Rust's own pairing run).
 | `app:deep-link` | `{ url: string; text?: string }` (`tramado://join/…`; `tramado://pair/…` in v1.1; `url: 'file:'` + `text` for an opened `.tramado-invite`) | `deeplink.rs` |
 | `app:shortcut` | `{ id: 'marker'; kind: MarkerKind }` | `system.rs` |
 | `app:tray` | `{ action: 'open' \| 'pause-sharing' \| 'resume-sharing' \| 'quit' }` | `tray.rs` |
-| `app:drop` | `{ picked: Picked[], x: number, y: number }` — files dropped on the window, registered as pick tokens (D-4) | `window.rs` (`WindowEvent::DragDrop`) |
+| `app:drop` | `{ picked: Picked[], x: number, y: number }` — files dropped on the window, registered as pick tokens (D-4); a dropped `.tramado-invite` becomes `app:deep-link` instead (INT) | `window.rs` (`WindowEvent::DragDrop`) |
+| `app:drag` | `{ state: 'enter' \| 'leave', names: string[] }` — files dragged over the window (file names only) or gone; the drop overlay (INT, wave 3) | `window.rs` (`DragDropEvent::Enter/Leave`) |
 
 ```ts
 export type SyncEvent =

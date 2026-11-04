@@ -54,6 +54,16 @@ describe('rowOf', () => {
     expect(r.locator).toContain('18.º');
   });
 
+  it('INT: shows the printed page label of a PDF with page labels, like the document view', () => {
+    const labels = ['i', 'ii', '1', '2', '3', '4', '5', '6', '7'];
+    expect(rowOf(doc, 'pt', labels)!.locator).toBe('art. 18.º (p. 7)');
+    expect(rowOf({ ...doc, locator: { type: 'page', page: 6 } }, 'en', labels)!.locator).toBe('p. 4');
+    expect(rowOf({ ...doc, locator: { type: 'article', article: '2.º', pages: [1, 3] } }, 'en', labels)!.locator).toBe('art. 2.º (pp. i–1)');
+    // Without labels, the physical page; route pages stay physical (the viewer maps them).
+    expect(rowOf(doc, 'pt')!.locator).toBe('art. 18.º (p. 9)');
+    expect(rowOf(doc, 'pt', labels)!.route).toMatchObject({ page: 9 });
+  });
+
   it('opens a lecture at the time and plays on Enter, not on Shift+Enter', () => {
     const r = rowOf(lec, 'pt')!;
     expect(r.locator).toBe('41:12');

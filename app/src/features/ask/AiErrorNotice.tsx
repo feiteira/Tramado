@@ -20,7 +20,27 @@ export interface AiErrorNoticeProps {
   onRetry?(): void;
   /** The busy chooser's "Use NVIDIA free models for this request". */
   onBusyFallback?(): void;
+  /** INT: when a rate limit said to come back (Retry-After, epoch ms): [Try again] counts down until then. */
+  retryAt?: number;
   'data-testid'?: string;
+}
+
+/** Seconds left until `at` (0 when past), ticking once a second while it counts. */
+function useSecondsLeft(at: number | undefined, now: () => number): number {
+  const left = () => (at === undefined ? 0 : Math.max(0, Math.ceil((at - now()) / 1000)));
+  const [s, setS] = React.useState(left);
+  React.useEffect(() => {
+    setS(left());
+    if (at === undefined) return undefined;
+    const id = window.setInterval(() => {
+      const v = left();
+      setS(v);
+      if (v === 0) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at]);
+  return s;
 }
 
 const AI_CODES = new Set(['AI_NO_KEY', 'AI_AUTH', 'AI_NO_CREDIT', 'AI_MODEL_GATED', 'AI_FLAGGED', 'AI_PRIVACY_BLOCKS', 'AI_UNSUPPORTED', 'AI_MODEL_UNKNOWN', 'AI_TOO_LONG', 'AI_BAD_REQUEST', 'AI_BUSY', 'AI_FREE_LIMIT', 'AI_UPSTREAM', 'AI_UNAVAILABLE', 'AI_TIMEOUT', 'AI_OFFLINE', 'AI_LENGTH', 'AI_HOST_NOT_ALLOWED', 'AI_BAD_ADDRESS']);
@@ -56,11 +76,14 @@ export function useErrorMessage(services: AppServices): (e: unknown) => string {
   };
 }
 
-export function AiErrorNotice({ services, code, onRetry, onBusyFallback, ...rest }: AiErrorNoticeProps) {
+export function AiErrorNotice({ services, code, onRetry, onBusyFallback, retryAt, ...rest }: AiErrorNoticeProps) {
   const { t } = useI18n();
   const { go } = useRouter();
   const text = useAiErrorText(services);
-  if (code === 'AI_BUSY' && onRetry && onBusyFallback) return <BusyChooser services={services} onRetry={onRetry} onOnce={onBusyFallback} />;
+  const wait = useSecondsLeft(retryAt, () => services.ctx.clock.now());
+  // A rate limit with Retry-After (429 per minute, or 503): its own sentence, and [Try again] once the wait is over.
+  const rateLimited = retryAt !== undefined && (code === 'AI_FREE_LIMIT' || code === 'AI_UNAVAILABLE' || code === 'AI_BUSY');
+  if (code === 'AI_BUSY' && onRetry && onBusyFallback && !rateLimited) return <BusyChooser services={services} onRetry={onRetry} onOnce={onBusyFallback} />;
   const settings = () => go({ name: 'settings', section: 'ai' });
   const actions: React.ReactNode[] = [];
   switch (code) {
@@ -91,12 +114,16 @@ export function AiErrorNotice({ services, code, onRetry, onBusyFallback, ...rest
     default:
       break;
   }
-  if (onRetry && (RETRY.has(code) || code === 'AI_BUSY')) {
-    actions.push(<Button key="retry" icon={RefreshCw} onClick={onRetry} data-testid="ai-recover-retry">{t('ai.recovery.tryAgain')}</Button>);
+  if (onRetry && (RETRY.has(code) || code === 'AI_BUSY' || rateLimited)) {
+    actions.push(
+      <Button key="retry" icon={RefreshCw} onClick={onRetry} disabled={rateLimited && wait > 0} data-testid="ai-recover-retry" data-wait={rateLimited ? wait : undefined}>
+        {rateLimited && wait > 0 ? t('ai.recovery.tryAgainIn', { s: wait }) : t('ai.recovery.tryAgain')}
+      </Button>,
+    );
   }
   return (
-    <Notice tone={code === 'AI_FREE_LIMIT' || code === 'AI_OFFLINE' ? 'warning' : 'danger'} actions={actions.length ? <>{actions}</> : undefined} data-testid={rest['data-testid'] ?? 'ai-error'}>
-      <span data-code={code}>{text(code)}</span>
+    <Notice tone={code === 'AI_FREE_LIMIT' || code === 'AI_OFFLINE' || rateLimited ? 'warning' : 'danger'} actions={actions.length ? <>{actions}</> : undefined} data-testid={rest['data-testid'] ?? 'ai-error'}>
+      <span data-code={code} data-rate-limited={rateLimited || undefined}>{rateLimited ? t('ai.rateLimit.text') : text(code)}</span>
     </Notice>
   );
 }

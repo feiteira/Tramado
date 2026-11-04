@@ -80,6 +80,7 @@ export function Answers({ services, classId, examId, questionId }: { services: A
   const progress = useStore(progressStore);
   // A batch started elsewhere (Answer settings, the dock) is followed as soon as it runs.
   const runningIds = useStore(exams.running);
+  const laterItem = useStore(exams.later).find((x) => x.examId === examId) ?? null;
   useEffect(() => {
     const live = runningIds.includes(examId) ? exams.progress(examId) : null;
     if (live && live !== progressStore) setProgressStore(live as ReadableStore<Progress | null>);
@@ -184,6 +185,16 @@ export function Answers({ services, classId, examId, questionId }: { services: A
       <div className="exam-answers" data-testid="exam-answers">
         <aside className="qlist" aria-label={t('exams.answers.list')}>
           <h2 className="qlist__title">{t('exams.answers.list')}</h2>
+          {laterItem ? (
+            <Notice
+              tone="info"
+              className="qlist__later"
+              data-testid="exam-answers-later"
+              actions={<Button size="sm" variant="ghost" onClick={() => void exams.cancelLater(examId)} data-testid="exam-answers-later-cancel">{t('common.cancel')}</Button>}
+            >
+              {tp('exams.later.notice', laterItem.qids.length, { n: laterItem.qids.length, time: i18n.time(DateTime.fromISO(laterItem.at).toLocal()) })}
+            </Notice>
+          ) : null}
           <ol
             className="qlist__items"
             ref={list}

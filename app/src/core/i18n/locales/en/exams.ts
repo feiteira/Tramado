@@ -192,4 +192,8 @@ export const exams = {
     confirm: 'Delete for everyone',
   },
   deleted: 'Deleted “{title}”.',
+  // INT (wave 3)
+  later: {
+    notice: { one: '{n} more answer starts at {time}, when the free requests come back.', other: '{n} more answers start at {time}, when the free requests come back.' },
+  },
 };
