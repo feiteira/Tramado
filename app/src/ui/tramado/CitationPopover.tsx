@@ -3,7 +3,7 @@
 // ("Open at p. 9", "Open art. 18.º", "Open at 41:12" + "▶ Play from 41:12", "Open question II.b", "Open my note",
 // "Search for the passage" when missing). Focus lands on the primary button; Escape and a click outside close it.
 import React from 'react';
-import { ClipboardCheck, FileText, NotebookPen, Play, Presentation, AudioLines, Search, type LucideIcon } from 'lucide-react';
+import { AudioLines, CircleHelp, ClipboardCheck, FileText, NotebookPen, Play, Presentation, Search, type LucideIcon } from 'lucide-react';
 import type { ViewCitation as Citation } from '../../services/types/viewModels';
 import { Popover } from '../components/Popover';
 import type { Anchor } from '../components/floating';
@@ -23,7 +23,7 @@ export interface CitationPopoverProps {
 /** The type icon of a source (UX §4.4): file-text / presentation / audio-lines / clipboard-check / notebook-pen. */
 export function sourceIcon(c: Pick<Citation, 'source'>): LucideIcon {
   const s = c.source;
-  if (!s) return FileText;
+  if (!s) return CircleHelp;
   if (s.type === 'lecture') return AudioLines;
   if (s.type === 'exam') return ClipboardCheck;
   if (s.type === 'note') return NotebookPen;

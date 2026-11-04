@@ -40,10 +40,10 @@ export function SourceRow({ citation, onOpen, className, ...rest }: SourceRowPro
       </span>
       <Icon size={18} strokeWidth={1.75} aria-hidden className="srow__icon" />
       <span className="srow__text">
-        <span className="srow__title">{src ? src.title : citation.ref}</span>
-        {where ? <span className="srow__where">{where}{citation.pin ? ` · ${citation.pin}` : ''}</span> : null}
+        <span className="srow__title">{src ? src.title : i18n.t('ai.cite.badges.hallucinated')}</span>
+        {where ? <span className="srow__where">{where}{citation.pin ? ` · ${citation.pin}` : ''}</span> : !src ? <span className="srow__where">{i18n.t('ai.cite.hallucinatedNote')}</span> : null}
       </span>
-      {badge ? <Badge tone={citation.status === 'hallucinated' || citation.status === 'missing' ? 'warning' : 'neutral'}>{badge}</Badge> : <span />}
+      {badge && src ? <Badge tone={citation.status === 'hallucinated' || citation.status === 'missing' ? 'warning' : 'neutral'}>{badge}</Badge> : <span />}
       <ChevronRight size={16} strokeWidth={1.75} aria-hidden className="srow__chev" />
     </button>
   );

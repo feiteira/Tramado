@@ -164,9 +164,23 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
     return { raw, exam, manifest, dir, newer: loaded.newer, answers, edits };
   }
 
+  // Names of classmates (DeviceRef) come from the class info, which may load after the exams: rebuild when it changes.
+  let watchingInfo = false;
+  function watchInfo() {
+    if (watchingInfo) return;
+    try {
+      app().forClass(classId).info.detail.subscribe(() => rebuild());
+      watchingInfo = true;
+    } catch {
+      // the class service is not available yet (tests, a class being added)
+    }
+  }
+
   async function load(): Promise<void> {
     const st = store.state.get();
     if (st.status !== 'ready') return;
+    await Promise.resolve();
+    watchInfo();
     const machine = [...st.index.machine.keys()];
     const next = new Map<Ulid, Entry>();
     for (const [id, item] of st.index.exams) {
