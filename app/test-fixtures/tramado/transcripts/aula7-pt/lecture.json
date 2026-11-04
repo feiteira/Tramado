@@ -1,0 +1,26 @@
+{
+  "format": "tramado.lecture",
+  "version": 1,
+  "id": "01JBX4Q7Z5W8M2E3C9R6T0YH2K",
+  "idNonce": "h7c2pq5x3m4kzw6n2v7bjr4yta",
+  "title": "Aula 7 — Responsabilidade civil",
+  "startedAt": "2026-11-03T10:15:02.000Z",
+  "durationMs": 5402320,
+  "mode": "room",
+  "language": "pt-PT",
+  "recordedBy": {
+    "memberId": "k3q7mzx2v4hbtnw5r6yjc2aefg",
+    "deviceId": "AB4Z76W-GA7E7XY-6YXM3ZP-CLW473T-RYRB5Q6-KTOC53U-HT4S232-ZWB42Q2",
+    "name": "Ana Ribeiro"
+  },
+  "audio": null,
+  "channels": [
+    {
+      "index": 0,
+      "speaker": "lecture"
+    }
+  ],
+  "pauses": [],
+  "consent": [],
+  "updatedAt": "2026-11-03T11:46:10.221Z"
+}

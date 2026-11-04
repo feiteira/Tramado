@@ -1,0 +1,26 @@
+{
+  "format": "tramado.lecture",
+  "version": 1,
+  "id": "01JAC7M2N4P6Q8R0S2T4V6W8X0",
+  "idNonce": "q4m2zx7k3v5hbnw6r2yjc7aefg",
+  "title": "Lecture 3 — Cells",
+  "startedAt": "2026-10-20T09:00:00.000Z",
+  "durationMs": 3900000,
+  "mode": "online",
+  "language": "en",
+  "recordedBy": {
+    "memberId": "b6xq2l4p7vjk3m5n2c7hzr4wte",
+    "deviceId": "TKBNV23-6HQ5HVU-DM667CH-DELE5MV-VW4HTSN-27PQJFW-FVGLDA3-4XDXLAT",
+    "name": "Sam Okafor"
+  },
+  "audio": null,
+  "channels": [
+    {
+      "index": 0,
+      "speaker": "lecture"
+    }
+  ],
+  "pauses": [],
+  "consent": [],
+  "updatedAt": "2026-10-20T10:06:00.000Z"
+}
