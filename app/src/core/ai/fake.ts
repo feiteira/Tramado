@@ -117,7 +117,7 @@ export interface ScriptedTransport extends AiTransport {
  * A transport answering each request from a script (a function, or a queue of replies; the last reply of a queue
  * repeats). Events are delivered asynchronously, after `send` resolved, like the Rust channel.
  */
-export function createScriptedTransport(script: FakeScript | FakeReply[]): ScriptedTransport {
+export function createScriptedTransport(script: FakeScript | FakeReply[], opts: { pace?: (ms: number) => Promise<void>; lineMs?: number } = {}): ScriptedTransport {
   const requests: PipeRequest[] = [];
   const cancelled: string[] = [];
   const live = new Map<string, (e: WireEvent) => void>();
@@ -131,7 +131,8 @@ export function createScriptedTransport(script: FakeScript | FakeReply[]): Scrip
       void Promise.resolve().then(async () => {
         const reply = await next(req, n);
         for (const e of wireEventsFor(reply, req)) {
-          await Promise.resolve();
+          if (opts.pace && opts.lineMs && e.type === 'line') await opts.pace(opts.lineMs);
+          else await Promise.resolve();
           if (!live.has(req.requestId)) return;
           onEvent(e);
         }

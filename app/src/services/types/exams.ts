@@ -21,7 +21,7 @@ export interface ExamService {
   saveReview(draftId: string, questions: Question[], meta: Partial<ExamFile>): Promise<Ulid>;   // writes exam.json (reviewedAt set)
   editQuestion(examId: Ulid, qid: QuestionId, field: string, value: unknown): Promise<void>;   // importer only in 0.1 (others: v1.1 exam-edit lines)
   addQuestion(examId: Ulid, q: Question, after: QuestionId | null): Promise<void>; deleteQuestion(examId: Ulid, qid: QuestionId): Promise<void>;
-  answer(examId: Ulid, qids: QuestionId[], mode: 'quick' | 'deep', scope: Answer['scope']): ReadableStore<{ done: number; total: number; current: QuestionId | null; error: ErrorCode | null }>;
+  answer(examId: Ulid, qids: QuestionId[], mode: 'quick' | 'deep', scope: Answer['scope'], opts?: AnswerOptions): ReadableStore<{ done: number; total: number; current: QuestionId | null; error: ErrorCode | null }>;
   setMyAnswer(examId: Ulid, qid: QuestionId, text: string): Promise<void>;
   setCorrect(examId: Ulid, qid: QuestionId, text: string): Promise<void>;     // "the correct answer", private
   setMark(examId: Ulid, qid: QuestionId, m: 'right' | 'partly' | 'wrong' | 'unsure' | null): Promise<void>;
@@ -29,4 +29,18 @@ export interface ExamService {
   hint(examId: Ulid, qid: QuestionId): Promise<void>;                         // private hint (never in answers/)
   practise(examId: Ulid, qid: QuestionId, result: 'again' | 'gotIt'): Promise<void>;
   setInPractice(examId: Ulid, qid: QuestionId, on: boolean): Promise<void>;
+  // ── Additive (T-AI, wave 1) ──
+  /** "Type or paste the questions" (UX §3.9.4): a draft at the review step, the pre-split applied, no AI. */
+  startTyped(text: string, meta?: Partial<ExamFile>): Promise<string>;
+  /** [Cancel] while extracting (UX §3.9.5): stops the draft's requests and forgets it (copied files stay). */
+  cancelDraft(draftId: string): void;
+  /** [Try again] after a failed step (UX §3.9.5): runs the draft again from its files. */
+  retryDraft(draftId: string): Promise<void>;
+  /** [Cancel] of "Answering… {i} of {n}" (UX §3.9.8). */
+  cancelAnswers(examId: Ulid): void;
+  /** The progress of a running batch, if any (the dock and the question list after a remount). */
+  progress(examId: Ulid): ReadableStore<{ done: number; total: number; current: QuestionId | null; error: ErrorCode | null }> | null;
 }
+
+/** Additive options of `answer` (T-AI): the busy chooser's "Use NVIDIA free models for this request". */
+export interface AnswerOptions { busyFallback?: boolean }

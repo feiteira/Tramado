@@ -45,6 +45,7 @@ export const es: PromptPack = {
   labels: {
     question: 'Pregunta', points: 'puntos', options: 'Opciones', group: (n, of) => `Responda a ${n} de: ${of}`, rules: 'Normas del examen',
     sources: 'Fuentes', noSources: '(no se encontraron fuentes en los materiales de la asignatura)', transcript: 'Transcripción', passage: 'Fragmento', myAnswer: 'Mi respuesta',
+    summary: 'Resumen', terms: 'Conceptos clave', studyNotes: 'Apuntes',
   },
   marks: { insufficient: 'Los materiales no cubren', general: 'Conocimiento general', choice: 'Respuesta' },
 };

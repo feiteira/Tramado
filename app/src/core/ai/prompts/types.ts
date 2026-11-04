@@ -36,6 +36,7 @@ export interface PromptPack {
   labels: {
     question: string; points: string; options: string; group: (choose: number, of: string) => string; rules: string;
     sources: string; noSources: string; transcript: string; passage: string; myAnswer: string;
+    summary: string; terms: string; studyNotes: string;
   };
   /** Sentence openers the model is told to use; also detected (in every language) when reading answers. */
   marks: { insufficient: string; general: string; choice: string };

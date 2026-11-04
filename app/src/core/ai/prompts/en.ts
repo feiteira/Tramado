@@ -46,6 +46,7 @@ export const en: PromptPack = {
   labels: {
     question: 'Question', points: 'points', options: 'Options', group: (n, of) => `Answer ${n} of: ${of}`, rules: 'Exam rules',
     sources: 'Sources', noSources: '(no sources were found in the class materials)', transcript: 'Transcript', passage: 'Passage', myAnswer: 'My answer',
+    summary: 'Summary', terms: 'Key terms', studyNotes: 'Study notes',
   },
   marks: { insufficient: 'The materials do not cover', general: 'General knowledge', choice: 'Answer' },
 };

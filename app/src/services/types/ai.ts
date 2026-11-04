@@ -5,8 +5,9 @@ import type { ModelLabel, Quota } from './viewModels';
 import type { CatalogModel } from '../context';
 import type { ReadableStore } from '../store';
 
-/** The AI client of core/ai/client.ts (T-AI). M0 declares the slot; T-AI replaces this alias with an import. */
-export type AiClient = object;
+/** The AI client of core/ai/client.ts (T-AI). */
+export type { AiClient } from '../../core/ai/client';
+import type { AiClient } from '../../core/ai/client';
 
 export interface AiSettingsView {
   key: SecretStatus; privacy: PrivacyLevel; model: string; fallbacks: string[]; chain: string[];
@@ -15,7 +16,7 @@ export interface AiSettingsView {
 }
 
 export interface AiService {
-  settings: ReadableStore<AiSettingsView & { enabled: boolean; busyRelax: boolean; generalDefault: boolean }>;
+  settings: ReadableStore<AiSettingsView & { enabled: boolean; busyRelax: boolean; generalDefault: boolean } & AiSettingsExtra>;
   client: AiClient;                                         // core/ai/client.ts instance over platform.ai
   setKey(value: string): Promise<void>; clearKey(): Promise<void>; testKey(): Promise<{ ok: boolean; code?: ErrorCode; remaining?: number }>;
   setModel(id: string): Promise<void>; setFallbacks(ids: string[]): Promise<void>;
@@ -26,4 +27,17 @@ export interface AiService {
   refreshQuota(): Promise<void>; catalog(): Promise<CatalogModel[]>;
   activity(limit: number): Promise<AiActivityEntry[]>; clearActivity(): Promise<void>;
   estimate(task: string, count: number): { requests: number; remaining: number | null };
+  // ── Additive (T-AI, wave 1) ──
+  /** The display label of a model id (catalog name without "Vendor: ", UX §8 OQ13). */
+  label(id: string): ModelLabel;
+  /** Resolves when the stored settings (key status, privacy, busy policy, catalog cache) have been read. */
+  ready(): Promise<void>;
+}
+
+/** Additive fields of the settings store (T-AI): the catalog check of the chain (critique G21). */
+export interface AiSettingsExtra {
+  /** The chosen model is no longer in the catalog and `replacement` answers instead ("{model} is no longer on OpenRouter. Using {replacement}."). */
+  replaced: { model: string; replacement: string } | null;
+  /** Free models of the catalog that work at the current privacy level (the "{n} free models work" line). */
+  freeAtLevel: number | null;
 }

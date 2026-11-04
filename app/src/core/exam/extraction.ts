@@ -131,7 +131,7 @@ export function kindOf(text: string, options: readonly unknown[], hasChildren: b
   if (has('quid (?:iuris|juris)|resolva (?:o caso|a hipótese)|hipótese prática|caso práctico|resuelva el caso|solve the case|analise a (?:constitucionalidade|validade|legalidade|situação)|aprecie a (?:situação|validade)|analice (?:la|el) (?:caso|validez)') || t.length > 320) return 'case';
   if (has('calcule|calcula|calculate|compute|determine o valor')) return 'calculation';
   if (has('desenvolva|disserte|discuta|discuss|desarrolle|elabore|evaluate')) return 'essay';
-  if (has('distinga|explique|defina|indique|enumere|identifique|o que (?:é|se entende)|distinguish|explain|define|what is|state|name|qué es|explica|enumera|indica')) return 'short';
+  if (has('distinga|explique|defina|indique|enumere|identifique|o que (?:é|se entende)|em que (?:condições|casos|termos)|distinguish|explain|define|what is|state|name|in which cases|under what conditions|qué es|en qué (?:casos|condiciones)|explica|enumera|indica')) return 'short';
   return 'other';
 }
 
