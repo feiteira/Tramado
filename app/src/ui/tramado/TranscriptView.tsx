@@ -105,9 +105,22 @@ function RunSpan({ seg, run, onDecoration }: { seg: TvSegment; run: Run; onDecor
       className={cls}
       title={clickable?.title ?? hl?.title}
       data-annotation-id={clickable?.id}
+      // A comment or an AI note opens on click, and from the keyboard (Tab, then Enter or Space).
+      role={clickable && onDecoration ? 'button' : undefined}
+      tabIndex={clickable && onDecoration ? 0 : undefined}
       onClick={
         clickable && onDecoration
           ? (e) => {
+              e.stopPropagation();
+              onDecoration(clickable, e.currentTarget);
+            }
+          : undefined
+      }
+      onKeyDown={
+        clickable && onDecoration
+          ? (e) => {
+              if (e.key !== 'Enter' && e.key !== ' ') return;
+              e.preventDefault();
               e.stopPropagation();
               onDecoration(clickable, e.currentTarget);
             }

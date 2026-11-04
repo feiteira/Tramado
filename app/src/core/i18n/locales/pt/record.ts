@@ -52,7 +52,7 @@ export const record: Messages['record'] = {
   why: 'A lei portuguesa (Código Penal, art. 199.º) considera crime gravar palavras não destinadas ao público sem consentimento, e também usar uma gravação lícita para além do que foi autorizado. Em Espanha, a voz das pessoas e as aulas estão protegidas de forma semelhante, e as aulas são obras protegidas nos dois países. Por isso o Tramado pede duas autorizações separadas: para gravar e para partilhar com a sua turma. Isto não é aconselhamento jurídico; a sua universidade pode ter regras próprias.',
   dock: {
     region: 'Gravação',
-    rec: 'GRAV',
+    rec: 'REC',
     paused: 'Em pausa',
     starting: 'A começar…',
     saving: 'A guardar a gravação…',

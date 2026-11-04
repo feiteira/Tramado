@@ -8,7 +8,7 @@ import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
 import type { MemoryPlatform } from '../platform/memory';
 import type { ClassStoreImpl } from './classStore';
 import { createServices } from './index';
-import { FOLD_DEBOUNCE_MS, type LectureServiceImpl } from './lectures';
+import { FOLD_DEBOUNCE_MS, parsePeaks, type LectureServiceImpl } from './lectures';
 import { claimView, installClassFakes } from './testing/fakeClaims';
 import { createFakeSearch } from './testing/fakeSearch';
 import { createTestContext } from './testing/context';
@@ -131,6 +131,20 @@ describe('LectureService: list and detail', () => {
     expect(lectures.list.get()[0]!.autoExamMarks).toBe(0);
     expect(JSON.parse(dec.decode((await platform.privateFiles.read(classId, `lectures/${id}.json`))!)).removedAutoMarks).toEqual([30_000]);
     void cs;
+  });
+
+  it('draws the waveform from cache/peaks without a speech engine (the browser demo, a warm cache)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const sha = sha256Hex(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
+    const buckets = Array.from({ length: 1200 }, (_, i) => i % 256);
+    await platform.cache.write(`peaks/${sha}-1200.json`, enc.encode(JSON.stringify({ format: 'tramado.peaks', version: 1, buckets })));
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    const detail = lectures.open(id);
+    await settle();
+    expect(detail.get()!.peaks).toEqual(buckets);
+    expect(parsePeaks(enc.encode('{"format":"tramado.peaks","version":1,"buckets":[1,300]}'))).toBeNull();
+    expect(parsePeaks(enc.encode('not json'))).toBeNull();
   });
 
   it('removes a lecture from this computer only: ignored first, then deleted here (UI-LECTURES, UX §3.4)', async () => {

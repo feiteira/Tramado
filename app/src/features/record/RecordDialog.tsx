@@ -101,10 +101,16 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
       live = false;
     };
   }, [speech, services]);
+  // Start and stop run one after the other: a stop still in flight from the previous device must not end the new
+  // meter (each is a separate call to Rust, run on its own thread).
+  const meterChain = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     if (!speech) return undefined;
-    void services.recording.startMeter({ inputDeviceId: device || null, mode }).catch(() => undefined);
-    return () => void services.recording.stopMeter().catch(() => undefined);
+    const req = { inputDeviceId: device || null, mode };
+    meterChain.current = meterChain.current.then(() => services.recording.startMeter(req)).catch(() => undefined);
+    return () => {
+      meterChain.current = meterChain.current.then(() => services.recording.stopMeter()).catch(() => undefined);
+    };
   }, [speech, services, device, mode]);
 
   // The lecturer's permission on record for this class (scope "class", not revoked).

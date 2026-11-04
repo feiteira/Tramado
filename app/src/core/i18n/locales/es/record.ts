@@ -52,7 +52,7 @@ export const record: Messages['record'] = {
   why: 'La ley portuguesa (Código Penal, art. 199.º) castiga grabar sin consentimiento palabras no destinadas al público, y también usar una grabación lícita más allá de lo acordado. En España, la voz de las personas y las clases están protegidas de forma parecida, y las clases son obras protegidas en ambos países. Por eso Tramado pide dos permisos distintos: para grabar y para compartir con su grupo de clase. Esto no es asesoramiento jurídico; su universidad puede tener sus propias normas.',
   dock: {
     region: 'Grabación',
-    rec: 'GRAB',
+    rec: 'REC',
     paused: 'En pausa',
     starting: 'Empezando…',
     saving: 'Guardando la grabación…',

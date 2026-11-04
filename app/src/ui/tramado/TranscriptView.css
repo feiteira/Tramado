@@ -123,6 +123,12 @@
   text-underline-offset: 4px;
   cursor: pointer;
 }
+.tv-comment:focus-visible,
+.tv-ai:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
 .tv-ai-mark {
   margin-inline-end: 2px;
   color: var(--ai);

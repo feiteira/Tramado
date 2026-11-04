@@ -13,6 +13,9 @@
   gap: var(--s-1) var(--s-2);
   min-width: 0;
 }
+.player__speed {
+  display: inline-flex;
+}
 .player__toggle {
   display: inline-flex;
   align-items: center;

@@ -38,7 +38,7 @@ import { Timeline, type TimelineMarker } from '../../ui/tramado/Timeline';
 import { TranscriptView, type TvDecoration, type TvRef, type TvSegment } from '../../ui/tramado/TranscriptView';
 import { useLectureActions } from '../lectures/actions';
 import { cardModel, TranscriptionCard } from '../lectures/TranscriptionCard';
-import { duration, findAll, longClock, rowDate, shortClock, spokenTime } from '../lectures/format';
+import { duration, findAll, firstName, longClock, rowDate, shortClock, spokenTime } from '../lectures/format';
 import { usePlayback } from './playback';
 import { SidePanel, type ExplainRequest, type SideTab } from './SidePanel';
 import { SpeakersDialog } from './SpeakersDialog';
@@ -150,6 +150,15 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
     setNarrow(el.clientWidth < SIDE_BREAKPOINT);
     return () => ro.disconnect();
   }, []);
+  // Opening the drawer moves focus into it (unless something in it already took focus, like a new note).
+  useEffect(() => {
+    if (!drawer) return undefined;
+    const raf = requestAnimationFrame(() => {
+      const el = screen.current?.querySelector<HTMLElement>('.lecture-drawer');
+      if (el && !el.contains(document.activeElement)) el.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [drawer]);
   const [sideTab, setSideTab] = useState<SideTab>('notes');
   const [noteRequest, setNoteRequest] = useState(0);
   const [explain, setExplain] = useState<ExplainRequest | null>(null);
@@ -612,7 +621,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
     </>
   );
   const recorder = view.recordedBy.self;
-  const onlyRecorder = t('lectures.list.menu.renameOnlyRecorder', { name: view.recordedBy.memberName });
+  const onlyRecorder = t('lectures.list.menu.renameOnlyRecorder', { name: firstName(view.recordedBy.memberName) });
   const moreItems: MenuEntry[] = [
     {
       id: 'link', label: t('lectures.view.more.copyLink'), testId: 'lecture-copy-link',
@@ -829,7 +838,17 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
           <>
             {transcriptArea}
             {drawer ? (
-              <div className="lecture-drawer" role="complementary">
+              <div
+                className="lecture-drawer"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape' && !e.defaultPrevented && !modalOpen()) {
+                    e.preventDefault();
+                    setDrawer(false);
+                    screen.current?.querySelector<HTMLElement>('[data-testid="lecture-side-toggle"]')?.focus();
+                  }
+                }}
+                data-testid="lecture-drawer"
+              >
                 <div className="lecture-drawer__head">
                   <IconButton size="sm" icon={X} label={t('common.close')} onClick={() => setDrawer(false)} />
                 </div>
@@ -1015,6 +1034,7 @@ function SegmentEditor({ seg, onSave, onCancel, onCaret }: { seg: TvSegment; onS
 
 function DuplicateHint({ view, services, classId, actions }: { view: LectureDetail['view']; services: AppServices; classId: ClassId; actions: ReturnType<typeof useLectureActions> }) {
   const { t } = useI18n();
+  const toast = useToast();
   const list = useStore(services.forClass(classId).lectures.list);
   const other = list.find((l) => l.id === view.probableDuplicateOf);
   return (
@@ -1024,7 +1044,7 @@ function DuplicateHint({ view, services, classId, actions }: { view: LectureDeta
       actions={
         <>
           {view.recordedBy.self ? (
-            <Button size="sm" onClick={() => void services.forClass(classId).lectures.markDuplicate(view.id, view.probableDuplicateOf)}>
+            <Button size="sm" onClick={() => void services.forClass(classId).lectures.markDuplicate(view.id, view.probableDuplicateOf).catch((e: unknown) => toast.error(e))}>
               {t('lectures.transcription.markDuplicate')}
             </Button>
           ) : null}

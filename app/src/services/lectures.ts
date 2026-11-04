@@ -117,6 +117,18 @@ const parseEdit = parserFor('tramado.transcript-edit');
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 /** A file of a lecture directory (a lecture may sit at the class root: dir ''). */
 export const inLecture = (dir: ClassPath, name: string): ClassPath => (dir ? `${dir}/${name}` : name);
+
+/** `cache/peaks/<sha256>-<n>.json` (`tramado.peaks` v1, crates/tramado-speech peaks.rs): the buckets, or null. */
+export function parsePeaks(bytes: Uint8Array | null): number[] | null {
+  if (!bytes) return null;
+  try {
+    const v = JSON.parse(dec.decode(bytes)) as { format?: unknown; version?: unknown; buckets?: unknown };
+    if (v.format !== 'tramado.peaks' || v.version !== 1 || !Array.isArray(v.buckets)) return null;
+    return v.buckets.every((b) => typeof b === 'number' && b >= 0 && b <= 255) ? (v.buckets as number[]) : null;
+  } catch {
+    return null;
+  }
+}
 const errorMessage = (e: unknown) => toPlatformError(e).message;
 
 export function createLectureService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): LectureServiceImpl {
@@ -411,21 +423,29 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
     return r.audioSize === a.size ? { kind: 'class', classId, path: r.audioPath } : null;
   }
 
+  /**
+   * The timeline's waveform: `cache/peaks/<sha256>-1200.json` first (written by Rust's `speech_peaks`, and by the
+   * demo seed), else `speech.peaks` (which computes and caches it). Without either, the timeline draws a flat rule.
+   */
   function loadPeaks(r: LectureRecord, source: AudioSource): number[] | null {
     const speech = platform.speech;
     const sha = r.lecture.audio?.sha256;
-    if (!speech || !sha) return null;
+    if (!sha) return null;
     const hit = peaks.get(sha);
     if (Array.isArray(hit)) return hit;
     if (!hit) {
       peaks.set(sha, 'loading');
-      void speech.peaks(source, PEAK_BUCKETS).then(
-        (p) => {
-          peaks.set(sha, p);
-          void schedule();
-        },
-        () => peaks.set(sha, 'failed'),
-      );
+      void (async () => {
+        const cached = await platform.cache.read(`peaks/${sha}-${PEAK_BUCKETS}.json`).then(parsePeaks, () => null);
+        const p = cached ?? (speech ? await speech.peaks(source, PEAK_BUCKETS) : null);
+        if (disposed) return;
+        if (!p || p.length === 0) {
+          peaks.set(sha, 'failed');
+          return;
+        }
+        peaks.set(sha, p);
+        void schedule();
+      })().catch(() => peaks.set(sha, 'failed'));
     }
     return null;
   }

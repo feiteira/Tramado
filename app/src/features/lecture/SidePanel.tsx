@@ -159,6 +159,7 @@ function NotesPanel({ services, classId, detail, ms, onSeek, noteRequest }: Side
               }}
               data-testid="lecture-note-input"
             />
+            <IconButton size="sm" icon={X} label={t('common.cancel')} onClick={() => setDraft(null)} />
           </li>
         ) : null}
       </ul>
@@ -186,9 +187,14 @@ function NoteItem({ note, lectureId, services, classId, onSeek }: { note: Marker
   const commit = async () => {
     const next = text.trim();
     if (next === (note.note ?? '')) return;
+    // An emptied note keeps its text (deleting is the trash button's job, never a side effect of clearing a field).
+    if (!next) {
+      setText(note.note ?? '');
+      return;
+    }
     try {
       // A marker has no edit operation: the note is replaced at the same time.
-      await cls.lectures.markers.add(lectureId, { atMs: note.atMs, rawMs: note.rawMs, kind: 'note', ...(next ? { note: next } : {}) });
+      await cls.lectures.markers.add(lectureId, { atMs: note.atMs, rawMs: note.rawMs, kind: 'note', note: next });
       await cls.lectures.markers.remove(lectureId, note.id);
     } catch (e) {
       toast.error(e);
@@ -556,7 +562,7 @@ function MarkersPanel({ services, classId, detail, onSeek }: SidePanelProps) {
           <ul className="side-list" role="list">
             {auto.map((a) => (
               <li key={`${a.segmentId}-${a.atMs}`} className="side-marker" data-testid="lecture-auto-marker" data-mk="exam">
-                <MarkerIcon kind="exam" auto size={16} />
+                <MarkerIcon kind="exam" auto size={16} className="side-marker__auto-icon" />
                 <button type="button" className="side-marker__main" onClick={() => onSeek(a.atMs)}>
                   <span className="side-marker__label">{t('record.markers.auto')}</span>
                   <span className="side-marker__time t-tabular">{shortClock(a.atMs)}</span>

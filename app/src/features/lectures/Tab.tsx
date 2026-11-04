@@ -20,7 +20,7 @@ import { useI18n } from '../../ui/i18n';
 import { isTextEntry, modalOpen } from '../../ui/focus';
 import { MarkerIcon } from '../../ui/tramado/MarkerIcon';
 import { useLectureActions, type LectureActions } from './actions';
-import { dayMonth, duration, foldText, groupByWeek, longClock, rowDate, type WeekKey } from './format';
+import { dayMonth, duration, firstName, foldText, groupByWeek, longClock, rowDate, type WeekKey } from './format';
 import { TranscriptChip } from './TranscriptionCard';
 import { startImport } from '../record/importFlow';
 import './lectures.css';
@@ -116,7 +116,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
             </button>
           ) : null}
           {pending.map((p) => (
-            <PendingRow key={p.recordingId} rec={p} onSave={() => dialogs.open('save', { recording: p })} />
+            <PendingRow key={p.recordingId} rec={p} now={now} onSave={() => dialogs.open('save', { recording: p })} />
           ))}
           {lectures.length === 0 && !recordingHere && pending.length === 0 ? (
             <EmptyState
@@ -167,7 +167,7 @@ function weekLabel(w: WeekKey, i18n: ReturnType<typeof useI18n>): string {
   return i18n.t('lectures.list.weekOf', { date: dayMonth(DateTime.fromISO(w.monday), i18n.locale) });
 }
 
-function PendingRow({ rec, onSave }: { rec: FinishedRecording; onSave(): void }) {
+function PendingRow({ rec, now, onSave }: { rec: FinishedRecording; now: DateTime; onSave(): void }) {
   const f = useI18n();
   const { t } = f;
   return (
@@ -178,7 +178,7 @@ function PendingRow({ rec, onSave }: { rec: FinishedRecording; onSave(): void })
       <span className="lecture-row__main">
         <span className="lecture-row__title">{rec.title}</span>
         <span className="lecture-row__meta">
-          {t('lectures.list.pendingMeta', { date: rowDate(rec.startedAt, DateTime.now(), f), duration: duration(rec.durationMs, f) })}
+          {t('lectures.list.pendingMeta', { date: rowDate(rec.startedAt, now, f), duration: duration(rec.durationMs, f) })}
         </span>
       </span>
       <Button size="sm" onClick={onSave} data-testid="lecture-pending-save">
@@ -199,17 +199,18 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
   const done = s.kind === 'done';
   const dupOf = view.duplicateOf ? all.find((x) => x.id === view.duplicateOf) : null;
   const open = useCallback(() => go({ name: 'lecture', classId, lectureId: view.id }), [go, classId, view.id]);
-  const onlyRecorder = t('lectures.list.menu.renameOnlyRecorder', { name: view.recordedBy.memberName });
+  // One hint, on Rename (UX §3.4): the other recorder-only entries are simply unavailable.
+  const onlyRecorder = t('lectures.list.menu.renameOnlyRecorder', { name: firstName(view.recordedBy.memberName) });
   const items = (): MenuEntry[] => [
     { id: 'open', label: t('lectures.list.menu.open'), onSelect: open, testId: 'lecture-menu-open' },
     { id: 'rename', label: t('lectures.list.menu.rename'), disabled: !recorder, hint: recorder ? undefined : onlyRecorder, onSelect: () => actions.rename(view), testId: 'lecture-menu-rename' },
     done
       ? { id: 'retranscribe', label: t('lectures.list.menu.retranscribe'), onSelect: () => void actions.retranscribe(view), testId: 'lecture-menu-retranscribe' }
       : { id: 'transcribe', label: t('lectures.list.menu.transcribe'), disabled: s.kind === 'claimed' && s.health !== 'stale' || s.kind === 'local' || s.kind === 'unavailable', onSelect: () => void (s.kind === 'claimed' ? actions.takeOver(view.id) : actions.transcribeHere(view.id)), testId: 'lecture-menu-transcribe' },
-    { id: 'duplicate', label: t('lectures.list.menu.duplicate'), disabled: !recorder, hint: recorder ? undefined : onlyRecorder, onSelect: () => actions.markDuplicate(view), testId: 'lecture-menu-duplicate' },
+    { id: 'duplicate', label: t('lectures.list.menu.duplicate'), disabled: !recorder, onSelect: () => actions.markDuplicate(view), testId: 'lecture-menu-duplicate' },
     { kind: 'separator' },
-    { id: 'deleteAudio', label: t('lectures.list.menu.deleteAudio'), disabled: !recorder || !view.audio, hint: recorder ? undefined : onlyRecorder, onSelect: () => void actions.deleteAudio(view), danger: true, testId: 'lecture-menu-delete-audio' },
-    { id: 'deleteAll', label: t('lectures.list.menu.deleteAll'), disabled: !recorder, hint: recorder ? 'Delete' : onlyRecorder, onSelect: () => void actions.deleteAll(view), danger: true, testId: 'lecture-menu-delete' },
+    { id: 'deleteAudio', label: t('lectures.list.menu.deleteAudio'), disabled: !recorder || !view.audio, onSelect: () => void actions.deleteAudio(view), danger: true, testId: 'lecture-menu-delete-audio' },
+    { id: 'deleteAll', label: t('lectures.list.menu.deleteAll'), disabled: !recorder, hint: recorder ? t('lectures.list.deleteKey') : undefined, onSelect: () => void actions.deleteAll(view), danger: true, testId: 'lecture-menu-delete' },
     ...(shared ? [{ id: 'removeLocal', label: t('lectures.list.menu.removeLocal'), onSelect: () => void actions.removeLocal(view), testId: 'lecture-menu-remove-local' }] : []),
     { kind: 'separator' },
     { id: 'reveal', label: t('lectures.list.menu.showInFolder'), onSelect: () => void actions.showInFolder(view), testId: 'lecture-menu-reveal' },
@@ -272,7 +273,7 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
         </span>
         <span className="lecture-row__markers" role={counts.length ? 'img' : undefined} aria-label={counts.map((c) => `${c.n} ${t(`record.markers.${c.k}`)}`).join(', ') || undefined}>
           {counts.map((c) => (
-            <span key={c.k} className="lecture-row__count" aria-hidden>
+            <span key={c.k} className={c.auto ? 'lecture-row__count lecture-row__count--auto' : 'lecture-row__count'} aria-hidden>
               <MarkerIcon kind={c.k} auto={c.auto} size={14} />
               <span className="t-tabular">{c.n}</span>
             </span>

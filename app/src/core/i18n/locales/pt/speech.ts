@@ -44,6 +44,7 @@ export const speech: Messages['speech'] = {
   volunteerNeedsModel: 'Isto começa quando houver um modelo de fala instalado.',
   turnOff: 'Desativar',
   shortcutTaken: 'Outra aplicação usa {keys}.',
+  cloudHint: 'Pago, cerca de 2 cêntimos por aula. O áudio é enviado para o OpenRouter em pequenos excertos.',
   left: {
     underMinute: 'falta menos de um minuto',
     minutes: { one: 'falta cerca de {n} minuto', other: 'faltam cerca de {n} minutos' },

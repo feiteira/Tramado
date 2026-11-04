@@ -191,7 +191,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
       ) : null}
 
       <Section title={t('settings.transcription.cloud')} data-testid="speech-cloud-section">
-        <Switch checked={queue.cloud.on} onChange={(on) => void toggleCloud(on)} label={t('record.save.cloud')} description={t('settings.transcription.cloudHint')} data-testid="speech-cloud" />
+        <Switch checked={queue.cloud.on} onChange={(on) => void toggleCloud(on)} label={t('record.save.cloud')} description={t('speech.cloudHint')} data-testid="speech-cloud" />
         <TextField
           label={t('settings.transcription.cloudModel')}
           value={cloudModel}

@@ -47,6 +47,7 @@ export const speech = {
   volunteerNeedsModel: 'This starts once a speech model is installed.',
   turnOff: 'Turn off',
   shortcutTaken: 'Another app uses {keys}.',
+  cloudHint: 'Paid, about 2 cents per lecture. The audio is sent to OpenRouter in short pieces.',
   left: {
     underMinute: 'less than a minute left',
     minutes: { one: 'about {n} minute left', other: 'about {n} minutes left' },

@@ -158,10 +158,12 @@
   background: var(--paper);
   box-shadow: var(--shadow-3);
 }
+/* The close button shares the tab row's line (no empty band above the tabs). */
 .lecture-drawer__head {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--s-1) var(--s-2) 0;
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  z-index: 1;
 }
 .lecture-drawer > .lecture-side {
   flex: 1;
@@ -227,8 +229,10 @@
   gap: var(--s-2);
 }
 .side-note__time {
+  min-width: 52px;
   height: 28px;
   padding: 0 6px;
+  text-align: end;
   border: none;
   border-radius: var(--r-xs);
   background: transparent;
@@ -240,15 +244,15 @@
 .side-note__time:hover {
   background: var(--accent-soft);
 }
-.side-note--draft {
-  grid-template-columns: auto minmax(0, 1fr);
-}
 .side-marker {
   display: flex;
   align-items: center;
   gap: var(--s-2);
   padding: 2px 0 2px var(--s-1);
   border-radius: var(--r-sm);
+}
+.side-marker__auto-icon {
+  margin-inline-end: 3px;
 }
 .side-marker:hover {
   background: var(--paper-hover);

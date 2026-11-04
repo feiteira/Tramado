@@ -12,6 +12,7 @@ export const lectures = {
     recordingNow: 'Recording now — {time}',
     transcriptOnly: 'Recording only on {name}’s computer',
     duplicateOf: 'Duplicate of {title}',
+    deleteKey: 'Delete',   // UI-LECTURES: the Delete key's name on keyboards (menu hint)
     noMatch: 'No lectures match “{q}”.',
     // UI-LECTURES
     pendingMeta: '{date} · {duration} · kept on this computer, not saved as a lecture yet',

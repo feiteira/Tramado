@@ -182,7 +182,7 @@ export function useLectureActions(services: AppServices, classId: ClassId): Lect
           const pick = await services.ctx.platform.dialogs.save({
             title: t('lectures.view.more.export'),
             defaultName: `${view.title}.${format}`,
-            filters: [{ name: format === 'md' ? 'Markdown' : format === 'vtt' ? 'WebVTT' : 'Text', extensions: [format] }],
+            filters: [{ name: t(format === 'md' ? 'lectures.view.more.exportMd' : format === 'vtt' ? 'lectures.view.more.exportVtt' : 'lectures.view.more.exportTxt'), extensions: [format] }],
           });
           if (!pick) return;
           await cls.lectures.exportTranscript(view.id, format, pick);

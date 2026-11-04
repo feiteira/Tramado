@@ -144,6 +144,10 @@
   align-items: center;
   gap: 3px;
 }
+/* The radar badge sits at the icon's lower right: keep it clear of the count. */
+.lecture-row__count--auto {
+  gap: 6px;
+}
 .lecture-row__menu {
   flex: none;
 }

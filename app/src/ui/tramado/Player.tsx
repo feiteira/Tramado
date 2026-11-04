@@ -264,14 +264,17 @@ export const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
             <span className="player__total">{hms(duration)}</span>
           </button>
         )}
-        <MenuButton
-          size="sm"
-          variant="ghost"
-          label={`${rate}×`}
-          align="start"
-          items={PLAYER_RATES.map((r) => ({ id: String(r), label: `${r}×`, checked: r === rate, onSelect: () => onRate(r), testId: `player-speed-${r}` }))}
-          data-testid="player-speed"
-        />
+        {/* The button reads "1×": the group gives it its name ("Speed: 1×") for screen readers and the tooltip. */}
+        <span role="group" aria-label={t('lectures.player.speed', { rate })} title={t('lectures.player.speed', { rate })} className="player__speed">
+          <MenuButton
+            size="sm"
+            variant="ghost"
+            label={`${rate}×`}
+            align="start"
+            items={PLAYER_RATES.map((r) => ({ id: String(r), label: `${r}×`, checked: r === rate, onSelect: () => onRate(r), testId: `player-speed-${r}` }))}
+            data-testid="player-speed"
+          />
+        </span>
         <label className="player__volume" title={t('lectures.player.volume')}>
           {React.createElement(volIcon, { size: 16, 'aria-hidden': true, strokeWidth: 1.75 })}
           <input
