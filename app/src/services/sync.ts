@@ -9,19 +9,19 @@ import { translate } from '../core/i18n/translate';
 import { classIdOf, newNonce } from '../core/model/derive';
 import { classifyPath } from '../core/model/paths';
 import { sanitize, unique } from '../core/model/sanitize';
-import { dashless, shortIdOf, type ClassId, type ClassPath, type DeviceId, type ShortId } from '../core/model/ids';
+import { dashed, dashless, shortIdOf, type ClassId, type ClassPath, type DeviceId, type ShortId } from '../core/model/ids';
 import type { InviteV1 } from '../core/model/files';
 import { checkWords } from '../core/sync/checkWords';
 import {
   chooseInviteDevices, decodeInvite, encodeInvite, inviteFileName, inviteLink, inviteWeb, qrText, reduceInvite, selectInviteAddresses,
 } from '../core/sync/invite';
-import type { ClassEntry, FolderView, SyncEvent, SyncSettings } from '../platform/types';
+import type { ClassEntry, FolderView, Picked, SyncSettings } from '../platform/types';
 import type { ClassServiceImpl } from './class';
 import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { TrustServiceImpl } from './trust';
 import type { AppServices } from './types/common';
-import type { ConnectionState, InvitePreview, SyncService, SyncUiState } from './types/sync';
+import type { ConnectionState, InvitePreview, SyncEventG2, SyncService, SyncUiState } from './types/sync';
 
 export const EMPTY_SYNC_STATE: SyncUiState = {
   status: null, folders: {}, joinRequests: [], offers: [], massDelete: [], massDeleteRemote: [], foreignWrites: 0, markerMissing: [],
@@ -46,7 +46,31 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
   const state = new Store<SyncUiState>(EMPTY_SYNC_STATE);
   const connections = new Store<Record<DeviceId, ConnectionState>>({});
   const indexListeners = new Set<(classId: ClassId) => void>();
-  const joinTimers = new Map<ClassId, () => void>();
+  // Joins of this session (sync spec §8): the invite's devices, and the 90 s stall timer that starts at the first
+  // connection to one of them (not at join()).
+  const joins = new Map<ClassId, { preview: InvitePreview; opts: { includeAudio: boolean; parent?: Picked }; devices: Set<DeviceId>; since: number; connectedAt: number | null; timer: (() => void) | null }>();
+  // Classes left with "keep a copy" whose fork waits for Rust's `left` event (or, before G2, a status event).
+  const pendingForks = new Set<ClassId>();
+  const forking = new Set<ClassId>();
+  /** Forks a class whose leave finished with `fork.json` pending, once (a `left` and a `status` event may race). */
+  async function forkPending(classId: ClassId): Promise<boolean> {
+    if (forking.has(classId)) return true;
+    forking.add(classId);
+    try {
+      const pending = await platform.privateFiles.read(classId, 'fork.json').catch(() => null);
+      if (!pending) return false;
+      pendingForks.delete(classId);
+      const p = JSON.parse(dec.decode(pending)) as { from?: string };
+      if (p.from !== classId) return false;
+      await service.fork(classId);
+      return true;
+    } catch (err) {
+      ctx.log('warn', 'fork failed', { classId, error: String(err) });
+      return false;
+    } finally {
+      forking.delete(classId);
+    }
+  }
   let booted = false;
   let addressTimer: (() => void) | null = null;
   const patch = (p: Partial<SyncUiState>) => state.set({ ...state.get(), ...p });
@@ -105,11 +129,15 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
     }
   }
 
-  function route(e: SyncEvent) {
+  function route(e: SyncEventG2) {
     switch (e.type) {
       case 'status':
         patch({ status: e.status });
-        void service.completeForks();
+        // Before G2 Rust emits no `left` event: a status change is when a pending fork may be complete.
+        if (pendingForks.size) void service.completeForks();
+        break;
+      case 'left':
+        void leftClass(e.classId, e.afterwards);
         break;
       case 'gap':
         void snapshot().then(startClasses);
@@ -129,6 +157,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
         break;
       case 'connection':
         setConnection(e.deviceId, { connected: e.connected, relay: e.relay, ...(e.connected ? {} : { lastSeen: new Date(clock.now()).toISOString() }) });
+        if (e.connected) for (const [classId, j] of joins) if (j.devices.has(dashed(e.deviceId))) startStall(classId);
         break;
       case 'joinRequest':
         if (!state.get().joinRequests.some((r) => r.classId === e.request.classId && r.deviceId === e.request.deviceId)) {
@@ -193,10 +222,31 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
     return by;
   }
 
-  function clearStall(classId: ClassId) {
-    joinTimers.get(classId)?.();
-    joinTimers.delete(classId);
+  /** Starts the 90 s "not let in" timer at the first connection to a member's device (sync spec §8). */
+  function startStall(classId: ClassId) {
+    const j = joins.get(classId);
+    if (!j || j.timer || j.connectedAt !== null) return;
+    j.connectedAt = clock.now();
+    j.timer = clock.setTimeout(() => {
+      j.timer = null;
+      if (joins.get(classId) !== j) return;
+      patch({ joinStalled: [...new Set([...state.get().joinStalled, classId])] });
+    }, JOIN_STALL_MS);
+  }
+
+  function clearStall(classId: ClassId, done = true) {
+    const j = joins.get(classId);
+    j?.timer?.();
+    if (j) j.timer = null;
+    if (done) joins.delete(classId);
     if (state.get().joinStalled.includes(classId)) patch({ joinStalled: state.get().joinStalled.filter((c) => c !== classId) });
+  }
+
+  /** Rust finished leaving a class (the `left` event): the library drops it, a kept copy is forked. */
+  async function leftClass(classId: ClassId, afterwards: 'keepLocal' | 'trash') {
+    pendingForks.delete(classId);
+    if (afterwards === 'keepLocal' && (await forkPending(classId))) return;
+    await app().library.load().catch(() => undefined);
   }
 
   async function dirNameFor(label: string): Promise<string> {
@@ -315,12 +365,26 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       const c = classOf(entry.classId);
       c.store.setTrustGate(c.trust);
       await (c.info as ClassServiceImpl).refreshOwnMemberFile();
-      joinTimers.set(entry.classId, clock.setTimeout(() => {
-        joinTimers.delete(entry.classId);
-        patch({ joinStalled: [...new Set([...state.get().joinStalled, entry.classId])] });
-      }, JOIN_STALL_MS));
+      clearStall(entry.classId);
+      const j = { preview, opts, devices: new Set(preview.devices.map((d) => dashed(d.deviceId))), since: clock.now(), connectedAt: null, timer: null };
+      joins.set(entry.classId, j);
       if (!booted) await service.boot();
+      // Already connected to one of the invite's devices (another class with them): the timer starts now.
+      if ([...j.devices].some((d) => connections.get()[d]?.connected)) startStall(entry.classId);
       return entry.classId;
+    },
+    async retryJoin(classId) {
+      const j = joins.get(classId);
+      if (!j) throw new PlatformError('NOT_FOUND', 'no join of this class in this session');
+      clearStall(classId);
+      await platform.sync.cancelJoin(classId);
+      await app().library.load();
+      const preview = { ...j.preview, warnings: j.preview.warnings.filter((w) => w !== 'alreadyMember') };
+      return service.join(preview, j.opts);
+    },
+    joining(classId) {
+      const j = joins.get(classId);
+      return j ? { preview: j.preview, since: j.since, connectedAt: j.connectedAt } : null;
     },
     async cancelJoin(classId) {
       clearStall(classId);
@@ -334,9 +398,12 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       await (c.info as ClassServiceImpl).removeOwnFiles();
       await platform.sync.leaveClass(classId, { afterwards: opts.afterwards });
       if (opts.deleteMyNotes) await platform.privateFiles.purge(classId);
-      if (opts.afterwards === 'keepLocal') await platform.privateFiles.write(classId, 'fork.json', enc.encode(JSON.stringify({ format: 'tramado.pending-fork', version: 1, from: classId })));
+      if (opts.afterwards === 'keepLocal') {
+        await platform.privateFiles.write(classId, 'fork.json', enc.encode(JSON.stringify({ format: 'tramado.pending-fork', version: 1, from: classId })));
+        pendingForks.add(classId);
+      }
       await app().library.load();
-      await service.completeForks();
+      await service.completeForks();   // a platform that finished leaving at once (the memory platform, nobody to wait for)
     },
     async admit(classId, deviceId) {
       await platform.sync.admit(classId, deviceId);
@@ -454,15 +521,9 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
         return;
       }
       for (const e of list) {
+        if (e.leaving?.afterwards === 'keepLocal') pendingForks.add(e.classId);   // still leaving (e.g. after a restart)
         if (e.shared || e.leaving) continue;
-        const pending = await platform.privateFiles.read(e.classId, 'fork.json').catch(() => null);
-        if (!pending) continue;
-        try {
-          const p = JSON.parse(dec.decode(pending)) as { from?: string };
-          if (p.from === e.classId) await service.fork(e.classId);
-        } catch (err) {
-          ctx.log('warn', 'fork failed', { classId: e.classId, error: String(err) });
-        }
+        await forkPending(e.classId);
       }
     },
   };

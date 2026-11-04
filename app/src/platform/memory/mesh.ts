@@ -449,6 +449,8 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
         if (f.leaving.afterwards === 'trash') void d.registry.api.trash(classId).catch(() => undefined);
       }
       emit(d, { type: 'status', status: statusOf(d) });
+      // G2 (UI-GROUP): the `left` event Rust emits when finish_leaving ran (services/types/sync.ts SyncLeftEvent).
+      emit(d, { type: 'left', classId, afterwards: f.leaving.afterwards } as unknown as SyncEvent);
     }
   }
 
@@ -604,6 +606,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
         d.leftClasses.delete(classId);
         d.folders.set(classId, newFolder(classId, decoded.invite.l, [d.deviceId, ...devs]));
         scheduleAuto();
+        queueMicrotask(notifyConnections);   // the invite's devices dial in (connection events, sync spec §8)
         return entryOf(classId);
       },
       async cancelJoin(classId) {
@@ -762,6 +765,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
     },
     async flush() {
       flushRound++;
+      const wasJoining = new Map([...devices.values()].map((d) => [d, new Set([...d.registry.entries.values()].filter((e) => e.joining).map((e) => e.classId))]));
       // Lagging events and database entries of the previous rounds.
       for (const d of devices.values()) {
         const due = d.pendingEvents.filter((p) => p.due <= flushRound);
@@ -792,7 +796,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
         if (!m || !linked(m, j) || f.admittedBy.has(x)) continue;
         if (m.folders.get(classId)?.devices.has(j.deviceId)) {
           f.admittedBy.add(x);
-          if (f.admittedBy.size === 1 && j.registry.entries.get(classId)?.joining) emit(j, { type: 'admittedMe', classId, byDevice: x });
+          if (f.admittedBy.size === 1 && (j.registry.entries.get(classId)?.joining || wasJoining.get(j)?.has(classId))) emit(j, { type: 'admittedMe', classId, byDevice: x });
         }
       }
       for (const d of list) {

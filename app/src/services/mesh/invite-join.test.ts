@@ -69,6 +69,53 @@ describe('mesh: invite and join', () => {
     expect(mesh.folderDevices('bruno', classId)).not.toContain(diogo.deviceId);
   });
 
+  it('joinStalled counts 90 s from the first connection to a member, not from join() (sync spec §8)', async () => {
+    const mesh = newMesh();
+    const [ana, carla] = [await meshApp(mesh, 'ana'), await meshApp(mesh, 'carla')];
+    const classId = await sharedClass(mesh, ana, []);
+    await info(ana, classId).setMeta({ askBeforeAdmit: true });   // nobody lets Carla in
+    await settle(mesh, [ana]);
+    const { code } = await ana.services.sync.invite(classId);
+    mesh.crash('ana');                                             // the only member is offline
+    await carla.services.sync.join(await carla.services.sync.parseCode(code), { includeAudio: true });
+    expect(carla.services.sync.joining(classId)).toMatchObject({ connectedAt: null });
+    await mesh.advance(120_000);
+    await settle(mesh, [carla], 2);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([]);   // nobody to connect to: not stalled
+    mesh.restart('ana');
+    const ana2 = await meshApp(mesh, 'ana', ana.platform);
+    await settle(mesh, [ana2, carla], 2);
+    expect(carla.services.sync.joining(classId)?.connectedAt).not.toBeNull();
+    await mesh.advance(60_000);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([]);
+    await mesh.advance(31_000);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([classId]);
+    // Let in at last: the stall clears.
+    await ana2.services.sync.admit(classId, carla.deviceId);
+    await settle(mesh, [ana2, carla], 6);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([]);
+    expect(carla.services.sync.joining(classId)).toBeNull();
+  });
+
+  it('try again re-runs the knock with the same invite', async () => {
+    const mesh = newMesh();
+    const [ana, carla] = [await meshApp(mesh, 'ana'), await meshApp(mesh, 'carla')];
+    const classId = await sharedClass(mesh, ana, []);
+    await info(ana, classId).setMeta({ askBeforeAdmit: true });
+    await settle(mesh, [ana]);
+    const { code } = await ana.services.sync.invite(classId);
+    await carla.services.sync.join(await carla.services.sync.parseCode(code), { includeAudio: false });
+    await settle(mesh, [ana, carla], 2);
+    await mesh.advance(91_000);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([classId]);
+    await expect(carla.services.sync.retryJoin(classId)).resolves.toBe(classId);
+    expect(carla.services.sync.state.get().joinStalled).toEqual([]);
+    expect((await carla.platform.classes.list()).find((e) => e.classId === classId)).toMatchObject({ joining: true, skipAudio: true });
+    await ana.services.sync.admit(classId, carla.deviceId);
+    await settle(mesh, [ana, carla], 6);
+    expect(info(carla, classId).detail.get().meta.name).toBe('Direito Constitucional I');
+  });
+
   it('refuses damaged and pairing codes', async () => {
     const mesh = newMesh();
     const ana = await meshApp(mesh, 'ana');
