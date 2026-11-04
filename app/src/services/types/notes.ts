@@ -15,6 +15,12 @@ export interface NotesService {
   conflicts(path: ClassPath): Promise<{ base: string; copies: Array<{ path: ClassPath; text: string }> }>;
   resolve(path: ClassPath, choice: { keep: 'base' | ClassPath } | { merged: string } | { keepBoth: true }): Promise<void>;
   editing(path: ClassPath | null): void;                    // presence activity.editing
+  // ── UI-DOCS (additive, wave 2) ──
+  /**
+   * "Move to class notes…" / "Make private…" (UX §3.8): writes the note in the other section (same file name,
+   * made unique there) and deletes it from this one; returns the new path. Never silent: the UI confirms first.
+   */
+  moveTo(scope: 'class' | 'private', path: string, to: 'class' | 'private'): Promise<string>;
 }
 
 export interface Annotation { id: Ulid; visibility: 'private' | 'class'; author: { memberId: MemberId; name: string }; kind: 'comment' | 'highlight'; target: AnnotationLine['target']; colour?: AnnotationLine['colour']; body?: string; ai?: { model: string }; ms: EpochMs; anchor: 'exact' | 'moved' | 'approximate' | 'lost' }

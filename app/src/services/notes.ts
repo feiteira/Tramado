@@ -271,6 +271,30 @@ export function createNotesService(ctx: AppContext, app: () => AppServices, cls:
       await store.remove(classPath(path));
       await scanDir(path);
     },
+    async moveTo(scope, path, to) {
+      if (scope === to) return path;
+      const text = await service.read(scope, path);
+      const name = nameOf(path);
+      let next: string;
+      if (to === 'private') {
+        const unique_ = unique(await privateSiblings(), name);
+        next = validateClassPath(`${PRIVATE_DIR}/${unique_}`);
+        await platform.privateFiles.write(classId, next, enc.encode(text));
+        await touch(next);
+      } else {
+        const dir = notesDir();
+        const fitted = fitClassPath(dir, unique(await classSiblings(dir), name));
+        if (!fitted) throw new PlatformError('INVALID', 'the note name is too long');
+        next = validateClassPath(fitted);
+        await platform.fs.mkdir(classId, dir).catch(() => undefined);
+        await store.writeText(next, text, { own: false });
+        await scanDir(next);
+      }
+      await service.remove(scope, path);
+      app().search.refresh?.(classId);
+      await rebuild();
+      return next;
+    },
     async conflicts(path) {
       const p = classPath(path);
       const copies = groupConflicts(store.state.get().index.conflicts.map((c) => c.path)).get(p) ?? [];

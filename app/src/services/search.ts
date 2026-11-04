@@ -19,6 +19,7 @@ import { transcriptIndexText } from '../core/transcript/units';
 import { sha256Hex } from '../core/util/sha256';
 import type { AppContext } from './context';
 import { hashMemo, type ExtractionServiceImpl } from './extraction';
+import type { LectureServiceImpl } from './lectures';
 import { Store, type ReadableStore } from './store';
 import type { AppServices, ClassStore } from './types/common';
 import type { TextCache } from './types/documents';
@@ -110,10 +111,18 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
     if (!c.pending.size && !c.syncing) for (const w of c.settledWaiters.splice(0)) w();
   };
 
-  /** The lecture service's effective transcript (edits applied, folder spec §8.9) when it has one loaded. */
-  function effectiveTranscript(classId: ClassId, lectureId: string): TranscriptFile | null {
+  /**
+   * The effective transcript (pending corrections applied, folder spec §8.9) from the class's LectureService, which
+   * replays every lecture's edit logs on each refresh (not only the lectures someone opened). Null when the service
+   * has no record of the lecture (the trusted transcript.json is read instead).
+   */
+  async function effectiveTranscript(classId: ClassId, lectureId: string): Promise<TranscriptFile | null> {
     try {
-      return app().forClass(classId).lectures.open(lectureId).get()?.transcript ?? null;
+      const lectures = app().forClass(classId).lectures as Partial<LectureServiceImpl>;
+      if (typeof lectures.records !== 'function') return null;
+      // A refresh started by the same store change may be running: its result includes the change.
+      await lectures.idle?.();
+      return lectures.records().get(lectureId)?.effective ?? null;
     } catch {
       return null;
     }
@@ -162,7 +171,7 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
       wants.push({
         key: `lecture:${id}`, sig: `${st.size}:${st.mtimeMs}:${item.mtimeMs}:${edits}`, title: '', private: false,
         load: async () => {
-          const effective = effectiveTranscript(classId, id);
+          const effective = await effectiveTranscript(classId, id);
           const t = effective ? { value: effective } : await store.readJson<TranscriptFile>(tPath, parserFor('tramado.transcript'));
           if (!t || t.value.lectureId !== id) return null;
           const { text, units } = transcriptIndexText(t.value);
@@ -464,6 +473,14 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
     },
     refresh(classId) {
       if (classes.get(classId)?.first) void schedule(classId);
+    },
+    reindex(classId, path) {
+      const c = classes.get(classId);
+      if (!c?.first) return;
+      const key = `document:${path}`;
+      c.entries.delete(key);
+      c.failed.delete(key);
+      void schedule(classId);
     },
     drop(classId) {
       const c = classes.get(classId);

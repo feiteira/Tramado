@@ -15,7 +15,10 @@ import type { AppContext } from './context';
 import { hashMemo } from './extraction';
 import { Store } from './store';
 import type { AppServices, ClassStore } from './types/common';
-import type { DocSummary, DocumentService } from './types/documents';
+import type { DocSummary, DocumentService, RemovedDoc } from './types/documents';
+
+/** Undo keeps the bytes of a deleted file up to this size (larger files rely on Syncthing's versions). */
+const UNDO_MAX_BYTES = 64 * 1024 * 1024;
 
 const nameOf = (p: string) => p.slice(p.lastIndexOf('/') + 1);
 const extOf = (n: string) => (n.lastIndexOf('.') > 0 ? n.slice(n.lastIndexOf('.')) : '');
@@ -31,6 +34,11 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
   const { store, classId } = cls;
   const memo = hashMemo(ctx);
   const list = new Store<DocSummary[]>([]);
+  const folders = new Store<ClassPath[]>([]);
+  /** This device's local ignore lines (class paths): files kept private or removed from this computer only. */
+  let ignores = new Set<ClassPath>();
+  /** "Added by" per path (Syncthing's modifiedBy → member), filled after the list (UX §3.7.1). */
+  const addedBy = new Map<ClassPath, { sig: string; who: { name: string; self: boolean } | null }>();
   let hashing: Promise<void> | null = null;
   let again = false;
   let started = false;
@@ -66,12 +74,16 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
       const sha = shaOf.get(e.path) ?? null;
       const state = !TEXT_KINDS.has(kind) ? 'unsupported' : sha ? (status.bySha[sha] ?? 'pending') : 'pending';
       const first = sha ? firstBySha.get(sha) : undefined;
+      const who = addedBy.get(e.path);
+      const localOnly = ignores.has(e.path);
       return {
         path: e.path, name: nameOf(e.path), dir: dirOf(e.path), size: e.size, mtimeMs: e.mtimeMs, sha256: sha, kind,
         extraction: state, pages: sha ? (status.pages?.[sha] ?? null) : null,
         lectureId: e.lectureId ?? null, examId: e.examId ?? null, conflictOf: e.conflictOf,
         duplicateOf: first && first.path !== e.path ? first.path : null,
         fromChat: e.path.startsWith(`${fromChatDir}/`),
+        ...(localOnly ? { localOnly: true } : {}),
+        ...(localOnly ? { addedBy: { name: '', self: true } } : who && who.sig === `${e.size}:${e.mtimeMs}` ? { addedBy: who.who } : {}),
       };
     }).sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   }
@@ -79,7 +91,8 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
   const same = (a: DocSummary[], b: DocSummary[]) => a.length === b.length && a.every((x, i) => {
     const y = b[i]!;
     return x.path === y.path && x.size === y.size && x.mtimeMs === y.mtimeMs && x.sha256 === y.sha256 && x.extraction === y.extraction
-      && x.pages === y.pages && x.duplicateOf === y.duplicateOf && x.conflictOf === y.conflictOf;
+      && x.pages === y.pages && x.duplicateOf === y.duplicateOf && x.conflictOf === y.conflictOf
+      && !!x.localOnly === !!y.localOnly && JSON.stringify(x.addedBy) === JSON.stringify(y.addedBy);
   });
   const refresh = () => {
     const next = compute();
@@ -93,11 +106,16 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
       return hashing;
     }
     hashing = (async () => {
-      for (const d of store.state.get().index.documents) {
+      await memo.load(classId);
+      refresh();
+      const docs = store.state.get().index.documents;
+      for (const d of docs) {
         if (memo.known(classId, d.path, d.size, d.mtimeMs)) continue;
         await memo.hash(classId, d.path).catch(() => null);
       }
+      if (store.state.get().status === 'ready') memo.retain(classId, [...store.state.get().index.documents.map((d) => d.path), ...store.state.get().index.notes.map((n) => n.path)]);
       refresh();
+      await whoAdded();
     })().finally(() => {
       hashing = null;
       if (again) {
@@ -108,16 +126,124 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
     return hashing;
   }
 
+  /** "Added by" for the listed files whose (size, mtime) changed since the last look (one fileInfo batch). */
+  async function whoAdded(): Promise<void> {
+    const shared = store.state.get().entry.shared;
+    const want = store.state.get().index.documents.filter((d) => addedBy.get(d.path)?.sig !== `${d.size}:${d.mtimeMs}`);
+    if (!want.length) return;
+    const meName = () => ctx.identity.get()?.name ?? '';
+    if (!shared) {
+      // Nobody else has a local class: whatever is in it was added on this computer.
+      for (const d of want) addedBy.set(d.path, { sig: `${d.size}:${d.mtimeMs}`, who: { name: meName(), self: true } });
+      refresh();
+      return;
+    }
+    let infos: Awaited<ReturnType<typeof platform.sync.fileInfo>> = [];
+    try {
+      infos = await platform.sync.fileInfo(classId, want.map((d) => d.path));
+    } catch {
+      infos = [];
+    }
+    const myShort = ctx.device.get()?.shortId ?? '';
+    let people: Array<{ name: string; isMe: boolean; devices: Array<{ deviceId: string }> }> = [];
+    try {
+      people = app().forClass(classId).info.detail.get().people;
+    } catch {
+      people = [];
+    }
+    for (const d of want) {
+      const by = infos.find((i) => i.path === d.path)?.localModifiedBy ?? null;
+      let who: { name: string; self: boolean } | null = null;
+      if (by && myShort && by === myShort) who = { name: meName(), self: true };
+      else if (by) {
+        const p = people.find((x) => x.devices.some((dev) => dev.deviceId.startsWith(by)));
+        if (p) who = { name: p.name, self: p.isMe };
+      }
+      addedBy.set(d.path, { sig: `${d.size}:${d.mtimeMs}`, who });
+    }
+    refresh();
+  }
+
+  async function loadIgnores(): Promise<void> {
+    const entry = (await platform.classes.list().catch(() => [])).find((e) => e.classId === classId);
+    const next = new Set(entry?.localIgnores ?? store.state.get().entry.localIgnores ?? []);
+    if (next.size !== ignores.size || [...next].some((p) => !ignores.has(p))) {
+      ignores = next;
+      refresh();
+    }
+  }
+  async function setIgnores(f: (cur: ClassPath[]) => ClassPath[]): Promise<void> {
+    const entry = (await platform.classes.list()).find((e) => e.classId === classId);
+    if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
+    const next = f(entry.localIgnores);
+    const updated = await platform.classes.update(classId, { localIgnores: next });
+    ignores = new Set(updated.localIgnores);
+  }
+
+  /** Folders under the documents directory (also the empty ones the index does not show). */
+  async function listFolders(): Promise<void> {
+    const root = store.dir('documents');
+    let dirs: ClassPath[] = [];
+    try {
+      dirs = (await platform.fs.list(classId, root, { recursive: true, maxDepth: 6 })).filter((f) => f.isDir && classifyPath(f.path).kind === 'content').map((f) => f.path);
+    } catch {
+      dirs = [];
+    }
+    // Directories that hold listed files (an index may know a file before a listing shows its folder).
+    for (const d of store.state.get().index.documents) {
+      let dir = dirOf(d.path);
+      while (dir && dir !== root && dir.startsWith(`${root}/`)) {
+        dirs.push(dir);
+        dir = dirOf(dir);
+      }
+    }
+    const next = [...new Set(dirs)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const cur = folders.get();
+    if (next.length !== cur.length || next.some((p, i) => p !== cur[i])) folders.set(next);
+  }
+  let foldersRunning: Promise<void> | null = null;
+  let foldersAgain = false;
+  function refreshFolders(): Promise<void> {
+    if (foldersRunning) {
+      foldersAgain = true;
+      return foldersRunning;
+    }
+    foldersRunning = listFolders().finally(() => {
+      foldersRunning = null;
+      if (foldersAgain) {
+        foldersAgain = false;
+        void refreshFolders();
+      }
+    });
+    return foldersRunning;
+  }
+
   function start() {
     if (started) return;
     started = true;
     offs.push(store.state.subscribe(() => {
       refresh();
       void hashAll();
+      void refreshFolders();
     }));
     offs.push(app().extraction.status.subscribe(refresh));
+    try {
+      offs.push(app().forClass(classId).info.detail.subscribe(() => {
+        // Names of people bound later (a member file that arrived): look again at the unknown ones.
+        let changed = false;
+        for (const [p, v] of addedBy) if (v.who === null) {
+          addedBy.delete(p);
+          changed = true;
+        }
+        if (changed) void whoAdded();
+      }));
+    } catch {
+      // no class service (tests that build only this service)
+    }
+    void loadIgnores();
     refresh();
     void hashAll();
+    void refreshFolders();
     // The search service extracts and indexes the class's documents (text states follow).
     void app().search.ensure(classId).catch((e: unknown) => ctx.log('warn', 'documents: search index failed', { classId, error: String(e) }));
   }
@@ -130,6 +256,16 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
     subscribe: (l: () => void) => {
       start();
       return list.subscribe(l);
+    },
+  };
+  const lazyFolders = {
+    get: () => {
+      start();
+      return folders.get();
+    },
+    subscribe: (l: () => void) => {
+      start();
+      return folders.subscribe(l);
     },
   };
 
@@ -170,8 +306,74 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
     return null;
   }
 
+  const scan = async (path: ClassPath) => {
+    if (!store.state.get().entry.shared) return;
+    await platform.sync.scan(classId, dirOf(path) || undefined).catch(() => undefined);
+  };
+
   const service: DocumentServiceImpl = {
     list: lazyList,
+    folders: lazyFolders,
+    async mkdir(name, parent) {
+      const dir = parent ?? store.dir('documents');
+      if (dir) validateClassPath(dir);
+      const path = await placeName(dir, name, await siblings(dir));
+      await platform.fs.mkdir(classId, path);
+      await refreshFolders();
+      return path;
+    },
+    async keepPrivate(path) {
+      validateClassPath(path);
+      const st = await platform.fs.stat(classId, path);
+      if (!st || st.isDir) throw new PlatformError('NOT_FOUND', `no file ${path}`);
+      if (store.state.get().entry.shared && !ignores.has(path)) {
+        // Deleted for everyone first (the deletion must reach the index before the ignore line hides the path)…
+        const bytes = await platform.fs.read(classId, path);
+        await store.remove(path);
+        await scan(path);
+        // …then ignored here and written back: Syncthing never announces it again (folder spec §11.2).
+        await setIgnores((cur) => (cur.includes(path) ? cur : [...cur, path]));
+        await platform.fs.write(classId, path, bytes, { own: false });
+      } else {
+        await setIgnores((cur) => (cur.includes(path) ? cur : [...cur, path]));
+      }
+      refresh();
+    },
+    async share(path) {
+      validateClassPath(path);
+      await setIgnores((cur) => cur.filter((p) => p !== path));
+      refresh();
+      await scan(path);
+    },
+    async removeForUndo(path) {
+      validateClassPath(path);
+      const st = await platform.fs.stat(classId, path);
+      if (!st) throw new PlatformError('NOT_FOUND', `no ${path}`);
+      const bytes = !st.isDir && st.size <= UNDO_MAX_BYTES ? await platform.fs.read(classId, path).catch(() => null) : null;
+      const at = ctx.clock.now();
+      await service.remove(path, 'everyone');
+      return { path, at, bytes };
+    },
+    async restore(removed: RemovedDoc) {
+      const { path } = removed;
+      if (await platform.fs.stat(classId, path).catch(() => null)) return;   // already back (a classmate restored it)
+      if (store.state.get().entry.shared) {
+        try {
+          const versions = (await platform.sync.versions(classId)).filter((v) => v.path === path).sort((a, b) => (a.versionTime < b.versionTime ? 1 : -1));
+          if (versions[0]) {
+            await platform.sync.restore(classId, [{ path, versionTime: versions[0].versionTime }]);
+            if (await platform.fs.stat(classId, path).catch(() => null)) return;
+          }
+        } catch {
+          // no version kept on this computer: the bytes below
+        }
+      }
+      if (!removed.bytes) throw new PlatformError('NOT_FOUND', `no copy of ${path} to restore`);
+      const dir = dirOf(path);
+      if (dir) await platform.fs.mkdir(classId, dir).catch(() => undefined);
+      await platform.fs.write(classId, path, removed.bytes, { own: false });
+      await scan(path);
+    },
     async import(picks: Picked[], destDir?: ClassPath, opts: { allowDuplicate?: boolean } = {}) {
       const dir = destDir ?? store.dir('documents');
       if (dir) validateClassPath(dir);
@@ -219,7 +421,7 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
         // The ignore line first (folder spec §9.1, §11.2): the local delete must not propagate.
         const entry = (await platform.classes.list()).find((e) => e.classId === classId);
         if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
-        if (!entry.localIgnores.includes(path)) await platform.classes.update(classId, { localIgnores: [...entry.localIgnores, path] });
+        if (!entry.localIgnores.includes(path)) ignores = new Set((await platform.classes.update(classId, { localIgnores: [...entry.localIgnores, path] })).localIgnores);
       }
       const st = await platform.fs.stat(classId, path);
       if (!st) throw new PlatformError('NOT_FOUND', `no ${path}`);
@@ -255,7 +457,11 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
     open: (path) => platform.classes.open(classId, path),
     async idle() {
       start();
-      for (let i = 0; i < 20 && (hashing || again); i++) await hashing;
+      for (let i = 0; i < 20 && (hashing || again || foldersRunning); i++) {
+        await hashing;
+        await foldersRunning;
+      }
+      await loadIgnores();
       refresh();
     },
     dispose() {
