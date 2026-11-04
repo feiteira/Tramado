@@ -1,0 +1,649 @@
+[
+  {
+    "name": "class-lectures",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "lecture-item:3"
+      },
+      {
+        "expect-text": "lecture-list=Aula 8"
+      },
+      {
+        "expect-attr": "lecture-transcript-chip:data-state=claimed"
+      }
+    ]
+  },
+  {
+    "name": "class-lectures-pt-dark",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect-text": "lecture-list=Esta semana"
+      }
+    ]
+  },
+  {
+    "name": "class-lectures-es-125",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect-text": "lecture-list=Esta semana"
+      }
+    ]
+  },
+  {
+    "name": "class-lectures-1000x660",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "size": "1000x660"
+  },
+  {
+    "name": "class-lectures-filter",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "steps": [
+      {
+        "type": "lectures-filter=zzz"
+      },
+      {
+        "expect": "lectures-nomatch"
+      },
+      {
+        "type": "lectures-filter=proporcional"
+      },
+      {
+        "expect": "lecture-item:1"
+      }
+    ]
+  },
+  {
+    "name": "class-lectures-menu",
+    "query": "route=class&class=law&tab=lectures&sync=fake",
+    "ready": "lecture-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-menu"
+      },
+      {
+        "expect": "lecture-menu-open"
+      }
+    ]
+  },
+  {
+    "name": "empty-class",
+    "query": "route=class&class=stats&tab=lectures",
+    "ready": "lectures-empty",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "lectures-empty-record"
+      }
+    ]
+  },
+  {
+    "name": "empty-class-pt",
+    "query": "route=class&class=stats&tab=lectures",
+    "ready": "lectures-empty",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "lecture",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "transcript-para"
+      },
+      {
+        "expect": "player"
+      },
+      {
+        "expect": "timeline"
+      },
+      {
+        "expect-not": "transcription-card"
+      }
+    ]
+  },
+  {
+    "name": "lecture-dark",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "transcript-para"
+      }
+    ]
+  },
+  {
+    "name": "lecture-pt-dark",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "expect": "transcript-para"
+      }
+    ]
+  },
+  {
+    "name": "lecture-es-125",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25,
+    "steps": [
+      {
+        "expect": "transcript-para"
+      }
+    ]
+  },
+  {
+    "name": "lecture-1000x660",
+    "query": "route=lecture&class=law&lecture=l6&cite=1&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect": "lecture-side-toggle"
+      },
+      {
+        "click": "lecture-side-toggle"
+      },
+      {
+        "expect": "lecture-notes"
+      }
+    ]
+  },
+  {
+    "name": "lecture-ai",
+    "query": "route=lecture&class=law&lecture=l6&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-side-ai"
+      },
+      {
+        "expect": "lecture-summary"
+      },
+      {
+        "expect": "time-chip"
+      }
+    ]
+  },
+  {
+    "name": "lecture-ai-off",
+    "query": "route=lecture&class=law&lecture=l6&ai=off",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-side-ai"
+      },
+      {
+        "expect": "lecture-ai-off"
+      }
+    ]
+  },
+  {
+    "name": "lecture-markers",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-side-markers"
+      },
+      {
+        "expect": "lecture-marker:5"
+      },
+      {
+        "expect": "lecture-auto-marker:1"
+      }
+    ]
+  },
+  {
+    "name": "lecture-note-keys",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "lecture-marker:5"
+      },
+      {
+        "click": "lecture-note-add"
+      },
+      {
+        "type": "lecture-note-input=1"
+      },
+      {
+        "expect": "lecture-marker:5"
+      },
+      {
+        "expect": "lecture-note-input"
+      }
+    ]
+  },
+  {
+    "name": "lecture-find",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Control+f"
+      },
+      {
+        "expect": "transcript-find"
+      },
+      {
+        "type": "transcript-find-input=conteudo essencial"
+      },
+      {
+        "expect-text": "transcript-find-count=1 of"
+      }
+    ]
+  },
+  {
+    "name": "lecture-edit",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "transcript-edit"
+      },
+      {
+        "expect": "transcript-edit-notice"
+      },
+      {
+        "expect": "transcript-segment-menu"
+      },
+      {
+        "click": "transcript-segment"
+      },
+      {
+        "expect": "transcript-segment-input"
+      }
+    ]
+  },
+  {
+    "name": "lecture-speakers",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-more"
+      },
+      {
+        "click": "lecture-more-speakers"
+      },
+      {
+        "expect": "speakers-dialog"
+      },
+      {
+        "expect": "speakers-input:1"
+      }
+    ]
+  },
+  {
+    "name": "lecture-edit-pt-dark",
+    "query": "route=lecture&class=law&lecture=l6",
+    "ready": "lecture-transcript",
+    "lang": "pt",
+    "theme": "dark",
+    "axe": true,
+    "steps": [
+      {
+        "press": "e"
+      },
+      {
+        "expect": "transcript-edit-notice"
+      },
+      {
+        "click": "transcript-segment"
+      },
+      {
+        "expect": "transcript-segment-input"
+      }
+    ]
+  },
+  {
+    "name": "lecture-cite",
+    "query": "route=lecture&class=law&lecture=l6&cite=1",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "transcript-para"
+      }
+    ]
+  },
+  {
+    "name": "lecture-l8-bruno",
+    "query": "route=lecture&class=law&lecture=l8&sync=fake",
+    "ready": "transcription-card",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "transcription-card:data-state=claimed"
+      },
+      {
+        "expect": "transcribe-notify"
+      }
+    ]
+  },
+  {
+    "name": "lecture-b4-waiting",
+    "query": "route=lecture&class=bio&lecture=b4",
+    "ready": "transcription-card",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "transcription-card:data-state=none"
+      },
+      {
+        "expect": "transcribe-here"
+      }
+    ]
+  },
+  {
+    "name": "lecture-b3-stereo",
+    "query": "route=lecture&class=bio&lecture=b3",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "transcript-para"
+      }
+    ]
+  },
+  {
+    "name": "record-dialog",
+    "query": "route=class&class=law&speech=fake&dialog=record",
+    "ready": "record-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "record-on-record"
+      },
+      {
+        "expect-attr": "record-start:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "record-dialog-consent",
+    "query": "route=class&class=stats&speech=fake&dialog=record",
+    "ready": "record-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "record-start:disabled=true"
+      },
+      {
+        "click": "record-consent"
+      },
+      {
+        "expect-attr": "record-start:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "record-dialog-change",
+    "query": "route=class&class=law&speech=fake&dialog=record",
+    "ready": "record-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark",
+    "steps": [
+      {
+        "click": "record-consent-change"
+      },
+      {
+        "expect-attr": "record-start:disabled=true"
+      },
+      {
+        "click": "record-consent"
+      },
+      {
+        "expect-attr": "record-start:disabled=true"
+      },
+      {
+        "click": "record-consent-share"
+      },
+      {
+        "expect-attr": "record-start:disabled=null"
+      }
+    ]
+  },
+  {
+    "name": "record-dialog-es-125",
+    "query": "route=class&class=bio&speech=fake&dialog=record",
+    "ready": "record-dialog",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "record-pick-class",
+    "query": "route=today&speech=fake&dialog=record",
+    "ready": "record-pick-class",
+    "axe": true,
+    "steps": [
+      {
+        "click": "record-pick-class-item"
+      },
+      {
+        "expect": "record-dialog"
+      }
+    ]
+  },
+  {
+    "name": "recording",
+    "query": "route=lecture&class=law&lecture=l7&speech=fake&recording=1",
+    "ready": "record-dock",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "record-mark:5"
+      },
+      {
+        "expect": "record-pause"
+      },
+      {
+        "expect": "record-stop"
+      }
+    ]
+  },
+  {
+    "name": "recording-1000x660",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=1",
+    "ready": "record-dock",
+    "axe": true,
+    "size": "1000x660",
+    "steps": [
+      {
+        "expect": "lecture-recording-row"
+      }
+    ]
+  },
+  {
+    "name": "recording-pt-dark",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=1",
+    "ready": "record-dock",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "recording-note",
+    "query": "route=class&class=law&tab=lectures&speech=fake&recording=1",
+    "ready": "record-dock",
+    "axe": true,
+    "steps": [
+      {
+        "press": "n"
+      },
+      {
+        "expect": "record-note-input"
+      },
+      {
+        "type": "record-note-input=3"
+      },
+      {
+        "expect": "record-note-input"
+      }
+    ]
+  },
+  {
+    "name": "save",
+    "query": "route=class&class=law&speech=fake&recording=1&dialog=save",
+    "ready": "record-save",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "record-save-title"
+      },
+      {
+        "expect": "record-save-share"
+      }
+    ]
+  },
+  {
+    "name": "save-es-125",
+    "query": "route=class&class=law&speech=fake&recording=1&dialog=save",
+    "ready": "record-save",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "recover",
+    "query": "route=today&dialog=recover",
+    "ready": "record-recover",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "record-recover-keep"
+      },
+      {
+        "expect": "record-recover-delete"
+      }
+    ]
+  },
+  {
+    "name": "import",
+    "query": "route=class&class=law&tab=lectures&dialog=import",
+    "ready": "import-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "import-choose"
+      },
+      {
+        "expect-attr": "import-confirm:disabled="
+      }
+    ]
+  },
+  {
+    "name": "import-pt-dark",
+    "query": "route=class&class=law&tab=lectures&dialog=import",
+    "ready": "import-dialog",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "model-prompt",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "model-choice-turbo"
+      },
+      {
+        "expect": "model-prompt-download"
+      }
+    ]
+  },
+  {
+    "name": "model-prompt-es-125",
+    "query": "route=lecture&class=bio&lecture=b4&model=missing&dialog=model",
+    "ready": "model-prompt",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "model-downloading",
+    "query": "route=class&class=law&tab=lectures&speech=fake&model=downloading",
+    "ready": "job-dock",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "job-dock:data-kind=model"
+      },
+      {
+        "expect": "job-pause"
+      }
+    ]
+  },
+  {
+    "name": "settings-transcription",
+    "query": "route=settings&section=transcription&speech=fake&model=downloading",
+    "ready": "settings-transcription",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "speech-model-turbo"
+      },
+      {
+        "expect": "speech-volunteer-plugged"
+      }
+    ]
+  },
+  {
+    "name": "settings-transcription-pt-dark",
+    "query": "route=settings&section=transcription&speech=fake",
+    "ready": "settings-transcription",
+    "axe": true,
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "settings-transcription-es-125",
+    "query": "route=settings&section=transcription&speech=fake",
+    "ready": "settings-transcription",
+    "axe": true,
+    "lang": "es",
+    "scale": 1.25
+  }
+]

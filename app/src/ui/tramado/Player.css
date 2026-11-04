@@ -1,0 +1,122 @@
+/* Player (UX §3.5.2). Tokens only. */
+.player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  min-width: 0;
+}
+.player__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  min-width: 0;
+}
+.player__speed {
+  display: inline-flex;
+}
+.player__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-1);
+  transition: background-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.player__toggle:hover {
+  background: var(--accent-hover);
+}
+.player__toggle:active {
+  transform: scale(0.96);
+}
+.player__time,
+.player__time-input {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: var(--control-h-sm);
+  padding: 0 var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.player__time:hover {
+  background: var(--paper-hover);
+}
+.player__time-input {
+  width: 11ch;
+  border-color: var(--accent);
+  background: var(--paper-raised);
+}
+.player__sep,
+.player__total {
+  color: var(--ink-3);
+  font-weight: 450;
+}
+.player__volume {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-3);
+}
+.player__volume input[type='range'] {
+  width: 72px;
+  height: 4px;
+  appearance: none;
+  border-radius: var(--r-pill);
+  background: linear-gradient(to right, var(--ink-3) var(--pct, 100%), var(--rule-strong) var(--pct, 100%));
+  cursor: pointer;
+}
+.player__volume input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  border: 2px solid var(--ink-2);
+}
+.player__volume input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  border: 2px solid var(--ink-2);
+}
+.player__follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-h-sm);
+  padding: 0 var(--s-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 540;
+  white-space: nowrap;
+}
+.player__follow:hover {
+  background: var(--paper-hover);
+}
+.player__follow--on {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.player__status {
+  margin-inline-start: auto;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}

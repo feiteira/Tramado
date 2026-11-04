@@ -1,4 +1,5 @@
-// English source catalog `speech`: UX spec §5.19 verbatim (docs/design/ux-mvp.md).
+// English source catalog `speech`: UX spec §5.19 verbatim (docs/design/ux-mvp.md), plus the keys UI-LECTURES added in
+// wave 2 (marked "UI-LECTURES").
 // English is the source of truth; pt/ and es/ are typed Messages['speech'].
 
 export const speech = {
@@ -33,7 +34,20 @@ export const speech = {
     noDisk: 'The speech model needs {size} free. You have {free}.',
     useDraft: 'Use the Draft model ({size})',
     openStorage: 'Open Storage settings',
+    // UI-LECTURES
+    choose: 'Speech model',
+    turboHint: 'good accuracy',
+    smallHint: 'faster, but rough on Portuguese and Spanish',
+    largeHint: 'slower',
+    noDiskUnknown: 'The speech model needs {size} free, and this disk has less.',
+    cpu: 'This computer’s processor can’t run the speech model (it needs AVX2, found in processors since about 2013). A classmate’s computer or OpenRouter can transcribe it instead.',
   },
+  // UI-LECTURES
+  unavailable: 'Speech models need the Tramado app on your computer.',
+  volunteerNeedsModel: 'This starts once a speech model is installed.',
+  turnOff: 'Turn off',
+  shortcutTaken: 'Another app uses {keys}.',
+  cloudHint: 'Paid, about 2 cents per lecture. The audio is sent to OpenRouter in short pieces.',
   left: {
     underMinute: 'less than a minute left',
     minutes: { one: 'about {n} minute left', other: 'about {n} minutes left' },

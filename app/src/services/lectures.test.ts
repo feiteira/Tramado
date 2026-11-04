@@ -8,7 +8,7 @@ import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
 import type { MemoryPlatform } from '../platform/memory';
 import type { ClassStoreImpl } from './classStore';
 import { createServices } from './index';
-import { FOLD_DEBOUNCE_MS, type LectureServiceImpl } from './lectures';
+import { FOLD_DEBOUNCE_MS, parsePeaks, type LectureServiceImpl } from './lectures';
 import { claimView, installClassFakes } from './testing/fakeClaims';
 import { createFakeSearch } from './testing/fakeSearch';
 import { createTestContext } from './testing/context';
@@ -133,6 +133,58 @@ describe('LectureService: list and detail', () => {
     void cs;
   });
 
+  it('draws the waveform from cache/peaks without a speech engine (the browser demo, a warm cache)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const sha = sha256Hex(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
+    const buckets = Array.from({ length: 1200 }, (_, i) => i % 256);
+    await platform.cache.write(`peaks/${sha}-1200.json`, enc.encode(JSON.stringify({ format: 'tramado.peaks', version: 1, buckets })));
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    const detail = lectures.open(id);
+    await settle();
+    expect(detail.get()!.peaks).toEqual(buckets);
+    expect(parsePeaks(enc.encode('{"format":"tramado.peaks","version":1,"buckets":[1,300]}'))).toBeNull();
+    expect(parsePeaks(enc.encode('not json'))).toBeNull();
+  });
+
+  it('removes a lecture from this computer only: ignored first, then deleted here (UI-LECTURES, UX §3.4)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    await lectures.markers.add(id, { atMs: 1000, rawMs: 1000, kind: 'important' });
+    const order: string[] = [];
+    const update = platform.classes.update.bind(platform.classes);
+    platform.classes.update = async (c, patch) => {
+      order.push(`ignore ${patch.localIgnores?.join(',')}`);
+      return update(c, patch);
+    };
+    platform.mem.onWrite((_c, path, _b, kind) => kind === 'remove' && order.push(`remove ${path}`));
+    await lectures.removeLocal(id);
+    await settle();
+    expect(order[0]).toBe('ignore Aulas/2026-11-03 1015 Aula 6');
+    expect((await platform.classes.list()).find((e) => e.classId === classId)!.localIgnores).toEqual(['Aulas/2026-11-03 1015 Aula 6']);
+    expect([...platform.mem.list(classId).keys()].filter((p) => p.startsWith('Aulas/'))).toEqual([]);
+    expect(await platform.privateFiles.read(classId, `markers/${id}.json`)).toBeNull();
+    expect(lectures.list.get()).toEqual([]);
+  });
+
+  it('hides an automatic exam mark within 30 s of my own exam marker (UI-LECTURES, UX §7.3)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(1);
+    await lectures.markers.add(id, { atMs: 75_000, rawMs: 75_000, kind: 'exam' });   // 45 s away: both stay
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(1);
+    await lectures.markers.add(id, { atMs: 27_000, rawMs: 30_000, kind: 'exam' });   // 3 s before: the radar mark hides
+    await lectures.markers.add(id, { atMs: 31_000, rawMs: 31_000, kind: 'important' });   // other kinds do not count
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(0);
+    const d = lectures.open(id);
+    await settle();
+    expect(d.get()!.autoMarkers).toEqual([]);
+  });
+
   it('links legal references to the article in the class’s law text', async () => {
     const { platform, classId, me, lectures, settle, services } = await setup();
     (services as { search: unknown }).search = createFakeSearch([
@@ -254,7 +306,7 @@ describe('LectureService: corrections (folder spec §8.9, in 0.1)', () => {
     await settle();
     const t = d.get()!.transcript!;
     expect(t.segments.map((s) => s.text)).toEqual(['Bom dia, turma.', 'Hoje vamos ver', 'o artigo 18.º, n.º 3, da Constituição.', 'Isto costuma sair no exame, tomem nota.']);
-    expect(t.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Marta Reis' }]);
+    expect(t.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Marta Reis', labelHlc: expect.stringMatching(/-tkbnv23$/) }]);
     expect(t.unfolded).toBe(3);
     expect(t.correctedBy).toEqual({ s_aaaaa: ['TKBNV23'], s_bbbbb: ['TKBNV23'], s_ddddd: ['TKBNV23'] });
     expect(lectures.list.get()[0]!.transcription).toMatchObject({ kind: 'done', pendingEdits: 3 });
@@ -294,7 +346,7 @@ describe('LectureService: corrections (folder spec §8.9, in 0.1)', () => {
     expect(folded.revision).toBe(2);
     expect(folded.folded[me.deviceId]).toBe(log.length ? JSON.parse(dec.decode(await platform.fs.read(classId, `.tramado/edits/${id}/${me.deviceId}.jsonl`)).trim().split('\n').pop()!).hlc : '');
     expect(folded.segments.map((s) => s.id)).toEqual(['s_aaaaa', 's_bbbbb', newId, 's_ccccc']);
-    expect(folded.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis' }, { id: 'spk_1', label: 'Orador 1' }]);
+    expect(folded.speakers).toEqual([{ id: 'lecture', label: 'Prof.ª Reis', labelHlc: expect.any(String) }, { id: 'spk_1', label: 'Orador 1' }]);
     const md = dec.decode(await platform.fs.read(classId, 'Aulas/x/transcript.md'));
     expect(md).toContain('(revision 2)');
     expect(md).toContain('**[00:00:00] Prof.ª Reis:** Bom dia, turma.');

@@ -1,4 +1,5 @@
-// English source catalog `record`: UX spec §5.8 verbatim (docs/design/ux-mvp.md).
+// English source catalog `record`: UX spec §5.8 verbatim (docs/design/ux-mvp.md), plus the keys UI-LECTURES added in
+// wave 2 (marked "UI-LECTURES").
 // English is the source of truth; pt/ and es/ are typed Messages['record'].
 
 export const record = {
@@ -13,6 +14,7 @@ export const record = {
     includeMe: 'Also record me (for my questions)',
     headphones: 'Wear headphones, so the lecture isn’t recorded twice.',
     language: 'Language spoken',
+    languageAuto: 'Detect automatically',   // UI-LECTURES
     device: 'Microphone',
     deviceDefault: 'Default — {name}',
     permission: 'Permission',
@@ -45,6 +47,7 @@ export const record = {
     permissionPlaceMac: 'System Settings › Privacy & Security › Microphone',
     permissionPlaceWindows: 'Settings › Privacy & security › Microphone',
     openSettings: 'Open settings',
+    unavailable: 'Recording isn’t available here: this needs the Tramado app on your computer.',   // UI-LECTURES
   },
   why: 'Portuguese law (Código Penal, art. 199.º) makes it a crime to record words not meant for the public without consent, and also to use a lawful recording beyond what was agreed. Spain protects people’s voice and lectures in a similar way, and lectures are protected works in both countries. So Tramado asks for two separate permissions: to record, and to share with your class group. This is not legal advice; your university may have its own rules.',
   dock: {
@@ -68,6 +71,10 @@ export const record = {
     systemOff: 'The computer’s sound is not being recorded: {reason}',
     failed: 'The recording stopped: {reason}. What was recorded is kept.',
     saveWhatWasRecorded: 'Save what was recorded',
+    // UI-LECTURES
+    failedReason: 'it ended unexpectedly',
+    batteryUnknown: 'On battery and running low. Plug in if the lecture runs long.',
+    checkHint: 'Speak and watch the meter. To use another microphone, stop and start again.',
     announce: { started: 'Recording started', paused: 'Recording paused', resumed: 'Recording resumed', saved: 'Recording saved' },
   },
   markers: {
@@ -96,6 +103,12 @@ export const record = {
     discard: 'Discard recording…',
     discardConfirm: { title: 'Delete this recording?', body: 'It hasn’t been shared with anyone.', confirm: 'Delete it' },
     saved: 'Saved “{title}”.',
+    // UI-LECTURES
+    meta: '{duration} · {class}',
+    keptHere: '“{title}” stays on this computer. Share it from the Lectures tab when you’re ready.',
+    classmateHint: 'A classmate’s computer that helps with transcription takes it on.',
+    classmateNobody: 'Nobody in this class transcribes automatically yet: it waits until someone does.',
+    nudge: 'If nobody has transcribed it a day after the lecture, Tramado reminds you.',
   },
   recover: {
     title: 'A recording was interrupted',
@@ -103,6 +116,9 @@ export const record = {
     keep: 'Keep what was recorded',
     delete: 'Delete it',
     deleteConfirm: 'Delete the interrupted recording? This can’t be undone.',
+    // UI-LECTURES
+    length: 'What was kept: {duration}.',
+    lost: 'The last {seconds} s could not be recovered.',
   },
   import: {
     title: 'Add a recording to {class}',
@@ -117,5 +133,11 @@ export const record = {
     looksLikeRecording: '“{file}” looks like a recording. Add it as a lecture?',
     asLecture: 'Add as a lecture',
     asDocument: 'Add as a document',
+    // UI-LECTURES
+    filterAudio: 'Audio and video',
+    filterSubtitles: 'Subtitles',
+    noFile: 'No file chosen yet.',
+    unsupported: 'This file’s audio format isn’t supported. Convert it to MP3 or M4A (AAC-LC) and try again.',
+    vttLater: 'Subtitles (“{file}”) can’t be used as the transcript yet: Tramado transcribes the recording itself.',
   },
 };

@@ -4,6 +4,13 @@
 import type { DeviceId, Hex64, Hlc, SegmentId } from '../model/ids';
 import type { Segment, TranscriptEditLine, TranscriptFile } from '../model/files';
 import { isSpeakerId, speakerLabel } from './labels';
+
+/**
+ * A speaker of transcript.json with the HLC of its last folded `label_speaker` line (folder spec §8.8, G2 lead
+ * decision 2026-11-04). `labelHlc` is absent until a label was folded. (The integrator adds `labelHlc?` to
+ * `TranscriptFile.speakers` in core/model/files.ts; until then this widening carries it.)
+ */
+export type Speaker = TranscriptFile['speakers'][number] & { labelHlc?: Hlc };
 import { validEditLine } from './edits';
 import { sha1Hex } from './sha1';
 
@@ -31,7 +38,7 @@ export interface ReplayInfo {
   dropped: Array<{ deviceId: DeviceId; id: string; op: TranscriptEditLine['op']; reason: string }>;
   /** Per device: the greatest HLC replayed, what a fold writes into `folded`. */
   foldedTo: Record<DeviceId, Hlc>;
-  /** Per speaker: the HLC of the label currently in effect from an unfolded `label_speaker`. */
+  /** Per speaker: the HLC of the label now in effect (an unfolded `label_speaker`, else the folded `labelHlc`). */
   speakerHlc: Record<string, Hlc>;
   /** Merged-away ids → the segment that absorbed them (folder spec §8.8 `merged`). */
   redirects: Record<SegmentId, SegmentId>;
@@ -78,7 +85,7 @@ export function pendingOps(t: Pick<TranscriptFile, 'lectureId' | 'round' | 'fold
 /** Replays the pending edit lines of `t` (folder spec §8.9 `effective`) and says what happened. */
 export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: ReplayOptions = {}): { transcript: EffectiveTranscript; info: ReplayInfo } {
   const segments = [...t.segments].map(copySeg).sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
-  const speakers = t.speakers.map((s) => ({ ...s }));
+  const speakers: Speaker[] = (t.speakers as Speaker[]).map((s) => ({ ...s }));
   // Every speaker a segment uses is listed, with its default label when nobody named it. Speakers are only
   // ever added (here, by set_speaker and by label_speaker), so folding part of the edits commutes with replay.
   const listSpeaker = (id: string) => {
@@ -86,6 +93,7 @@ export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: Replay
   };
   for (const s of segments) listSpeaker(s.speaker);
   const info: ReplayInfo = { ops: 0, touched: {}, dropped: [], foldedTo: {}, speakerHlc: {}, redirects: {}, splitFrom: {} };
+  for (const s of speakers) if (s.labelHlc) info.speakerHlc[s.id] = s.labelHlc;
   const concurrent = new Set<SegmentId>();
   const used = new Set<SegmentId>();
   for (const s of segments) {
@@ -119,12 +127,20 @@ export function replay(t: TranscriptFile, logs: readonly EditLog[], opts: Replay
     if (!info.foldedTo[deviceId] || op.hlc > info.foldedTo[deviceId]!) info.foldedTo[deviceId] = op.hlc;
     const drop = (reason: string) => info.dropped.push({ deviceId, id: op.id, op: op.op, reason });
     if (op.op === 'label_speaker') {
+      // LWW per speaker against the folded label's HLC: a late line older than the folded label changes nothing.
       const id = op.speakerId!;
       const label = op.label!.replace(/\s+/g, ' ').trim();
       const existing = speakers.find((s) => s.id === id);
-      if (existing) existing.label = label;
-      else speakers.push({ id, label });
-      info.speakerHlc[id] = op.hlc;
+      if (existing) {
+        if (op.hlc > (existing.labelHlc ?? '')) {
+          existing.label = label;
+          existing.labelHlc = op.hlc;
+          info.speakerHlc[id] = op.hlc;
+        }
+      } else {
+        speakers.push({ id, label, labelHlc: op.hlc });
+        info.speakerHlc[id] = op.hlc;
+      }
       continue;
     }
     const i = indexOf(op.segment!);

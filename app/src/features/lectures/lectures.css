@@ -1,0 +1,362 @@
+/* Lectures tab (UX §3.4) and the transcription card/chip (UX §3.5.5). Tokens only. */
+.lectures-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding-bottom: var(--s-6);
+}
+.lectures-tab__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.lectures-tab__spacer {
+  flex: 1;
+}
+.lectures-tab__filter {
+  width: min(280px, 100%);
+}
+.lectures-tab__nomatch {
+  padding: var(--s-6) var(--s-4);
+  color: var(--ink-3);
+  text-align: center;
+}
+.lecture-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-width: 0;
+}
+.lecture-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.lecture-group__title {
+  padding: 0 var(--s-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.lecture-group__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+.lecture-group__rows > li + li {
+  border-top: 1px solid var(--rule-faint);
+}
+.lecture-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease);
+}
+.lecture-row:hover {
+  background: var(--paper-hover);
+}
+.lecture-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.lecture-row__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-md);
+  background: var(--c-soft, var(--paper-sunk));
+  color: var(--c-text, var(--ink-2));
+}
+.lecture-row__main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.lecture-row__title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lecture-row__meta {
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lecture-row__flags {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.lecture-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--paper-sunk);
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  font-weight: 540;
+}
+.lecture-flag--info {
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+.lecture-flag__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lecture-row__markers {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.lecture-row__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+/* The radar badge sits at the icon's lower right: keep it clear of the count. */
+.lecture-row__count--auto {
+  gap: 6px;
+}
+.lecture-row__menu {
+  flex: none;
+}
+.lecture-row--pending {
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  cursor: default;
+}
+.lecture-row--skeleton {
+  border-bottom: 1px solid var(--rule-faint);
+  cursor: default;
+}
+.skeleton {
+  display: block;
+  border-radius: var(--r-sm);
+  background: var(--paper-sunk);
+}
+.skeleton--icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+.skeleton--line {
+  height: 12px;
+  margin: 3px 0;
+}
+.skeleton--sub {
+  height: 10px;
+}
+.lecture-recording-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  padding: 0 var(--s-4);
+  border: 1px solid color-mix(in oklab, var(--rec) 35%, var(--rule));
+  border-radius: var(--r-lg);
+  background: var(--rec-soft);
+  color: var(--rec-text);
+  font-weight: 650;
+  text-align: start;
+}
+.lecture-recording-row__title {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rec-dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rec);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--rec) 25%, transparent);
+  animation: rec-pulse 1.6s var(--ease) infinite;
+}
+.rec-dot--still {
+  animation: none;
+  opacity: 0.6;
+}
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Transcription chip */
+.tr-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--r-pill);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tr-chip__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tr-chip--done {
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+.tr-chip--progress {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.tr-chip--warning {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+}
+.tr-chip--info {
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+.tr-ring__track {
+  stroke: color-mix(in oklab, currentColor 25%, transparent);
+}
+.tr-ring__value {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+.tr-ring--quiet {
+  opacity: 0.6;
+}
+
+/* Transcription card */
+.tr-card {
+  display: flex;
+  gap: var(--s-3);
+  max-width: 720px;
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+}
+.tr-card__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.tr-card--progress .tr-card__icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.tr-card--done .tr-card__icon {
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+.tr-card--warning .tr-card__icon {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+}
+.tr-card--info .tr-card__icon {
+  background: var(--info-soft);
+  color: var(--info-text);
+}
+.tr-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.tr-card__text {
+  color: var(--ink-2);
+  line-height: var(--lh-ui);
+}
+.tr-card__text strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+.tr-card__progress {
+  max-width: 360px;
+}
+.tr-card__progress--quiet .progress__bar {
+  background: var(--ink-4);
+}
+.tr-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+}
+.tr-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.tr-status__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-status--done svg {
+  color: var(--success-text);
+}
+.lecture-row__open {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+}
+.lecture-row__open:focus-visible {
+  outline-offset: 2px;
+}

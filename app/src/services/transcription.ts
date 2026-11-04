@@ -36,12 +36,20 @@ const MODEL_IDS: readonly ModelId[] = ['turbo', 'small', 'large-v3'];
 const asVolunteer = (v: string): VolunteerPref => (v === 'off' || v === 'always' ? v : 'plugged');
 const PRESENCE_EVERY_MS = 60_000;
 const CAUGHT_UP_MS = 60_000;
+/** The owner hand-over trigger and the "nobody transcribed it" nudge are checked this often (sync spec §14.8, §14.3). */
+export const HOURLY_CHECK_MS = 3_600_000;
 /** Release (not fail) a claim when the job could not start for a reason of this computer, not of the lecture. */
 const RELEASE_CODES: readonly ErrorCode[] = ['JOB_BUSY', 'MODEL_NOT_DOWNLOADED', 'AI_NO_KEY', 'CONFLICT', 'SPEECH_UNSUPPORTED_CPU', 'NOT_IMPLEMENTED'];
 
 export interface TranscriptionQueueImpl extends TranscriptionQueue {
   /** Re-evaluates every class now: views, volunteering timers, owner duties (tests, after changes). */
   evaluate(): Promise<void>;
+  /**
+   * The hourly check (also run at start): re-evaluates (the 24 h nudge is due without any file change) and runs
+   * the transcript owner hand-over of sync spec §14.8 for every lecture with unfolded corrections whose owner is
+   * gone. Returns the lectures this device took over (tests).
+   */
+  hourly(): Promise<Array<{ classId: ClassId; lectureId: Ulid; revision: number }>>;
   /** Resolves when no evaluation or job follow-up is running (tests). */
   idle(): Promise<void>;
   dispose(): void;
@@ -67,6 +75,7 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
   const work = new Set<Promise<unknown>>();
   let started = false;
   let disposed = false;
+  let hourTimer: (() => void) | null = null;
   let noticeRaised = false;
   let lastCaps: string | null = null;
   let speechInfo: SpeechInfo | null = null;
@@ -562,6 +571,75 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     state.update((s) => ({ ...s, notify: [...notifyOn] }));
   }
 
+  // ── the transcript owner hand-over (sync spec §14.8) ──
+
+  /**
+   * For one lecture: when this device has the transcript and unfolded corrections, is not the owner, and the
+   * owner is gone (no member file, or last seen more than 7 days ago), it runs a fold claim round; the winner
+   * rewrites transcript.json as its new writer (`LectureService.fold({ takeOver: true })`), regenerates .md and
+   * .vtt, and sets its fold claim `done`. Readers accept the writer change because the fold claim exists
+   * (folder spec §6.2 rule 3).
+   */
+  async function handOver(classId: ClassId, r: LectureRecord): Promise<number | null> {
+    const t = r.transcript;
+    if (!t || r.transcriptNewer || r.lectureNewer || t.writer.deviceId === me() || t.round < r.round) return null;
+    if ((r.info?.ops ?? 0) === 0) return null;   // "every member that has unfolded edits for the lecture"
+    const claims = cls(classId).claims;
+    if (!(await claims.foldTrigger(r.id))) return null;
+    const current = claims.winner(r.id, 'fold');
+    if (current && !current.mine && (current.status === 'claimed' || current.status === 'working') && current.health !== 'stale') return null;
+    // The gone owner had itself taken the transcript over: its done fold claim would still win this round.
+    const newRound = !!current && !current.mine && current.status === 'done' && current.deviceId === t.writer.deviceId;
+    const outcome = await claims.tryClaim(r.id, 'fold', { engine: undefined, audioSha256: t.audioSha256, supersedeStale: true, ...(newRound ? { newRound: true } : {}) });
+    if (outcome !== 'won') return null;
+    let revision: number | null = null;
+    try {
+      revision = await lecturesOf(classId).fold(r.id, { takeOver: true });
+    } catch (e) {
+      log('take-over fold failed', e, { lectureId: r.id });
+    }
+    if (revision === null) {
+      await claims.setStatus(r.id, 'fold', { status: 'released' }).catch(() => undefined);
+      return null;
+    }
+    await claims.setStatus(r.id, 'fold', { status: 'done', finishedAt: instant(clock.now()), transcriptRevision: revision });
+    return revision;
+  }
+
+  async function hourly(): Promise<Array<{ classId: ClassId; lectureId: Ulid; revision: number }>> {
+    const taken: Array<{ classId: ClassId; lectureId: Ulid; revision: number }> = [];
+    if (disposed) return taken;
+    for (const c of app().library.classes.get()) {
+      if (!c.shared || c.archived) continue;
+      let lectures: LectureServiceImpl;
+      try {
+        lectures = lecturesOf(c.id);
+      } catch {
+        continue;
+      }
+      if (typeof lectures.records !== 'function') continue;
+      for (const r of [...lectures.records().values()]) {
+        try {
+          const revision = await handOver(c.id, r);
+          if (revision !== null) taken.push({ classId: c.id, lectureId: r.id, revision });
+        } catch (e) {
+          log('hand-over check failed', e, { lectureId: r.id });
+        }
+      }
+    }
+    await evaluate();
+    return taken;
+  }
+
+  function scheduleHourly() {
+    hourTimer?.();
+    if (disposed) return;
+    hourTimer = clock.setTimeout(() => {
+      hourTimer = null;
+      void track(hourly().catch((e: unknown) => log('hourly check failed', e))).finally(() => scheduleHourly());
+    }, HOURLY_CHECK_MS);
+  }
+
   // ── start-up: re-attach jobs, take finished results (sync spec §14.5 "on app start") ──
 
   async function resume() {
@@ -686,6 +764,9 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
         log('resume failed', e);
       }
       await evaluate();
+      // The hand-over trigger is checked at start and then every hour (sync spec §14.8), with the 24 h nudge.
+      void track(hourly().catch((e: unknown) => log('hourly check failed', e)));
+      scheduleHourly();
     },
     async ackVolunteerNotice(turnOff) {
       await prefs.set('speech.volunteerAsked', '1');
@@ -700,6 +781,7 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
       publishNotify();
     },
     evaluate,
+    hourly: () => track(hourly()),
     async idle() {
       for (let n = 0; n < 20 && work.size; n++) await Promise.allSettled([...work]);
     },
@@ -709,6 +791,8 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
       for (const off of classSubs.values()) off();
       for (const t of timers.values()) t.cancel();
       timers.clear();
+      hourTimer?.();
+      hourTimer = null;
     },
   };
 
