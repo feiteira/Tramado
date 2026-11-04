@@ -5,7 +5,7 @@ import { PlatformError } from '../core/errors';
 import { EXTRACTOR, extractText, type DocKind } from '../core/import/extract';
 import type { PdfJsLike } from '../core/import/pdf';
 import type { MammothLike } from '../core/import/docx';
-import type { ExtractHost, IndexHost } from '../services/context';
+import type { ExtractHost, ImagePrep, IndexHost, PdfRender } from '../services/context';
 import type { TextCache } from '../services/types/documents';
 import { createIndexEngine } from './engine';
 import { createRpcClient } from './rpc';
@@ -65,6 +65,32 @@ export function createWorkerExtractHost(worker: Worker): ExtractHost {
       const job = rpc.call<TextCache>('extract', [copy.buffer, kind, name, jobId], { transfer: [copy.buffer], onProgress });
       signal.addEventListener('abort', () => void rpc.call('cancel', [jobId]).catch(() => undefined), { once: true });
       return job;
+    },
+  };
+}
+
+/** ImagePrep backed by image.worker.ts (EXIF rotation, downscale, JPEG; critique G10.3). */
+export function createWorkerImagePrep(worker: Worker): ImagePrep {
+  const rpc = createRpcClient(worker);
+  return {
+    prepare(bytes, mime, maxSide, quality) {
+      const copy = bytes.slice();
+      return rpc.call('prepare', [copy.buffer, mime, maxSide, quality], { transfer: [copy.buffer] });
+    },
+  };
+}
+
+/** PdfRender backed by image.worker.ts (pdf.js on an OffscreenCanvas; scanned exam pages for OCR). */
+export function createWorkerPdfRender(worker: Worker): PdfRender {
+  const rpc = createRpcClient(worker);
+  return {
+    pages(bytes) {
+      const copy = bytes.slice();
+      return rpc.call('pages', [copy.buffer], { transfer: [copy.buffer] });
+    },
+    renderJpeg(bytes, page, maxSide) {
+      const copy = bytes.slice();
+      return rpc.call('renderJpeg', [copy.buffer, page, maxSide], { transfer: [copy.buffer] });
     },
   };
 }

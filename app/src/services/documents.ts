@@ -179,6 +179,7 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
       // The class as it is on disk now (the store's index may not show a file imported a moment ago).
       const existing = await contentFiles();
       const out: Array<{ name: string; path?: ClassPath; error?: ErrorCode; duplicateOf?: ClassPath }> = [];
+      if (picks.length) await platform.fs.mkdir(classId, '.tramado/tmp').catch(() => undefined);
       for (const pick of picks) {
         if (pick.isDir) {
           out.push({ name: pick.name, error: 'INVALID' });
@@ -220,7 +221,9 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
         if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
         if (!entry.localIgnores.includes(path)) await platform.classes.update(classId, { localIgnores: [...entry.localIgnores, path] });
       }
-      await store.remove(path);
+      const st = await platform.fs.stat(classId, path);
+      if (!st) throw new PlatformError('NOT_FOUND', `no ${path}`);
+      await store.remove(path, { recursive: st.isDir });
     },
     async rename(path, name) {
       validateClassPath(path);

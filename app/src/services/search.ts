@@ -110,6 +110,15 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
     if (!c.pending.size && !c.syncing) for (const w of c.settledWaiters.splice(0)) w();
   };
 
+  /** The lecture service's effective transcript (edits applied, folder spec §8.9) when it has one loaded. */
+  function effectiveTranscript(classId: ClassId, lectureId: string): TranscriptFile | null {
+    try {
+      return app().forClass(classId).lectures.open(lectureId).get()?.transcript ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   // ── What a class holds ────────────────────────────────────────────────────────────────────────
   async function collect(classId: ClassId, store: ClassStore): Promise<Want[]> {
     const ix = store.state.get().index;
@@ -147,10 +156,14 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
       const tPath = item.dir ? `${item.dir}/transcript.json` : 'transcript.json';
       const st = await ctx.platform.fs.stat(classId, tPath).catch(() => null);
       if (!st) continue;
+      // Corrections not folded yet (folder spec §8.9) change the effective text: their sizes are in the signature.
+      let edits = 0;
+      for (const [p, e] of ix.machine) if (p.startsWith(`.tramado/edits/${id}/`)) edits += e.size;
       wants.push({
-        key: `lecture:${id}`, sig: `${st.size}:${st.mtimeMs}:${item.mtimeMs}`, title: '', private: false,
+        key: `lecture:${id}`, sig: `${st.size}:${st.mtimeMs}:${item.mtimeMs}:${edits}`, title: '', private: false,
         load: async () => {
-          const t = await store.readJson<TranscriptFile>(tPath, parserFor('tramado.transcript'));
+          const effective = effectiveTranscript(classId, id);
+          const t = effective ? { value: effective } : await store.readJson<TranscriptFile>(tPath, parserFor('tramado.transcript'));
           if (!t || t.value.lectureId !== id) return null;
           const { text, units } = transcriptIndexText(t.value);
           return { text, units, source: { kind: 'lecture', lectureId: id, audioSha256: t.value.audioSha256, transcriptRevision: t.value.revision } };
@@ -311,7 +324,7 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
     const c = idx(classId);
     if (!c.first) {
       const store = app().forClass(classId).store;
-      c.off.push(store.onChange(['document', 'note', 'transcript', 'lecture', 'exam'], () => void schedule(classId)));
+      c.off.push(store.onChange(['document', 'note', 'transcript', 'lecture', 'exam', 'edits'], () => void schedule(classId)));
       c.first = schedule(classId);
     }
     await c.first;

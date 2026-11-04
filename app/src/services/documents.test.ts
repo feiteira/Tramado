@@ -128,6 +128,11 @@ describe('DocumentService', () => {
     expect(await platform.fs.stat(classId, 'Documents/Legislação/Lei de exemplo.pdf')).not.toBeNull();
     await expect(docs.move('Documents/Legislação', 'Documents/Legislação/sub')).rejects.toMatchObject({ code: 'INVALID' });
     expect(typeof docs.url('Documents/Legislação/Lei de exemplo.pdf')).toBe('string');
+    // A whole folder, from this computer only.
+    await docs.remove('Documents/Legislação', 'thisComputer');
+    expect(await platform.fs.stat(classId, 'Documents/Legislação/Lei de exemplo.pdf')).toBeNull();
+    expect((await platform.classes.list())[0]!.localIgnores).toEqual(['Documents/b.txt', 'Documents/Legislação']);
+    await expect(docs.remove('Documents/none.pdf', 'everyone')).rejects.toMatchObject({ code: 'NOT_FOUND' });
     env.s.dispose();
   });
 });
