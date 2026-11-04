@@ -81,14 +81,14 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - name: No secrets or account ids in the repository
-        run: node tools/check-leaks.mjs
-      - name: Every relative link and picture of the README, manual and release notes resolves
-        run: node .github/scripts/check-links.mjs
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+      - name: No secrets or account ids in the repository
+        run: node tools/check-leaks.mjs
+      - name: Every relative link and picture of the README, manual and release notes resolves
+        run: node .github/scripts/check-links.mjs
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
