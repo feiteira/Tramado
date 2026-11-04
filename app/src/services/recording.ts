@@ -96,10 +96,16 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
   const readDraft = (classId: ClassId, id: Ulid) => readPrivateJson<RecordingDraftFile>(platform, classId, draftPath(id));
   const writeDraft = (d: RecordingDraftFile) => writePrivateJson(platform, d.classId, draftPath(d.recordingId), d);
 
+  // INT review: markers undone after their recording stopped. Rust can only unmark a running recording, so its journal
+  // still has them: they are left out of the pending list and of what publish() writes (this session).
+  const unmarked = new Set<string>();
+  const withoutUnmarked = (r: FinishedRecording): FinishedRecording =>
+    unmarked.size && r.markers.some((m) => unmarked.has(m.id)) ? { ...r, markers: r.markers.filter((m) => !unmarked.has(m.id)) } : r;
+
   async function refreshPending(): Promise<FinishedRecording[]> {
     const s = platform.speech;
     if (!s) return [];
-    const list = await s.recorder.pending();
+    const list = (await s.recorder.pending()).map(withoutUnmarked);
     pending.set(list);
     return list;
   }
@@ -204,8 +210,9 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
     return id;
   }
 
-  async function publish(rec: FinishedRecording, opts: { title: string; share: ShareMode; transcribe: Transcribe }): Promise<Ulid> {
+  async function publish(recIn: FinishedRecording, opts: { title: string; share: ShareMode; transcribe: Transcribe }): Promise<Ulid> {
     const s = speech();
+    const rec = withoutUnmarked(recIn);
     const title = cleanTitle(opts.title, rec.title);
     let draft = await readDraft(rec.classId, rec.recordingId);
     if (!draft) {
@@ -355,15 +362,20 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
       return marker;
     },
     async removeMarker(markerId) {
-      const cur = state.get();
-      if (cur) {
-        await speech().recorder.unmark(markerId);
-        const now = state.get();
-        if (now) state.set({ ...now, markers: now.markers.filter((m) => m.id !== markerId) });
-        return;
+      if (state.get()) {
+        try {
+          await speech().recorder.unmark(markerId);
+          const now = state.get();
+          if (now) state.set({ ...now, markers: now.markers.filter((m) => m.id !== markerId) });
+          return;
+        } catch (e) {
+          // The recording stopped between the click and the call: undo it in the recording waiting to be saved.
+          if (state.get() || toPlatformError(e).code !== 'NOT_FOUND') throw e;
+        }
       }
-      // Stopped meanwhile: the marker is in the recording waiting to be saved (the Save dialog reads the pending list).
-      pending.update((xs) => xs.map((r) => (r.markers.some((m) => m.id === markerId) ? { ...r, markers: r.markers.filter((m) => m.id !== markerId) } : r)));
+      // Stopped meanwhile: the marker is in the recording waiting to be saved; publish() leaves it out.
+      unmarked.add(markerId);
+      pending.update((xs) => xs.map(withoutUnmarked));
     },
     async stop() {
       const cur = state.get();

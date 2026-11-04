@@ -19,6 +19,15 @@ import {
 } from './model';
 import { navigate } from './navigate';
 
+/** Printed page labels per PDF version (`classId|path|sha256`), for the search rows; at most PAGE_LABELS_MAX kept. */
+const PAGE_LABELS = new Map<string, ReadonlyArray<string | null> | null>();
+const PAGE_LABELS_MAX = 200;
+function rememberLabels(key: string, v: ReadonlyArray<string | null> | null) {
+  PAGE_LABELS.delete(key);
+  PAGE_LABELS.set(key, v);
+  while (PAGE_LABELS.size > PAGE_LABELS_MAX) PAGE_LABELS.delete(PAGE_LABELS.keys().next().value!);
+}
+
 /** One palette row with the extra fields of UX §3.13 (the frozen PaletteGroup item fields are always set). */
 export interface PaletteResultItem {
   id: string; label: string; detail?: string; icon?: string; run(): void;
@@ -234,20 +243,32 @@ export default function provider(services: AppServices) {
       }
       if (signal.aborted) return [];
       const lang = services.ctx.prefs.get('ui.locale') || 'en';
-      // The printed page labels of the PDFs among the hits (their text caches; one read per document).
-      const labels = new Map<string, Array<string | null> | null>();
+      // The printed page labels of the PDFs among the hits (their text caches): read once per document version, in
+      // parallel, and kept for the next keystrokes (INT review: not one text-cache read per PDF per keystroke).
+      const labels = new Map<string, ReadonlyArray<string | null> | null>();
+      const reads: Array<Promise<void>> = [];
       for (const p of passages) {
         if (p.source.kind !== 'document' || !/\.pdf$/i.test(p.source.path)) continue;
         const k = `${p.classId}|${p.source.path}`;
         if (labels.has(k)) continue;
-        labels.set(k, null);
-        try {
-          labels.set(k, (await services.forClass(p.classId).documents.text(p.source.path)).pageLabels ?? null);
-        } catch {
-          // not extracted (yet): physical pages
-        }
-        if (signal.aborted) return [];
+        const memoKey = `${k}|${p.source.sha256 ?? ''}`;
+        const known = PAGE_LABELS.get(memoKey);
+        labels.set(k, known ?? null);
+        if (known !== undefined) continue;
+        const { classId, source } = p;
+        reads.push(
+          services.forClass(classId).documents.text(source.path).then(
+            (t) => {
+              const v = t.pageLabels ?? null;
+              rememberLabels(memoKey, v);
+              labels.set(k, v);
+            },
+            () => undefined,   // not extracted (yet): physical pages
+          ),
+        );
       }
+      await Promise.all(reads);
+      if (signal.aborted) return [];
       const rows = passages
         .map((p) => rowOf(p, lang, p.source.kind === 'document' ? labels.get(`${p.classId}|${p.source.path}`) : null))
         .filter((r): r is ResultRow => !!r && classIds.includes(r.classId));

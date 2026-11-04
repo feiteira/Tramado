@@ -94,8 +94,10 @@ export function reviewProblems(questions: readonly Question[]): string[] {
   return out;
 }
 
-export function createExamService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ExamService & { idle(): Promise<void> } {
+export function createExamService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ExamService & { idle(): Promise<void>; dispose(): void } {
   const { platform } = ctx;
+  // Set by dispose() (the services' phase ended, or the class left the library): no timer may start a batch after it.
+  let disposed = false;
   const { store, classId } = cls;
   const entries = new Map<Ulid, Entry>();
   const privates = new Map<Ulid, MarksFile>();
@@ -133,12 +135,14 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
     else await platform.privateFiles.remove(classId, LATER_PATH).catch(() => undefined);
   }
   function armLater(item: LaterAnswers) {
+    if (disposed) return;
     laterTimers.get(item.examId)?.();
     const at = Date.parse(item.at);
     // Overdue (the app was closed at the reset): a few seconds after start, once the class is read.
     const wait = Math.max(5_000, Math.min(Number.isFinite(at) ? at - now() : 0, 2_000_000_000));
     laterTimers.set(item.examId, ctx.clock.setTimeout(() => {
       laterTimers.delete(item.examId);
+      if (disposed) return;
       void (async () => {
         await saveLater(later.get().filter((x) => x.examId !== item.examId));
         if (!entries.has(item.examId)) await load().catch(() => undefined);
@@ -155,7 +159,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   void (async () => {
     try {
       const bytes = await platform.privateFiles.read(classId, LATER_PATH);
-      if (!bytes) return;
+      if (!bytes || disposed) return;
       const j = JSON.parse(new TextDecoder().decode(bytes)) as { format?: string; later?: LaterAnswers[] };
       const list = j.format === 'tramado.exams-later' && Array.isArray(j.later) ? j.later.filter((x) => x && typeof x.examId === 'string' && Array.isArray(x.qids) && typeof x.at === 'string') : [];
       later.set(list);
@@ -270,7 +274,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   // ── The importer folds exam-edits (folder spec §8.13; never written by 0.1, but read and folded) ──────────
   function scheduleFold(e: Entry) {
     const mine = myDevice();
-    if (!mine || e.raw.importedBy.deviceId !== mine || foldTimers.has(e.raw.id)) return;
+    if (disposed || !mine || e.raw.importedBy.deviceId !== mine || foldTimers.has(e.raw.id)) return;
     if (!foldExamEdits(e.raw, e.edits).changed) return;
     foldTimers.set(e.raw.id, ctx.clock.setTimeout(() => {
       foldTimers.delete(e.raw.id);
@@ -715,6 +719,14 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       await Promise.resolve();
       while (loading) await loading;
     },
+    /** INT review: the timers of answers for later and of folds stop with the services (no batch from a dead instance). */
+    dispose() {
+      disposed = true;
+      for (const off of laterTimers.values()) off();
+      laterTimers.clear();
+      for (const off of foldTimers.values()) off();
+      foldTimers.clear();
+    },
     async createUpcoming(input) {
       const who = me();
       const t = now();
@@ -939,6 +951,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
       batches.get(examId)?.ac.abort();
       foldTimers.get(examId)?.();
       foldTimers.delete(examId);
+      await cancelLater(examId);
       if (e.dir && e.dir !== '.') await store.remove(e.dir, { recursive: true });
       else await store.remove(e.manifest);
       const mine = myDevice();

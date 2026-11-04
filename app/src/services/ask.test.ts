@@ -4,7 +4,8 @@ import { createTestContext } from './testing/context';
 import { createFakeSearch, testPassage, type FakeSearch } from './testing/fakeSearch';
 import { createFakeAi, type FakeAi } from '../platform/memory/ai';
 import { bodyOf } from '../core/ai/fake';
-import { chatMonthPath, createAskService, createGlobalAsk } from './ask';
+import { chatMonthPath, createAskService, createGlobalAsk, failedTurn } from './ask';
+import { PlatformError } from '../core/errors';
 import { manifestJson } from '../core/json';
 import type { AskService, AskTurn } from './types/ask';
 import type { AnnotationLine, ChatAi, ChatMessage, LectureFile, TranscriptFile } from '../core/model/files';
@@ -118,6 +119,13 @@ describe('AskService (UX §3.11)', () => {
     const [turn] = await settle(b, tid);
     expect(turn).toMatchObject({ status: 'error', error: 'AI_NO_KEY' });
     b.s.dispose();
+  });
+
+  it('INT review: the Retry-After wait counts from the failure, not from the question', () => {
+    const limited = new PlatformError('AI_FREE_LIMIT', 'per minute', { retryAfterMs: 60_000 });
+    expect(failedTurn(limited, 30_000)).toEqual({ status: 'error', error: 'AI_FREE_LIMIT', retryAfterS: 90 });
+    expect(failedTurn(limited)).toEqual({ status: 'error', error: 'AI_FREE_LIMIT', retryAfterS: 60 });
+    expect(failedTurn(new PlatformError('AI_UPSTREAM', 'x'), 5_000)).toEqual({ status: 'error', error: 'AI_UPSTREAM' });
   });
 
   it('INT: a rate limit keeps its Retry-After; a cut-off answer is marked and can be asked again with more room', async () => {

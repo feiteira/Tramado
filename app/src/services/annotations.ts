@@ -207,7 +207,8 @@ export function createAnnotationService(ctx: AppContext, app: () => AppServices,
       return v.store;
     },
     async add(a) {
-      if (a.visibility === 'class') throw new PlatformError('NOT_IMPLEMENTED', 'shared annotations are v1.1 (folder spec §8.17)');
+      // No screen offers it in 0.1 (plan §8.1 task 6): a caller that asks gets INVALID.
+      if (a.visibility === 'class') throw new PlatformError('INVALID', 'shared annotations are v1.1 (folder spec §8.17)');
       if (!a.target?.source || !a.target.locator || !a.target.quote) throw new PlatformError('INVALID', 'an annotation needs a target with a quote');
       if ((a.body?.length ?? 0) > BODY_MAX) throw new PlatformError('INVALID', 'comment longer than 8 000 characters');
       const now = ctx.clock.now();

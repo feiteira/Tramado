@@ -692,7 +692,12 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
     const handled = new Set<string>();
     for (const j of running) {
       const hit = findLecture(j.lectureId);
-      if (!hit) continue;
+      if (!hit) {
+        // INT review: a finished result of a lecture no class here holds (deleted, or its class removed): Rust restarted
+        // its claim heartbeat after the restart; stop it, or it would keep writing a claim for a lecture that is gone.
+        if (j.state === 'done') await s.transcribe.cancel(j.jobId, false).catch(() => undefined);
+        continue;
+      }
       const k = key(hit.classId, j.lectureId);
       handled.add(k);
       const claims = cls(hit.classId).claims;

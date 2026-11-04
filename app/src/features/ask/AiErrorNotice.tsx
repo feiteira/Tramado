@@ -81,9 +81,12 @@ export function AiErrorNotice({ services, code, onRetry, onBusyFallback, retryAt
   const { go } = useRouter();
   const text = useAiErrorText(services);
   const wait = useSecondsLeft(retryAt, () => services.ctx.clock.now());
-  // A rate limit with Retry-After (429 per minute, or 503): its own sentence, and [Try again] once the wait is over.
-  const rateLimited = retryAt !== undefined && (code === 'AI_FREE_LIMIT' || code === 'AI_UNAVAILABLE' || code === 'AI_BUSY');
-  if (code === 'AI_BUSY' && onRetry && onBusyFallback && !rateLimited) return <BusyChooser services={services} onRetry={onRetry} onOnce={onBusyFallback} />;
+  // The per-minute limit of the free models (429 with Retry-After): its own sentence. A 503 that said when to come
+  // back keeps its own text; both enable [Try again] once the wait is over. A busy provider (429 from upstream) keeps
+  // the busy chooser, whatever Retry-After it sent (INT review: it is not the student's rate limit).
+  const rateLimited = retryAt !== undefined && code === 'AI_FREE_LIMIT';
+  const waits = rateLimited || (retryAt !== undefined && code === 'AI_UNAVAILABLE');
+  if (code === 'AI_BUSY' && onRetry && onBusyFallback) return <BusyChooser services={services} onRetry={onRetry} onOnce={onBusyFallback} retryAfterS={wait > 0 ? wait : null} />;
   const settings = () => go({ name: 'settings', section: 'ai' });
   const actions: React.ReactNode[] = [];
   switch (code) {
@@ -116,13 +119,13 @@ export function AiErrorNotice({ services, code, onRetry, onBusyFallback, retryAt
   }
   if (onRetry && (RETRY.has(code) || code === 'AI_BUSY' || rateLimited)) {
     actions.push(
-      <Button key="retry" icon={RefreshCw} onClick={onRetry} disabled={rateLimited && wait > 0} data-testid="ai-recover-retry" data-wait={rateLimited ? wait : undefined}>
-        {rateLimited && wait > 0 ? t('ai.recovery.tryAgainIn', { s: wait }) : t('ai.recovery.tryAgain')}
+      <Button key="retry" icon={RefreshCw} onClick={onRetry} disabled={waits && wait > 0} data-testid="ai-recover-retry" data-wait={waits ? wait : undefined}>
+        {waits && wait > 0 ? t('ai.recovery.tryAgainIn', { s: wait }) : t('ai.recovery.tryAgain')}
       </Button>,
     );
   }
   return (
-    <Notice tone={code === 'AI_FREE_LIMIT' || code === 'AI_OFFLINE' || rateLimited ? 'warning' : 'danger'} actions={actions.length ? <>{actions}</> : undefined} data-testid={rest['data-testid'] ?? 'ai-error'}>
+    <Notice tone={code === 'AI_FREE_LIMIT' || code === 'AI_OFFLINE' ? 'warning' : 'danger'} actions={actions.length ? <>{actions}</> : undefined} data-testid={rest['data-testid'] ?? 'ai-error'}>
       <span data-code={code} data-rate-limited={rateLimited || undefined}>{rateLimited ? t('ai.rateLimit.text') : text(code)}</span>
     </Notice>
   );

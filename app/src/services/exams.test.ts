@@ -399,6 +399,19 @@ describe('ExamService: UI-EXAMS additions (wave 2)', () => {
     b.s.dispose();
   });
 
+  it('INT review: the answers for later die with their services (no batch from a disposed instance)', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    const qids = b.exams.list.get().papers[0]!.questions.map((q) => q.id);
+    await b.exams.answerLater(examId, qids.slice(1), 'materials', new Date(b.s.ctx.clock.now() + 60_000).toISOString());
+    b.s.dispose();
+    b.clock.advance(120_000);
+    for (let i = 0; i < 50; i++) await new Promise((r) => setTimeout(r, 0));
+    expect(chatRequests(b.ai)).toHaveLength(0);
+    // Still on disk: the next services of this class answer them.
+    expect(await b.platform.privateFiles.read(b.classId, 'exams-later.json')).not.toBeNull();
+  });
+
   it('remove(): "Delete for everyone" deletes the folder, my answers and the private marks (importer only)', async () => {
     const b = await bed();
     const examId = await paper(b);

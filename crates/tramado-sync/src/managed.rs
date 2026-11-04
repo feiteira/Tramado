@@ -77,7 +77,7 @@ pub fn ignore_lines_with(
     let includes: Vec<&String> = local_includes
         .iter()
         .filter(usable)
-        .filter(|p| p.ends_with("/audio.webm"))
+        .filter(|p| p.as_str() == "audio.webm" || p.ends_with("/audio.webm"))
         .collect();
     if skip_audio || !locals.is_empty() {
         out.push(PER_DEVICE_HEADER.to_string());
@@ -237,10 +237,12 @@ mod tests {
         let includes = vec![
             "Aulas/2026-10-20 Aula 6/audio.webm".to_string(),
             "Aulas/x/notes.md".to_string(),
+            // INT review: a lecture kept at the class root has its recording there too.
+            "audio.webm".to_string(),
         ];
         let text = ignore_lines_with(true, &[], &includes, &[]).join("\n");
         assert!(text.contains(
-            "// Tramado per-device (v1)\n// recordings fetched although audio is skipped\n!/Aulas/2026-10-20 Aula 6/audio.webm\n// skip audio files\n(?d)/**/audio.webm"
+            "// Tramado per-device (v1)\n// recordings fetched although audio is skipped\n!/Aulas/2026-10-20 Aula 6/audio.webm\n!/audio.webm\n// skip audio files\n(?d)/**/audio.webm"
         ));
         // Only recordings are fetched this way, and only while audio is skipped.
         assert!(!text.contains("notes.md"));

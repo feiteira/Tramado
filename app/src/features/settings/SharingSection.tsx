@@ -48,6 +48,11 @@ export default function SharingSection({ services }: { services: AppServices }) 
   const { route } = useRouter();
   // Open when asked: the route's `diagnostics` (a link, the sync popover) or the older one-shot flag.
   const [diagOpen, setDiagOpen] = useState(() => takeDiagnosticsRequest() || (route.name === 'settings' && route.diagnostics === true));
+  // Asked again while this section is already open (the sync pill's [Details] on Settings › Sharing): open it then too.
+  const askedDiagnostics = route.name === 'settings' && route.diagnostics === true;
+  useEffect(() => {
+    if (askedDiagnostics) setDiagOpen(true);
+  }, [askedDiagnostics, route]);
   const [diag, setDiag] = useState<SyncDiagnostics | null>(null);
   const [log, setLog] = useState<string | null>(null);
   const mac = info.os === 'macos' || info.traySupported === false;

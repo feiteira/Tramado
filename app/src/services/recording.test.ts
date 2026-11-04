@@ -5,7 +5,7 @@ import { sha256Hex } from '../core/util/sha256';
 import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
 import type { ClassStoreImpl } from './classStore';
 import { createServices } from './index';
-import type { LectureServiceImpl } from './lectures';
+import { privateMarkersPath, type LectureServiceImpl } from './lectures';
 import type { RecordingServiceImpl } from './recording';
 import { installClassFakes } from './testing/fakeClaims';
 import { createTestContext } from './testing/context';
@@ -207,7 +207,7 @@ describe('RecordingService', () => {
   });
 
   it('INT: markers can be stamped earlier and undone; an end without Stop keeps its reason', async () => {
-    const { speech, recording, classId } = await setup();
+    const { speech, recording, classId, platform } = await setup();
     await recording.start({ classId, title: 'Aula 9', mode: 'room', includeMic: true, inputDeviceId: null, language: 'pt-PT', consent: { record: consent('record'), share: null, remember: false } });
     speech.tick(60_000);
     // A note stamped when its field opened (50 s), not when Enter was pressed.
@@ -226,9 +226,14 @@ describe('RecordingService', () => {
     await recording.idle();
     const rec = recording.pending.get()[0]!;
     expect(rec.markers.map((m) => m.id)).toEqual([note!.id]);
-    // Undo after the recording ended: the marker leaves the recording waiting to be saved.
+    // Undo after the recording ended: the marker leaves the recording waiting to be saved, also after a reload of the
+    // pending list (Rust's journal still has it) and in what the Save dialog publishes from its older copy (INT review).
     await recording.removeMarker(note!.id);
     expect(recording.pending.get()[0]!.markers).toEqual([]);
+    await recording.recover();
+    expect(recording.pending.get()[0]!.markers).toEqual([]);
+    const id = await recording.publish(rec, { title: 'Aula 9', share: 'audio+transcript', transcribe: 'later' });
+    expect(await platform.privateFiles.read(classId, privateMarkersPath(id))).toBeNull();
     // A new start forgets the reason.
     await recording.start({ classId, title: 'Aula 10', mode: 'room', includeMic: true, inputDeviceId: null, language: 'pt-PT', consent: { record: consent('record'), share: null, remember: false } });
     expect(recording.stopReason.get()).toBeNull();

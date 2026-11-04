@@ -77,10 +77,15 @@ const toLine = (t: AskTurn): Stored => ({
   ...(t.classOf ? { classOf: t.classOf } : {}), ...(t.cut ? { cut: true } : {}), ...(typeof t.retryAfterS === 'number' ? { retryAfterS: t.retryAfterS } : {}),
 });
 
-/** INT: what a failed turn keeps besides its code — when a rate limit said to come back (Retry-After). */
-export function failedTurn(e: unknown): Pick<AskTurn, 'status' | 'error' | 'retryAfterS'> {
+/**
+ * INT: what a failed turn keeps besides its code — when a rate limit said to come back (Retry-After). `retryAfterS`
+ * counts from the turn's `at` (when it was asked): `elapsedMs` is the time the request and its retries took, so the
+ * wait ends Retry-After seconds after the failure, not after the question (INT review).
+ */
+export function failedTurn(e: unknown, elapsedMs = 0): Pick<AskTurn, 'status' | 'error' | 'retryAfterS'> {
   const after = errorData(e).retryAfterMs;
-  return { status: 'error', error: errorCode(e), ...(typeof after === 'number' && after > 0 ? { retryAfterS: Math.ceil(after / 1000) } : {}) };
+  const since = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  return { status: 'error', error: errorCode(e), ...(typeof after === 'number' && after > 0 ? { retryAfterS: Math.ceil((since + after) / 1000) } : {}) };
 }
 
 /** Private thread titles set with Rename (`ask/titles.json`, `ask-all/titles.json`). */
@@ -411,7 +416,7 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
             ...(a.run.finish === 'length' ? { cut: true } : {}),
           };
         } catch (e) {
-          turn = { ...turn, answer: '', ...failedTurn(e) };
+          turn = { ...turn, answer: '', ...failedTurn(e, ctx.clock.now() - Date.parse(turn.at)) };
         }
         setTurn(tid, turn);
         await persist(tid, turn).catch((e: unknown) => ctx.log('warn', 'Ask turn not saved', { error: String(e) }));
@@ -722,7 +727,7 @@ export function createGlobalAsk(ctx: AppContext, app: () => AppServices): Global
             ...(r.run.finish === 'length' ? { cut: true } : {}),
           };
         } catch (e) {
-          turn = { ...turn, answer: '', ...failedTurn(e) };
+          turn = { ...turn, answer: '', ...failedTurn(e, ctx.clock.now() - Date.parse(turn.at)) };
         }
         setTurn(tid, turn);
         await platform.privateFiles.append(home, `${GLOBAL_DIR}/${tid}.jsonl`, enc.encode(jsonlLine(toLine(turn)))).catch((e: unknown) => ctx.log('warn', 'Ask turn not saved', { error: String(e) }));

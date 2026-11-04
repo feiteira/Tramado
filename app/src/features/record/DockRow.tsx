@@ -279,7 +279,7 @@ export default function DockRow({ services }: { services: AppServices }) {
       <div className="dock-row dock-row--rec dock-row--failed" role="region" aria-label={t('record.dock.region')} data-testid="record-dock" data-state="failed">
         {live}
         <span className="dock-row__text" role="alert" data-testid="record-failed-reason" data-reason={stopReason?.reason ?? 'unknown'}>{t('record.dock.failed', { reason: failedReason(stopReason && (!failed.recordingId || stopReason.recordingId === failed.recordingId) ? stopReason : null, t) })}</span>
-        <span className="dock-row__title">{cls?.shortName ?? ''} · {failed.title}</span>
+        <span className="dock-row__title">{[cls?.shortName, failed.title].filter(Boolean).join(' · ')}</span>
         <span className="dock-row__spacer" />
         <Button
           size="sm"
