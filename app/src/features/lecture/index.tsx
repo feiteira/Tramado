@@ -187,14 +187,29 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
       setTimeout(() => seek(at, !!route.play), 0);
     }
   }, [route.at, route.play, seek, playback.media, playback.src]);
+  // Bring the cited (or `at`) segment to the middle, again once the reading font has loaded and the paragraphs
+  // reflowed, unless the student scrolled meanwhile.
+  const userScrolled = useRef(false);
   useEffect(() => {
     const id = cited?.segmentId ?? (route.at !== undefined && transcript ? segmentAt(transcript, route.at)?.id : null);
-    if (!id) return;
-    const timer = setTimeout(() => {
-      const el = scroller.current?.querySelector<HTMLElement>(`[data-segment-id="${CSS.escape(id)}"]`);
-      el?.scrollIntoView({ block: 'center', behavior: 'auto' });
-    }, 60);
-    return () => clearTimeout(timer);
+    if (!id) return undefined;
+    let live = true;
+    const center = () => {
+      if (!live || userScrolled.current) return;
+      const box = scroller.current;
+      const el = box?.querySelector<HTMLElement>(`[data-segment-id="${CSS.escape(id)}"]`);
+      if (!box || !el) return;
+      const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+      box.scrollTop = Math.max(0, top - box.clientHeight / 2 + el.offsetHeight / 2);
+    };
+    const raf = requestAnimationFrame(() => requestAnimationFrame(center));
+    const late = setTimeout(center, 450);
+    void document.fonts?.ready.then(() => requestAnimationFrame(center));
+    return () => {
+      live = false;
+      cancelAnimationFrame(raf);
+      clearTimeout(late);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!transcript, cited?.segmentId]);
 
@@ -208,6 +223,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
     const el = scroller.current;
     if (!el) return undefined;
     const manual = () => {
+      userScrolled.current = true;
       if (follow && playing) setFollowPaused(true);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -614,6 +630,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
     { kind: 'separator' },
     { id: 'deleteAudio', label: t('lectures.list.menu.deleteAudio'), disabled: !recorder || !view.audio, danger: true, onSelect: () => void actions.deleteAudio(view) },
     { id: 'deleteAll', label: t('lectures.list.menu.deleteAll'), disabled: !recorder, danger: true, onSelect: () => void actions.deleteAll(view).then((ok) => ok && replace({ name: 'class', classId, tab: 'lectures' })) },
+    ...(shared ? [{ id: 'removeLocal', label: t('lectures.list.menu.removeLocal'), onSelect: () => void actions.removeLocal(view).then((ok) => ok && replace({ name: 'class', classId, tab: 'lectures' })) }] : []),
     { kind: 'separator' },
     { id: 'reveal', label: t('lectures.list.menu.showInFolder'), onSelect: () => void actions.showInFolder(view) },
   ];

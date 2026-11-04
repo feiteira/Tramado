@@ -269,7 +269,7 @@ export default function DockRow({ services }: { services: AppServices }) {
       <button type="button" className="dock-row__class" onClick={() => go({ name: 'class', classId: state.classId, tab: 'lectures' })} title={cls?.name}>
         {cls ? <ClassTab color={cls.color} icon={cls.icon} size="sm" /> : null}
         <span className="dock-row__classname">{cls?.shortName ?? ''}</span>
-        <span className="dock-row__title">· {state.title}</span>
+        {state.title ? <span className="dock-row__title">· {state.title}</span> : null}
       </button>
       <span className="dock-row__time t-tabular" data-testid="record-time">
         {longClock(s.ms)}

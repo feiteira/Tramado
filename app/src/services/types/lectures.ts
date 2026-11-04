@@ -55,5 +55,12 @@ export interface LectureService {
    * T-SYNC). Returns the new revision, or null when there was nothing to fold or this device is not the owner.
    */
   fold(id: Ulid, opts?: { takeOver?: boolean }): Promise<number | null>;
+  /**
+   * UI-LECTURES addition (UX §3.4 "Remove from this computer only"): adds the lecture's directory to this device's
+   * ignores (folder spec §11.2, `classes.json` `localIgnores`) first, so the local delete does not propagate, then
+   * removes the directory and this device's private files of the lecture. Errors: NOT_FOUND, INVALID (a lecture
+   * stored at the class root cannot be ignored on its own).
+   */
+  removeLocal(id: Ulid): Promise<void>;
 }
 

@@ -133,6 +133,44 @@ describe('LectureService: list and detail', () => {
     void cs;
   });
 
+  it('removes a lecture from this computer only: ignored first, then deleted here (UI-LECTURES, UX §3.4)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    await lectures.markers.add(id, { atMs: 1000, rawMs: 1000, kind: 'important' });
+    const order: string[] = [];
+    const update = platform.classes.update.bind(platform.classes);
+    platform.classes.update = async (c, patch) => {
+      order.push(`ignore ${patch.localIgnores?.join(',')}`);
+      return update(c, patch);
+    };
+    platform.mem.onWrite((_c, path, _b, kind) => kind === 'remove' && order.push(`remove ${path}`));
+    await lectures.removeLocal(id);
+    await settle();
+    expect(order[0]).toBe('ignore Aulas/2026-11-03 1015 Aula 6');
+    expect((await platform.classes.list()).find((e) => e.classId === classId)!.localIgnores).toEqual(['Aulas/2026-11-03 1015 Aula 6']);
+    expect([...platform.mem.list(classId).keys()].filter((p) => p.startsWith('Aulas/'))).toEqual([]);
+    expect(await platform.privateFiles.read(classId, `markers/${id}.json`)).toBeNull();
+    expect(lectures.list.get()).toEqual([]);
+  });
+
+  it('hides an automatic exam mark within 30 s of my own exam marker (UI-LECTURES, UX §7.3)', async () => {
+    const { platform, classId, me, lectures, settle } = await setup();
+    const { id } = await addLecture(platform, classId, me, { dir: 'Aulas/2026-11-03 1015 Aula 6', transcript: { segments: SEGMENTS } });
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(1);
+    await lectures.markers.add(id, { atMs: 75_000, rawMs: 75_000, kind: 'exam' });   // 45 s away: both stay
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(1);
+    await lectures.markers.add(id, { atMs: 27_000, rawMs: 30_000, kind: 'exam' });   // 3 s before: the radar mark hides
+    await lectures.markers.add(id, { atMs: 31_000, rawMs: 31_000, kind: 'important' });   // other kinds do not count
+    await settle();
+    expect(lectures.list.get()[0]!.autoExamMarks).toBe(0);
+    const d = lectures.open(id);
+    await settle();
+    expect(d.get()!.autoMarkers).toEqual([]);
+  });
+
   it('links legal references to the article in the class’s law text', async () => {
     const { platform, classId, me, lectures, settle, services } = await setup();
     (services as { search: unknown }).search = createFakeSearch([

@@ -9,7 +9,7 @@ import type { Marker } from '../../platform/types';
 import type { AppServices } from '../../services/types/common';
 import type { AskTurn, ExplainStyle } from '../../services/types/ask';
 import type { LectureDetail } from '../../services/types/lectures';
-import type { MarkerKind } from '../../services/types/viewModels';
+import type { MarkerKind, ModelLabel } from '../../services/types/viewModels';
 import { useRouter } from '../../shell/router';
 import { useStore } from '../../shell/useStore';
 import { Button, IconButton } from '../../ui/components/Button';
@@ -282,6 +282,7 @@ function AiPanel({ services, classId, detail, onSeek, explain, onCloseExplain }:
         result={summary}
         onSeek={onSeek}
         detail={detail}
+        label={services.ai.label}
         actions={
           summary ? (
             <>
@@ -306,6 +307,7 @@ function AiPanel({ services, classId, detail, onSeek, explain, onCloseExplain }:
         result={terms}
         onSeek={onSeek}
         detail={detail}
+        label={services.ai.label}
         actions={
           terms ? (
             <>
@@ -393,11 +395,11 @@ function timeLinked(turn: AskTurn, lectureId: Ulid): string {
   });
 }
 
-function ToolCard({ title, testid, result, actions, cost, onSeek, detail }: { title: string; testid: string; result: AskTurn | null; actions: React.ReactNode; cost: React.ReactNode; onSeek(ms: number): void; detail: LectureDetail }) {
+function ToolCard({ title, testid, result, actions, cost, onSeek, detail, label }: { title: string; testid: string; result: AskTurn | null; actions: React.ReactNode; cost: React.ReactNode; onSeek(ms: number): void; detail: LectureDetail; label(id: string): ModelLabel }) {
   return (
-    <section className="side-tool" data-testid={testid}>
+    <section className={cx('side-tool', result && 'side-tool--result')} data-testid={testid}>
       {result ? (
-        <TurnCard turn={result} title={title} onSeek={onSeek} detail={detail} footer={<div className="side-tool__actions">{actions}</div>} />
+        <TurnCard turn={result} title={title} onSeek={onSeek} detail={detail} label={label} footer={<div className="side-tool__actions">{actions}</div>} />
       ) : (
         <>
           <h3 className="side-tool__title">{title}</h3>
@@ -409,12 +411,12 @@ function ToolCard({ title, testid, result, actions, cost, onSeek, detail }: { ti
   );
 }
 
-function TurnCard({ turn, title, onSeek, detail, footer }: { turn: AskTurn; title: string; onSeek(ms: number): void; detail: LectureDetail; footer?: React.ReactNode }) {
+function TurnCard({ turn, title, onSeek, detail, footer, label }: { turn: AskTurn; title: string; onSeek(ms: number): void; detail: LectureDetail; footer?: React.ReactNode; label(id: string): ModelLabel }) {
   const { t } = useI18n();
   const cites = turn.citations as unknown as StoredCitation[];
   if (turn.status === 'error') return <Notice tone="danger" title={title}>{t(`errors.${turn.error ?? 'IO_ERROR'}` as never)}</Notice>;
   return (
-    <AiCard title={title} model={{ id: turn.model ?? '', label: turn.model ?? '', free: false }} state={turn.status === 'running' ? 'streaming' : 'done'} footer={footer}>
+    <AiCard title={title} model={turn.model ? label(turn.model) : { id: '', label: '', free: false }} state={turn.status === 'running' ? 'streaming' : 'done'} footer={footer}>
       <MarkdownView
         source={turn.answer}
         links="internal-only"
@@ -477,7 +479,7 @@ function ExplainArea({ services, classId, detail, request, onClose, onSeek }: { 
         <IconButton size="sm" icon={X} label={t('common.close')} onClick={onClose} />
       </header>
       <blockquote className="cite-block side-quote reading">{request.text}</blockquote>
-      {turn ? <TurnCard turn={turn} title={t('lectures.ai.explainTitle')} onSeek={onSeek} detail={detail} /> : <p className="side-panel__loading"><Spinner size={14} /> {t('common.working')}</p>}
+      {turn ? <TurnCard turn={turn} title={t('lectures.ai.explainTitle')} onSeek={onSeek} detail={detail} label={services.ai.label} /> : <p className="side-panel__loading"><Spinner size={14} /> {t('common.working')}</p>}
       <div className="explain-chips" role="group" aria-label={t('lectures.ai.explainTitle')}>
         {chips.map((c) => (
           <button key={c.id} type="button" className={cx('explain-chip', style === c.id && 'explain-chip--on')} aria-pressed={style === c.id} disabled={!turn} onClick={() => ask(c.id)} data-testid="explain-chip">
@@ -538,7 +540,7 @@ function MarkersPanel({ services, classId, detail, onSeek }: SidePanelProps) {
         {mine.map((m) => (
           <li key={m.id} className="side-marker" data-testid="lecture-marker" data-mk={m.kind} data-marker-id={m.id}>
             <MarkerIcon kind={m.kind} size={16} />
-            <button type="button" className="side-marker__main" onClick={() => onSeek(m.atMs)} aria-label={t('a11y.markerItem', { kind: t(`record.markers.${m.kind}`), time: longClock(m.atMs), note: m.note ? `: ${m.note}` : '' })}>
+            <button type="button" className="side-marker__main" onClick={() => onSeek(m.atMs)} title={t('a11y.markerItem', { kind: t(`record.markers.${m.kind}`), time: longClock(m.atMs), note: m.note ? `: ${m.note}` : '' })}>
               <span className="side-marker__label">{t(`record.markers.${m.kind}`)}</span>
               <span className="side-marker__time t-tabular">{shortClock(m.atMs)}</span>
               {m.note ? <span className="side-marker__note">{m.note}</span> : null}

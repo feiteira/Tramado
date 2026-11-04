@@ -253,9 +253,10 @@ export const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
               setTyped(hms(now));
               setEditing(true);
             }}
-            aria-label={`${t('lectures.player.timeEdit')}: ${t('lectures.player.time', { current: hms(now), total: hms(duration) })}`}
+            title={t('lectures.player.timeEdit')}
             data-testid="player-time"
           >
+            <span className="visually-hidden">{t('lectures.player.timeEdit')}: </span>
             <span>{hms(now)}</span>
             <span className="player__sep" aria-hidden>
               /

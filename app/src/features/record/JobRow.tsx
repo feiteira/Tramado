@@ -42,7 +42,10 @@ export default function JobRow({ services }: { services: AppServices }) {
     }
   }, [job, services, t, toast, go]);
 
+  const models = useStore(services.models.models);
   const dl = (Object.entries(downloads) as Array<[ModelId, { done: number; total: number; bytesPerSec: number } | undefined]>).filter(([, v]) => !!v) as Array<[ModelId, { done: number; total: number; bytesPerSec: number }]>;
+  // A download re-attached after a reload reports its first progress only later: show what the model state knows.
+  for (const m of models) if (m.state === 'downloading' && !dl.some(([id]) => id === m.id)) dl.push([m.id, { done: m.bytes, total: m.size, bytesPerSec: 0 }]);
   const count = (job ? 1 : 0) + dl.length + imports.length;
   if (count === 0) return null;
   const more = count - 1;

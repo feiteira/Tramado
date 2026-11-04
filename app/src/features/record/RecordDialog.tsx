@@ -3,7 +3,7 @@
 // what to share, the presence warning when a classmate is already recording, and the pre-flight checks. Without
 // a class (Ctrl/⌘+Shift+R on Today) it first asks which class (`record-pick-class`). The answers are
 // remembered per class (prefs `record.<classId>`).
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CircleDot, Headphones, Info, Mic, MonitorSpeaker, TriangleAlert } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { toPlatformError } from '../../core/errors';
@@ -84,6 +84,12 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
   const [error, setError] = useState<string | null>(null);
   const [battery, setBattery] = useState<number | null>(null);
   const whyRef = useRef<HTMLButtonElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
+  // The disabled Start reads disabled="true" (the plan's must-pass assertion, UX §3.6.2 consent rules).
+  useLayoutEffect(() => {
+    const el = startRef.current;
+    if (el?.disabled) el.setAttribute('disabled', 'true');
+  });
 
   // Devices, the live meter (RecordingService.startMeter) and the battery.
   useEffect(() => {
@@ -191,7 +197,7 @@ function RecordForm({ classId, services, close }: { classId: ClassId; services: 
           ) : null}
           <Button onClick={close}>{t('common.cancel')}</Button>
           <span title={missing ?? undefined}>
-            <Button type="submit" variant="primary" icon={CircleDot} disabled={!canStart} busy={busy} data-testid="record-start">
+            <Button ref={startRef} type="submit" variant="primary" icon={CircleDot} disabled={!canStart} busy={busy} data-testid="record-start">
               {t('record.dialog.start')}
             </Button>
           </span>

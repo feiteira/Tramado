@@ -27,7 +27,6 @@ export function MarkerButton({ kind, label, keyHint, compact = false, disabled, 
       className={cx('marker-button', compact && 'marker-button--compact', popped && 'marker-button--popped')}
       data-mk={kind}
       data-testid="record-mark"
-      aria-label={label}
       aria-keyshortcuts={keyHint}
       aria-pressed={pressed}
       disabled={disabled}
@@ -37,7 +36,7 @@ export function MarkerButton({ kind, label, keyHint, compact = false, disabled, 
       <kbd className="marker-button__key" aria-hidden>
         {keyHint}
       </kbd>
-      {compact ? null : <span className="marker-button__label">{label}</span>}
+      <span className={compact ? 'visually-hidden' : 'marker-button__label'}>{label}</span>
     </button>
   );
   return compact ? (

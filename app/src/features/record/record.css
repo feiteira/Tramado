@@ -447,3 +447,12 @@
   align-items: center;
   gap: var(--s-3);
 }
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-text);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -30,6 +30,11 @@ import type { DeviceRef, LectureView, MarkerKind, TranscriptionState } from './t
 
 /** The owner folds corrections this long after the last new one (folder spec §8.9). */
 export const FOLD_DEBOUNCE_MS = 5 * 60_000;
+/** An automatic exam mark this close to a manual exam marker is not shown (UX §7.3). */
+export const AUTO_NEAR_MANUAL_MS = 30_000;
+/** Legal references not found in the class documents are looked up again this many times, this far apart (× n). */
+const REF_RETRIES = 5;
+const REF_RETRY_MS = 8_000;
 /** Waveform buckets of the lecture timeline (UX §3.5.2). */
 export const PEAK_BUCKETS = 1200;
 
@@ -125,6 +130,7 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
   const foldTimers = new Map<Ulid, { timer: () => void; ops: number }>();
   const peaks = new Map<string, number[] | 'loading' | 'failed'>();
   const refTargets = new Map<string, { path: ClassPath; page: number | null } | null | 'loading'>();
+  const refRetries = new Map<string, number>();
   const offs: Array<() => void> = [];
   const folding = new Set<Promise<unknown>>();
   let disposed = false;
@@ -378,7 +384,9 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
   function autoMarkers(r: LectureRecord) {
     if (!r.effective) return [];
     const removed = new Set(r.priv.removedAutoMarks);
-    return examRadar(r.effective, r.effective.language).filter((m) => !removed.has(m.atMs));
+    // An automatic exam mark within 30 s of one of my own exam markers adds nothing: it is hidden (UX §7.3 l6).
+    const mine = r.markers.filter((m) => m.kind === 'exam').map((m) => m.atMs);
+    return examRadar(r.effective, r.effective.language).filter((m) => !removed.has(m.atMs) && !mine.some((at) => Math.abs(at - m.atMs) <= AUTO_NEAR_MANUAL_MS));
   }
 
   function viewOf(r: LectureRecord, all: Map<Ulid, LectureRecord>): LectureView {
@@ -435,12 +443,26 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
         const p = passages.find((x) => x.locator.type === 'article' && norm(x.locator.article) === norm(article) && x.source.kind === 'document');
         const target = p && p.source.kind === 'document' && p.locator.type === 'article' ? { path: p.source.path, page: p.locator.pages?.[0] ?? null } : null;
         refTargets.set(key, target);
+        if (!target) retryRef(key);
       } catch {
         refTargets.set(key, null);
+        retryRef(key);
       }
       void schedule();
     })();
     return null;
+  }
+
+  /** A reference not found yet (the search index may still be building): ask again a few times. */
+  function retryRef(key: string) {
+    const n = refRetries.get(key) ?? 0;
+    if (n >= REF_RETRIES || disposed) return;
+    refRetries.set(key, n + 1);
+    offs.push(clock.setTimeout(() => {
+      if (disposed) return;
+      refTargets.delete(key);
+      void schedule();
+    }, REF_RETRY_MS * (n + 1)));
   }
 
   function detailOf(r: LectureRecord, view: LectureView): LectureDetail {
@@ -635,6 +657,18 @@ export function createLectureService(ctx: AppContext, app: () => AppServices, cl
       if (r.dir) await store.remove(r.dir, { recursive: true });
       else for (const name of ['lecture.json', 'audio.webm', 'transcript.json', 'transcript.md', 'transcript.vtt']) await store.remove(name).catch(() => undefined);   // a lecture at the class root
       await store.remove(editLogPath(id, me())).catch(() => undefined);
+      for (const p of [privateMarkersPath(id), privateLecturePath(id)]) await platform.privateFiles.remove(classId, p).catch(() => undefined);
+      manifestCache.delete(r.item.manifest);
+      await schedule();
+    },
+    async removeLocal(id) {
+      const r = await record(id);
+      if (!r.dir) throw new PlatformError('INVALID', 'a lecture at the class root cannot be removed on its own');
+      // The ignore line first (folder spec §9.1, §11.2): the local delete must not propagate.
+      const entry = (await platform.classes.list()).find((e) => e.classId === classId);
+      if (!entry) throw new PlatformError('NOT_FOUND', `class ${classId}`);
+      if (!entry.localIgnores.includes(r.dir)) await platform.classes.update(classId, { localIgnores: [...entry.localIgnores, r.dir] });
+      await store.remove(r.dir, { recursive: true });
       for (const p of [privateMarkersPath(id), privateLecturePath(id)]) await platform.privateFiles.remove(classId, p).catch(() => undefined);
       manifestCache.delete(r.item.manifest);
       await schedule();

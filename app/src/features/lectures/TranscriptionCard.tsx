@@ -8,13 +8,13 @@ import type { AppServices } from '../../services/types/common';
 import type { LectureView, TranscriptionState } from '../../services/types/viewModels';
 import { useStore } from '../../shell/useStore';
 import { Button } from '../../ui/components/Button';
-import { ProgressBar, Spinner } from '../../ui/components/Feedback';
+import { ProgressBar } from '../../ui/components/Feedback';
 import { MenuButton } from '../../ui/components/Menu';
 import { useI18n, type I18n } from '../../ui/i18n';
 import { renderMarks, stripMarks } from '../../ui/marks';
 import { cx } from '../../ui/cx';
 import { Ellipsis as MoreHorizontal } from 'lucide-react';
-import { firstName, mb, timeLeft } from './format';
+import { dayMonth, firstName, mb, timeLeft } from './format';
 import { pendingAfterModel, thanked, type LectureActions } from './actions';
 import { DateTime } from 'luxon';
 import './lectures.css';
@@ -63,8 +63,8 @@ export function cardModel(view: LectureView, i18n: Pick<I18n, 't' | 'tp' | 'loca
       if (s.phase === 'model') return { icon: Download, tone: 'progress', text: t('lectures.transcription.localModel', { done: '…', total: '…' }), progress: null, chip: t('lectures.transcription.chip.local', { percent: s.percent }) };
       return { icon: null, tone: 'progress', text: t('lectures.transcription.local', { percent: s.percent, left: left(s.etaMin) || t('lectures.transcription.leftUnknown') }), progress: s.percent / 100, chip: t('lectures.transcription.chip.local', { percent: s.percent }) };
     case 'done': {
-      const date = DateTime.fromISO(s.at).setLocale(i18n.locale === 'en' ? 'en-GB' : i18n.locale === 'pt' ? 'pt-PT' : 'es-ES').toLocaleString({ day: 'numeric', month: 'short' });
-      const model = s.engine === 'cloud' ? s.model : s.model;
+      const date = dayMonth(DateTime.fromISO(s.at), i18n.locale);
+      const model = s.model;
       return {
         icon: CircleCheck, tone: 'done', progress: null, chip: t('lectures.transcription.chip.done'),
         text: s.by.self ? t('lectures.transcription.doneSelf', { model, date }) : t('lectures.transcription.done', { device: s.by.deviceName, model, date }),
@@ -185,7 +185,7 @@ export function TranscriptionCard({ view, services, classId, shared, actions, cl
   return (
     <section className={cx('tr-card', `tr-card--${m.tone}`, className)} data-testid="transcription-card" data-state={s.kind} data-health={s.kind === 'claimed' ? s.health : undefined} aria-live="polite">
       <div className="tr-card__icon" aria-hidden>
-        {Icon ? <Icon size={20} strokeWidth={1.75} /> : <Spinner size={20} />}
+        {Icon ? <Icon size={20} strokeWidth={1.75} /> : <ProgressRing value={m.progress ?? 0} quiet={m.tone === 'quiet'} size={20} />}
       </div>
       <div className="tr-card__body">
         <p className="tr-card__text">{renderMarks(m.text)}</p>
@@ -213,11 +213,11 @@ export function TranscriptChip({ view, shared }: { view: LectureView; shared: bo
 }
 
 /** A 14 px progress ring (the ◐ of the chip). */
-export function ProgressRing({ value, quiet }: { value: number; quiet?: boolean }) {
+export function ProgressRing({ value, quiet, size = 14 }: { value: number; quiet?: boolean; size?: number }) {
   const r = 5.5;
   const c = 2 * Math.PI * r;
   return (
-    <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden className={cx('tr-ring', quiet && 'tr-ring--quiet')}>
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden className={cx('tr-ring', quiet && 'tr-ring--quiet')}>
       <circle cx={7} cy={7} r={r} fill="none" strokeWidth={2} className="tr-ring__track" />
       <circle cx={7} cy={7} r={r} fill="none" strokeWidth={2} className="tr-ring__value" strokeDasharray={`${Math.max(0, Math.min(1, value)) * c} ${c}`} transform="rotate(-90 7 7)" />
     </svg>

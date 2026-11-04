@@ -39,6 +39,7 @@ export interface LectureActions {
   markDuplicate(view: LectureView): void;
   deleteAudio(view: LectureView): Promise<void>;
   deleteAll(view: LectureView): Promise<boolean>;
+  removeLocal(view: LectureView): Promise<boolean>;
   showInFolder(view: LectureView): Promise<void>;
   exportTranscript(view: LectureView, format: 'md' | 'vtt' | 'txt'): Promise<void>;
   /** The rename / duplicate dialogs (render once in the screen). */
@@ -152,6 +153,21 @@ export function useLectureActions(services: AppServices, classId: ClassId): Lect
         let done = false;
         await run(`delete:${view.id}`, async () => {
           await cls.lectures.deleteLecture(view.id);
+          done = true;
+        });
+        return done;
+      },
+      removeLocal: async (view) => {
+        const ok = await confirm({
+          title: t('lectures.list.removeLocalConfirm.title', { title: view.title }),
+          body: t('lectures.list.removeLocalConfirm.body'),
+          confirmLabel: t('lectures.list.removeLocalConfirm.confirm'),
+          danger: true,
+        });
+        if (!ok) return false;
+        let done = false;
+        await run(`removeLocal:${view.id}`, async () => {
+          await cls.lectures.removeLocal(view.id);
           done = true;
         });
         return done;

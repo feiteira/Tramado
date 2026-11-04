@@ -69,7 +69,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
 
   const onListKey = (e: React.KeyboardEvent) => {
     if (isTextEntry(e.target)) return;
-    const rows = [...(listRef.current?.querySelectorAll<HTMLElement>('[data-testid="lecture-item"]') ?? [])];
+    const rows = [...(listRef.current?.querySelectorAll<HTMLElement>('.lecture-row__open') ?? [])];
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -81,7 +81,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
   return (
     <div className="lectures-tab" data-testid="class-lectures">
       <div className="lectures-tab__bar">
-        <Button variant="primary" icon={CircleDot} onClick={record} disabled={!!rec} data-testid="lectures-record">
+        <Button icon={CircleDot} onClick={record} disabled={!!rec} data-testid="lectures-record">
           {t('lectures.list.record')}
         </Button>
         <Button icon={Upload} onClick={importRec} data-testid="lecture-import">
@@ -142,7 +142,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
           ) : null}
           {groups.map((g) => (
             <section key={g.key} className="lecture-group" aria-label={weekLabel(g.week, i18n)}>
-              <h3 className="lecture-group__title">{weekLabel(g.week, i18n)}</h3>
+              <h2 className="lecture-group__title">{weekLabel(g.week, i18n)}</h2>
               <ul className="lecture-group__rows" role="list">
                 {g.items.map((l) => (
                   <li key={l.id}>
@@ -208,6 +208,7 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
     { kind: 'separator' },
     { id: 'deleteAudio', label: t('lectures.list.menu.deleteAudio'), disabled: !recorder || !view.audio, hint: recorder ? undefined : onlyRecorder, onSelect: () => void actions.deleteAudio(view), danger: true, testId: 'lecture-menu-delete-audio' },
     { id: 'deleteAll', label: t('lectures.list.menu.deleteAll'), disabled: !recorder, hint: recorder ? 'Delete' : onlyRecorder, onSelect: () => void actions.deleteAll(view), danger: true, testId: 'lecture-menu-delete' },
+    ...(shared ? [{ id: 'removeLocal', label: t('lectures.list.menu.removeLocal'), onSelect: () => void actions.removeLocal(view), testId: 'lecture-menu-remove-local' }] : []),
     { kind: 'separator' },
     { id: 'reveal', label: t('lectures.list.menu.showInFolder'), onSelect: () => void actions.showInFolder(view), testId: 'lecture-menu-reveal' },
   ];
@@ -218,21 +219,15 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
     <ContextMenu items={items} label={view.title}>
       <div
         className="lecture-row"
-        role="link"
-        tabIndex={0}
         data-testid="lecture-item"
         data-lecture-id={view.id}
-        aria-label={view.title}
         onClick={(e) => {
-          if ((e.target as HTMLElement).closest('button')) return;
+          if ((e.target as HTMLElement).closest('button:not(.lecture-row__open), [role="menu"]')) return;
           open();
         }}
         onKeyDown={(e) => {
-          if (e.target !== e.currentTarget) return;
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            open();
-          } else if (e.key === 'Delete' && recorder) {
+          if (!(e.target as HTMLElement).classList.contains('lecture-row__open')) return;
+          if (e.key === 'Delete' && recorder) {
             e.preventDefault();
             void actions.deleteAll(view);
           }
@@ -242,7 +237,9 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
           <ModeIcon size={18} strokeWidth={1.75} />
         </span>
         <span className="lecture-row__main">
-          <span className="lecture-row__title">{view.title}</span>
+          <button type="button" className="lecture-row__open lecture-row__title" onClick={open} data-testid="lecture-open">
+            {view.title}
+          </button>
           <span className="lecture-row__meta">{t('lectures.list.meta', { date: rowDate(view.startedAt, now, i18n), duration: duration(view.durationMs, i18n), who })}</span>
         </span>
         <span className="lecture-row__flags">
@@ -271,7 +268,7 @@ function LectureRow({ view, all, classId, shared, now, actions, services }: RowP
             </span>
           ) : null}
         </span>
-        <span className="lecture-row__markers" aria-label={counts.map((c) => `${c.n} ${t(`record.markers.${c.k}`)}`).join(', ') || undefined}>
+        <span className="lecture-row__markers" role={counts.length ? 'img' : undefined} aria-label={counts.map((c) => `${c.n} ${t(`record.markers.${c.k}`)}`).join(', ') || undefined}>
           {counts.map((c) => (
             <span key={c.k} className="lecture-row__count" aria-hidden>
               <MarkerIcon kind={c.k} auto={c.auto} size={14} />

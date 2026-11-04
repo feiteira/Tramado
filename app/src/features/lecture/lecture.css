@@ -525,3 +525,19 @@
   flex: 1;
   max-width: 640px;
 }
+.side-tool--result {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.lecture-side .ai-card__body {
+  font-size: var(--fs-md);
+  line-height: var(--lh-ui);
+}
+.lecture-side .ai-card__body ul,
+.lecture-side .ai-card__body ol {
+  padding-inline-start: var(--s-4);
+}
+.tv-para.cite-block.tv-para--current {
+  box-shadow: none;
+}

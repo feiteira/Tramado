@@ -21,6 +21,7 @@ export const lectures: Messages['lectures'] = {
     duplicateHint: 'Un duplicado nunca se transcribe automáticamente. Elija la clase que repite.',
     duplicateOfLabel: 'La misma clase que',
     duplicateClear: 'No es un duplicado',
+    removeLocalConfirm: { title: '¿Quitar «{title}» de este ordenador?', body: 'Sus compañeros la conservan. Este ordenador deja de recibirla y libera el espacio.', confirm: 'Quitar de este ordenador' },
     empty: {
       title: 'Todavía no hay clases.',
       body: 'Grabe la próxima, o añada una grabación que ya tenga (un archivo de audio o de vídeo).',

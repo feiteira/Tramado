@@ -342,3 +342,17 @@
 .tr-status--done svg {
   color: var(--success-text);
 }
+.lecture-row__open {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+}
+.lecture-row__open:focus-visible {
+  outline-offset: 2px;
+}

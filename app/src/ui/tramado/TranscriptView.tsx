@@ -214,7 +214,7 @@ const ParagraphView = memo(function ParagraphView({ para, current, props, decos,
       </div>
       <div className="tv-para__body">
         {props.showSpeakers ? <span className="tv-speaker">{props.speakerLabel(para.speaker)}</span> : null}
-        <p className="tv-text">
+        <div className="tv-text">
           {para.segments.map((s, i) => {
             const seg = s as TvSegment;
             if (props.editing && editingId === s.id && props.renderEditor) return <React.Fragment key={s.id}>{props.renderEditor(seg)}</React.Fragment>;
@@ -226,6 +226,7 @@ const ParagraphView = memo(function ParagraphView({ para, current, props, decos,
                 {i > 0 ? ' ' : null}
                 <span
                   data-segment-id={s.id}
+                  data-testid={props.editing ? 'transcript-segment' : undefined}
                   className={cx('tv-seg', current === s.id && 'tv-seg--current', corrected && 'tv-seg--corrected', clash && 'tv-seg--clash', props.editing && 'tv-seg--editable')}
                   title={corrected}
                   role={props.editing ? 'button' : undefined}
@@ -259,7 +260,7 @@ const ParagraphView = memo(function ParagraphView({ para, current, props, decos,
               </React.Fragment>
             );
           })}
-        </p>
+        </div>
       </div>
     </div>
   );

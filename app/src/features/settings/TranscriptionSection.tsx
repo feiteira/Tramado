@@ -137,7 +137,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
                 state={stateOf(id)}
                 size={sizeOf(id)}
                 active={active === id}
-                download={downloads[id] ?? null}
+                download={downloads[id] ?? (stateOf(id)?.state === 'downloading' ? { done: stateOf(id)!.bytes, total: stateOf(id)!.size, bytesPerSec: 0 } : null)}
                 canSelect={stateOf(id)?.state === 'ready'}
                 onSelect={() => void run(() => services.models.setActive(id))}
                 onDownload={() => void run(() => services.models.download(id))}
@@ -191,7 +191,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
       ) : null}
 
       <Section title={t('settings.transcription.cloud')} data-testid="speech-cloud-section">
-        <Switch checked={queue.cloud.on} onChange={(on) => void toggleCloud(on)} label={t('settings.transcription.cloud')} description={t('settings.transcription.cloudHint')} data-testid="speech-cloud" />
+        <Switch checked={queue.cloud.on} onChange={(on) => void toggleCloud(on)} label={t('record.save.cloud')} description={t('settings.transcription.cloudHint')} data-testid="speech-cloud" />
         <TextField
           label={t('settings.transcription.cloudModel')}
           value={cloudModel}
@@ -203,7 +203,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
         />
       </Section>
 
-      <Section title={t('settings.transcription.mic')} data-testid="speech-mic-section">
+      <Section data-testid="speech-mic-section">
         <div className="record-row">
           <Select
             label={t('settings.transcription.mic')}
@@ -240,7 +240,7 @@ export default function TranscriptionSection({ services }: { services: AppServic
 
       <Section title={t('settings.transcription.markerLead')} description={t('settings.transcription.markerLeadHint')} data-testid="speech-marker-lead-section">
         <Select
-          label={t('settings.transcription.markerLead')}
+          aria-label={t('settings.transcription.markerLead')}
           value={String(leadMs)}
           onChange={(v) => setPref('speech.markerOffsetMs', v)}
           options={[0, 3000, 5000, 10000].map((ms) => ({ value: String(ms), label: tp('settings.transcription.markerLeadValue', ms / 1000, { n: ms / 1000 }) }))}
@@ -282,7 +282,9 @@ function ModelRow({
     );
   } else if (s === 'downloading' && download) {
     const secs = download.bytesPerSec > 0 ? (download.total - download.done) / download.bytesPerSec : null;
-    const text = t('speech.state.downloading', { done: mb(download.done), total: `${mb(download.total)} MB`, speed: `${(download.bytesPerSec / 1e6).toFixed(1)} MB`, left: secs === null ? '' : timeLeft(secs / 60, i18n, 'speech') });
+    const text = download.bytesPerSec > 0
+      ? t('speech.state.downloading', { done: mb(download.done), total: `${mb(download.total)} MB`, speed: `${(download.bytesPerSec / 1e6).toFixed(1)} MB`, left: secs === null ? '' : timeLeft(secs / 60, i18n, 'speech') })
+      : t('speech.state.partial', { done: mb(download.done), total: `${mb(download.total)} MB` }).replace(/\s*\(.*\)$/, '');
     status = (
       <>
         <ProgressBar value={download.done} max={download.total || 1} label={text} className="model-row__progress" />

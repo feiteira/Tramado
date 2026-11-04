@@ -21,6 +21,7 @@ export const lectures = {
     duplicateHint: 'A duplicate is never transcribed automatically. Choose the lecture it repeats.',
     duplicateOfLabel: 'Same lecture as',
     duplicateClear: 'Not a duplicate',
+    removeLocalConfirm: { title: 'Remove “{title}” from this computer?', body: 'Your classmates keep it. This computer stops receiving it and frees the space.', confirm: 'Remove from this computer' },
     empty: {
       title: 'No lectures yet.',
       body: 'Record the next one, or add a recording you already have (an audio or video file).',

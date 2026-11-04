@@ -92,7 +92,7 @@ export default function ModelDialog({ props, services, close }: { props: DialogP
     <Dialog
       open
       onClose={close}
-      size="md"
+      size="lg"
       title={t('speech.prompt.title')}
       description={t('speech.prompt.body')}
       data-testid="model-prompt"
