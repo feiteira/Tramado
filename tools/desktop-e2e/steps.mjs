@@ -167,3 +167,58 @@ export async function waitFor(what, fn, timeout = 60_000, every = 500) {
     await sleep(every);
   }
 }
+
+/**
+ * Visits screens and checks each: no crash screen, nothing wider than the window. Returns the labels visited; throws
+ * with every problem found. `classId`: every tab of that class; `settings`: every section; `palette`: the palette.
+ */
+export async function tour(a, { today = true, classId = null, settings = false, palette = false } = {}) {
+  const problems = [];
+  const visited = [];
+  const fits = async (label) => {
+    await sleep(500);
+    const crash = await a.crashText();
+    if (crash) problems.push(`${label}: crash screen: ${crash.slice(0, 200)}`);
+    const fit = await a.js(`const de = document.documentElement; return { inner: innerWidth, doc: de.scrollWidth, body: document.body.scrollWidth };`);
+    if (fit.doc > fit.inner + 1 || fit.body > fit.inner + 1) problems.push(`${label}: page ${Math.max(fit.doc, fit.body)} px in a ${fit.inner} px window`);
+    visited.push(label);
+  };
+  if (today) {
+    await a.click('nav-today');
+    await a.present('screen-today', 15_000);
+    await fits('today');
+  }
+  if (classId) {
+    await a.click('rail-class', { selector: `[data-testid="rail-class"][data-class-id="${classId}"]` });
+    await a.present('class-tabs', 15_000);
+    const tabs = await a.js(`return [...document.querySelectorAll('[data-testid^="class-tabs-"]')].map((e) => e.dataset.testid.slice('class-tabs-'.length)).filter((x) => !x.includes('-'))`);
+    for (const tab of tabs) {
+      await a.click(`class-tabs-${tab}`);
+      await a.until(`the ${tab} tab`, `const s = document.querySelector('[data-testid="screen-class"]'); return s && s.dataset.tab === arguments[0]`, [tab], 15_000);
+      await fits(`class › ${tab}`);
+    }
+  }
+  if (settings) {
+    await a.click('nav-settings');
+    const sections = await a.until('the settings sections', `const n = [...document.querySelectorAll('[data-testid^="settings-nav-"]')].map((e) => e.dataset.testid.slice('settings-nav-'.length)); return n.length ? n : null`, [], 15_000);
+    for (const sec of sections) {
+      await a.click(`settings-nav-${sec}`);
+      await fits(`settings › ${sec}`);
+    }
+  }
+  if (palette) {
+    await a.click('rail-search');
+    await a.present('palette', 10_000);
+    await fits('palette');
+    await a.keys('\uE00C');
+  }
+  if (problems.length) throw new Error(problems.join('\n      '));
+  return visited;
+}
+
+/** The page errors an instance collected since its session started (or since the last reset). */
+export async function pageErrors(a, reset = false) {
+  const errors = (await a.js('return window.__e2eErrors || []')) ?? [];
+  if (reset) await a.js('window.__e2eErrors = []');
+  return errors;
+}

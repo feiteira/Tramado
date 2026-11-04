@@ -14,7 +14,7 @@
 import { readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { assert, say, sleep } from './lib.mjs';
-import { createClass, onboard, waitFor } from './steps.mjs';
+import { createClass, onboard, pageErrors, waitFor } from './steps.mjs';
 import { classDir, dismissFirstShare, inviteCode, joinWithCode, openTab, seesChat, sendChat } from './sync.mjs';
 
 /** Folders (with their devices) and devices (with their ignored folders) of an instance's Syncthing config.xml. */
@@ -166,8 +166,11 @@ export default async function syncThree(h) {
     return "A ↔ B chat crossed in the class; C's new file stayed on C; C's line reached A in the study group";
   });
 
-  await h.step('C quits', async () => {
+  await h.step('C quits; no page error on A, B or C since they started', async () => {
+    const errors = [];
+    for (const x of [a, b, c]) errors.push(...(await pageErrors(x)).map((e) => `${x.name}: ${e}`));
     await c.quit();
+    assert(!errors.length, `page errors:\n      ${errors.join('\n      ')}`);
   });
 
   await h.step('leaving while the others are offline: A quits, B leaves (the class leaves B at once, B keeps "leaving")', async () => {

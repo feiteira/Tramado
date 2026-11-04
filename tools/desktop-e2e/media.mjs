@@ -137,8 +137,25 @@ export default async function media(h) {
     return `src ${r.src}…, duration ${r.duration.toFixed(2)} s, seek to ${r.target.toFixed(2)} landed at ${r.at.toFixed(2)}`;
   });
 
-  await h.step('the recording is transcribed on this computer: the words of the clip', async () => {
+  await h.step('the webview reloads while the transcription runs: the job is re-attached (its progress comes back)', async () => {
     assert(models, 'no turbo model to transcribe with (TRAMADO_SPEECH_FROM)');
+    const job = await a.until('the transcription running', `const d = document.querySelector('[data-testid="job-dock"][data-kind="transcription"]'); return d ? d.textContent.slice(0, 80) : null`, [], 60_000);
+    const jobs = await a.call('speech_jobs');
+    assert(jobs.some((j) => j.state === 'running'), `no running job in Rust: ${JSON.stringify(jobs)}`);
+    const before = a.logged('webview ready').length;
+    await a.js('setTimeout(() => location.reload(), 50); return true');
+    const end = Date.now() + 30_000;
+    while (a.logged('webview ready').length <= before) {
+      assert(Date.now() < end, '"webview ready" was not logged again');
+      await sleep(250);
+    }
+    await a.js(`window.__e2eErrors = []; window.addEventListener('error', (e) => window.__e2eErrors.push('error: ' + e.message)); window.addEventListener('unhandledrejection', (e) => window.__e2eErrors.push('unhandled: ' + (e.reason && e.reason.stack || e.reason)));`);
+    // Either the dock shows the job again (re-attached), or it finished meanwhile and the result was taken.
+    const after = await a.until('the job back in the dock, or its transcript', `const d = document.querySelector('[data-testid="job-dock"][data-kind="transcription"]'); return d ? 'dock: ' + d.textContent.slice(0, 80) : null`, [], 30_000).catch(() => 'not seen (finished before the dock came back)');
+    return `before: ${job.replace(/\s+/g, ' ')}; after the reload: ${after.replace(/\s+/g, ' ')}`;
+  });
+
+  await h.step('the recording is transcribed on this computer: the words of the clip', async () => {
     const t = await waitFor('transcript.json', () => {
       try {
         return JSON.parse(readFileSync(join(recorded.dir, 'transcript.json'), 'utf8'));
@@ -148,8 +165,13 @@ export default async function media(h) {
     }, 5 * 60_000, 1000);
     const words = (t.segments ?? []).map((s) => s.text).join(' ').trim();
     assert(/separation of powers|legislative|executive|judicial/i.test(words), `the transcript misses the clip: ${words.slice(0, 200)}`);
+    await openTab(a, classId, 'lectures');
+    await a.click('lecture-open', { selector: '[data-testid="lecture-item"] [data-testid="lecture-open"], [data-testid="lecture-item"]' }).catch(() => a.click('lecture-item'));
     await a.until('the transcript on screen', `const t = document.querySelector('[data-testid="lecture-transcript"]'); return t && /powers|legislative|judicial/i.test(t.textContent)`, [], 60_000);
-    return `"${words.slice(0, 120)}"`;
+    const errors = await a.js('return window.__e2eErrors || []');
+    assert(!errors.length, `page errors after the reload:\n      ${errors.join('\n      ')}`);
+    const jobs = await a.call('speech_jobs');
+    return `"${words.slice(0, 120)}"; Rust jobs left: ${jobs.length}`;
   });
 
   await h.step('quit (close the window): exit handlers ran', async () => {

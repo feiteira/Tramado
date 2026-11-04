@@ -10,7 +10,7 @@ import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { ROOT, addSecret, assert, sleep } from './lib.mjs';
-import { onboard, createClass, importDocuments, cspProbe, fontsProbe, networkProbe, allowListed } from './steps.mjs';
+import { onboard, createClass, importDocuments, cspProbe, fontsProbe, networkProbe, allowListed, tour, pageErrors } from './steps.mjs';
 import { openTab } from './sync.mjs';
 
 export default async function smoke(h) {
@@ -71,6 +71,36 @@ export default async function smoke(h) {
     return state;
   });
 
+  await h.step('every screen at the smallest window (1000×660): no page error, nothing scrolls sideways', async () => {
+    await a.wd('POST', '/window/rect', { width: 800, height: 500 });
+    await sleep(800);
+    const size = await a.js('return [innerWidth, innerHeight]');
+    assert(size[0] >= 1000 && size[1] >= 660 && size[0] <= 1010, `the window went below its minimum size: ${size.join('×')}`);
+    await a.js('window.__e2eErrors = []');
+    const visited = await tour(a, { classId, settings: true, palette: true });
+    const errors = await pageErrors(a);
+    assert(!errors.length, `page errors:\n      ${errors.join('\n      ')}`);
+    await a.wd('POST', '/window/rect', { width: 1360, height: 860 });
+    return `${size.join('×')}; ${visited.length} screens: ${visited.join(', ')}`;
+  });
+
+  await h.step('the webview reloads (a crash recovery or a developer reload): the app comes back with its data', async () => {
+    const before = a.logged('webview ready').length;
+    await a.js('setTimeout(() => location.reload(), 50); return true');
+    await sleep(1500);
+    await a.until('"webview ready" logged again', 'return true', [], 1000).catch(() => null);
+    await waitForLog(a, 'webview ready', before + 1);
+    await a.js(`if (!window.__e2eErrors) { window.__e2eErrors = []; window.addEventListener('error', (e) => window.__e2eErrors.push('error: ' + e.message)); window.addEventListener('unhandledrejection', (e) => window.__e2eErrors.push('unhandled: ' + (e.reason && e.reason.stack || e.reason))); }`);
+    await a.present('rail', 30_000);
+    const names = await a.untilRun('the library', `const s = window.__tramadoE2E; if (!s) return null; const c = s.library.classes.get(); return c.length ? c.map((x) => x.name) : null;`, [], 30_000);
+    assert(names.includes('Direito Constitucional'), `classes after the reload: ${names}`);
+    const st = await a.untilRun('the index again', `const v = await window.__tramadoE2E.search.settled(arguments[0]); return v.docs >= 1 && v.pending === 0 ? v : null;`, [classId], 60_000);
+    await sleep(1000);
+    const errors = await a.js('return window.__e2eErrors || []');
+    assert(!errors.length, `page errors after the reload:\n      ${errors.join('\n      ')}`);
+    return `${names.length} class(es), ${st.docs} document(s) indexed again`;
+  });
+
   if (live) {
     await h.step('live: one real Ask in the class (free models); the model that answered', () => liveAsk(a, classId));
   }
@@ -114,6 +144,14 @@ export default async function smoke(h) {
       assert(secrets.includes(Buffer.from(key)), 'the secrets store does not hold the key (the test would prove nothing)');
       return `${a.files().length} files checked`;
     });
+  }
+}
+
+async function waitForLog(a, message, count, timeout = 30_000) {
+  const end = Date.now() + timeout;
+  while (a.logged(message).length < count) {
+    if (Date.now() > end) throw new Error(`"${message}" was not logged again`);
+    await sleep(250);
   }
 }
 

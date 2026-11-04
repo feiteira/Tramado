@@ -7,7 +7,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, assert, say, sleep } from './lib.mjs';
-import { createClass, importDocuments, onboard, waitFor } from './steps.mjs';
+import { createClass, importDocuments, onboard, pageErrors, tour, waitFor } from './steps.mjs';
 
 const TURBO = 'ggml-large-v3-turbo-q5_0.bin';
 const VAD = 'ggml-silero-v5.1.2.bin';
@@ -223,6 +223,13 @@ export default async function sync(h, opts) {
     await openTab(b, classB, 'lectures');
     await b.until('the transcript chip at B', `return document.querySelector('[data-testid="lecture-transcript-chip"]')`, [], 60_000).catch(() => null);
     return `in ${((Date.now() - t0) / 1000).toFixed(0)} s by ${ids[ta.writer?.deviceId] ?? ta.writer?.deviceId ?? '?'} (${ta.engine?.model ?? '?'}): "${words.trim().slice(0, 90)}"; ${claims.length} claim file(s): ${claims.map((c) => `${c.file}=${c.state ?? c.status ?? '?'}`).join(', ')}`;
+  });
+  await h.step('every tab of the shared class on both computers; no page error on either since they started', async () => {
+    const va = await tour(a, { classId: classA, today: true });
+    const vb = await tour(b, { classId: classB, today: true });
+    const errors = [...(await pageErrors(a)).map((e) => `A: ${e}`), ...(await pageErrors(b)).map((e) => `B: ${e}`)];
+    assert(!errors.length, `page errors:\n      ${errors.join('\n      ')}`);
+    return `A: ${va.join(', ')}; B: ${vb.length} screens`;
   });
   await h.step('instances stopped one after the other: A quits (its Syncthing too), B sees A leave, then B quits', async () => {
     const syncA = a.tree().syncthing;
