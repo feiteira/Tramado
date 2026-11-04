@@ -47,6 +47,10 @@ export const ai = {
     arriving: 'This file is still arriving.',
     transcribedBy: 'transcribed by {name}',
     badges: { moved: 'Moved', changed: 'Changed', missing: 'Missing', hallucinated: 'Not a real source' },
+    // UI-EXAMS additions (UX §4.3 spoken times, §4.5 status notes)
+    units: { h: { one: '{n} hour', other: '{n} hours' }, m: { one: '{n} minute', other: '{n} minutes' }, s: { one: '{n} second', other: '{n} seconds' } },
+    movedNote: 'This file was moved to {path}.',
+    changedNote: 'This file changed after the answer was written. The passage was found again by its text.',
   },
   cost: {
     line: { one: 'About {n} request · {left} free left today', other: 'About {n} requests · {left} free left today' },
@@ -76,6 +80,8 @@ export const ai = {
     zdrFree: 'Free models aren’t available at this level. Choose a paid model, or answers will fail.',
     sttZdr: 'Cloud transcription isn’t available at the Keep nothing level.',
     custom: 'Privacy depends on {host}.',
+    // UI-EXAMS addition
+    standardOn: 'Free models that may train on what you send are allowed on this computer.',
   },
   busy: {
     title: 'The free models are busy right now. This happens often, and it’s not your fault.',

@@ -12,6 +12,11 @@ export const ask = {
   placeholder: 'Ask about {class}…',
   placeholderAll: 'Ask about all your classes…',
   you: 'You',
+  // UI-EXAMS additions
+  send: 'Send',
+  screenTitle: 'Ask AI',
+  postPrivate: 'Answers that use your private notes can’t be posted',
+  postOther: 'Answers that cite more than one class can’t be posted to a class chat',
   sent: { one: 'Sent: your question and {n} passage.', other: 'Sent: your question and {n} passages.' },
   seeSent: 'See what was sent',
   post: 'Post to class chat',

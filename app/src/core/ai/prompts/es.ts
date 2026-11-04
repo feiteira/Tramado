@@ -41,11 +41,12 @@ export const es: PromptPack = {
     'Encuentra los conceptos clave que el profesor define en esta transcripción. Devuelve SOLO un objeto JSON: {"terms": [{"term": "…", "note": "la definición tal como la dio el profesor, ≤ 200 caracteres", "ref": "S#"}]} con como máximo 15 conceptos.',
   studyNotesRole:
     'Escribe apuntes de estudio de esta clase en Markdown: un título y después títulos por tema con puntos breves. Termina cada punto con la ref de la parte de la transcripción [S#]. Menciona los documentos y artículos a los que se refiere el profesor.',
+  studyNotesDocs: 'Algunas fuentes de abajo son fragmentos de los documentos de la asignatura (lecturas, legislación, diapositivas). Cuando la clase se refiera a uno de ellos, cita también su ref, por ejemplo "(ver art. 18 [S12])". Nunca cites un documento para algo que el profesor no dijo.',
   mergeRole: 'Une estos resultados parciales sobre la misma clase en uno solo, manteniendo las refs [S#] tal como están y quitando repeticiones.',
   labels: {
     question: 'Pregunta', points: 'puntos', options: 'Opciones', group: (n, of) => `Responda a ${n} de: ${of}`, rules: 'Normas del examen',
     sources: 'Fuentes', noSources: '(no se encontraron fuentes en los materiales de la asignatura)', transcript: 'Transcripción', passage: 'Fragmento', myAnswer: 'Mi respuesta',
-    summary: 'Resumen', terms: 'Conceptos clave', studyNotes: 'Apuntes',
+    summary: 'Resumen', terms: 'Conceptos clave', studyNotes: 'Apuntes', documents: 'Documentos de la asignatura',
   },
   marks: { insufficient: 'Los materiales no cubren', general: 'Conocimiento general', choice: 'Respuesta' },
 };

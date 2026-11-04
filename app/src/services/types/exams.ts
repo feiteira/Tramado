@@ -3,12 +3,14 @@
 import type { ClassId, QuestionId, Ulid } from '../../core/model/ids';
 import type { Answer, ExamFile, Question } from '../../core/model/files';
 import type { ErrorCode, Picked } from '../../platform/types';
-import type { ExamDateView, ExamPaperView } from './viewModels';
+import type { DeviceRef, ExamDateView, ExamPaperView } from './viewModels';
 import type { ReadableStore } from '../store';
 
 export interface ExamDraft {
   id: string; classId: ClassId; step: 'ocr' | 'presplit' | 'extracting' | 'review' | 'saving' | 'failed';
   pages: number; ocrDone: number; text: string; questions: Question[]; meta: Partial<ExamFile>; cost: { requests: number }; error: ErrorCode | null; model: string | null;
+  /** UI-EXAMS (additive): the files copied into the exam's folder (the Review screen's original preview). */
+  files?: ExamFile['files'];
 }
 
 export interface ExamService {
@@ -40,6 +42,23 @@ export interface ExamService {
   cancelAnswers(examId: Ulid): void;
   /** The progress of a running batch, if any (the dock and the question list after a remount). */
   progress(examId: Ulid): ReadableStore<{ done: number; total: number; current: QuestionId | null; error: ErrorCode | null }> | null;
+  // ── Additive (UI-EXAMS, wave 2) ──
+  /** Exam ids with an answering batch running now (the answers view and the dock follow it). */
+  running: ReadableStore<Ulid[]>;
+  /** The exam as stored with the exam-edits folded in (the Review screen edits its raw questions); null when unknown. */
+  raw(examId: Ulid): ExamFile | null;
+  /** Who added an exam date or paper (only that computer edits it in 0.1, UX §3.9.3); null when unknown. */
+  importer(examId: Ulid): DeviceRef | null;
+  /**
+   * "Delete for everyone…" (UX §3.9.2, §3.9.8): removes the exam's folder (exam.json and its original files), this
+   * computer's answers and edits of it, and the private marks. Importer only (PERMISSION_DENIED otherwise).
+   */
+  remove(examId: Ulid): Promise<void>;
+  /**
+   * "Edit questions…" (UX §3.9.8 ⋯ → back to Review): saves the reviewed questions and the rules of a saved paper in one
+   * write (importer only; INVALID with `{ problems }` when numbers repeat or a text is empty).
+   */
+  saveQuestions(examId: Ulid, questions: Question[], meta: Partial<Pick<ExamFile, 'title' | 'type' | 'academicYear' | 'rules' | 'durationMin' | 'extraPoints' | 'scale'>>): Promise<void>;
 }
 
 /** Additive options of `answer` (T-AI): the busy chooser's "Use NVIDIA free models for this request". */

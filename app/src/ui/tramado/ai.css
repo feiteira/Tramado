@@ -1,0 +1,412 @@
+/* The AI surfaces of UX §2.11 and §4 (UI-EXAMS): AiCard, CitationChip, CitationPopover, SourceRow, QuotaMeter,
+   CostLine. Violet (--ai) means "a model wrote this"; highlighter yellow (--mark) means "a source says this"
+   (UX §1.1). Every colour is a token; light and dark come from tokens.css. */
+
+/* ── AiCard ─────────────────────────────────────────────────────────────────────────────── */
+.aicard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-4) var(--s-4) var(--s-4) calc(var(--s-4) + 4px);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.aicard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--ai);
+}
+.aicard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-ui);
+}
+.aicard__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--r-sm);
+  background: var(--ai-soft);
+  color: var(--ai-text);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.aicard__model {
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aicard__fallback {
+  color: var(--ink-3);
+}
+.aicard__meta {
+  margin-top: calc(-1 * var(--s-1));
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.aicard__title {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.aicard__body {
+  max-width: none;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aicard__body p + p,
+.aicard__body p + ul,
+.aicard__body ul + p,
+.aicard__body h4 + p,
+.aicard__body p + h4 {
+  margin-top: var(--s-2);
+}
+.aicard__body h4,
+.aicard__body h5,
+.aicard__body h6 {
+  margin: var(--s-3) 0 2px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.aicard__body ul,
+.aicard__body ol {
+  margin: var(--s-1) 0;
+  padding-inline-start: var(--s-5);
+}
+.aicard__body li + li {
+  margin-top: 2px;
+}
+.aicard__writing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ai-text);
+  font-size: var(--fs-sm);
+}
+.aicard__caret {
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  margin-inline-start: 2px;
+  vertical-align: -0.15em;
+  background: var(--ai);
+  border-radius: 1px;
+  animation: aicard-blink 1s steps(2, start) infinite;
+}
+@keyframes aicard-blink {
+  to { visibility: hidden; }
+}
+.aicard--cut .aicard__body,
+.aicard--error .aicard__body {
+  color: var(--ink-3);
+}
+.aicard__cut {
+  color: var(--warning-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.aicard__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  margin-top: var(--s-1);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule-faint);
+  font-size: var(--fs-sm);
+}
+.aicard__foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-inline-start: auto;
+}
+
+/* The 5-segment Grounded meter (UX §3.9.8). */
+.grounded {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.grounded__bar {
+  display: inline-flex;
+  gap: 2px;
+}
+.grounded__seg {
+  width: 10px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--paper-active);
+}
+.grounded__seg--on {
+  background: var(--mark-edge);
+}
+.grounded__value {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* Unverified sentences (general knowledge allowed, UX §3.9.8). */
+.unverified {
+  text-decoration: underline dashed var(--warning-text);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.unverified__badge {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  font: 650 var(--fs-xs) / 18px var(--font-ui);
+  vertical-align: 0.12em;
+  white-space: nowrap;
+}
+
+/* ── CitationChip (UX §4.2) ─────────────────────────────────────────────────────────────── */
+.cchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 5px;
+  margin: 0 1px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: var(--mark);
+  color: var(--mark-ink);
+  box-shadow: inset 0 -1.5px 0 var(--mark-strong);
+  font: 750 11px/1 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  vertical-align: 0.1em;
+  justify-content: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease);
+}
+.cchip:hover {
+  background: color-mix(in oklab, var(--mark) 75%, var(--mark-strong));
+}
+.cchip.cchip--open {
+  outline: 2px solid var(--mark-edge);
+  outline-offset: 0;
+}
+.cchip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.cchip__pin {
+  font-weight: 600;
+}
+.cchip--hallucinated {
+  background: transparent;
+  color: var(--ink-3);
+  box-shadow: none;
+  border: 1px dashed var(--ink-4);
+  text-decoration: line-through;
+}
+.cchip--hallucinated:hover {
+  background: var(--paper-hover);
+}
+.cchip--missing {
+  opacity: 0.6;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-4);
+}
+.cchip--static {
+  cursor: default;
+}
+.cchip-sep {
+  display: inline-block;
+  width: 1px;
+}
+
+/* ── CitationPopover (UX §4.5) ──────────────────────────────────────────────────────────── */
+.cpop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  width: min(420px, calc(100vw - 32px));
+  padding: var(--s-4);
+}
+.cpop__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s-2);
+}
+.cpop__icon {
+  margin-top: 2px;
+  color: var(--ink-3);
+}
+.cpop__title {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.cpop__where {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.cpop__quote {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: var(--lh-reading);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.cpop__note {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.cpop__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* ── SourceRow (UX §4.4) ────────────────────────────────────────────────────────────────── */
+.srow {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-1) var(--s-3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease);
+}
+.srow:hover {
+  background: var(--paper-hover);
+}
+.srow__icon {
+  color: var(--ink-3);
+}
+.srow__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.srow__title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 560;
+}
+.srow__where {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.srow__chev {
+  color: var(--ink-4);
+}
+.srow--hallucinated .srow__title {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+/* ── QuotaMeter (UX §3.14.3) ────────────────────────────────────────────────────────────── */
+.quota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+  min-width: 0;
+}
+.quota__bar {
+  display: inline-flex;
+  gap: 2px;
+}
+.quota__seg {
+  width: 12px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--paper-active);
+}
+.quota__seg--on {
+  background: var(--accent);
+}
+.quota__text {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.quota__text strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+.quota--compact .quota__text {
+  color: var(--ink-3);
+}
+
+/* ── CostLine (UX §2.11, §3.15.7) ───────────────────────────────────────────────────────── */
+.costline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.costline__icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ai-text);
+}
+.costline--exhausted {
+  color: var(--warning-text);
+}
+.costline--exhausted .costline__icon {
+  color: var(--warning-text);
+}
+
+@media (forced-colors: active) {
+  .aicard::before {
+    background: CanvasText;
+  }
+  .cchip {
+    border: 1px solid ButtonText;
+  }
+  .grounded__seg--on,
+  .quota__seg--on {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}

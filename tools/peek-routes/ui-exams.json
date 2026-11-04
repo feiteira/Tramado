@@ -1,0 +1,1846 @@
+[
+  {
+    "name": "exams",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-item:2"
+      },
+      {
+        "expect": "exam-paper-item:1"
+      },
+      {
+        "expect": "exam-countdown"
+      },
+      {
+        "expect": "exam-practise-class"
+      },
+      {
+        "expect-not": "exams-empty"
+      },
+      {
+        "expect-text": "exam-list=Frequência"
+      }
+    ]
+  },
+  {
+    "name": "exams-pt-dark",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-item:2"
+      },
+      {
+        "expect": "exam-paper-item:1"
+      },
+      {
+        "expect": "exam-countdown"
+      },
+      {
+        "expect": "exam-practise-class"
+      },
+      {
+        "expect-not": "exams-empty"
+      },
+      {
+        "expect-text": "exam-list=Frequência"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exams-es-125",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-item:2"
+      },
+      {
+        "expect": "exam-paper-item:1"
+      },
+      {
+        "expect": "exam-countdown"
+      },
+      {
+        "expect": "exam-practise-class"
+      },
+      {
+        "expect-not": "exams-empty"
+      },
+      {
+        "expect-text": "exam-list=Frequência"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exams-min",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-item:2"
+      },
+      {
+        "expect": "exam-paper-item:1"
+      },
+      {
+        "expect": "exam-countdown"
+      },
+      {
+        "expect": "exam-practise-class"
+      },
+      {
+        "expect-not": "exams-empty"
+      },
+      {
+        "expect-text": "exam-list=Frequência"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "exams-empty",
+    "query": "route=class&class=hist&tab=exams",
+    "ready": "exams-empty",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exams-empty-date"
+      },
+      {
+        "expect": "exams-empty-paper"
+      }
+    ]
+  },
+  {
+    "name": "exams-add-menu",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "exam-add"
+      },
+      {
+        "expect": "exam-add-date"
+      },
+      {
+        "expect": "exam-add-paper"
+      }
+    ]
+  },
+  {
+    "name": "exams-date-menu",
+    "query": "route=class&class=law&tab=exams&ai=fake",
+    "ready": "exam-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "exam-date-more"
+      },
+      {
+        "expect": "exam-date-edit"
+      },
+      {
+        "expect": "exam-date-delete"
+      }
+    ]
+  },
+  {
+    "name": "exam-date",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-date",
+    "ready": "exam-date-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-kind"
+      },
+      {
+        "expect": "exam-date-date"
+      },
+      {
+        "expect": "exam-date-time"
+      },
+      {
+        "expect": "exam-date-room"
+      },
+      {
+        "expect": "exam-date-covers"
+      },
+      {
+        "expect": "exam-date-weight"
+      },
+      {
+        "expect": "exam-date-title"
+      }
+    ]
+  },
+  {
+    "name": "exam-date-pt-dark",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-date",
+    "ready": "exam-date-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-kind"
+      },
+      {
+        "expect": "exam-date-date"
+      },
+      {
+        "expect": "exam-date-time"
+      },
+      {
+        "expect": "exam-date-room"
+      },
+      {
+        "expect": "exam-date-covers"
+      },
+      {
+        "expect": "exam-date-weight"
+      },
+      {
+        "expect": "exam-date-title"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exam-date-es-125",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-date",
+    "ready": "exam-date-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-kind"
+      },
+      {
+        "expect": "exam-date-date"
+      },
+      {
+        "expect": "exam-date-time"
+      },
+      {
+        "expect": "exam-date-room"
+      },
+      {
+        "expect": "exam-date-covers"
+      },
+      {
+        "expect": "exam-date-weight"
+      },
+      {
+        "expect": "exam-date-title"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-date-edit",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-date&exam=freq",
+    "ready": "exam-date-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-save"
+      }
+    ]
+  },
+  {
+    "name": "exam-date-add",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-date",
+    "ready": "exam-date-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "type": "exam-date-date=2026-12-02"
+      },
+      {
+        "type": "exam-date-room=Sala 3"
+      },
+      {
+        "click": "exam-date-save"
+      },
+      {
+        "expect-not": "exam-date-dialog"
+      },
+      {
+        "expect": "exam-date-item:3"
+      }
+    ]
+  },
+  {
+    "name": "exam-paper",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-paper-file"
+      },
+      {
+        "expect": "exam-paper-type"
+      },
+      {
+        "expect": "exam-paper-name"
+      },
+      {
+        "expect": "exam-paper-kind"
+      },
+      {
+        "expect": "exam-paper-year"
+      }
+    ]
+  },
+  {
+    "name": "exam-paper-pt-dark",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-paper-file"
+      },
+      {
+        "expect": "exam-paper-type"
+      },
+      {
+        "expect": "exam-paper-name"
+      },
+      {
+        "expect": "exam-paper-kind"
+      },
+      {
+        "expect": "exam-paper-year"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exam-paper-es-125",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-paper-file"
+      },
+      {
+        "expect": "exam-paper-type"
+      },
+      {
+        "expect": "exam-paper-name"
+      },
+      {
+        "expect": "exam-paper-kind"
+      },
+      {
+        "expect": "exam-paper-year"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-paper-noai",
+    "query": "route=class&class=law&tab=exams&ai=off&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-paper-noai"
+      }
+    ]
+  },
+  {
+    "name": "exam-paper-typed",
+    "query": "route=class&class=law&tab=exams&ai=fake&dialog=exam-paper",
+    "ready": "exam-paper-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "click": "exam-paper-type"
+      },
+      {
+        "type": "exam-paper-text=1. Distinga direitos de garantias. (4 valores)\n2. O que é o conteúdo essencial? (4 valores)"
+      },
+      {
+        "click": "exam-paper-start"
+      },
+      {
+        "expect": "exam-review"
+      },
+      {
+        "expect": "review-question:2"
+      }
+    ]
+  },
+  {
+    "name": "answer-settings",
+    "query": "route=exam&class=law&exam=mock&ai=fake&dialog=answer-settings",
+    "ready": "answer-settings",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "answer-from-materials"
+      },
+      {
+        "expect": "answer-from-general"
+      },
+      {
+        "expect": "answer-try-first"
+      },
+      {
+        "expect": "answer-cost"
+      },
+      {
+        "expect": "answer-existing"
+      },
+      {
+        "expect": "answer-start"
+      }
+    ]
+  },
+  {
+    "name": "answer-settings-pt-dark",
+    "query": "route=exam&class=law&exam=mock&ai=fake&dialog=answer-settings",
+    "ready": "answer-settings",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "answer-from-materials"
+      },
+      {
+        "expect": "answer-from-general"
+      },
+      {
+        "expect": "answer-try-first"
+      },
+      {
+        "expect": "answer-cost"
+      },
+      {
+        "expect": "answer-existing"
+      },
+      {
+        "expect": "answer-start"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "answer-settings-es-125",
+    "query": "route=exam&class=law&exam=mock&ai=fake&dialog=answer-settings",
+    "ready": "answer-settings",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "answer-from-materials"
+      },
+      {
+        "expect": "answer-from-general"
+      },
+      {
+        "expect": "answer-try-first"
+      },
+      {
+        "expect": "answer-cost"
+      },
+      {
+        "expect": "answer-existing"
+      },
+      {
+        "expect": "answer-start"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "answer-settings-quota",
+    "query": "route=exam&class=law&exam=mock&ai=quota&dialog=answer-settings",
+    "ready": "answer-settings",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "answer-cost:data-exhausted=true"
+      },
+      {
+        "expect-attr": "answer-start:disabled="
+      }
+    ]
+  },
+  {
+    "name": "exam-extracting",
+    "query": "route=exam&class=law&exam=final&mode=extracting&ai=fake",
+    "ready": "exam-extracting",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-extracting-nopaper"
+      },
+      {
+        "expect": "exam-extracting-add"
+      }
+    ]
+  },
+  {
+    "name": "exam-extracting-es-125",
+    "query": "route=exam&class=law&exam=final&mode=extracting&ai=fake",
+    "ready": "exam-extracting",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-extracting-nopaper"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-extracting-done",
+    "query": "route=exam&class=law&exam=mock&mode=extracting&ai=fake",
+    "ready": "exam-extracting",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-steps"
+      },
+      {
+        "click": "exam-extracting-check"
+      },
+      {
+        "expect": "exam-review"
+      }
+    ]
+  },
+  {
+    "name": "exam-review",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "review-question:5"
+      },
+      {
+        "expect": "review-group:1"
+      },
+      {
+        "expect": "review-rule:2"
+      },
+      {
+        "expect": "review-original"
+      },
+      {
+        "expect": "review-confirm"
+      }
+    ]
+  },
+  {
+    "name": "exam-review-pt-dark",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "review-question:5"
+      },
+      {
+        "expect": "review-group:1"
+      },
+      {
+        "expect": "review-rule:2"
+      },
+      {
+        "expect": "review-original"
+      },
+      {
+        "expect": "review-confirm"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exam-review-es-125",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "review-question:5"
+      },
+      {
+        "expect": "review-group:1"
+      },
+      {
+        "expect": "review-rule:2"
+      },
+      {
+        "expect": "review-original"
+      },
+      {
+        "expect": "review-confirm"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-review-min",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "review-question:5"
+      },
+      {
+        "expect": "review-group:1"
+      },
+      {
+        "expect": "review-rule:2"
+      },
+      {
+        "expect": "review-original"
+      },
+      {
+        "expect": "review-confirm"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "exam-review-edit",
+    "query": "route=exam&class=law&exam=mock&mode=review",
+    "ready": "exam-review",
+    "axe": true,
+    "steps": [
+      {
+        "click": "review-split"
+      },
+      {
+        "expect": "review-question:6"
+      },
+      {
+        "click": "review-add"
+      },
+      {
+        "expect": "review-question:7"
+      },
+      {
+        "expect-attr": "review-confirm:disabled="
+      },
+      {
+        "click": "review-rule-add"
+      },
+      {
+        "expect": "review-rule-input"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-mustpass",
+    "query": "route=exam&class=law&exam=mock&mode=answers&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect-not": "ai-answer"
+      },
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-answer"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "question-item:5"
+      },
+      {
+        "expect": "my-answer"
+      },
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ai-grounded"
+      },
+      {
+        "expect": "ai-sources"
+      },
+      {
+        "expect": "source-row:2"
+      },
+      {
+        "expect": "mark-partly"
+      },
+      {
+        "expect": "exam-integrity"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-pt-dark",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "question-item:5"
+      },
+      {
+        "expect": "my-answer"
+      },
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ai-grounded"
+      },
+      {
+        "expect": "ai-sources"
+      },
+      {
+        "expect": "source-row:2"
+      },
+      {
+        "expect": "mark-partly"
+      },
+      {
+        "expect": "exam-integrity"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exam-answers-es-125",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "question-item:5"
+      },
+      {
+        "expect": "my-answer"
+      },
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ai-grounded"
+      },
+      {
+        "expect": "ai-sources"
+      },
+      {
+        "expect": "source-row:2"
+      },
+      {
+        "expect": "mark-partly"
+      },
+      {
+        "expect": "exam-integrity"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-answers-min",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "question-item:5"
+      },
+      {
+        "expect": "my-answer"
+      },
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ai-grounded"
+      },
+      {
+        "expect": "ai-sources"
+      },
+      {
+        "expect": "source-row:2"
+      },
+      {
+        "expect": "mark-partly"
+      },
+      {
+        "expect": "exam-integrity"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "exam-answers-cite",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "click": "cite-chip"
+      },
+      {
+        "expect": "cite-popover"
+      },
+      {
+        "expect": "cite-open"
+      },
+      {
+        "click": "cite-open"
+      },
+      {
+        "expect": "screen-document"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-popover",
+    "query": "route=exam&class=law&exam=mock&q=I&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "click": "cite-chip"
+      },
+      {
+        "expect": "cite-popover"
+      },
+      {
+        "expect": "cite-open"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-unverified",
+    "query": "route=exam&class=law&exam=mock&q=IIc&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "reveal-answer"
+      },
+      {
+        "expect": "ai-unverified"
+      },
+      {
+        "expect": "ai-unverified-badge"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-case",
+    "query": "route=exam&class=law&exam=mock&q=I&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "mark-right"
+      },
+      {
+        "expect": "mark-practice"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-hint",
+    "query": "route=exam&class=law&exam=mock&q=III&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "hint"
+      },
+      {
+        "expect": "ai-hint"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-aioff",
+    "query": "route=exam&class=law&exam=mock&q=IIa&ai=off",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-ai-off"
+      },
+      {
+        "expect-not": "reveal-answer"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-more",
+    "query": "route=exam&class=law&exam=mock&q=IIb&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "click": "exam-more"
+      },
+      {
+        "expect": "exam-more-edit"
+      },
+      {
+        "expect": "exam-more-copy"
+      },
+      {
+        "expect": "exam-more-delete"
+      }
+    ]
+  },
+  {
+    "name": "exam-date-route",
+    "query": "route=exam&class=law&exam=freq",
+    "ready": "exam-answers",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "exam-date-nopaper"
+      },
+      {
+        "expect": "exam-countdown"
+      }
+    ]
+  },
+  {
+    "name": "exam-answers-bio",
+    "query": "route=exam&class=bio&exam=pquiz&ai=fake",
+    "ready": "question-list",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "question-item:4"
+      }
+    ]
+  },
+  {
+    "name": "exam-practice",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-question"
+      },
+      {
+        "expect": "practice-progress"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "expect": "practice-answer"
+      },
+      {
+        "expect": "practice-again"
+      },
+      {
+        "expect": "practice-got-it"
+      }
+    ]
+  },
+  {
+    "name": "exam-practice-pt-dark",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-question"
+      },
+      {
+        "expect": "practice-progress"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "expect": "practice-answer"
+      },
+      {
+        "expect": "practice-again"
+      },
+      {
+        "expect": "practice-got-it"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "exam-practice-es-125",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-question"
+      },
+      {
+        "expect": "practice-progress"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "expect": "practice-answer"
+      },
+      {
+        "expect": "practice-again"
+      },
+      {
+        "expect": "practice-got-it"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "exam-practice-min",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-question"
+      },
+      {
+        "expect": "practice-progress"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "expect": "practice-answer"
+      },
+      {
+        "expect": "practice-again"
+      },
+      {
+        "expect": "practice-got-it"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "exam-practice-done",
+    "query": "route=exam&class=law&exam=mock&mode=practice",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Space"
+      },
+      {
+        "press": "2"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "press": "2"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "press": "2"
+      },
+      {
+        "press": "Space"
+      },
+      {
+        "press": "2"
+      },
+      {
+        "expect": "practice-done"
+      }
+    ]
+  },
+  {
+    "name": "practice-class",
+    "query": "route=practice&class=bio&ai=fake",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-question"
+      },
+      {
+        "click": "practice-reveal"
+      },
+      {
+        "expect": "practice-answer"
+      }
+    ]
+  },
+  {
+    "name": "practice-empty",
+    "query": "route=practice&class=stats",
+    "ready": "exam-practice",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "practice-empty"
+      },
+      {
+        "expect": "practice-again-all"
+      }
+    ]
+  },
+  {
+    "name": "ask",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-thread-item:1"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "cite-chip"
+      },
+      {
+        "expect": "ask-scope-all"
+      },
+      {
+        "expect": "ask-general"
+      },
+      {
+        "expect": "ask-cost"
+      },
+      {
+        "expect": "ask-model"
+      },
+      {
+        "expect": "ask-post"
+      }
+    ]
+  },
+  {
+    "name": "ask-pt-dark",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-thread-item:1"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "cite-chip"
+      },
+      {
+        "expect": "ask-scope-all"
+      },
+      {
+        "expect": "ask-general"
+      },
+      {
+        "expect": "ask-cost"
+      },
+      {
+        "expect": "ask-model"
+      },
+      {
+        "expect": "ask-post"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "ask-es-125",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-thread-item:1"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "cite-chip"
+      },
+      {
+        "expect": "ask-scope-all"
+      },
+      {
+        "expect": "ask-general"
+      },
+      {
+        "expect": "ask-cost"
+      },
+      {
+        "expect": "ask-model"
+      },
+      {
+        "expect": "ask-post"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "ask-min",
+    "query": "route=class&class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-thread-item:1"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "cite-chip"
+      },
+      {
+        "expect": "ask-scope-all"
+      },
+      {
+        "expect": "ask-general"
+      },
+      {
+        "expect": "ask-cost"
+      },
+      {
+        "expect": "ask-model"
+      },
+      {
+        "expect": "ask-post"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "ask-empty",
+    "query": "route=class&class=bio&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-empty"
+      },
+      {
+        "expect": "ask-suggestion:3"
+      }
+    ]
+  },
+  {
+    "name": "ask-send",
+    "query": "route=class&class=bio&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "type": "ask-input=What happens to a cell in a hypotonic solution?"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ask-thread-item:1"
+      },
+      {
+        "expect": "ask-sent"
+      },
+      {
+        "click": "ask-sent"
+      },
+      {
+        "expect": "ask-sent-list"
+      }
+    ]
+  },
+  {
+    "name": "ask-off",
+    "query": "route=class&class=law&tab=ask&ai=off",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-off"
+      },
+      {
+        "expect": "ask-off-setup"
+      },
+      {
+        "expect": "ask-off-search"
+      },
+      {
+        "expect-not": "ask-input"
+      }
+    ]
+  },
+  {
+    "name": "ask-off-pt-dark",
+    "query": "route=class&class=law&tab=ask&ai=off",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-off"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "ask-quota",
+    "query": "route=class&class=law&tab=ask&ai=quota",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "ask-cost:data-exhausted=true"
+      }
+    ]
+  },
+  {
+    "name": "ask-badkey",
+    "query": "route=class&class=bio&tab=ask&ai=badkey",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "type": "ask-input=osmosis"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-error"
+      },
+      {
+        "expect": "ai-recover-key"
+      }
+    ]
+  },
+  {
+    "name": "ai-busy",
+    "query": "route=class&class=law&tab=ask&ai=busy",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "type": "ask-input=teste"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-busy-chooser"
+      },
+      {
+        "expect": "ai-busy-nvidia-once"
+      },
+      {
+        "expect": "ai-busy-nvidia-always"
+      }
+    ]
+  },
+  {
+    "name": "ai-busy-pt-dark",
+    "query": "route=class&class=law&tab=ask&ai=busy",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "type": "ask-input=teste"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-busy-chooser"
+      },
+      {
+        "expect": "ai-busy-nvidia-once"
+      },
+      {
+        "expect": "ai-busy-nvidia-always"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "ai-busy-once",
+    "query": "route=class&class=law&tab=ask&ai=busy",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "type": "ask-input=teste"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-busy-chooser"
+      },
+      {
+        "expect": "ai-busy-nvidia-once"
+      },
+      {
+        "expect": "ai-busy-nvidia-always"
+      },
+      {
+        "click": "ai-busy-nvidia-once"
+      },
+      {
+        "expect-not": "ai-busy-chooser"
+      },
+      {
+        "expect": "ai-answer"
+      }
+    ]
+  },
+  {
+    "name": "ask-all",
+    "query": "route=ask&ai=fake",
+    "ready": "screen-ask",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-scope-class:3"
+      },
+      {
+        "expect": "ask-empty"
+      },
+      {
+        "type": "ask-input=conteúdo essencial"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ask-thread-item:1"
+      }
+    ]
+  },
+  {
+    "name": "ask-all-pt-dark",
+    "query": "route=ask&ai=fake",
+    "ready": "screen-ask",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-scope-class:3"
+      },
+      {
+        "expect": "ask-empty"
+      },
+      {
+        "type": "ask-input=conteúdo essencial"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ask-thread-item:1"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "ask-all-es-125",
+    "query": "route=ask&ai=fake",
+    "ready": "screen-ask",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-scope-class:3"
+      },
+      {
+        "expect": "ask-empty"
+      },
+      {
+        "type": "ask-input=conteúdo essencial"
+      },
+      {
+        "click": "ask-send"
+      },
+      {
+        "expect": "ai-answer"
+      },
+      {
+        "expect": "ask-thread-item:1"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "ask-all-off",
+    "query": "route=ask&ai=off",
+    "ready": "screen-ask",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ask-off"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-privacy-no-training"
+      },
+      {
+        "expect": "ai-privacy-zdr"
+      },
+      {
+        "expect": "ai-privacy-standard"
+      },
+      {
+        "expect": "ai-key-status"
+      },
+      {
+        "expect": "ai-quota"
+      },
+      {
+        "expect": "ai-model"
+      },
+      {
+        "expect": "ai-fallback-1"
+      },
+      {
+        "expect": "ai-fallback-2"
+      },
+      {
+        "expect": "ai-busy-policy"
+      },
+      {
+        "expect": "ai-answer-language"
+      },
+      {
+        "expect": "ai-general-default"
+      },
+      {
+        "expect": "ai-off"
+      },
+      {
+        "expect": "ai-activity-link"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-mustpass",
+    "query": "route=settings&section=ai",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-privacy-no-training"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-pt-dark",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-privacy-no-training"
+      },
+      {
+        "expect": "ai-privacy-zdr"
+      },
+      {
+        "expect": "ai-privacy-standard"
+      },
+      {
+        "expect": "ai-key-status"
+      },
+      {
+        "expect": "ai-quota"
+      },
+      {
+        "expect": "ai-model"
+      },
+      {
+        "expect": "ai-fallback-1"
+      },
+      {
+        "expect": "ai-fallback-2"
+      },
+      {
+        "expect": "ai-busy-policy"
+      },
+      {
+        "expect": "ai-answer-language"
+      },
+      {
+        "expect": "ai-general-default"
+      },
+      {
+        "expect": "ai-off"
+      },
+      {
+        "expect": "ai-activity-link"
+      }
+    ],
+    "lang": "pt",
+    "theme": "dark"
+  },
+  {
+    "name": "settings-ai-es-125",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-privacy-no-training"
+      },
+      {
+        "expect": "ai-privacy-zdr"
+      },
+      {
+        "expect": "ai-privacy-standard"
+      },
+      {
+        "expect": "ai-key-status"
+      },
+      {
+        "expect": "ai-quota"
+      },
+      {
+        "expect": "ai-model"
+      },
+      {
+        "expect": "ai-fallback-1"
+      },
+      {
+        "expect": "ai-fallback-2"
+      },
+      {
+        "expect": "ai-busy-policy"
+      },
+      {
+        "expect": "ai-answer-language"
+      },
+      {
+        "expect": "ai-general-default"
+      },
+      {
+        "expect": "ai-off"
+      },
+      {
+        "expect": "ai-activity-link"
+      }
+    ],
+    "lang": "es",
+    "scale": 1.25
+  },
+  {
+    "name": "settings-ai-min",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-privacy-no-training"
+      },
+      {
+        "expect": "ai-privacy-zdr"
+      },
+      {
+        "expect": "ai-privacy-standard"
+      },
+      {
+        "expect": "ai-key-status"
+      },
+      {
+        "expect": "ai-quota"
+      },
+      {
+        "expect": "ai-model"
+      },
+      {
+        "expect": "ai-fallback-1"
+      },
+      {
+        "expect": "ai-fallback-2"
+      },
+      {
+        "expect": "ai-busy-policy"
+      },
+      {
+        "expect": "ai-answer-language"
+      },
+      {
+        "expect": "ai-general-default"
+      },
+      {
+        "expect": "ai-off"
+      },
+      {
+        "expect": "ai-activity-link"
+      }
+    ],
+    "size": "1000x660"
+  },
+  {
+    "name": "settings-ai-nokey",
+    "query": "route=settings&section=ai&ai=off",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "expect": "ai-key"
+      },
+      {
+        "expect": "ai-check"
+      },
+      {
+        "expect": "ai-key-paste"
+      },
+      {
+        "expect": "ai-key-get"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-test",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ai-key-test"
+      },
+      {
+        "expect": "ai-check-result"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-standard",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ai-privacy-standard"
+      },
+      {
+        "expect": "ai-privacy-standard-note"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-off",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ai-off"
+      },
+      {
+        "expect": "ai-disabled"
+      },
+      {
+        "expect": "ai-on"
+      }
+    ]
+  },
+  {
+    "name": "settings-ai-custom",
+    "query": "route=settings&section=ai&ai=fake",
+    "ready": "settings-ai",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ai-service-custom"
+      },
+      {
+        "expect": "ai-custom-address"
+      },
+      {
+        "expect": "ai-custom-test"
+      }
+    ]
+  }
+]

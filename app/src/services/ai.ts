@@ -331,7 +331,9 @@ export function viewCitations(text: string, cites: readonly Citation[], classId:
     const c = byRef.get(chip.ref);
     if (!c) return { n: chip.n, ref: chip.ref, pin: chip.pin, source: null, status: 'hallucinated' as const };
     const s = c.source;
-    const title = c.label.split(' · ')[0] || (s.kind === 'document' || s.kind === 'note' ? baseNameNoExt(s.path) : c.label);
+    // UX §4.1: documents and notes are titled without their file extension (a label may carry ".pdf").
+    const head = c.label.split(' · ')[0] ?? '';
+    const title = (s.kind === 'document' || s.kind === 'note' ? head.replace(/\.(?:pdf|docx?|pptx?|odt|md|txt|png|jpe?g|webp)$/i, '') : head) || (s.kind === 'document' || s.kind === 'note' ? baseNameNoExt(s.path) : c.label);
     const src: ViewSourceRef = {
       type: s.kind, classId, title,
       ...(s.kind === 'document' || s.kind === 'note' ? { relPath: s.path, sha256: s.sha256 } : {}),
