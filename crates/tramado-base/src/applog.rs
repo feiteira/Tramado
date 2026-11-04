@@ -204,24 +204,45 @@ impl log::Log for Bridge {
         if !self.enabled(record.metadata()) {
             return;
         }
+        let message = record.args().to_string();
+        if is_noise(record.target(), &message) {
+            return;
+        }
         let level = match record.level() {
             log::Level::Error => "error",
             log::Level::Warn => "warn",
             _ => "info",
         };
-        self.0.write(
-            level,
-            &format!("[{}] {}", record.target(), record.args()),
-            None,
-        );
+        self.0
+            .write(level, &format!("[{}] {message}", record.target()), None);
     }
 
     fn flush(&self) {}
 }
 
+/// Records of other crates that say nothing wrong happened: the PulseAudio client (cpal's
+/// PulseAudio host, every device list and system-audio check) logs its own normal disconnect as
+/// an error, two lines each time, which made diagnostics look alarming.
+fn is_noise(target: &str, message: &str) -> bool {
+    target.starts_with("pulseaudio::") && message.contains("Client disconnected")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pulseaudio_disconnects_are_not_errors() {
+        assert!(is_noise(
+            "pulseaudio::client::reactor",
+            "Reactor error: Client disconnected"
+        ));
+        assert!(!is_noise(
+            "pulseaudio::client::reactor",
+            "Reactor error: Protocol error"
+        ));
+        assert!(!is_noise("tramado_speech::capture", "Client disconnected"));
+    }
 
     #[test]
     fn appends_one_line_per_entry() {
