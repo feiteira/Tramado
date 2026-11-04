@@ -469,7 +469,7 @@ impl JournalPaths {
                 Err(e) => log::warn!("recording journal {id} unreadable: {e}"),
             }
         }
-        out.sort_by(|a, b| a.started_at_ms.cmp(&b.started_at_ms));
+        out.sort_by_key(|a| a.started_at_ms);
         out
     }
 
