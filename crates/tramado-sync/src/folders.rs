@@ -380,7 +380,6 @@ pub fn finish_leaving(
     }
     let label = ctx.label(class_id);
     ctx.writer.run(|| ctx.c.delete_folder(class_id))?;
-    ctx.registry.add_left_class(class_id)?;
     let devices: Vec<String> = ctx
         .c
         .devices()?
@@ -413,6 +412,9 @@ pub fn finish_leaving(
             e.leaving = None;
         })?;
     }
+    // last: from now on offers of this ID are dropped silently (§9.2); the devices' ignoredFolders
+    // entries above already keep them from showing as pending meanwhile
+    ctx.registry.add_left_class(class_id)?;
     log::info!("sync: finished leaving {}", ids::short_id(class_id));
     Ok(true)
 }
