@@ -53,6 +53,8 @@ export interface ClassStoreImpl extends ClassStore {
   ingest(paths: ClassPath[], opts: { selfWrite: boolean; rescan: boolean }): void;
   /** Resolves when no load is running or queued (tests). */
   idle(): Promise<void>;
+  /** Replaces the registry entry after the library reloaded it (shared, archived, leaving…; G1, services/index.ts). */
+  setEntry(entry: ClassEntry): void;
 }
 
 export function createClassStore(ctx: AppContext, entry: ClassEntry): ClassStoreImpl {
@@ -293,6 +295,10 @@ export function createClassStore(ctx: AppContext, entry: ClassEntry): ClassStore
     },
     setTrustGate(g) {
       gate = g;
+    },
+    setEntry(e) {
+      const cur = state.get();
+      if (e.classId === classId && JSON.stringify(e) !== JSON.stringify(cur.entry)) state.set({ ...cur, entry: e });
     },
     setDirs(d) {
       dirs = { ...d };

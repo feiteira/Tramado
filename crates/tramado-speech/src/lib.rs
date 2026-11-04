@@ -707,6 +707,9 @@ impl Speech {
             .name("tramado-import".into())
             .spawn(move || {
                 let r = run_import(&fs, &journals, &req, &file, &j);
+                // Mark the job finished before telling anyone: a caller that reacts to `Done`
+                // with `pending_recordings()` must already see this import as pending.
+                j.done.store(true, Ordering::SeqCst);
                 match r {
                     Ok(audio) => {
                         j.sink.send(ImportEvent::Done { audio });
@@ -718,7 +721,6 @@ impl Speech {
                         });
                     }
                 }
-                j.done.store(true, Ordering::Relaxed);
             })?;
         *lock(&job.thread) = Some(t);
         Ok(())

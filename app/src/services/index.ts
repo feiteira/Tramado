@@ -69,12 +69,21 @@ export function createServices(ctx: AppContext): AppServicesImpl {
     return created;
   };
 
-  // Classes that left the library stop their store.
+  // Classes that left the library stop their store (and the lecture fold timers); the others get the reloaded
+  // registry entry, so `store.state.entry` follows sharing (and a class shared later gets its trust gate). G1.
   const offLibrary = library.classes.subscribe(() => {
     const ids = new Set(library.classes.get().map((c) => c.id));
-    for (const [id, s] of perClass) if (!ids.has(id)) {
-      s.store.stop();
-      perClass.delete(id);
+    for (const [id, s] of perClass) {
+      if (!ids.has(id)) {
+        s.store.stop();
+        (s.lectures as { dispose?(): void }).dispose?.();
+        perClass.delete(id);
+        continue;
+      }
+      const e = library.entry(id);
+      if (!e) continue;
+      if (e.shared && !s.store.state.get().entry.shared) s.store.setTrustGate(s.trust);
+      s.store.setEntry(e);
     }
   });
 
@@ -106,7 +115,10 @@ export function createServices(ctx: AppContext): AppServicesImpl {
       offLibrary();
       offChanged();
       offSync();
-      for (const s of perClass.values()) s.store.stop();
+      for (const s of perClass.values()) {
+        s.store.stop();
+        (s.lectures as { dispose?(): void }).dispose?.();
+      }
       perClass.clear();
     },
   };
