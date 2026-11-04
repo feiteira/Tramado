@@ -24,11 +24,18 @@ cambiarlo en Ajustes › Sincronización.
 
 **Invitar** (en la cabecera de la asignatura o en Miembros) muestra la invitación:
 
-- **Copiar la invitación** copia un mensaje corto con un enlace y el código: péguelo en el grupo de la asignatura, en Moodle o
-  en un correo;
-- el **código QR** contiene la misma invitación, para escanearla con un móvil;
+- **Copiar la invitación** copia un mensaje corto con un enlace y el código: péguelo en el grupo de la asignatura, en
+  Moodle o en un correo. El enlace abre en el navegador la página de Tramado para unirse
+  (`https://feiteira.github.io/Tramado/join/`);
+- el **código QR** abre la misma página en el móvil que lo escanee;
 - **Copiar el código** copia solo el código, y **Guardar como archivo…** guarda un archivo `.tramado-invite`, que se
   abre desde **Unirse a una asignatura › Abrir un archivo de invitación…**.
+
+La página para unirse muestra la asignatura y quién envió la invitación. En un ordenador con Tramado, **Abrir en
+Tramado** abre la invitación en **Unirse a una asignatura**; en un móvil, pulse **Copiar el código**, envíe el código a
+su ordenador (por correo, o por una aplicación de mensajería que también use en el ordenador) y péguelo en **Unirse a
+una asignatura**. La invitación va en la parte del enlace que sigue a `#`, que el navegador nunca envía a un servidor:
+la página la lee en su dispositivo y no envía nada a ningún sitio.
 
 Quien tenga la invitación puede entrar, a través de su ordenador o del de cualquier miembro que esté en línea; si no
 hay nadie, espera. Para aprobar a cada persona primero, un organizador activa **Preguntar antes de dejar entrar** en
@@ -39,10 +46,11 @@ Miembros.
 ![Unirse: la asignatura a la que le han invitado, dónde guardarla y si descargar las grabaciones](../img/es/join.webp)
 
 **Unirse a una asignatura** (en la barra lateral, o <kbd>Ctrl</kbd>+<kbd>Mayús</kbd>+<kbd>J</kbd>): pegue la invitación
-(sirve el mensaje entero) o abra un archivo de invitación, y pulse **Continuar**. Tramado muestra la asignatura y quién
-le ha invitado. Elija dónde guardarla, si quiere **descargar también las grabaciones de las clases** (unos 11 MB por
-hora; recibe todas las transcripciones en cualquier caso) y acepte que las grabaciones de esta asignatura son solo para
-ella. Después, **Unirse a la asignatura**.
+(sirve el mensaje entero) o abra un archivo de invitación, y pulse **Continuar**. (Un enlace abre primero la página
+para unirse: allí, **Abrir en Tramado** abre esta ventana con la invitación ya puesta.) Tramado muestra la asignatura y
+quién le ha invitado. Elija dónde guardarla, si quiere **descargar también las grabaciones de las clases** (unos 11 MB
+por hora; recibe todas las transcripciones en cualquier caso) y acepte que las grabaciones de esta asignatura son solo
+para ella. Después, **Unirse a la asignatura**.
 
 Tramado muestra sus **palabras de verificación** (por ejemplo *wavy-alpaca*). Si la asignatura pregunta antes de dejar
 entrar, un miembro ve las mismas palabras junto a su nombre: dígalas en voz alta o en el grupo, para que sepan que es

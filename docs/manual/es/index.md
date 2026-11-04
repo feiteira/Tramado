@@ -6,7 +6,7 @@ Tramado reúne en un solo lugar todo lo de cada una de sus asignaturas: las clas
 documentos y los textos legales, sus apuntes, los exámenes de otros años y el chat del grupo de la asignatura. Funciona en su
 ordenador, no necesita cuenta y comparte una asignatura directamente entre los ordenadores de los compañeros.
 
-Este manual corresponde a la versión 0.1 (versión candidata 0.1.0-rc.1). Se ha probado en Linux; las versiones para
+Este manual corresponde a la versión 0.1 (versión candidata 0.1.0-rc.2). Se ha probado en Linux; las versiones para
 Windows y macOS todavía no se han probado.
 
 ## Índice

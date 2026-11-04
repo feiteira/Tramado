@@ -6,16 +6,18 @@
 Record and transcribe lectures, keep every handout and law text together, share them with your class without a
 server, and practise for exams with an AI that shows where each answer comes from.</p>
 
-<p align="center"><a href="docs/manual/en/index.md">Manual</a> ·
+<p align="center"><a href="https://github.com/feiteira/Tramado/releases"><b>Download</b></a> ·
+<a href="docs/manual/en/index.md">Manual</a> ·
 <a href="docs/manual/pt/index.md">Manual (Português)</a> ·
 <a href="docs/manual/es/index.md">Manual (Español)</a> ·
 <a href="PRIVACY.md">Privacy</a> ·
 <a href="docs/release-notes/v0.1.0.md">Release notes</a></p>
 
-> **Release candidate 0.1.0-rc.1.** Tested on Linux (Ubuntu 24.04, WebKitGTK). Windows and macOS installers are built
-> by CI but nobody has tested them yet. Tramado is new: keep copies of anything you cannot afford to lose.
+> **Pre-release 0.1.0-rc.2.** Tested on Linux (Ubuntu 24.04). The Windows and macOS installers are the project's first
+> and have not been tried yet: if you try one, please [say how it went](https://github.com/feiteira/Tramado/issues).
+> Tramado is new: keep copies of anything you cannot afford to lose.
 
-![Tramado's Today screen: upcoming exams, transcriptions in progress, recent lectures and unread messages](docs/manual/img/en/today.webp)
+![Tramado showing a lecture: the player with its waveform and coloured markers, the transcript following the recording with a passage highlighted, and a private note at a timestamp](docs/manual/img/en/lecture.webp)
 
 Tramado is a free, open-source desktop app for university students. Each class is an ordinary folder on your computer
 with its lectures, documents, notes and exams. Share a class and your classmates get the same folder, synchronised
@@ -33,8 +35,6 @@ exactly one computer transcribes each lecture and everyone gets the transcript; 
 in can volunteer. Follow along as it plays, mark moments with <kbd>1</kbd>–<kbd>4</kbd>, take notes at a timestamp,
 correct the transcript together, and export it as Markdown, subtitles or plain text.
 
-![A lecture: the player with its waveform and markers, the transcript, and private notes at a timestamp](docs/manual/img/en/lecture.webp)
-
 ### Documents you can search
 
 Drop slides, readings and legislation into a class: PDF, Word, PowerPoint, OpenDocument, RTF, HTML, text, subtitles
@@ -49,18 +49,38 @@ the questions; you check them; then it drafts answers **from your own class mate
 of law or the minute of the lecture each claim comes from, with a "grounded" score. Practise question by question, and
 the ones you missed come back.
 
-![An exam question answered by the AI, with citation chips that lead to an article of law and a lecture moment](docs/manual/img/en/exam-answers.webp)
-
 ### Class groups, without a server
 
-Invite classmates with one message (a link, a code, a QR code or a file). They get the lectures, transcripts,
-documents, class notes and a class chat with mentions, replies and an `@AI` that answers from the class's sources.
-Sharing runs on [Syncthing](https://syncthing.net), bundled with Tramado: files travel encrypted between your computers
-(directly, or through a public Syncthing relay when a network blocks direct connections). Organisers can ask to
-approve each newcomer, and everyone can compare **check words** to be sure who they let in. Your own notes,
-highlights, practice and Ask conversations stay on your computer.
+Invite classmates with one message (a link, a code, a QR code or a file); the link and the QR code open a small web
+page that reads the invite in the browser and sends it nowhere. They get the lectures, transcripts, documents, class
+notes and a class chat with mentions, replies and an `@AI` that answers from the class's sources. Sharing runs on
+[Syncthing](https://syncthing.net), bundled with Tramado: files travel encrypted between your computers (directly, or
+through a public Syncthing relay when a network blocks direct connections). Organisers can ask to approve each
+newcomer, and everyone can compare **check words** to be sure who they let in. Your own notes, highlights, practice
+and Ask conversations stay on your computer.
 
-![The class chat with an AI answer that cites the lecture and the law](docs/manual/img/en/chat.webp)
+## Screenshots
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/palette.webp" alt="The search palette: the phrase 'conteúdo essencial' found in two lectures, three documents, an exam and the class chat, with the matching words highlighted"><br><b>Search everything.</b> <kbd>Ctrl</kbd>+<kbd>K</kbd> finds a phrase in lectures, documents, exams and chat.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/document-pdf.webp" alt="A PDF of a fictional law open on page 9 at article 18.º, with the passage that was searched for marked and the law's articles listed beside it"><br><b>Documents.</b> PDFs open on the right page with the passage marked; laws list their articles.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/exam-answers.webp" alt="A past exam question answered by the AI from the class's own material, with numbered citations to an article of law and a lecture moment, and a grounded score of 100 %"><br><b>Exams.</b> Answers drafted from your class material, each claim with its source.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/chat.webp" alt="The class chat: an answer by the AI that cites a lecture at 41:12 and an article of law, followed by classmates' messages, one of them a mention"><br><b>Class chat.</b> Replies, mentions, and an <code>@AI</code> that cites the class's sources.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/invite.webp" alt="The invite dialog: Copy invite, a QR code to scan with a phone, the invite code, Copy code and Save as a file"><br><b>Invite.</b> One message, a QR code or a file; the link opens a join page in the browser.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/members.webp" alt="The Members tab: a newcomer waiting to join, with their check words and the buttons Let in, Not now and Decline, above the class's three members and whether they are online"><br><b>Members.</b> Compare check words, then let newcomers in.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="docs/manual/img/en/today.webp" alt="The Today screen: upcoming tests with Practise buttons, a lecture being transcribed on a classmate's laptop, recent lectures and an unread mention in the class chat"><br><b>Today.</b> Tests coming up, transcriptions, recent lectures and unread messages.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/lecture-dark.webp" alt="The lecture view from the top of this page in the dark theme"><br><b>Dark theme.</b> Light, dark, or whatever your system uses.</td>
+</tr>
+</table>
+
+The pictures come from the browser demo (`npm run dev:web`): the classes, people and documents in them are fictional.
 
 ## Privacy
 
@@ -89,16 +109,25 @@ local transcription is free.
 
 ## Install
 
-**Linux** (x86-64): download the `.AppImage` (any distribution: make it executable and open it) or the `.deb` (Debian,
-Ubuntu) from the [Releases page](https://github.com/feiteira/Tramado/releases) once 0.1.0 is published; until then,
-build from source (below). The installers contain the app, Syncthing and the voice-activity model; the speech model
-downloads when you first transcribe.
+Download the installer for your system from the [Releases page](https://github.com/feiteira/Tramado/releases).
+**0.1.0-rc.2 is a pre-release, and its installers are not code-signed**, so Windows and macOS ask you to confirm the
+first time you open Tramado.
 
-**Windows 10/11 and macOS 14.2+**: CI builds an NSIS installer and a universal `.dmg`, unsigned (macOS: signed ad hoc),
-and **untested**. If you try them, please [report what happens](https://github.com/feiteira/Tramado/issues).
+- **Windows 10 and 11**: run `Tramado_<version>_x64-setup.exe`. If SmartScreen says *Windows protected your PC*,
+  choose **More info**, then **Run anyway**.
+- **macOS 14.2 or later** (Apple silicon and Intel): open the universal `.dmg` and drag Tramado to Applications. The
+  app is signed ad hoc but not notarised, so macOS refuses to open it the first time: close the message, then go to
+  **System Settings › Privacy & Security**, scroll down to Security and choose **Open Anyway**. After that it opens
+  normally.
+- **Linux** (x86-64): the `.AppImage` runs on most distributions: make it executable
+  (`chmod +x Tramado_<version>_amd64.AppImage`) and open it. If it does not start, install FUSE 2
+  (`sudo apt install libfuse2t64` on Ubuntu 24.04, `libfuse2` on older versions). On Debian and Ubuntu you can
+  install the `.deb` instead: `sudo apt install ./Tramado_<version>_amd64.deb`.
 
-Local transcription needs a 64-bit processor with AVX2 (Intel and AMD since about 2013) or Apple silicon; without it,
-classmates' computers or OpenRouter can transcribe for you.
+The installers contain the app, Syncthing and the voice-activity model; the speech model downloads when you first
+transcribe. Local transcription needs a 64-bit processor with AVX2 (Intel and AMD since about 2013) or Apple silicon;
+without it, classmates' computers or OpenRouter can transcribe for you. The
+[release notes](docs/release-notes/v0.1.0.md) list what is new and what is not done yet.
 
 ### Build from source
 
@@ -120,15 +149,6 @@ npm run build:desktop    # AppImage and .deb in target/release/bundle/
 
 Contributors: start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) (commands, layout, rules).
 Security issues: [SECURITY.md](SECURITY.md).
-
-## More pictures
-
-| | |
-|---|---|
-| ![Recording a lecture: the record dialog with the lecturer's permission](docs/manual/img/en/record-dialog.webp) | ![A PDF opened on the cited page, the passage marked](docs/manual/img/en/document-pdf.webp) |
-| ![The search palette finds a phrase in lectures, documents, exams and chat](docs/manual/img/en/palette.webp) | ![Members, with someone waiting to join and their check words](docs/manual/img/en/members.webp) |
-
-The pictures come from the browser demo: the classes, people and documents in them are fictional.
 
 ## Languages
 

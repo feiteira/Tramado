@@ -12,4 +12,6 @@ code, fixtures, screenshots or this description. -->
 - [ ] `data-testid` on what tests and peek touch; works from the keyboard, in light and dark themes, at 1000 × 660 and 125 %
 - [ ] No new network access; any new way data leaves the computer is in `app/src/core/privacy/flows.ts` and `PRIVACY.md` is regenerated
 - [ ] Files on disk and on the wire follow `docs/spec/` (or the spec change is part of this pull request)
-- [ ] Commits are signed off (`git commit -s`)
+- [ ] Each commit message explains what changed and why
+
+Contributions are accepted under the project's licence, the [Mozilla Public License 2.0](https://github.com/feiteira/Tramado/blob/main/LICENSE) (inbound = outbound): by opening this pull request you agree that it is licensed under MPL-2.0.

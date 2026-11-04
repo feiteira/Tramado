@@ -4,12 +4,23 @@
 
 ## Installing
 
-- **Linux**: the `.AppImage` works on most distributions (make it executable, then open it); the `.deb` is for Debian
-  and Ubuntu. Both contain Tramado, the Syncthing program that shares classes, and the small model that finds speech
-  in recordings.
-- **Windows and macOS**: installers are built automatically but have not been tested yet. They are not code-signed:
-  Windows SmartScreen asks you to confirm (*More info › Run anyway*); on macOS open the app once, then *System Settings ›
-  Privacy & Security › Open Anyway*.
+Download Tramado from the [Releases page](https://github.com/feiteira/Tramado/releases). Version 0.1.0-rc.2 is a
+pre-release, and its installers are not code-signed, so Windows and macOS ask you to confirm the first time you open
+it.
+
+- **Windows 10 and 11**: run `Tramado_<version>_x64-setup.exe`. If SmartScreen says *Windows protected your PC*, choose
+  *More info › Run anyway*.
+- **macOS 14.2 or later** (Apple silicon and Intel): open the `.dmg` and drag Tramado to Applications. The first time,
+  macOS refuses to open it because it is not notarised: close the message, open *System Settings › Privacy & Security*,
+  scroll down to Security and choose *Open Anyway*.
+- **Linux** (x86-64): the `.AppImage` works on most distributions: make it executable
+  (`chmod +x Tramado_<version>_amd64.AppImage`, or in the file's properties) and open it. If it does not start,
+  install FUSE 2 (`sudo apt install libfuse2t64` on Ubuntu 24.04, `libfuse2` on older versions). On Debian and Ubuntu
+  you can install the `.deb` instead: `sudo apt install ./Tramado_<version>_amd64.deb`.
+
+The installers contain Tramado, the Syncthing program that shares classes, and the small model that finds speech in
+recordings. The Windows and macOS installers have not been tested yet: if you try one, please
+[tell us how it went](https://github.com/feiteira/Tramado/issues).
 
 The speech model that transcribes lectures is not in the installer: Tramado downloads it the first time you transcribe
 (see [Lectures](03-lectures.md#transcription)).

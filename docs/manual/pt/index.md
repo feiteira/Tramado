@@ -7,7 +7,7 @@ respetivas transcrições, os documentos e os textos legais, os seus apontamento
 turma. Funciona no seu computador, não precisa de conta e partilha uma disciplina diretamente entre os computadores dos
 colegas.
 
-Este manual é da versão 0.1 (versão candidata 0.1.0-rc.1). Foi testada em Linux; as versões para Windows e macOS ainda
+Este manual é da versão 0.1 (versão candidata 0.1.0-rc.2). Foi testada em Linux; as versões para Windows e macOS ainda
 não foram testadas.
 
 ## Índice

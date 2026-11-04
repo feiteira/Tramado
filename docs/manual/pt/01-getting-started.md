@@ -4,12 +4,23 @@
 
 ## Instalar
 
-- **Linux**: o `.AppImage` funciona na maioria das distribuições (torne-o executável e abra-o); o `.deb` é para Debian e
-  Ubuntu. Ambos incluem o Tramado, o programa Syncthing, que partilha as disciplinas, e o pequeno modelo que encontra a
-  fala nas gravações.
-- **Windows e macOS**: os instaladores são gerados automaticamente, mas ainda não foram testados. Não têm assinatura de
-  código: o SmartScreen do Windows pede confirmação (*Mais informações › Executar mesmo assim*); no macOS, abra a
-  aplicação uma vez e depois *Definições do Sistema › Privacidade e Segurança › Abrir mesmo assim*.
+Transfira o Tramado da [página de versões](https://github.com/feiteira/Tramado/releases) ("Releases"). A versão
+0.1.0-rc.2 é uma pré-versão e os instaladores não têm assinatura de código, por isso o Windows e o macOS pedem
+confirmação da primeira vez que o abrir.
+
+- **Windows 10 e 11**: execute `Tramado_<versão>_x64-setup.exe`. Se o SmartScreen disser *O Windows protegeu o seu PC*,
+  escolha *Mais informações › Executar mesmo assim*.
+- **macOS 14.2 ou posterior** (Apple silicon e Intel): abra o `.dmg` e arraste o Tramado para Aplicações. Da primeira
+  vez, o macOS recusa abri-lo, porque não tem notarização: feche o aviso, abra *Definições do Sistema › Privacidade e
+  segurança*, desça até Segurança e escolha *Abrir mesmo assim*.
+- **Linux** (x86-64): o `.AppImage` funciona na maioria das distribuições: torne-o executável
+  (`chmod +x Tramado_<versão>_amd64.AppImage`, ou nas propriedades do ficheiro) e abra-o. Se não arrancar, instale o
+  FUSE 2 (`sudo apt install libfuse2t64` no Ubuntu 24.04, `libfuse2` nas versões anteriores). No Debian e no Ubuntu
+  pode instalar o `.deb` em alternativa: `sudo apt install ./Tramado_<versão>_amd64.deb`.
+
+Os instaladores incluem o Tramado, o programa Syncthing, que partilha as disciplinas, e o pequeno modelo que encontra a
+fala nas gravações. Os instaladores para Windows e macOS ainda não foram testados: se experimentar um, por favor
+[diga-nos como correu](https://github.com/feiteira/Tramado/issues).
 
 O modelo de voz que transcreve as aulas não vem no instalador: o Tramado transfere-o da primeira vez que transcrever
 (ver [Aulas](03-lectures.md#transcrição)).
