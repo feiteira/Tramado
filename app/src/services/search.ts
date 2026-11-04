@@ -242,6 +242,9 @@ export function createSearchService(ctx: AppContext, app: () => AppServices): Se
           const entry: Entry = { key: w.key, sig: w.sig, source: { kind: 'document', path, sha256: t.sha256 }, title: w.title, private: false, units: t.units };
           c.entries.set(w.key, entry);
           await host.upsert(classId, w.key, t.text, t.units);
+        } else if (now) {
+          // It changed while it was being read: index the new version.
+          void schedule(classId);
         }
         await publish(classId, c);
       },
