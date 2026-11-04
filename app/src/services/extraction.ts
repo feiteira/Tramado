@@ -18,7 +18,7 @@ import type { ExtractionService, TextCache } from './types/documents';
 type State = 'pending' | 'running' | 'ready' | 'scan' | 'failed' | 'unsupported';
 interface StatusValue {
   running: number; queued: number; bySha: Readonly<Record<Hex64, State>>;
-  progress: Readonly<Record<Hex64, number>>; pages: Readonly<Record<Hex64, number>>;
+  progress: Readonly<Record<Hex64, number>>; pages: Readonly<Record<Hex64, number>>; imagePages: Readonly<Record<Hex64, number>>;
 }
 
 const FORMAT = 'tramado.text-cache';
@@ -220,20 +220,26 @@ export interface ExtractionServiceImpl extends ExtractionService {
 
 export function createExtractionService(ctx: AppContext, app: () => AppServices): ExtractionServiceImpl {
   const { platform } = ctx;
-  const status = new Store<StatusValue>({ running: 0, queued: 0, bySha: {}, progress: {}, pages: {} });
+  const status = new Store<StatusValue>({ running: 0, queued: 0, bySha: {}, progress: {}, pages: {}, imagePages: {} });
   const memo = hashMemo(ctx);
   const results = new Map<Hex64, Promise<TextCache>>();
   const controllers = new Map<Hex64, AbortController>();
   let chain: Promise<unknown> = Promise.resolve();
   let pendingJobs = 0;
 
-  const setState = (sha: Hex64, s: State, extra: { progress?: number | null; pages?: number } = {}) => status.update((v) => {
+  const setState = (sha: Hex64, s: State, extra: { progress?: number | null; pages?: number; imagePages?: number } = {}) => status.update((v) => {
     const progress = { ...v.progress };
     if (extra.progress === null) delete progress[sha];
     else if (extra.progress !== undefined) progress[sha] = extra.progress;
     const pages = extra.pages !== undefined ? { ...v.pages, [sha]: extra.pages } : v.pages;
-    return { ...v, bySha: { ...v.bySha, [sha]: s }, progress, pages };
+    const imagePages = extra.imagePages !== undefined ? { ...v.imagePages, [sha]: extra.imagePages } : v.imagePages;
+    return { ...v, bySha: { ...v.bySha, [sha]: s }, progress, pages, imagePages };
   });
+  /** Pages and image pages of a settled cache, for setState. */
+  const counts_ = (t: TextCache): { pages?: number; imagePages?: number } => {
+    const pages = pagesOf(t);
+    return { ...(pages !== undefined ? { pages } : {}), imagePages: t.imagePages?.length ?? 0 };
+  };
   const counts = (dRunning: number, dQueued: number) => status.update((v) => ({ ...v, running: v.running + dRunning, queued: v.queued + dQueued }));
   const pagesOf = (t: TextCache) => t.pageStarts?.length ?? t.slideStarts?.length;
   const settledState = (t: TextCache): State => (isScan(t) ? 'scan' : 'ready');
@@ -260,8 +266,7 @@ export function createExtractionService(ctx: AppContext, app: () => AppServices)
         // The file may have changed while it was read: cache under the hash of what was extracted.
         const cache: TextCache = { ...t, sha256: t.sha256 || sha };
         await platform.cache.write(cacheKey(cache.sha256), new TextEncoder().encode(JSON.stringify({ format: FORMAT, version: 1, ...cache })));
-        const pages = pagesOf(cache);
-        setState(sha, settledState(cache), { progress: null, ...(pages !== undefined ? { pages } : {}) });
+        setState(sha, settledState(cache), { progress: null, ...counts_(cache) });
         return cache;
       } catch (e) {
         const err = toPlatformError(e);
@@ -292,8 +297,8 @@ export function createExtractionService(ctx: AppContext, app: () => AppServices)
       if (running) return running;
       const hit = await cached(sha);
       if (hit) {
-        const pages = pagesOf(hit);
-        if (status.get().bySha[sha] !== settledState(hit)) setState(sha, settledState(hit), pages !== undefined ? { pages } : {});
+        const v = status.get();
+        if (v.bySha[sha] !== settledState(hit) || v.imagePages[sha] !== (hit.imagePages?.length ?? 0)) setState(sha, settledState(hit), counts_(hit));
         return hit;
       }
       const job = run(classId, path, sha);
@@ -366,7 +371,7 @@ export function createExtractionService(ctx: AppContext, app: () => AppServices)
           warnings: [...base.warnings.filter((w) => w !== OCR_WARNING), OCR_WARNING],
         };
         await platform.cache.write(cacheKey(sha), new TextEncoder().encode(JSON.stringify({ format: FORMAT, version: 1, ...cache })));
-        setState(sha, settledState(cache), { progress: null, pages });
+        setState(sha, settledState(cache), { progress: null, pages, imagePages: 0 });
         app().search.reindex?.(classId, path);
         return cache;
       } catch (e) {

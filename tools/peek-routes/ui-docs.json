@@ -1,0 +1,6 @@
+[
+  { "name": "documents", "query": "route=class&class=law&tab=documents&sync=fake", "ready": "doc-list", "steps": [{ "expect": "doc-item" }] },
+  { "name": "document-pdf", "query": "route=document&class=law&doc=lf&page=9&quote=nunca%20podem%20atingir", "ready": "doc-pdf-page", "steps": [{ "expect": "doc-pdf-page" }] },
+  { "name": "document-pptx", "query": "route=document&doc=slides6", "ready": "doc-slide", "steps": [] },
+  { "name": "document-docx", "query": "route=document&doc=resumo", "ready": "doc-text", "steps": [] }
+]

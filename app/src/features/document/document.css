@@ -1,0 +1,697 @@
+/* Document view (UX §3.7.2). Tokens only. PDF pages are always white paper (pdf.js canvases), so the overlays on
+   them blend with `multiply`; in the text views the overlays sit behind the text. */
+.docview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 var(--s-6) var(--s-4);
+  gap: var(--s-2);
+}
+.docview__subtitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--s-1);
+}
+.docview__private {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-2);
+}
+.docview__notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.docview__notices:empty {
+  display: none;
+}
+.docview__scan-note {
+  color: var(--ink-2);
+}
+.docview__ocr {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--s-2);
+  max-width: 360px;
+}
+.docview__loading {
+  flex: 1;
+  display: grid;
+  place-items: start center;
+  padding: var(--s-6) 0;
+  background: var(--paper-sunk);
+  border-radius: var(--r-lg);
+}
+.doc-page-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  width: min(560px, 90%);
+  aspect-ratio: 1 / 1.3;
+  padding: var(--s-7) var(--s-6);
+  background: var(--paper-raised);
+  border-radius: var(--r-xs);
+  box-shadow: var(--shadow-1);
+}
+.doc-page-skeleton .skeleton:nth-child(1) { width: 60%; }
+.doc-page-skeleton .skeleton:nth-child(2) { width: 90%; }
+.doc-page-skeleton .skeleton:nth-child(3) { width: 75%; }
+
+.docview__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  min-height: 44px;
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+}
+.docview__pager {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.docview__page {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.docview__page-input {
+  width: 3.4em;
+  height: var(--control-h-sm);
+  padding: 0 var(--s-1);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.docview__page-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.docview__zoom {
+  min-width: 3.6em;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+  text-align: center;
+}
+.docview__sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--s-1);
+  background: var(--rule);
+}
+.docview__spacer {
+  flex: 1;
+}
+
+.docview__find {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--s-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-md);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+  align-self: flex-end;
+  width: min(440px, 100%);
+}
+.docview__find-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-h-sm);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.docview__find-input:focus {
+  outline: none;
+}
+.docview__find:focus-within {
+  border-color: var(--focus);
+}
+.docview__find-count {
+  white-space: nowrap;
+}
+
+.docview__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+}
+.docview__body--nav {
+  grid-template-columns: 200px minmax(0, 1fr);
+}
+.docview__body--side {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+}
+.docview__body--nav.docview__body--side {
+  grid-template-columns: 200px minmax(0, 1fr) minmax(260px, 320px);
+}
+@media (max-width: 1180px) {
+  .docview__body--nav.docview__body--side {
+    grid-template-columns: 168px minmax(0, 1fr) 272px;
+  }
+}
+.docview__main {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--paper-sunk);
+  overflow: hidden;
+}
+
+/* ── Article index / outline ── */
+.docnav {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+.docnav__title {
+  padding: var(--s-3) var(--s-3) var(--s-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.docnav__list {
+  flex: 1;
+  margin: 0;
+  padding: 0 var(--s-1) var(--s-2);
+  list-style: none;
+  overflow: auto;
+}
+.docnav__item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  padding: 6px var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+.docnav__item:hover {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+.docnav__item--here {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 560;
+}
+.docnav__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.docnav__page {
+  flex: none;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+
+/* ── PDF ── */
+.pdfv-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.pdfv {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  outline: none;
+}
+.pdfv:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+.pdfv .pdfViewer {
+  padding: var(--s-4) 0 var(--s-6);
+}
+.pdfv .pdfViewer .page {
+  margin: 0 auto var(--s-4);
+  border: 0;
+  border-image: none;
+  box-shadow: var(--shadow-2);
+  border-radius: 2px;
+}
+.pdfv .textLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: color-mix(in oklab, var(--mark-strong) 45%, transparent);
+  border-radius: 2px;
+}
+.pdfv .textLayer .highlight.selected {
+  background-color: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.pdfv .textLayer ::selection {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+.doc-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.page > .doc-overlays {
+  z-index: 3;
+  mix-blend-mode: multiply;
+}
+.page > .doc-overlays mark.cite,
+.page > .doc-overlays .doc-cite {
+  position: absolute;
+  background: color-mix(in oklab, var(--mark-strong) 55%, transparent);
+  box-shadow: none;
+  border-radius: 2px;
+}
+.page > .doc-overlays .doc-hl {
+  position: absolute;
+  background: color-mix(in oklab, var(--mk) 30%, transparent);
+  box-shadow: inset 0 -2px 0 var(--mk);
+  border-radius: 2px;
+}
+.page > .doc-overlays .doc-cite-bar {
+  mix-blend-mode: normal;
+}
+.doc-cite-bar {
+  position: absolute;
+  left: 10px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--mark-edge);
+}
+
+/* ── Text documents ── */
+.doc-reading-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-5) var(--s-4) var(--s-7);
+}
+.doc-reading {
+  position: relative;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-7);
+  border-radius: var(--r-md);
+  background: var(--paper-reading);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.doc-reading:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus);
+}
+.doc-reading > :not(.doc-overlays) {
+  position: relative;
+  z-index: 1;
+}
+.doc-reading > .doc-overlays {
+  z-index: 0;
+}
+.doc-reading > .doc-overlays .doc-cite {
+  position: absolute;
+  border-radius: 2px;
+}
+.doc-reading > .doc-overlays .doc-hl {
+  position: absolute;
+}
+.doc-reading .doc-cite-bar {
+  left: var(--s-3);
+}
+.doc-reading h1,
+.doc-reading h2,
+.doc-reading h3,
+.doc-reading h4 {
+  margin: 1.2em 0 0.5em;
+  font-family: var(--font-display);
+  line-height: var(--lh-tight);
+}
+.doc-reading h1 { font-size: var(--fs-2xl); }
+.doc-reading h2 { font-size: var(--fs-xl); }
+.doc-reading h3, .doc-reading h4 { font-size: var(--fs-lg); }
+.doc-reading > :first-child {
+  margin-top: 0;
+}
+.doc-reading p {
+  margin: 0 0 0.8em;
+}
+.doc-reading ul,
+.doc-reading ol {
+  margin: 0 0 0.8em;
+  padding-inline-start: 1.4em;
+}
+.doc-reading blockquote {
+  margin: 0 0 0.8em;
+  padding-inline-start: var(--s-3);
+  border-inline-start: 3px solid var(--rule-strong);
+  color: var(--ink-2);
+}
+.doc-reading table {
+  border-collapse: collapse;
+  margin: 0 0 1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+}
+.doc-reading td,
+.doc-reading th {
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--rule);
+  vertical-align: top;
+}
+.doc-plain {
+  white-space: pre-wrap;
+}
+.doc-reading--skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.doc-skel-line {
+  height: 12px;
+}
+
+/* PPTX: each slide a card */
+.doc-reading--slides {
+  padding: var(--s-4);
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.doc-slide {
+  padding: var(--s-5) var(--s-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-reading);
+  box-shadow: var(--shadow-1);
+  scroll-margin-top: var(--s-4);
+}
+.doc-slide__head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--s-2);
+}
+.doc-slide__n {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.doc-reading .doc-slide__title {
+  margin: 0 0 var(--s-3);
+  font-size: var(--fs-xl);
+}
+.doc-slide ul {
+  margin: 0;
+}
+.doc-slide li + li {
+  margin-top: var(--s-1);
+}
+.doc-slide__notes {
+  margin-top: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px dashed var(--rule);
+  color: var(--ink-3);
+  font-size: var(--fs-md);
+}
+
+::highlight(doc-find) {
+  background-color: color-mix(in oklab, var(--mark-strong) 50%, transparent);
+  color: inherit;
+}
+::highlight(doc-find-current) {
+  background-color: color-mix(in oklab, var(--accent) 40%, transparent);
+}
+
+/* ── Images ── */
+.docimg {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  overflow: auto;
+}
+.docimg__bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.docimg__frame {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+}
+.docimg__img {
+  display: block;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-1);
+  background: var(--paper-raised);
+}
+.docimg__frame--fit .docimg__img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+.docimg__card {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+.docimg__wait {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* ── Side panel ── */
+.docside {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+.docside__tabs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.docside__tabs > [role='tablist'] {
+  padding: 0 var(--s-3);
+}
+.docside__tabs > [role='tabpanel'] {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.docside__body {
+  padding: var(--s-3);
+}
+.docside__count {
+  margin-inline-start: var(--s-1);
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+.docside__empty {
+  padding: var(--s-4) var(--s-2);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.docside__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dochl {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  border: 1px solid var(--rule-faint);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+.dochl__open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+.dochl__open:hover {
+  background: var(--paper-hover);
+  border-radius: var(--r-md);
+}
+.dochl__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.dochl__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--mk);
+}
+.dochl__quote {
+  font-family: var(--font-text);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dochl__body {
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.dochl__lost {
+  color: var(--warning-text);
+}
+.dochl > button:last-child {
+  margin: var(--s-1);
+}
+
+.docask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-height: 100%;
+}
+.docask__turns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  flex: 1;
+}
+.docask__intro {
+  margin: 0;
+}
+.docask__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.docask__composer {
+  position: sticky;
+  bottom: 0;
+}
+.doc-cites {
+  display: inline-flex;
+  gap: 2px;
+  margin-inline-start: 2px;
+}
+
+.docinfo dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.docinfo__row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--rule-faint);
+  font-size: var(--fs-sm);
+}
+.docinfo__row dt {
+  color: var(--ink-3);
+}
+.docinfo__row dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.docinfo__path {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+.docinfo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+/* Selection toolbar extras (the base style is ui/tramado/tramado.css). */
+.selection-toolbar {
+  padding: 2px;
+  border: 1px solid var(--rule);
+}
+.selection-toolbar__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--mk);
+}
+.selection-toolbar__ai svg {
+  color: var(--ai-text);
+}
+
+.docview__ask-btn svg {
+  color: var(--ai-text);
+}
+.docview__toolbar--text {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}

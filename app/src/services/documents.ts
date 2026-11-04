@@ -79,6 +79,7 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
       return {
         path: e.path, name: nameOf(e.path), dir: dirOf(e.path), size: e.size, mtimeMs: e.mtimeMs, sha256: sha, kind,
         extraction: state, pages: sha ? (status.pages?.[sha] ?? null) : null,
+        ...(sha && state === 'ready' && (status.imagePages?.[sha] ?? 0) > 0 ? { imagePages: status.imagePages![sha]! } : {}),
         lectureId: e.lectureId ?? null, examId: e.examId ?? null, conflictOf: e.conflictOf,
         duplicateOf: first && first.path !== e.path ? first.path : null,
         fromChat: e.path.startsWith(`${fromChatDir}/`),
@@ -92,7 +93,7 @@ export function createDocumentService(ctx: AppContext, app: () => AppServices, c
     const y = b[i]!;
     return x.path === y.path && x.size === y.size && x.mtimeMs === y.mtimeMs && x.sha256 === y.sha256 && x.extraction === y.extraction
       && x.pages === y.pages && x.duplicateOf === y.duplicateOf && x.conflictOf === y.conflictOf
-      && !!x.localOnly === !!y.localOnly && JSON.stringify(x.addedBy) === JSON.stringify(y.addedBy);
+      && !!x.localOnly === !!y.localOnly && JSON.stringify(x.addedBy) === JSON.stringify(y.addedBy) && x.imagePages === y.imagePages;
   });
   const refresh = () => {
     const next = compute();

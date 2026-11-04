@@ -15,6 +15,8 @@ export interface DocSummary {
   localOnly?: boolean;
   /** Who added it (Syncthing's modifiedBy → device → member, UX §3.7.1 "Added by"); null = unknown, absent = not known yet. */
   addedBy?: { name: string; self: boolean } | null;
+  /** PDF pages without text, when some (not all) pages are images ("⚠ {n} pages without text"). */
+  imagePages?: number;
 }
 
 /** UI-DOCS (additive): what an Undo of "Delete for everyone" needs (UX §3.7.1; sync spec §22.1). */
@@ -57,6 +59,7 @@ export interface ExtractionService {       // services/extraction.ts; writes cac
   status: ReadableStore<{ running: number; queued: number; bySha: Readonly<Record<Hex64, 'pending' | 'running' | 'ready' | 'scan' | 'failed' | 'unsupported'>>;
     progress?: Readonly<Record<Hex64, number>>;                      // T-DOCS (additive): 0..1 of running jobs ("Reading text… {n} %")
     pages?: Readonly<Record<Hex64, number>>;                         // T-DOCS (additive): pages/slides of extracted files
+    imagePages?: Readonly<Record<Hex64, number>>;                    // UI-DOCS (additive): PDF pages without text ("⚠ {n} pages without text")
   }>;
   ensure(classId: ClassId, path: ClassPath): Promise<TextCache>;
   cancel(sha256: Hex64): void;
