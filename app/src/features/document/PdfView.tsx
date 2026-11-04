@@ -117,6 +117,17 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
     if (scrollToCite && marks[0]) marks[0].scrollIntoView({ block: 'center', inline: 'nearest' });
   };
   const decorateRef = useRef(decorate);
+
+  /** The page at the middle of the view and how far down it the middle is (0..1). */
+  const middle = (): { page: number; frac: number } | null => {
+    const b = box.current;
+    if (!b || !inner.current) return null;
+    const mid = b.scrollTop + b.clientHeight / 2;
+    for (const el of Array.from(inner.current.querySelectorAll<HTMLElement>('.page'))) {
+      if (el.offsetTop <= mid && el.offsetTop + el.offsetHeight >= mid) return { page: Number(el.dataset.pageNumber), frac: (mid - el.offsetTop) / Math.max(1, el.offsetHeight) };
+    }
+    return null;
+  };
   decorateRef.current = decorate;
 
   useImperativeHandle(ref, () => ({
@@ -196,7 +207,19 @@ export const PdfView = forwardRef<PdfHandle, Props>(function PdfView(props, ref)
           const v = viewer.current;
           if (!v || !v.pagesCount) return;
           const preset = v.currentScaleValue;
-          if (preset === 'auto' || preset === 'page-width' || preset === 'page-fit') v.currentScaleValue = preset;
+          if (preset !== 'auto' && preset !== 'page-width' && preset !== 'page-fit') return;
+          // Keep the reader where they were: the point at the middle of the view, by page and fraction.
+          const at = middle();
+          v.currentScaleValue = preset;
+          if (!at) return;
+          const restore = () => {
+            const b = box.current;
+            const el = inner.current?.querySelector<HTMLElement>(`.page[data-page-number="${at.page}"]`);
+            if (viewer.current !== v || !b || !el) return;
+            b.scrollTop = Math.max(0, el.offsetTop + at.frac * el.offsetHeight - b.clientHeight / 2);
+          };
+          requestAnimationFrame(restore);
+          setTimeout(restore, 120);
         });
         resize.observe(box.current);
         eventBus.on('pagerendered', tagPages);

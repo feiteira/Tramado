@@ -9,9 +9,9 @@ import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 type PdfLib = typeof import('pdfjs-dist/legacy/build/pdf.mjs');
 type ViewerLib = typeof import('pdfjs-dist/legacy/web/pdf_viewer.mjs');
 
-const FONTS = import.meta.glob('../../../../node_modules/pdfjs-dist/standard_fonts/*.{pfb,ttf}', { query: '?url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
-const CMAPS = import.meta.glob('../../../../node_modules/pdfjs-dist/cmaps/*.bcmap', { query: '?url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
-const WASM = import.meta.glob('../../../../node_modules/pdfjs-dist/wasm/*.{wasm,js}', { query: '?url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
+const FONTS = import.meta.glob('../../../../node_modules/pdfjs-dist/standard_fonts/*.{pfb,ttf}', { query: '?no-inline&url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
+const CMAPS = import.meta.glob('../../../../node_modules/pdfjs-dist/cmaps/*.bcmap', { query: '?no-inline&url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
+const WASM = import.meta.glob('../../../../node_modules/pdfjs-dist/wasm/*.{wasm,js}', { query: '?no-inline&url', import: 'default', eager: true, exhaustive: true }) as Record<string, string>;
 
 const byName = (m: Record<string, string>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k.slice(k.lastIndexOf('/') + 1), v]));
 const ASSETS = { standardFontDataUrl: byName(FONTS), cMapUrl: byName(CMAPS), wasmUrl: byName(WASM) } as const;

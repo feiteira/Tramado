@@ -106,7 +106,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
 
   return (
     <section className="notes-tab" data-testid="class-notes" aria-label={t('classes.tabs.notes')}>
-      <div className="notes-toolbar">
+      <div className="notes-toolbar" hidden={empty}>
         <div className="notes-toolbar__start">
           <Button variant="primary" icon={Plus} busy={busy === 'private'} onClick={() => void create('private')} data-testid="note-new">{t('notes.new')}</Button>
           {shared ? <Button icon={Plus} busy={busy === 'class'} onClick={() => void create('class')} data-testid="note-new-class">{t('notes.newClass')}</Button> : null}
