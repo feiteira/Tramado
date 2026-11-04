@@ -67,6 +67,15 @@ export function createClassRegistry(deps: { now: () => number; root: string; fil
         if (e.shared) throw new PlatformError('CONFLICT', 'still shared');
         const files = deps.files();
         const old = files.raw(classId);
+        // As Rust (architecture §6.2): the forked class.json must already carry the new ID.
+        const classFile = old.files.get('.tramado/class.json');
+        let carried: unknown = null;
+        try {
+          carried = classFile ? (JSON.parse(new TextDecoder().decode(classFile.bytes)) as { classId?: unknown }).classId : null;
+        } catch {
+          carried = null;
+        }
+        if (carried !== newClassId) throw new PlatformError('CONFLICT', 'class.json does not carry the new class id');
         entries.delete(classId);
         const next = { ...e, classId: newClassId, aliases: [...e.aliases, classId] };
         entries.set(newClassId, next);

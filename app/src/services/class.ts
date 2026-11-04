@@ -554,8 +554,10 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       await platform.sync.scan(classId, '.tramado').catch(() => undefined);
     },
     async writeFork(newClassId, nonce) {
-      // Called after platform.classes.fork: this service still answers for the old ID, so it writes through the
-      // platform directly under the new one (sync spec §17; folder spec §8.1 `forkedFrom`).
+      // Sync spec §17, folder spec §8.1 `forkedFrom`, architecture §6.2 `class_fork`: the forked class.json is written
+      // first (the folder is still registered under the old ID), Rust then renames the class (it refuses unless
+      // class.json carries the new ID), and my meta and member files follow under the new ID. This service still
+      // answers for the old ID, so it writes through the platform directly.
       const mine = me();
       const identity = ctx.identity.get();
       if (!identity) throw new PlatformError('INVALID', 'no identity');
@@ -566,7 +568,8 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
         format: 'tramado.class', version: 1, classId: newClassId, idNonce: nonce, specVersion: '1.1', createdAt: instant(clock.now()),
         createdBy: { memberId: identity.memberId, deviceId: mine.deviceId, name: identity.name.slice(0, 64) }, initialName: m.meta.name, forkedFrom: classId,
       });
-      await platform.fs.write(newClassId, '.tramado/class.json', json(classFile, true), { own: true });
+      await platform.fs.write(classId, '.tramado/class.json', json(classFile, true), { own: true });
+      await platform.classes.fork(classId, newClassId);
       const reg = <T>(value: T) => ({ value, hlc: ctx.hlc.tick() });
       const fields: MetaFile['fields'] = {
         name: reg(m.meta.name), shortName: reg(m.meta.shortName), colour: reg(m.meta.colour), icon: reg(m.meta.icon), language: reg(m.meta.language),

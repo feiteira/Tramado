@@ -75,10 +75,10 @@ export function Badge({ children, tone = 'neutral', color, className, title }: {
 const NOTICE_ICON: Record<BadgeTone, LucideIcon> = { neutral: Info, info: Info, success: CircleCheck, warning: TriangleAlert, danger: CircleAlert, ai: Info, mark: Info, rec: CircleAlert };
 
 /** A message in the flow of a screen: an error, a warning, something to know. */
-export function Notice({ tone = 'info', title, children, icon, actions, className, ...rest }: { tone?: BadgeTone; title?: ReactNode; children?: ReactNode; icon?: LucideIcon; actions?: ReactNode; className?: string; 'data-testid'?: string }) {
+export function Notice({ tone = 'info', title, children, icon, actions, className, ...rest }: { tone?: BadgeTone; title?: ReactNode; children?: ReactNode; icon?: LucideIcon; actions?: ReactNode; className?: string; 'data-testid'?: string; 'data-state'?: string }) {
   const Icon = icon ?? NOTICE_ICON[tone];
   return (
-    <div className={cx('notice', `notice--${tone}`, className)} role={tone === 'danger' ? 'alert' : 'status'} data-testid={rest['data-testid']}>
+    <div className={cx('notice', `notice--${tone}`, className)} role={tone === 'danger' ? 'alert' : 'status'} data-testid={rest['data-testid']} data-state={rest['data-state']}>
       <Icon size={16} aria-hidden className="notice__icon" strokeWidth={1.75} />
       <div className="notice__content">
         {title ? <div className="notice__title">{title}</div> : null}

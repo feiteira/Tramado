@@ -541,8 +541,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       await ci.ready();
       const nonce = newNonce(ctx.rand);
       const newId = classIdOf(me, nonce);
-      await platform.classes.fork(classId, newId);
-      await ci.writeFork(newId, nonce);
+      await ci.writeFork(newId, nonce);   // class.json, then platform.classes.fork, then meta and member files
       await platform.privateFiles.remove(newId, 'fork.json').catch(() => undefined);
       await app().library.load();
       return newId;

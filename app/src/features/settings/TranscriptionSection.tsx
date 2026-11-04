@@ -278,7 +278,7 @@ function ModelRow({
         <span className="model-row__ok">
           <CircleCheck size={14} aria-hidden /> {t('speech.state.ready')}
         </span>
-        <Button size="sm" variant="ghost" onClick={onRemove} disabled={disabled}>{t('speech.actions.remove')}</Button>
+        <Button size="sm" variant="ghost" onClick={onRemove} disabled={disabled} data-testid="speech-model-remove">{t('speech.actions.remove')}</Button>
       </>
     );
   } else if (s === 'downloading' && download) {
@@ -299,15 +299,15 @@ function ModelRow({
     status = (
       <>
         <span className="model-row__text t-tabular">{t('speech.state.partial', { done: mb(state?.bytes ?? 0), total: `${mb(bytes)} MB` })}</span>
-        <Button size="sm" onClick={onDownload} disabled={disabled}>{t('speech.actions.resume')}</Button>
-        <Button size="sm" variant="ghost" onClick={onRemove} disabled={disabled}>{t('speech.actions.delete')}</Button>
+        <Button size="sm" onClick={onDownload} disabled={disabled} data-testid="speech-model-resume">{t('speech.actions.resume')}</Button>
+        <Button size="sm" variant="ghost" onClick={onRemove} disabled={disabled} data-testid="speech-model-delete">{t('speech.actions.delete')}</Button>
       </>
     );
   } else if (s === 'failed') {
     status = (
       <>
         <span className="model-row__text model-row__text--bad">{t('speech.state.failed')}</span>
-        <Button size="sm" onClick={onDownload} disabled={disabled}>{t('speech.actions.tryAgain')}</Button>
+        <Button size="sm" onClick={onDownload} disabled={disabled} data-testid="speech-model-retry">{t('speech.actions.tryAgain')}</Button>
       </>
     );
   } else {

@@ -63,6 +63,21 @@ export async function mediaSelfTest(url: string, timeoutMs = 15_000): Promise<{ 
   }
 }
 
+/** The self-test on a Blob URL of the file's bytes, fetched over the media scheme (the Linux player's path). */
+async function viaBlob(url: string): Promise<{ ok: true } | { ok: false; detail: string }> {
+  let blobUrl: string | null = null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return { ok: false, detail: `HTTP ${res.status}` };
+    blobUrl = URL.createObjectURL(new Blob([await res.arrayBuffer()], { type: 'audio/webm' }));
+    return await mediaSelfTest(blobUrl);
+  } catch (e) {
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
+  } finally {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  }
+}
+
 export default function AboutSection({ services }: { services: AppServices }) {
   const { t } = useI18n();
   const toast = useToast();
@@ -83,7 +98,11 @@ export default function AboutSection({ services }: { services: AppServices }) {
   };
   const test = async () => {
     setMedia({ kind: 'testing' });
-    const r = await mediaSelfTest(platform.media.url({ kind: 'selftest' }));
+    // The path the player uses (architecture §8): on Linux WebKitGTK's <audio> refuses the custom scheme, so the
+    // player plays a Blob URL of the bytes (AppInfo.mediaAudio 'blob'); the test does the same there.
+    const url = platform.media.url({ kind: 'selftest' });
+    const info = await platform.info().catch(() => null);
+    const r = info?.mediaAudio === 'blob' ? await viaBlob(url) : await mediaSelfTest(url);
     setMedia(r.ok ? { kind: 'ok' } : { kind: 'fail', detail: r.detail });
   };
   const openSource = () =>

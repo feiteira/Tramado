@@ -14,6 +14,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Tramado",
         "width": 1360,
         "height": 860,
