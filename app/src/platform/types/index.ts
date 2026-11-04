@@ -79,6 +79,8 @@ export interface Platform {
     pickFiles(req: { title: string; filters: FileFilter[]; multiple: boolean }): Promise<Picked[]>;
     pickFolder(req: { title: string }): Promise<Picked | null>;
     save(req: { title: string; defaultName: string; filters: FileFilter[] }): Promise<Picked | null>;
+    /** G2: "Save as a file…" for a small text (≤ 1 MiB: an invite file, a diagnostics log); false when cancelled. */
+    saveText(req: { title: string; defaultName: string; filters: FileFilter[] }, text: string): Promise<boolean>;
   };
   secrets: {
     set(name: SecretName, value: string): Promise<SecretStatus>;

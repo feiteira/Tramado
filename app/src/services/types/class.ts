@@ -81,7 +81,7 @@ export interface EffectiveMeta {
 
 export interface ConsentInput {
   kind: 'record' | 'share'; scope: 'class' | 'lecture'; lectureId?: Ulid; share?: 'audio+transcript' | 'transcript-only';
-  textId: 'record.dialog.consent.v1' | 'record.dialog.consentShare.v1';      // catalog keys = textId (§14)
+  textId: 'record.dialog.consent.v1' | 'record.dialog.consentShare.v1' | 'record.import.permission.v1';   // catalog keys = textId (§14)
   textLang: Lang; text: string; lecturer?: string;                            // the exact sentence shown (folder spec §8.5)
 }
 

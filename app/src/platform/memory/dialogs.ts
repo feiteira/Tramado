@@ -41,6 +41,26 @@ export function createDialogs(rand: () => number) {
         if ('cancel' in a) return null;
         return register(a.picks[0]?.name ?? req.defaultName, null, false, 'save');
       },
+      async saveText(req: { title: string; defaultName: string; filters: FileFilter[] }, text: string): Promise<boolean> {
+        // The browser demo hands the browser a file (Downloads); tests answer from the queue and keep the bytes.
+        if (typeof document !== 'undefined' && typeof Blob !== 'undefined' && typeof URL.createObjectURL === 'function') {
+          const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = req.defaultName;
+          a.rel = 'noopener';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 10_000);
+          return true;
+        }
+        const a = next();
+        if ('cancel' in a) return false;
+        register(a.picks[0]?.name ?? req.defaultName, new TextEncoder().encode(text), false, 'save');
+        return true;
+      },
     },
   };
 }

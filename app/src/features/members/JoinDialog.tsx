@@ -211,6 +211,10 @@ export default function JoinDialog({ props, services, close }: { props: DialogPr
     );
   }
 
+  // "You're in! Getting {class}… {have} of {total} files" once the folder's size is known, without the counts before.
+  const inLine = folder && folder.globalFiles > 0 && preview
+    ? t('members.join.in', { class: preview.invite.l, have: folder.inSyncFiles, total: folder.globalFiles })
+    : t('members.join.inStarting', { class: preview?.invite.l ?? '' });
   return (
     <Dialog
       open
@@ -315,8 +319,8 @@ export default function JoinDialog({ props, services, close }: { props: DialogPr
 
       {step === 'done' && preview ? (
         <div className="join__done" data-testid="join-step-done">
-          <p className="join__wait-title"><CheckCircle2 size={18} aria-hidden strokeWidth={1.75} className="join__ok" /> {t('members.join.in', { class: preview.invite.l, have: folder?.inSyncFiles ?? 0, total: folder?.globalFiles ?? 0 })}</p>
-          <ProgressBar value={folder && folder.globalFiles ? folder.inSyncFiles / folder.globalFiles : null} label={t('members.join.in', { class: preview.invite.l, have: folder?.inSyncFiles ?? 0, total: folder?.globalFiles ?? 0 })} data-testid="join-progress" />
+          <p className="join__wait-title"><CheckCircle2 size={18} aria-hidden strokeWidth={1.75} className="join__ok" /> {inLine}</p>
+          <ProgressBar value={folder && folder.globalFiles ? folder.inSyncFiles / folder.globalFiles : null} label={inLine} data-testid="join-progress" />
           <p className="t-small t-muted">{t('members.joinMore.arriving')}</p>
         </div>
       ) : null}

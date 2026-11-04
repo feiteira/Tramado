@@ -157,7 +157,7 @@ export function createRecordingService(ctx: AppContext, app: () => AppServices):
     const channels: LectureFile['channels'] = rec.speakers.length ? rec.speakers.map((s) => ({ index: s.index, speaker: s.speaker })) : [{ index: 0, speaker: 'lecture' }];
     // `utcOffsetMin` (folder spec §8.6, G2): the recorder's UTC offset at startedAt, for the local date of transcript.md.
     // (LectureFile gains the field through the integrator; the parser keeps it as a field it does not know yet.)
-    const lecture: LectureFile & { utcOffsetMin: number } = {
+    const lecture: LectureFile = {
       format: 'tramado.lecture', version: 1, id, idNonce: nonce, title: input.title, startedAt: instant(startMs), utcOffsetMin: utcOffsetMinAt(startMs), durationMs: Math.round(audio.durationMs),
       mode: rec.mode, language: rec.language, recordedBy: { memberId: who.memberId, deviceId: who.deviceId, name: who.name.slice(0, 64) },
       audio: {

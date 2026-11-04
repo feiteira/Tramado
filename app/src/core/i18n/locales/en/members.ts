@@ -51,6 +51,7 @@ export const members = {
     retry: 'Try again',
     pairNeedsNewer: 'Adding another computer needs a newer Tramado.',
     in: 'You’re in! Getting {class}… {have} of {total} files',
+    inStarting: 'You’re in! Getting {class}…',
     pairTitle: 'Add this computer to [b]{name}[/b]’s computers?',
     pairBody: 'This computer gets all of {name}’s classes. Private notes, highlights and practice are not copied.',
     pairSubmit: 'Add this computer',

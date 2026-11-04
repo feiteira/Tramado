@@ -211,6 +211,8 @@ export interface DemoAskThread {
   answer: string;
   model: string;
   citations: DemoCitation[];
+  /** The passages sent with the question ("Sent: your question and {n} passages", UX §3.11); each `quote` is where its excerpt starts. */
+  sent?: DemoCitation[];
 }
 
 export interface DemoConsent { by: MemberKey; at: LocalTime }

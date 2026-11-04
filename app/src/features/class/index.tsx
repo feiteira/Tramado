@@ -36,6 +36,7 @@ import { classStyle } from '../../ui/classColor';
 import { useI18n } from '../../ui/i18n';
 import { useDeleteClass } from './ClassDialog';
 import './class.css';
+import { modalOpen } from '../../ui/focus';
 
 type TabComponent = React.LazyExoticComponent<React.ComponentType<{ classId: string; services: AppServices }>>;
 const lazyTabs = Object.fromEntries(Object.entries(CLASS_TABS).map(([k, v]) => [k, lazy(v)])) as Record<ClassTabId, TabComponent>;
@@ -273,7 +274,7 @@ function ClassTabs({
       services.ctx.platform.events.onDrop((e) => {
         setDrag(null);
         depth.current = 0;
-        if (tab === 'documents' || !e.picked.length || cls.archived) return;
+        if (tab === 'documents' || !e.picked.length || cls.archived || modalOpen()) return;   // an open dialog takes its own drops
         const el = host.current?.getBoundingClientRect();
         if (el && (e.x < el.left || e.x > el.right || e.y < el.top || e.y > el.bottom)) return;
         const target = targetFor(e.picked.map((p) => p.name), []);

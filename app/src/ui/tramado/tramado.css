@@ -133,64 +133,6 @@ button.countdown-chip.countdown-chip--soon:hover {
 .spin { animation: tramado-spin 0.8s linear infinite; }
 @keyframes tramado-spin { to { transform: rotate(360deg); } }
 
-/* AiCard: a model wrote this (UX §1.1) */
-.ai-card {
-  border: 1px solid var(--rule);
-  border-inline-start: 4px solid var(--ai);
-  border-radius: var(--r-lg);
-  background: var(--paper-raised);
-  padding: var(--s-4);
-  box-shadow: var(--shadow-1);
-}
-.ai-card__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2);
-  margin-bottom: var(--s-2);
-}
-.ai-card__title { font-weight: 620; }
-.ai-card__body { max-width: none; }
-.ai-card__foot { display: flex; gap: var(--s-3); margin-top: var(--s-3); }
-
-/* Citation chips: a source says this (highlighter + number, UX §4.2) */
-.citation-chip {
-  display: inline-flex;
-  align-items: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border: 0;
-  border-radius: var(--r-xs);
-  background: var(--mark);
-  color: var(--mark-ink);
-  box-shadow: inset 0 -2px 0 var(--mark-strong);
-  font: 650 var(--fs-xs) / 1 var(--font-ui);
-  vertical-align: 0.1em;
-}
-.citation-chip--hallucinated { background: var(--danger-soft); color: var(--danger-text); box-shadow: none; text-decoration: line-through; }
-.citation-chip--missing { background: var(--paper-sunk); color: var(--ink-3); box-shadow: none; }
-.citation-popover { display: flex; flex-direction: column; gap: var(--s-2); max-width: 420px; }
-.citation-popover__actions { display: flex; gap: var(--s-2); }
-
-.source-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--s-1) var(--s-2);
-  align-items: baseline;
-  width: 100%;
-  padding: var(--s-2);
-  border: 0;
-  border-radius: var(--r-md);
-  background: transparent;
-  text-align: start;
-}
-.source-row:hover { background: var(--paper-hover); }
-.source-row__quote { grid-column: 2 / -1; color: var(--ink-2); }
-
-.quota-meter { display: flex; flex-direction: column; gap: var(--s-1); }
-.quota-meter--compact { flex-direction: row; }
-
 .composer {
   display: flex;
   align-items: flex-end;

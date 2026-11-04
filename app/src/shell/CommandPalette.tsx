@@ -9,10 +9,10 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ClipboardCheck, Clock, FileText, Files, History, ListFilter, MessagesSquare, Mic, NotebookPen, Search, Sparkles, AudioLines, type LucideIcon,
+  ClipboardCheck, Clock, FileText, Files, History, ListFilter, Lock, MessageCircle, MessagesSquare, Mic, NotebookPen, Search, Sparkles, AudioLines, type LucideIcon,
 } from 'lucide-react';
 import type { AppServices } from '../services/types/common';
-import type { PaletteGroup } from '../features/registry';
+import type { PaletteGroup, PaletteSearchContext } from '../features/registry';
 import { cx } from '../ui/cx';
 import { focusBackTo, pushLayer, trapTab } from '../ui/focus';
 import { useI18n } from '../ui/i18n';
@@ -34,25 +34,50 @@ import './palette.css';
 /** A search provider of the registry's PALETTE_PROVIDERS, already bound to the services. */
 export interface PaletteProvider {
   id: string;
-  search(q: string, ctx: { classId: string | null }, signal: AbortSignal): Promise<PaletteGroup[]>;
+  search(q: string, ctx: PaletteSearchContext, signal: AbortSignal): Promise<PaletteGroup[]>;
+}
+
+/** The window event `openPalette` sends; the shell opens the palette with `detail.query` typed in. */
+export const OPEN_PALETTE_EVENT = 'tramado:palette';
+
+/** Opens the command palette, optionally with a query already typed (e.g. Ask's "Search for the passage"). */
+export function openPalette(query?: string): void {
+  if (typeof window === 'undefined' || typeof CustomEvent !== 'function') return;
+  window.dispatchEvent(new CustomEvent<{ query?: string }>(OPEN_PALETTE_EVENT, { detail: query ? { query } : {} }));
 }
 
 /** Lucide names a provider may give its rows (`PaletteGroup` items carry the name as a string). */
 const ICONS: Record<string, LucideIcon> = {
   mic: Mic, 'audio-lines': AudioLines, 'file-text': FileText, files: Files, 'notebook-pen': NotebookPen, 'clipboard-list': ClipboardCheck,
-  'clipboard-check': ClipboardCheck, 'messages-square': MessagesSquare, sparkles: Sparkles, search: Search,
+  'clipboard-check': ClipboardCheck, 'messages-square': MessagesSquare, sparkles: Sparkles, search: Search, lock: Lock, history: History, 'message-circle': MessageCircle,
 };
 const KIND_ICON: Record<string, LucideIcon> = { lecture: AudioLines, document: FileText, note: NotebookPen, exam: ClipboardCheck, class: Files };
 
-export function CommandPalette({ open, onClose, providers, classId = null, services }: { open: boolean; onClose: () => void; providers?: PaletteProvider[]; classId?: string | null; services?: AppServices }) {
+export function CommandPalette({ open, onClose, providers, classId = null, services, initialQuery = '' }: { open: boolean; onClose: () => void; providers?: PaletteProvider[]; classId?: string | null; services?: AppServices; initialQuery?: string }) {
   if (!open) return null;
-  return createPortal(<Palette onClose={onClose} providers={providers ?? []} classId={classId} services={services ?? null} />, document.body);
+  return createPortal(<Palette onClose={onClose} providers={providers ?? []} classId={classId} services={services ?? null} initialQuery={initialQuery} />, document.body);
+}
+
+/** "{text}" with `mark.cite` over each [start, end) hit (UX §3.13 snippets). */
+function Snippet({ text, marks }: { text: string; marks: ReadonlyArray<readonly [number, number]> }) {
+  const parts: React.ReactNode[] = [];
+  let at = 0;
+  for (const [a, b] of [...marks].sort((x, y) => x[0] - y[0])) {
+    const start = Math.max(a, at);
+    const end = Math.min(b, text.length);
+    if (end <= start) continue;
+    if (start > at) parts.push(text.slice(at, start));
+    parts.push(<mark key={start} className="cite">{text.slice(start, end)}</mark>);
+    at = end;
+  }
+  if (at < text.length) parts.push(text.slice(at));
+  return <>{parts}</>;
 }
 
 const NO_CLASSES = { get: () => [] as never[], subscribe: () => () => undefined };
 const NO_STATUS = { get: () => ({ running: 0, queued: 0, bySha: {} }), subscribe: () => () => undefined };
 
-function Palette({ onClose, providers, classId, services }: { onClose: () => void; providers: PaletteProvider[]; classId: string | null; services: AppServices | null }) {
+function Palette({ onClose, providers, classId, services, initialQuery }: { onClose: () => void; providers: PaletteProvider[]; classId: string | null; services: AppServices | null; initialQuery: string }) {
   const { t, tp } = useI18n();
   const toast = useToast();
   const key = useKeyLabel();
@@ -63,7 +88,7 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
   const extraction = useStore(services ? services.extraction.status : NO_STATUS);
   const aiSettings = useStore(services ? services.ai.settings : { get: () => null, subscribe: () => () => undefined });
   const recent = useStore(recentItems);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<string | null>(classId);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -94,8 +119,8 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
       return;
     }
     const ac = new AbortController();
-    // `includeArchived` rides along for providers that read it (requested as a contract change of PaletteProvider ctx).
-    const ctx = { classId: scope, includeArchived };
+    // G2: the scope, the archive filter and the router's go (rows navigate through it).
+    const ctx: PaletteSearchContext = { classId: scope ?? classId, scope: scope ? 'class' : 'all', includeArchived, go };
     const timer = setTimeout(() => {
       void Promise.all(providers.map((p) => p.search(q, ctx, ac.signal).then((gs) => gs.map((g) => ({ provider: p.id, ...g })), () => [] as ResultGroup[]))).then((lists) => {
         if (!ac.signal.aborted) setGroups(lists.flat());
@@ -105,7 +130,7 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
       clearTimeout(timer);
       ac.abort();
     };
-  }, [query, providers, scope, includeArchived]);
+  }, [query, providers, scope, includeArchived, classId, go]);
 
   const aiReady = !!aiSettings && aiSettings.enabled && (aiSettings.key.set || !!aiSettings.customHost);
   const sections = useMemo(
@@ -119,6 +144,8 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
   const rows = useMemo(() => flatRows(sections), [sections]);
   const empty = nothingFound(query, sections);
   const indexing = extraction.running + extraction.queued;
+  // A provider's own indexing line (its index may still be building after extraction finished).
+  const notice = groups.find((g) => g.notice)?.notice ?? null;
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
 
@@ -169,16 +196,18 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
     }
     later(() => go(scope ? { name: 'class', classId: scope, tab: 'ask', ...(q ? { query: q } : {}) } : { name: 'ask', ...(q ? { query: q } : {}) }));
   };
-  const runRow = (row: Row | undefined) => {
+  const runRow = (row: Row | undefined, alt = false) => {
     if (!row) return;
     switch (row.type) {
       case 'command':
         later(row.command.run);
         return;
-      case 'result':
+      case 'result': {
         void setPref('search.recent', JSON.stringify(pushRecentSearch(recentSearches, query)));
-        later(row.item.run);
+        const item = row.item;
+        later(alt && item.runAlt ? () => item.runAlt!() : () => item.run());
         return;
+      }
       case 'more':
         setExpanded((s) => new Set([...s, row.group]));
         return;
@@ -207,7 +236,7 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
       ask();
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      runRow(rows[active]);
+      runRow(rows[active], e.shiftKey);
     } else if (e.key === 'Tab' && !e.shiftKey && classId) {
       // Tab toggles the scope between this class and all classes (UX §3.13).
       e.preventDefault();
@@ -243,13 +272,31 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
         );
       }
       case 'result': {
-        const Icon = row.item.icon ? ICONS[row.item.icon] : undefined;
-        const kind = row.group.split(':').pop() ?? '';
+        const it = row.item;
+        const Icon = it.private ? Lock : it.icon ? ICONS[it.icon] : undefined;
+        const kind = it.kind ?? row.group.split(':').pop() ?? '';
+        const cls = !scope && it.classId ? classes.find((c) => c.id === it.classId) : undefined;
         return (
-          <div key={row.key} {...common} className={cx(common.className, 'palette__item--result')} data-testid="palette-result" data-kind={kind} data-index={i}>
+          <div key={row.key} {...common} className={cx(common.className, 'palette__item--result')} data-testid={it.testid ?? 'palette-result'} data-kind={kind} data-index={i}>
             {Icon ? <Icon size={16} aria-hidden strokeWidth={1.75} /> : <span className="palette__noicon" />}
-            <span className="palette__label">{row.item.label}</span>
-            {row.item.detail ? <span className="palette__detail palette__snippet">{row.item.detail}</span> : null}
+            {/* A chat row's label is its own snippet: marks on the label, the author and date beside it. */}
+            {it.snippet && it.snippet.text === it.label ? (
+              <>
+                <span className="palette__label palette__snippet"><Snippet text={it.snippet.text} marks={it.snippet.marks} /></span>
+                {it.locator ? <span className="palette__detail">{it.locator}</span> : null}
+              </>
+            ) : (
+              <span className="palette__label">{it.label}</span>
+            )}
+            {it.snippet && it.snippet.text === it.label ? null : it.snippet ? (
+              <span className="palette__detail palette__snippet">
+                {it.locator ? <span className="palette__locator">{it.locator}</span> : null}
+                <Snippet text={it.snippet.text} marks={it.snippet.marks} />
+              </span>
+            ) : it.detail ? (
+              <span className="palette__detail palette__snippet">{it.detail}</span>
+            ) : null}
+            {cls ? <ClassChip cls={cls} short className="palette__chip" /> : null}
           </div>
         );
       }
@@ -350,9 +397,9 @@ function Palette({ onClose, providers, classId, services }: { onClose: () => voi
           ) : null}
           <kbd className="kbd palette__esc" aria-hidden="true">Esc</kbd>
         </div>
-        {indexing > 0 && query.trim() ? (
+        {(indexing > 0 || notice) && query.trim() ? (
           <p className="palette__indexing" data-testid="palette-indexing" role="status">
-            {tp('search.indexing', indexing, { n: indexing })}
+            {notice ?? tp('search.indexing', indexing, { n: indexing })}
           </p>
         ) : null}
         {empty ? (

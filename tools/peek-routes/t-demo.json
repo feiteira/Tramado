@@ -78,7 +78,10 @@
         "expect": "screen-lecture"
       },
       {
-        "expect-text": "screen-lecture=\"at\": 2472000"
+        "expect": "transcript-para"
+      },
+      {
+        "expect-text": "lecture-transcript=nunca pode atingir o conteúdo essencial do direito"
       },
       {
         "expect-attr": "lecture-transcript:data-testid=lecture-transcript"
@@ -170,13 +173,10 @@
         "expect-not": "missing-item"
       },
       {
-        "expect-text": "screen-document=Lei Fundamental de Exemplo (texto fictício).pdf"
+        "expect": "doc-pdf-page"
       },
       {
-        "expect-text": "screen-document=\"page\": 9"
-      },
-      {
-        "expect-text": "screen-document=nunca podem atingir"
+        "expect-not": "doc-quote-missing"
       }
     ]
   },

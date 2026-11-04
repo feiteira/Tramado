@@ -24,7 +24,7 @@ import { cx } from '../ui/cx';
 import { watchBack } from './activity.web';
 import { arriveFocus } from './arrival';
 import { useAppState } from './AppState';
-import { CommandPalette, type PaletteProvider } from './CommandPalette';
+import { CommandPalette, OPEN_PALETTE_EVENT, type PaletteProvider } from './CommandPalette';
 import type { Command } from './commands';
 import { diagnosticsText } from './diagnostics';
 import { Dock } from './Dock';
@@ -178,6 +178,7 @@ function Shell({ services }: { services: AppServicesImpl }) {
   const narrowWindow = useMediaQuery(NARROW_RAIL);
   const narrow = collapsed || narrowWindow;
   const [palette, setPalette] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState('');
   const providers = useProviders(services);
   const [version, setVersion] = useState('');
   const classId = 'classId' in route ? route.classId : null;
@@ -265,6 +266,7 @@ function Shell({ services }: { services: AppServicesImpl }) {
       e.preventDefault();
       switch (action.kind) {
         case 'palette':
+          setPaletteQuery('');
           setPalette(true);
           return;
         case 'record':
@@ -291,6 +293,25 @@ function Shell({ services }: { services: AppServicesImpl }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [palette, dialogsApi, go, active, toggleRecording, toast]);
+  // `openPalette(query?)` (CommandPalette.tsx) and `tramado:navigate` (palette rows and other code without the router).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      setPaletteQuery((e as CustomEvent<{ query?: string }>).detail?.query ?? '');
+      setPalette(true);
+    };
+    const onNavigate = (e: Event) => {
+      const route = (e as CustomEvent<Route>).detail;
+      if (!route || typeof route !== 'object' || typeof route.name !== 'string') return;
+      e.preventDefault();
+      go(route);
+    };
+    window.addEventListener(OPEN_PALETTE_EVENT, onOpen);
+    window.addEventListener('tramado:navigate', onNavigate);
+    return () => {
+      window.removeEventListener(OPEN_PALETTE_EVENT, onOpen);
+      window.removeEventListener('tramado:navigate', onNavigate);
+    };
+  }, [go]);
   // Alt+← and the mouse's back button.
   useEffect(() => watchBack(() => canGoBack && !palette && back()), [back, canGoBack, palette]);
 
@@ -461,7 +482,7 @@ function Shell({ services }: { services: AppServicesImpl }) {
       }}>
         {t('a11y.skipToContent')}
       </a>
-      <Rail services={services} version={version} collapsed={collapsed} narrow={narrow} onToggleCollapsed={toggleCollapsed} onSearch={() => setPalette(true)} />
+      <Rail services={services} version={version} collapsed={collapsed} narrow={narrow} onToggleCollapsed={toggleCollapsed} onSearch={() => { setPaletteQuery(''); setPalette(true); }} />
       <main className="shell__main" id="main" ref={mainRef}>
         {example ? (
           <div className="example-ribbon" role="note" data-testid="example-ribbon">
@@ -480,7 +501,7 @@ function Shell({ services }: { services: AppServicesImpl }) {
       </main>
       <DialogHost services={services} />
       <OverlayHost services={services} />
-      <CommandPalette open={palette} onClose={() => setPalette(false)} providers={providers} classId={classId} services={services} />
+      <CommandPalette open={palette} onClose={() => setPalette(false)} providers={providers} classId={classId} services={services} initialQuery={paletteQuery} />
     </div>
   );
 }

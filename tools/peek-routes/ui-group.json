@@ -734,5 +734,44 @@
         "expect": "sharing-log"
       }
     ]
+  },
+  {
+    "name": "join-demo-code",
+    "route": "today",
+    "query": "sync=fake&dialog=join&code=demo",
+    "ready": "join-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "click": "join-continue"
+      },
+      {
+        "expect-text": "join-dialog=Microeconomia I"
+      }
+    ]
+  },
+  {
+    "name": "join-done",
+    "route": "today",
+    "query": "sync=fake&dialog=join&code=demo",
+    "ready": "join-dialog",
+    "axe": true,
+    "steps": [
+      {
+        "click": "join-continue"
+      },
+      {
+        "click": "join-rules"
+      },
+      {
+        "click": "join-submit"
+      },
+      {
+        "expect": "join-step-done"
+      },
+      {
+        "expect-text": "join-dialog=Microeconomia I"
+      }
+    ]
   }
 ]

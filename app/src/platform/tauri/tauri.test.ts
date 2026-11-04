@@ -203,6 +203,7 @@ const CASES: Case[] = [
   { cmd: 'dialog_pick_files', run: (p) => p.dialogs.pickFiles({ title: 'Importar', filters: [{ name: 'PDF', extensions: ['pdf'] }], multiple: true }), args: { req: { title: 'Importar', filters: [{ name: 'PDF', extensions: ['pdf'] }], multiple: true } }, reply: [] },
   { cmd: 'dialog_pick_folder', run: (p) => p.dialogs.pickFolder({ title: 'Pasta' }), args: { req: { title: 'Pasta' } }, reply: null },
   { cmd: 'dialog_save', run: (p) => p.dialogs.save({ title: 'Guardar', defaultName: 'notas.md', filters: [] }), args: { req: { title: 'Guardar', defaultName: 'notas.md', filters: [] } }, reply: null },
+  { cmd: 'dialog_save_text', run: (p) => p.dialogs.saveText({ title: 'Guardar', defaultName: 'Convite.tramado-invite', filters: [] }, 'tri1_x'), args: { req: { title: 'Guardar', defaultName: 'Convite.tramado-invite', filters: [] }, text: 'tri1_x' }, reply: true },
   // §6.4 secrets and AI
   { cmd: 'secret_set', run: (p) => p.secrets.set('host:localhost_11434', 'k-1'), args: { name: 'host:localhost_11434', value: 'k-1' } },
   { cmd: 'secret_status', run: (p) => p.secrets.status('openrouter'), args: { name: 'openrouter' } },

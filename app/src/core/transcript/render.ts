@@ -75,7 +75,7 @@ const paragraphText = (p: Paragraph) => p.segments.map((s) => oneLine(s.text).tr
  */
 export function renderMarkdown(
   t: Pick<TranscriptFile, 'revision' | 'segments' | 'speakers' | 'language' | 'engine'>,
-  lecture: Pick<LectureFile, 'title' | 'startedAt' | 'durationMs' | 'recordedBy'> & { utcOffsetMin?: number },
+  lecture: Pick<LectureFile, 'title' | 'startedAt' | 'utcOffsetMin' | 'durationMs' | 'recordedBy'>,
   lang?: Lang,
 ): string {
   const language = lang ?? t.language;
@@ -100,7 +100,7 @@ const validOffset = (m: unknown): m is number => typeof m === 'number' && Number
  * `YYYY-MM-DD`: the recorder's local date of `startedAt` (`utcOffsetMin`, minutes east of UTC), or its UTC
  * date when the offset is absent or invalid (lectures written before 0.1).
  */
-export function recorderDate(lecture: Pick<LectureFile, 'startedAt'> & { utcOffsetMin?: number }): string {
+export function recorderDate(lecture: Pick<LectureFile, 'startedAt' | 'utcOffsetMin'>): string {
   const offset = lecture.utcOffsetMin;
   const ms = Date.parse(lecture.startedAt);
   if (!validOffset(offset) || !Number.isFinite(ms)) return lecture.startedAt.slice(0, 10);

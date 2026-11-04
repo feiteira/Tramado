@@ -73,7 +73,7 @@ export function createLibrary(ctx: AppContext, app: () => AppServices): ClassLib
   };
 
   function syncOf(e: ClassEntry, c: ClassServices | null): ClassSync {
-    if (!e.available) return { kind: 'missingFolder' };
+    if (!e.available) return e.joining ? { kind: 'waiting' } : { kind: 'missingFolder' };   // a class being joined has no folder yet (UI-GROUP, G2)
     if (!e.shared) return { kind: 'local' };
     const st = app().sync.state.get();
     const f = st.folders[e.classId];

@@ -333,7 +333,7 @@
   flex-wrap: wrap;
   gap: var(--s-2);
 }
-.side-tool .ai-card {
+.side-tool .aicard {
   padding: var(--s-3);
 }
 .side-tool--explain {
@@ -534,12 +534,12 @@
   border: none;
   background: transparent;
 }
-.lecture-side .ai-card__body {
+.lecture-side .aicard__body {
   font-size: var(--fs-md);
   line-height: var(--lh-ui);
 }
-.lecture-side .ai-card__body ul,
-.lecture-side .ai-card__body ol {
+.lecture-side .aicard__body ul,
+.lecture-side .aicard__body ol {
   padding-inline-start: var(--s-4);
 }
 .tv-para.cite-block.tv-para--current {

@@ -267,6 +267,40 @@ pub async fn dialog_save(
     .await
 }
 
+/// The most `dialog_save_text` writes (an invite file, a diagnostics log).
+const SAVE_TEXT_MAX: usize = 1 << 20;
+
+/// "Save as a file…" for a small text the page made (G2: the `.tramado-invite` file, sync spec §7.2, and the
+/// diagnostics log): the native save dialog, then an atomic write. `false` when the person cancelled.
+#[tauri::command]
+pub async fn dialog_save_text(
+    app: AppHandle,
+    dialogs: State<'_, DialogsState>,
+    req: SaveRequest,
+    text: String,
+) -> AppResult<bool> {
+    if text.len() > SAVE_TEXT_MAX {
+        return Err(AppError::invalid("the text is too long to save"));
+    }
+    let answer = dialogs.pop();
+    blocking(move || {
+        let path = match answer {
+            Some(a) => checked(a.paths.unwrap_or_default())?.into_iter().next(),
+            None => file_dialog(&app, &req.title, &req.filters)
+                .set_file_name(req.default_name.clone())
+                .blocking_save_file()
+                .map(to_path)
+                .transpose()?,
+        };
+        let Some(path) = path else {
+            return Ok(false);
+        };
+        files::write_atomic(&path, text.as_bytes())?;
+        Ok(true)
+    })
+    .await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

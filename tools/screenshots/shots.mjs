@@ -9,8 +9,8 @@
 //   keepFocus  leave the focused element alone (a popover that closes on blur)
 //   theme      'light' (default) or 'dark'; langs limits the languages (default: all)
 
-/** The fictional invite code of the join shot (UX §7.2 `code=`; UI-GROUP's join dialog parses it). */
-export const JOIN_CODE = 'tri1_fictional-demo-code';
+/** The join shot's invite: `code=demo` is the demo's fictional fixture (app/src/demo/keys.ts DEMO_JOIN_CODE). */
+export const JOIN_CODE = 'demo';
 
 const byId = (page, id) => page.getByTestId(id).first();
 const NAME = { en: 'Ana Ribeiro', pt: 'Ana Ribeiro', es: 'Ana Ribeiro' };

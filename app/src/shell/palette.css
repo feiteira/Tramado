@@ -257,3 +257,14 @@
   gap: var(--s-2);
   margin-top: var(--s-3);
 }
+
+.palette__locator {
+  margin-right: var(--s-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}
+
+.palette__snippet mark.cite {
+  border-radius: 2px;
+}

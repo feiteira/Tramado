@@ -88,4 +88,5 @@ export type SyncEvent =
   | { type: 'massDeleteRemote'; classId: ClassId; by: ShortId; count: number; sample: ClassPath[] }   // receiving guard
   | { type: 'folderErrors'; classId: ClassId; errors: FolderError[] }
   | { type: 'markerMissing'; classId: ClassId }
-  | { type: 'listenAddresses'; addresses: string[] };                  // ListenAddressesChanged (member file refresh)
+  | { type: 'listenAddresses'; addresses: string[] }                   // ListenAddressesChanged (member file refresh)
+  | { type: 'left'; classId: ClassId; afterwards: 'keepLocal' | 'trash' };   // G2: finish_leaving ran (§17); keepLocal → fork

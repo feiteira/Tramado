@@ -1845,5 +1845,35 @@
         "expect": "ai-custom-test"
       }
     ]
+  },
+  {
+    "name": "ask-lecture-scope",
+    "route": "class",
+    "query": "class=law&tab=ask&lecture=l6&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "ask-scope-focus:aria-pressed=true"
+      },
+      {
+        "expect-text": "ask-scope-focus=Aula 6"
+      }
+    ]
+  },
+  {
+    "name": "ask-sent",
+    "route": "class",
+    "query": "class=law&tab=ask&ai=fake",
+    "ready": "ask-thread",
+    "axe": true,
+    "steps": [
+      {
+        "click": "ask-sent"
+      },
+      {
+        "expect": "ask-sent-list"
+      }
+    ]
   }
 ]

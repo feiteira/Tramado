@@ -280,6 +280,17 @@ export const LAW: DemoClass = {
         { ref: 'S1', source: { kind: 'document', doc: 'lf', locator: { type: 'article', article: '18.º', page: 9 } }, quote: 'As leis restritivas devem ser gerais e abstratas', pin: 'n.º 3' },
         { ref: 'S2', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6d00' }, quote: 'a lei restritiva nunca pode atingir o conteúdo essencial do direito' },
       ],
+      sent: [
+        { ref: 'S1', source: { kind: 'document', doc: 'lf', locator: { type: 'article', article: '18.º', page: 9 } }, quote: '3. As leis restritivas devem ser gerais e abstratas' },
+        { ref: 'S2', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6d00' }, quote: 'Isto costuma sair no exame' },
+        { ref: 'S3', source: { kind: 'document', doc: 'lf', locator: { type: 'article', article: '18.º', page: 9 } }, quote: '2. A lei só pode restringir direitos' },
+        { ref: 'S4', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6e00' }, quote: 'É o que diz o artigo 18.º' },
+        { ref: 'S5', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6b00' }, quote: 'O primeiro requisito' },
+        { ref: 'S6', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6c00' }, quote: 'O segundo requisito' },
+        { ref: 'S7', source: { kind: 'document', doc: 'lf', locator: { type: 'article', article: '18.º', page: 9 } }, quote: '1. As normas sobre direitos' },
+        { ref: 'S8', source: { kind: 'lecture', lecture: 'l6', segment: 's_l6g00' }, quote: 'Tomem nota' },
+        { ref: 'S9', source: { kind: 'document', doc: 'lf', locator: { type: 'article', article: '19.º', page: 10 } }, quote: '1. O exercício de direitos só pode ser suspenso' },
+      ],
     },
   ],
 };

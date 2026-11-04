@@ -5,6 +5,8 @@
 //             "size": "1440x900", "ready": "screen-today", "axe": true,
 //             "steps": [{ "click": "rail-archive" }, { "expect": "rail-class:4" }, …] }
 // The step verbs are peek.mjs's: click, press, type, expect, expect-not, expect-text, expect-attr.
+// `--axe` scans every entry (an entry's own `"axe": false` still opts out); `--jobs=N` shoots N entries at once
+// (one browser context each; default 1); `--name=<a>[,…]` keeps only the named entries.
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,18 +27,29 @@ if (files.length === 0) {
 }
 
 const env = await startPeek({ app: args.app ?? join(HERE, '..', 'app'), port: Number(args.port) || 1531 });
-const results = [];
-try {
-  for (const f of files) {
-    const set = basename(f, '.json');
-    const entries = JSON.parse(readFileSync(join(ROUTES, f), 'utf8'));
-    for (const entry of entries) {
-      const out = join(OUT, set, `${entry.name}.png`);
-      const r = await shoot(env, { ...entry, out });
-      results.push({ set, name: entry.name, ok: !r.failed, png: r.png, errors: r.errors, overflow: r.overflow, axe: (r.axe ?? []).filter((v) => v.impact === 'serious' || v.impact === 'critical') });
-      console.log(`${r.failed ? 'FAIL' : 'ok  '} ${set}/${entry.name}${r.failed ? `  ${[...r.errors, r.overflow ?? ''].filter(Boolean).join(' | ')}${r.axe?.length ? ` axe: ${r.axe.map((v) => `${v.id}(${v.impact})`).join(',')}` : ''}` : ''}`);
-    }
+const names = args.name ? new Set(args.name.split(',')) : null;
+const queue = [];
+for (const f of files) {
+  const set = basename(f, '.json');
+  for (const entry of JSON.parse(readFileSync(join(ROUTES, f), 'utf8'))) {
+    if (names && !names.has(entry.name)) continue;
+    queue.push({ set, entry: args.axe && entry.axe !== false ? { ...entry, axe: true } : entry });
   }
+}
+const results = new Array(queue.length);
+let next = 0;
+async function worker() {
+  while (next < queue.length) {
+    const i = next++;
+    const { set, entry } = queue[i];
+    const out = join(OUT, set, `${entry.name}.png`);
+    const r = await shoot(env, { ...entry, out });
+    results[i] = { set, name: entry.name, ok: !r.failed, png: r.png, errors: r.errors, overflow: r.overflow, axe: (r.axe ?? []).filter((v) => v.impact === 'serious' || v.impact === 'critical') };
+    console.log(`${r.failed ? 'FAIL' : 'ok  '} ${set}/${entry.name}${r.failed ? `  ${[...r.errors, r.overflow ?? ''].filter(Boolean).join(' | ')}${r.axe?.length ? ` axe: ${r.axe.map((v) => `${v.id}(${v.impact})`).join(',')}` : ''}` : ''}`);
+  }
+}
+try {
+  await Promise.all(Array.from({ length: Math.max(1, Number(args.jobs) || 1) }, worker));
 } finally {
   await env.close();
 }

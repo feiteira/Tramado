@@ -93,6 +93,7 @@ pub fn run() {
             commands::dialogs::dialog_pick_files,
             commands::dialogs::dialog_pick_folder,
             commands::dialogs::dialog_save,
+            commands::dialogs::dialog_save_text,
             // §6.4 secrets and AI
             commands::ai::secret_set,
             commands::ai::secret_status,

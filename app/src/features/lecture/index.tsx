@@ -788,7 +788,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
         subtitle={subtitle}
         backTo={t('classes.tabs.lectures')}
         actions={
-          <Button icon={Sparkles} onClick={() => go({ name: 'class', classId, tab: 'ask', query: t('lectures.view.askPrefill', { title: view.title }) })} data-testid="lecture-ask">
+          <Button icon={Sparkles} onClick={() => go({ name: 'class', classId, tab: 'ask', lectureId: view.id })} data-testid="lecture-ask">
             {t('lectures.view.ask')}
           </Button>
         }
@@ -870,7 +870,7 @@ function LectureLoaded({ route, services, detail }: { route: LectureRoute; servi
             <Button size="sm" variant="ghost" icon={Sparkles} onClick={() => explainSel(selection)} data-testid="selection-explain">
               {t('lectures.selection.explain')}
             </Button>
-            <Button size="sm" variant="ghost" icon={Sparkles} onClick={() => go({ name: 'class', classId, tab: 'ask', query: t('lectures.selection.askPrefill', { text: selection.text }) })} data-testid="selection-ask">
+            <Button size="sm" variant="ghost" icon={Sparkles} onClick={() => go({ name: 'class', classId, tab: 'ask', lectureId: view.id, query: t('lectures.selection.askPrefill', { text: selection.text }) })} data-testid="selection-ask">
               {t('lectures.selection.ask')}
             </Button>
             <Button size="sm" variant="ghost" icon={Copy} onClick={() => void copyWithSource(selection)} data-testid="selection-copy">

@@ -16,7 +16,7 @@ import { hlcNodeOf, shortIdOf, type ClassId, type DeviceId, type Hex64, type Mem
 import { lectureDirName, sanitize } from '../core/model/sanitize';
 import { canonicalBytes, personProofMessage, signedMessageFromCanonical, toBase64Url } from '../core/model/sig';
 import { instant } from '../core/model/time';
-import { renderMarkdown, renderVtt } from '../core/transcript/render';
+import { renderMarkdown, renderVtt, utcOffsetMinAt } from '../core/transcript/render';
 import type {
   AnswersFile, Answer, AskHistoryLine, AnnotationLine, ChatLine, Citation, ClaimFile, ClassFile, ConsentLine, ExamFile, IdentityFile,
   LectureFile, MarkersFile, MarksFile, MemberFile, MetaFile, ModLine, PresenceFile, Question, Sig, TranscriptEditLine, TranscriptFile,
@@ -307,7 +307,7 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
       const publishedMs = endMs + 2 * MIN;
       const stereo = l.channels.length === 2;
       const lectureFile: LectureFile = {
-        format: 'tramado.lecture', version: 1, id, idNonce, title: l.title, startedAt: instant(startMs), durationMs: l.durationMs, mode: l.mode, language: l.language,
+        format: 'tramado.lecture', version: 1, id, idNonce, title: l.title, startedAt: instant(startMs), utcOffsetMin: utcOffsetMinAt(startMs, 'Europe/Lisbon'), durationMs: l.durationMs, mode: l.mode, language: l.language,
         recordedBy: { memberId: rec.memberId, deviceId: rec.deviceId, name: rec.name },
         audio: { file: 'audio.webm', shared: true, codec: 'opus', container: 'webm', sampleRate: 16000, channels: stereo ? 2 : 1, bitrate: stereo ? 32000 : 24000, size: audio.length, sha256: audioSha256 },
         channels: l.channels, pauses: [], consent: consentIds.get(l.recordedBy) ?? [], updatedAt: instant(publishedMs),
@@ -638,7 +638,18 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
         format: 'tramado.ask', version: 1, id: ulidOf(ms, `turn|${def.key}|${t.key}`), question: t.question,
         scope: { kinds: ['document', 'lecture', 'note'] }, answer: t.answer, citations: t.citations.map(citation), model: t.model, status: 'ok', error: null, at: instant(ms),
       };
-      await platform.privateFiles.write(classId, `ask/${threadId}.jsonl`, jsonl([line]));
+      // The passages sent with the question (AskTurn.sent, UI-EXAMS): label as a citation's, excerpt from the quote on.
+      const sent = t.sent?.map((c) => {
+        const { label } = citation(c);
+        const text = c.source.kind === 'lecture'
+          ? lectures.get(c.source.lecture)!.segments.find((x) => x.id === (c.source as { segment: string }).segment)!.text
+          : docSourceText(c.source.doc, c.source.locator.type === 'slide' ? c.source.locator.slide : c.source.locator.page);
+        const at = text.indexOf(c.quote);
+        if (at < 0) throw new Error(`sent passage not in its source: ${c.quote}`);
+        return { ref: c.ref, label, excerpt: text.slice(at, at + 200) };
+      });
+      const stored = sent ? { ...line, sent } : line;
+      await platform.privateFiles.write(classId, `ask/${threadId}.jsonl`, jsonl([stored]));
     }
 
     if (def.shared) await platform.sync.shareClass(classId, def.name);

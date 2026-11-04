@@ -128,7 +128,7 @@ export const record = {
     language: 'Language',
     keepVideo: 'Keep the video too (adds about {size} to the class)',
     useVtt: 'This file already has subtitles: use “{file}” as the transcript',
-    permission: 'I’m allowed to share this recording with the class.',
+    permission: { v1: 'I’m allowed to share this recording with the class.' },   // key = ConsentLine.textId (versioned, G2)
     confirm: 'Add recording',
     looksLikeRecording: '“{file}” looks like a recording. Add it as a lecture?',
     asLecture: 'Add as a lecture',

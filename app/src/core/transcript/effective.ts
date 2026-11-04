@@ -7,10 +7,9 @@ import { isSpeakerId, speakerLabel } from './labels';
 
 /**
  * A speaker of transcript.json with the HLC of its last folded `label_speaker` line (folder spec §8.8, G2 lead
- * decision 2026-11-04). `labelHlc` is absent until a label was folded. (The integrator adds `labelHlc?` to
- * `TranscriptFile.speakers` in core/model/files.ts; until then this widening carries it.)
+ * decision 2026-11-04). `labelHlc` is absent until a label was folded (`TranscriptFile.speakers[].labelHlc?`, G2).
  */
-export type Speaker = TranscriptFile['speakers'][number] & { labelHlc?: Hlc };
+export type Speaker = TranscriptFile['speakers'][number];
 import { validEditLine } from './edits';
 import { sha1Hex } from './sha1';
 

@@ -140,6 +140,7 @@ export interface LectureFile {
   idNonce: Nonce;
   title: string;                                   // 1–200 chars
   startedAt: Instant;
+  utcOffsetMin?: number;           // G2: the recorder's UTC offset at startedAt, minutes east (transcript.md's local date, §8.6)
   durationMs: number;
   mode: "room" | "online" | "import";
   language: Lang | "auto";
@@ -183,7 +184,7 @@ export interface TranscriptFile {
     modelSha256?: Hex64;
     vad?: string;                    // "silero-v5.1.2"
   };
-  speakers: Array<{ id: string; label: string }>;        // ids: "lecture" | "me" | "class" | "spk_<n>"
+  speakers: Array<{ id: string; label: string; labelHlc?: Hlc }>;   // ids: "lecture" | "me" | "class" | "spk_<n>"; labelHlc: G2, §8.9
   segments: Segment[];               // sorted by startMs
   folded: Record<DeviceId, Hlc>;     // per device: HLC of the last edit line folded into this file (§8.9)
   updatedAt: Instant;

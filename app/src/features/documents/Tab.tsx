@@ -34,6 +34,7 @@ import {
 } from './model';
 import { onQueuedImport, takeQueuedImport, useDocImport } from './useDocImport';
 import './documents.css';
+import { modalOpen } from '../../ui/focus';
 
 const KIND_ICON: Record<DocSummary['kind'], LucideIcon> = {
   pdf: FileText, docx: FileText, odt: FileText, rtf: FileText, md: FileText, txt: FileText, html: FileText,
@@ -109,6 +110,7 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
     const offQueue = onQueuedImport(take);
     const offDrop = services.ctx.platform.events.onDrop((e) => {
       setDragging(false);
+      if (modalOpen()) return;   // a dialog that takes drops itself (the exam-paper dialog) is open
       void importer.add(e.picked, mode === 'folders' ? folder : docsDir);
     });
     return () => {

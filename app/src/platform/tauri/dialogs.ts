@@ -8,5 +8,6 @@ export function createDialogBindings(): Platform['dialogs'] {
     pickFiles: (req) => call<Picked[]>('dialog_pick_files', { req }),
     pickFolder: (req) => call<Picked | null>('dialog_pick_folder', { req }),
     save: (req) => call<Picked | null>('dialog_save', { req }),
+    saveText: (req, text) => call<boolean>('dialog_save_text', { req, text }),
   };
 }

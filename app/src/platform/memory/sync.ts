@@ -145,6 +145,7 @@ export function createLocalSync(deps: LocalSyncDeps): Platform['sync'] {
         internals.writeAs(classId, inviter, `.tramado/members/${inviter}.json`, enc.encode(JSON.stringify(member)));
         deps.registry.insert({ ...e, joining: false });
         internals.emit?.({ type: 'admittedMe', classId, byDevice: inviter });
+        internals.emit?.({ type: 'folder', folder: folderView(classId) });   // the folder's size, as Syncthing's FolderSummary
       })();
     }, 4000);
   }
@@ -339,9 +340,8 @@ export function createDemoSyncControls(
         if (online.includes(key)) internals.online.add(d);
       }
     }
-    // `missing=1` (UX §7.2; until demo/boot.ts passes it, read from the page address): the folder of `class=`
-    // (default law) cannot be found (sync spec §22.3).
-    const missing = opts.missing !== undefined ? opts.missing : missingFromAddress();
+    // `missing=1` (UX §7.2; demo/boot.ts passes the class key): the folder of that class cannot be found (sync spec §22.3).
+    const missing = opts.missing ?? null;
     const lost = missing ? keys.classes[missing] : undefined;
     if (lost) {
       internals.missing.add(lost);
@@ -442,10 +442,3 @@ export function createDemoSyncControls(
   };
 }
 
-/** The class key of `missing=1` in the browser demo's address (`class=`, default `law`), or null. */
-function missingFromAddress(): string | null {
-  const search = (globalThis as { location?: { search?: string } }).location?.search;
-  if (!search) return null;
-  const q = new URLSearchParams(search);
-  return q.get('missing') === '1' ? (q.get('class') || 'law') : null;
-}

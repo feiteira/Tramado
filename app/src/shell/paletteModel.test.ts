@@ -38,6 +38,18 @@ describe('palette sections (UX §2.9, §3.13)', () => {
     expect(flatRows(open).at(-1)?.type).toBe('ask');
   });
 
+  it('uses a provider\'s held-back rows (total, more) and drops the groups the frame draws itself (G2)', () => {
+    const all = Array.from({ length: 12 }, (_, i) => item(`d${i}`));
+    const held: ResultGroup = { provider: 'search', id: 'documents', kind: 'document', label: 'Documents', items: all.slice(0, 5), total: 12, more: () => all };
+    const own = (kind: string): ResultGroup => ({ provider: 'search', id: kind, kind, label: '', items: [item(kind)] });
+    const folded = buildSections({ ...base, query: 'x', groups: [held, own('ask'), own('none'), own('recent')] });
+    expect(folded.map((x) => x.id)).toEqual(['search:documents', 'commands', 'ask']);
+    expect(folded[0]!.rows.at(-1)).toMatchObject({ type: 'more', n: 12 });
+    expect(folded[0]!.total).toBe(12);
+    const open = buildSections({ ...base, query: 'x', groups: [held], expanded: new Set(['search:documents']) });
+    expect(open[0]!.rows.map((r) => r.type)).toEqual(Array(12).fill('result'));
+  });
+
   it('knows when nothing was found', () => {
     expect(nothingFound('zz', buildSections({ ...base, query: 'zz', commands: [] }))).toBe(true);
     expect(nothingFound('', buildSections({ ...base, commands: [] }))).toBe(false);

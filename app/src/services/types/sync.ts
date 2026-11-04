@@ -3,7 +3,7 @@
 import type { ClassId, ClassPath, DeviceId, EpochMs, Hex64, Hlc, MemberId, ShortId, Ulid } from '../../core/model/ids';
 import type { ClaimKind } from '../../core/sync/claims';
 import type { ClaimFile, InviteV1, PresenceFile } from '../../core/model/files';
-import type { DeviceSpec, FolderOfferView, FolderView, JoinRequestView, Picked, RestoreItem, SyncEvent, SyncSettings, SyncStatus, VersionEntry } from '../../platform/types';
+import type { DeviceSpec, FolderOfferView, FolderView, JoinRequestView, Picked, RestoreItem, SyncSettings, SyncStatus, VersionEntry } from '../../platform/types';
 import type { ReadableStore } from '../store';
 import type { TrustGate } from './common';
 
@@ -62,13 +62,6 @@ export interface SyncService {
   joining(classId: ClassId): { preview: InvitePreview; since: EpochMs; connectedAt: EpochMs | null } | null;
 }
 
-/**
- * G2 (UI-GROUP): the `left` sync event (plan §15 item 15, §16 item 3). Rust emits it when `finish_leaving` ran
- * (sync spec §17): the folder is gone and, with `keepLocal`, the class waits to be forked. The integrator adds it to
- * `platform/types/sync.ts` `SyncEvent` at G2 (and the Rust emission); until then services code against this union.
- */
-export interface SyncLeftEvent { type: 'left'; classId: ClassId; afterwards: 'keepLocal' | 'trash' }
-export type SyncEventG2 = SyncEvent | SyncLeftEvent;
 
 /** A peer device's connection (G1: moved from services/sync.ts). */
 export interface ConnectionState { connected: boolean; relay: boolean; lastSeen: string | null }

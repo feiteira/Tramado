@@ -1326,6 +1326,7 @@ path rules and MUST NOT start with `mirror/` (Rust-only).
 | `dialog_pick_files` | `req: { title: string, filters: FileFilter[], multiple: boolean }` | `Picked[]` | dialog plugin from Rust in `blocking`; empty filter lists removed (Trama gotcha) |
 | `dialog_pick_folder` | `req: { title: string }` | `Picked \| null` | |
 | `dialog_save` | `req: { title: string, defaultName: string, filters: FileFilter[] }` | `Picked \| null` | |
+| `dialog_save_text` | `req: { title: string, defaultName: string, filters: FileFilter[] }, text: string` | `boolean` | G2: the save dialog, then an atomic write of `text` (≤ 1 MiB; `.tramado-invite`, diagnostics log); `false` = cancelled |
 
 When `TRAMADO_DATA_DIR` **and** `TRAMADO_E2E=1` are set, dialogs do not open: they pop answers from the JSON
 array in the file named by `TRAMADO_E2E_DIALOGS` (`[{"paths": ["/abs/a.pdf"]}, {"cancel": true}, …]`), so the

@@ -993,5 +993,80 @@
     "size": "1000x660",
     "ready": "settings-appearance",
     "axe": true
+  },
+  {
+    "name": "sync-error",
+    "route": "today",
+    "query": "sync=error",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "expect-attr": "sync-pill:data-state=error"
+      },
+      {
+        "click": "sync-pill"
+      },
+      {
+        "expect": "sync-popover"
+      },
+      {
+        "expect": "sync-error-card"
+      },
+      {
+        "expect": "sync-retry"
+      },
+      {
+        "expect": "sync-details"
+      }
+    ]
+  },
+  {
+    "name": "sync-error-details",
+    "route": "today",
+    "query": "sync=error",
+    "ready": "screen-today",
+    "axe": true,
+    "steps": [
+      {
+        "click": "sync-pill"
+      },
+      {
+        "click": "sync-details"
+      },
+      {
+        "expect": "settings-sharing"
+      }
+    ]
+  },
+  {
+    "name": "palette-open-query",
+    "route": "class",
+    "query": "class=law&ai=fake",
+    "ready": "screen-class",
+    "axe": true,
+    "steps": [
+      {
+        "press": "Control+k"
+      },
+      {
+        "type": "palette-input=conteúdo essencial"
+      },
+      {
+        "expect": "palette-group"
+      },
+      {
+        "expect": "palette-ask"
+      },
+      {
+        "press": "Tab"
+      },
+      {
+        "expect-attr": "palette-scope:data-scope=all"
+      },
+      {
+        "expect": "palette-result"
+      }
+    ]
   }
 ]

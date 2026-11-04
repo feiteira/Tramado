@@ -39,7 +39,7 @@ export const KNOWN_FIELDS: Readonly<Record<FormatName, readonly string[]>> = {
   'tramado.member': ['deviceId', 'memberId', 'name', 'colour', 'deviceName', 'joinedAt', 'hlc', 'addresses', 'caps', 'person', 'vouches', 'formats', 'app'],
   'tramado.presence': ['deviceId', 'memberId', 'seq', 'hlc', 'updatedAt', 'power', 'activity', 'heartbeatS'],
   'tramado.consent': ['id', 'hlc', 'ms', 'memberId', 'kind', 'scope', 'lectureId', 'share', 'revokes', 'textId', 'textLang', 'text', 'lecturer'],
-  'tramado.lecture': ['id', 'idNonce', 'title', 'startedAt', 'durationMs', 'mode', 'language', 'recordedBy', 'audio', 'audioDeletedAt', 'channels', 'pauses', 'consent', 'import', 'duplicateOf', 'updatedAt'],
+  'tramado.lecture': ['id', 'idNonce', 'title', 'startedAt', 'utcOffsetMin', 'durationMs', 'mode', 'language', 'recordedBy', 'audio', 'audioDeletedAt', 'channels', 'pauses', 'consent', 'import', 'duplicateOf', 'updatedAt'],
   'tramado.transcript': ['lectureId', 'round', 'revision', 'audioSha256', 'language', 'writer', 'transcribedBy', 'engine', 'speakers', 'segments', 'folded', 'updatedAt'],
   'tramado.transcript-edit': ['id', 'hlc', 'ms', 'memberId', 'lectureId', 'round', 'baseRevision', 'op', 'segment', 'base', 'text', 'speaker', 'atChar', 'atMs', 'newId', 'with', 'speakerId', 'label'],
   'tramado.claim': ['kind', 'lectureId', 'round', 'deviceId', 'memberId', 'claimedAt', 'status', 'heartbeat', 'updatedAt', 'audioSha256', 'engine', 'progress', 'etaMs', 'supersedes', 'error', 'finishedAt', 'transcriptRevision'],

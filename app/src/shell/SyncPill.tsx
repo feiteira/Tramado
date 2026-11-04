@@ -8,7 +8,6 @@ import type { ClassView } from '../services/types/viewModels';
 import { Popover } from '../ui/components/Popover';
 import { Button } from '../ui/components/Button';
 import { Switch } from '../ui/components/Choice';
-import { Notice } from '../ui/components/Feedback';
 import { Tooltip } from '../ui/components/Tooltip';
 import { useToast } from '../ui/components/Toast';
 import { ClassTab } from '../ui/tramado/ClassTab';
@@ -19,6 +18,8 @@ import { useRouter } from './router';
 import { useStore } from './useStore';
 import { syncPillState, type SyncPillState } from './pills';
 import { useSyncFacts } from './syncFacts';
+import { IdentityCopiedCard, SyncErrorCard, syncErrorOf } from '../features/sync/cards';
+import { requestDiagnostics } from '../features/sync/diagnosticsFlag';
 
 const ICON: Record<SyncPillState['id'], { icon: LucideIcon; tone: string; spin?: boolean }> = {
   local: { icon: HardDrive, tone: 'muted' },
@@ -103,8 +104,13 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
   const nameOf = (id: string) => classes.find((c) => c.id === id);
   const paused = !!sync.status?.paused;
   const started = !!sync.status && sync.status.state !== 'stopped';
-  const errorCode = sync.status?.error ?? null;
   const close = () => setOpen(false);
+  // Settings › Sharing with the diagnostics expanded (UI-GROUP's flag, read once when the section mounts).
+  const openDiagnostics = () => {
+    close();
+    requestDiagnostics();
+    go({ name: 'settings', section: 'sharing' });
+  };
   const goClass = (classId: string, tab?: 'members' | 'notes' | 'documents') => {
     close();
     go({ name: 'class', classId, ...(tab ? { tab } : {}) });
@@ -146,24 +152,9 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
             {label}
           </span>
         </div>
-        {state.id === 'error' ? (
-          <Notice
-            tone="danger"
-            data-testid="sync-error-card"
-            actions={
-              <>
-                <Button size="sm" busy={busy} onClick={() => void run(() => services.sync.restart())} data-testid="sync-retry">
-                  {t('sync.error.retry')}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-error-details">
-                  {t('sync.error.details')}
-                </Button>
-              </>
-            }
-          >
-            {t('sync.error.notRunning')}
-            {errorCode === 'SYNC_LOCKED' ? ` ${t('sync.error.locked')}` : errorCode === 'SYNC_PORT' ? ` ${t('sync.error.port')}` : ''}
-          </Notice>
+        {sync.identityCopied ? <IdentityCopiedCard services={services} /> : null}
+        {state.id === 'error' && !sync.identityCopied ? (
+          <SyncErrorCard services={services} code={syncErrorOf(sync.status) ?? 'SYNC_UNAVAILABLE'} compact onDetails={openDiagnostics} />
         ) : null}
         {sync.massDelete.length || sync.massDeleteRemote.length || folderErrors.length || conflicts ? (
           <ul className="sync-popover__problems" data-testid="sync-problems">
@@ -237,7 +228,7 @@ export function SyncPill({ services, compact }: { services: AppServices; compact
           <button type="button" className="link" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-settings">
             {t('sync.popover.settings')}
           </button>
-          <button type="button" className="link" onClick={() => { close(); go({ name: 'settings', section: 'sharing' }); }} data-testid="sync-open-diagnostics">
+          <button type="button" className="link" onClick={openDiagnostics} data-testid="sync-open-diagnostics">
             {t('sync.popover.diagnostics')}
           </button>
         </div>

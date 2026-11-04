@@ -9,6 +9,7 @@ export type Route =
   | { name: 'class'; classId: string; tab?: ClassTabId;          // default tab: 'lectures'
       folder?: string;                                           // documents tab: a sub-folder (relative path)
       threadId?: string; query?: string;                         // ask tab: open a thread / pre-fill a question
+      lectureId?: string; docPath?: string;                      // ask tab (G2): the "This lecture" / "This document" scope chip
       messageId?: string }                                       // chat tab: scroll to and flash a message
   | { name: 'lecture'; classId: string; lectureId: string;
       at?: number;                                               // ms into the audio

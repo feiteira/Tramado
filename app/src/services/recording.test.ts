@@ -97,7 +97,7 @@ describe('RecordingService', () => {
     });
     expect(lecture.pauses).toHaveLength(1);
     // G2: the recorder's UTC offset at startedAt (this computer's zone), for the local date of transcript.md.
-    expect((lecture as LectureFile & { utcOffsetMin?: number }).utcOffsetMin).toBe(-new Date(START).getTimezoneOffset() || 0);
+    expect(lecture.utcOffsetMin).toBe(-new Date(START).getTimezoneOffset() || 0);
     expect(itemIdMatches(lecture.id, me.deviceId, lecture.idNonce)).toBe(true);
     expect(dec.decode(files.get(`${dir}/lecture.json`)!.bytes)).toMatch(/^\{\n {2}"format"/);   // a manifest is indented
     const markers = JSON.parse(dec.decode((await platform.privateFiles.read(classId, `markers/${id}.json`))!));
@@ -184,7 +184,7 @@ describe('RecordingService', () => {
     expect(lecture).toMatchObject({ id, mode: 'import', language: 'pt-PT', startedAt: '2026-10-14T09:00:00.000Z', import: { fileName: 'aula-zoom-14-out.m4a', mime: 'audio/mp4', hadVideo: false }, audio: { shared: true } });
     expect(lectures.list.get().map((l) => l.mode)).toEqual(['import']);
     // G2: an import also carries the offset at its startedAt (the file's date, in this computer's zone).
-    expect((lecture as LectureFile & { utcOffsetMin?: number }).utcOffsetMin).toBe(-new Date('2026-10-14T09:00:00.000Z').getTimezoneOffset() || 0);
+    expect(lecture.utcOffsetMin).toBe(-new Date('2026-10-14T09:00:00.000Z').getTimezoneOffset() || 0);
     // A file Rust cannot decode.
     speech.failNext('import', 'SPEECH_UNSUPPORTED_AUDIO');
     platform.mem.queueDialog({ picks: [{ name: 'aula.aac', bytes: new Uint8Array([1]) }] });

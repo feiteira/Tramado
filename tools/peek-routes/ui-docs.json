@@ -451,6 +451,12 @@
       },
       {
         "expect-text": "palette=Lei Fundamental"
+      },
+      {
+        "expect": "palette-group"
+      },
+      {
+        "expect-attr": "palette-scope:data-scope=class"
       }
     ]
   },
@@ -485,10 +491,16 @@
         "type": "palette-input=xyzzyqw"
       },
       {
-        "expect": "palette-result:1"
+        "expect": "palette-empty"
       },
       {
-        "expect-text": "palette=xyzzyqw"
+        "expect-text": "palette-empty=xyzzyqw"
+      },
+      {
+        "expect": "palette-ask"
+      },
+      {
+        "expect-not": "palette-result"
       }
     ]
   }

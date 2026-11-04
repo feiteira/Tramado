@@ -20,7 +20,7 @@ import { freeze } from './freeze';
 import { installHooks } from './hooks';
 import { demoTranscript } from './example';
 import { tickFakeMedia } from './fakeMedia';
-import { MISSING_ID, type DemoKeys } from './keys';
+import { DEMO_JOIN_CODE, MISSING_ID, type DemoKeys } from './keys';
 import { seedDemo } from './seed';
 
 export interface DemoFlags {
@@ -54,6 +54,8 @@ export interface DemoFlags {
   join: 'ask' | null;
   unverified: boolean;
   conflict: boolean;
+  /** `missing=1` (UX §7.2, G2): the folder of `class=` (default `law`) is gone (sync spec §22.3). */
+  missing: boolean;
   dialog: DialogId | null;
   code: string | null;
 }
@@ -94,8 +96,9 @@ export function parseDemoFlags(search: string): DemoFlags {
     join: q.get('join') === 'ask' ? 'ask' : null,
     unverified: q.get('unverified') === '1',
     conflict: q.get('conflict') === '1',
+    missing: q.get('missing') === '1',
     dialog: maybe(q.get('dialog'), DIALOG_IDS),
-    code: str(q.get('code')),
+    code: q.get('code') === 'demo' ? DEMO_JOIN_CODE : str(q.get('code')),
   };
 }
 
@@ -107,7 +110,11 @@ export function demoRoute(f: DemoFlags, keys: DemoKeys): Route {
     case 'today':
       return { name: 'today' };
     case 'class':
-      return { name: 'class', classId: classId(f.class ?? 'law'), ...(f.tab ? { tab: f.tab } : {}) };
+      return {
+        name: 'class', classId: classId(f.class ?? 'law'), ...(f.tab ? { tab: f.tab } : {}),
+        // G2: `tab=ask&lecture=l6` opens Ask with the "This lecture" scope chip.
+        ...(f.tab === 'ask' && f.lecture && keys.lectures[f.lecture] ? { lectureId: keys.lectures[f.lecture]!.lectureId } : {}),
+      };
     case 'lecture': {
       const l = f.lecture ? keys.lectures[f.lecture] : undefined;
       if (!l) return { name: 'lecture', classId: MISSING_ID, lectureId: MISSING_ID };
@@ -181,7 +188,7 @@ function controlsFor(platform: MemoryPlatform, keys: DemoKeys, fakes: { flags: D
       queueAnswer: (a) => platform.mem.queueDialog(a),
     },
     ai: fakes.ai.controls,
-    sync: createDemoSyncControls(platform, keys, { mode: fakes.flags.sync, now: () => Date.now(), join: fakes.flags.join }),
+    sync: createDemoSyncControls(platform, keys, { mode: fakes.flags.sync, now: () => Date.now(), join: fakes.flags.join, missing: fakes.flags.missing ? (fakes.flags.class ?? 'law') : null }),
     ...(fakes.speech ? { speech: fakes.speech.controls(keys) } : {}),
     media: { tick: tickFakeMedia },
   };

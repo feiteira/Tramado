@@ -24,6 +24,12 @@ describe('prefs', () => {
     expect(parsePrefs('{"ui.theme":"dark","x":"y","ui.textSize":2}')).toEqual({ 'ui.theme': 'dark' });
     expect(parsePrefs('nope')).toEqual({});
   });
+
+  it('accepts a custom service model name as ai.model, not as a fallback (G2)', () => {
+    for (const v of ['qwen3:8b', 'llama3.1:8b-instruct-q4_K_M', 'hf.co/acme/model:Q4', 'google/gemma-4-31b-it:free']) expect(isValidPref('ai.model', v), v).toBe(true);
+    for (const v of ['', ' qwen3', 'a b', ':x', 'x'.repeat(121)]) expect(isValidPref('ai.model', v), v).toBe(false);
+    expect(isValidPref('ai.fallbacks', '["qwen3:8b"]')).toBe(false);
+  });
 });
 
 describe('identity', () => {

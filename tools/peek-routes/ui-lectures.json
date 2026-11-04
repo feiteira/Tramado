@@ -645,5 +645,23 @@
     "axe": true,
     "lang": "es",
     "scale": 1.25
+  },
+  {
+    "name": "lecture-ask-scope",
+    "route": "lecture",
+    "query": "class=law&lecture=l6&ai=fake",
+    "ready": "lecture-transcript",
+    "axe": true,
+    "steps": [
+      {
+        "click": "lecture-ask"
+      },
+      {
+        "expect": "class-ask"
+      },
+      {
+        "expect-attr": "ask-scope-focus:aria-pressed=true"
+      }
+    ]
   }
 ]

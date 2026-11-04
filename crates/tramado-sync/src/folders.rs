@@ -20,7 +20,7 @@ use crate::ctx::Ctx;
 use crate::invite::Invite;
 use crate::managed::{folder_create_body, ignore_lines};
 use crate::reconcile::member_path;
-use crate::types::{LeaveAfterwards, LeaveOptions};
+use crate::types::{LeaveAfterwards, LeaveOptions, SyncEvent};
 
 /// Leaving gives up waiting for a classmate after 30 days (§17).
 pub const LEAVE_TIMEOUT_MS: u64 = 30 * 24 * 3600 * 1000;
@@ -416,6 +416,14 @@ pub fn finish_leaving(
     // entries above already keep them from showing as pending meanwhile
     ctx.registry.add_left_class(class_id)?;
     log::info!("sync: finished leaving {}", ids::short_id(class_id));
+    ctx.emit(SyncEvent::Left {
+        class_id: class_id.to_string(),
+        afterwards: if leaving.afterwards == "trash" {
+            LeaveAfterwards::Trash
+        } else {
+            LeaveAfterwards::KeepLocal
+        },
+    });
     Ok(true)
 }
 
@@ -589,6 +597,19 @@ mod tests {
             "global": {"deleted": true, "modifiedBy": ids::short_id(ME)}}),
         );
         assert!(finish_leaving(&ctx, F, &HashSet::new(), &none, &mirror).unwrap());
+        assert!(w.events.lock().unwrap().contains(&SyncEvent::Left {
+            class_id: F.to_string(),
+            afterwards: LeaveAfterwards::KeepLocal,
+        }));
+        // the TS `SyncEvent` shape (platform/types/sync.ts)
+        assert_eq!(
+            serde_json::to_value(SyncEvent::Left {
+                class_id: F.to_string(),
+                afterwards: LeaveAfterwards::KeepLocal,
+            })
+            .unwrap(),
+            json!({ "type": "left", "classId": F, "afterwards": "keepLocal" })
+        );
         assert!(w.fake.folder_devices(F).is_empty());
         assert!(w.registry.left_classes().contains(&F.to_string()));
         let e = w.registry.get(F).unwrap();
@@ -619,6 +640,10 @@ mod tests {
         assert!(finish_leaving(&later, F, &HashSet::new(), &t, &w.dir.path().join("m")).unwrap());
         assert_eq!(trashed.lock().unwrap().len(), 1);
         assert!(w.registry.get(F).is_none());
+        assert!(w.events.lock().unwrap().contains(&SyncEvent::Left {
+            class_id: F.to_string(),
+            afterwards: LeaveAfterwards::Trash,
+        }));
     }
 
     #[test]

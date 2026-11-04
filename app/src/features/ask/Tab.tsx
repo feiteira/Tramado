@@ -19,9 +19,10 @@ export default function Tab({ classId, services }: { classId: ClassId; services:
         classId={classId}
         {...(r?.threadId ? { threadId: r.threadId } : {})}
         {...(r?.query ? { query: r.query } : {})}
+        {...(r?.lectureId ? { focus: { kind: 'lecture' as const, id: r.lectureId } } : r?.docPath ? { focus: { kind: 'document' as const, path: r.docPath } } : {})}
         onThread={(threadId) => {
           if (!r) return;
-          const { threadId: _old, query: _q, ...rest } = r;
+          const { threadId: _old, query: _q, lectureId: _l, docPath: _d, ...rest } = r;
           replace(threadId ? { ...rest, tab: 'ask', threadId } : { ...rest, tab: 'ask' });
         }}
       />

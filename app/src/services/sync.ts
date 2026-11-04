@@ -15,13 +15,13 @@ import { checkWords } from '../core/sync/checkWords';
 import {
   chooseInviteDevices, decodeInvite, encodeInvite, inviteFileName, inviteLink, inviteWeb, qrText, reduceInvite, selectInviteAddresses,
 } from '../core/sync/invite';
-import type { ClassEntry, FolderView, Picked, SyncSettings } from '../platform/types';
+import type { ClassEntry, FolderView, Picked, SyncEvent, SyncSettings } from '../platform/types';
 import type { ClassServiceImpl } from './class';
 import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { TrustServiceImpl } from './trust';
 import type { AppServices } from './types/common';
-import type { ConnectionState, InvitePreview, SyncEventG2, SyncService, SyncUiState } from './types/sync';
+import type { ConnectionState, InvitePreview, SyncService, SyncUiState } from './types/sync';
 
 export const EMPTY_SYNC_STATE: SyncUiState = {
   status: null, folders: {}, joinRequests: [], offers: [], massDelete: [], massDeleteRemote: [], foreignWrites: 0, markerMissing: [],
@@ -154,7 +154,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
     }
   }
 
-  function route(e: SyncEventG2) {
+  function route(e: SyncEvent) {
     switch (e.type) {
       case 'status':
         patch({ status: e.status });

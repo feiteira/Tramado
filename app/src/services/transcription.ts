@@ -504,7 +504,13 @@ export function createTranscriptionQueue(ctx: AppContext, app: () => AppServices
       }
     }
     for (const k of [...timers.keys()]) if (!seen.has(k)) cancelTimer(k);
-    state.update((s) => ({ ...s, lectures: views, volunteer: pref, volunteerEffective: effective, cloud, volunteerNotice: notice }));
+    // Only a real change notifies: every class's LectureService re-reads on this store, and its list feeds back here
+    // (G2: an unconditional update looped forever in the browser demo after a join).
+    const patch = { lectures: views, volunteer: pref, volunteerEffective: effective, cloud, volunteerNotice: notice };
+    const cur = state.get();
+    if (JSON.stringify(patch) !== JSON.stringify({ lectures: cur.lectures, volunteer: cur.volunteer, volunteerEffective: cur.volunteerEffective, cloud: cur.cloud, volunteerNotice: cur.volunteerNotice })) {
+      state.update((s) => ({ ...s, ...patch }));
+    }
     // The member files report caps (local model, cloud, effective volunteering): refresh them when these change.
     const caps = JSON.stringify([model?.id ?? null, cloud.on, effective]);
     if (lastCaps !== null && caps !== lastCaps) void refreshMemberFiles();

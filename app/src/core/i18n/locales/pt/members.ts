@@ -51,6 +51,7 @@ export const members: Messages['members'] = {
     retry: 'Tentar novamente',
     pairNeedsNewer: 'Para adicionar outro computador precisa de um Tramado mais recente.',
     in: 'Já entrou! A receber {class}… {have} de {total} ficheiros',
+    inStarting: 'Já entrou! A receber {class}…',
     pairTitle: 'Adicionar este computador aos computadores de [b]{name}[/b]?',
     pairBody: 'Este computador recebe todas as disciplinas de {name}. Os apontamentos privados, os destaques e o treino não são copiados.',
     pairSubmit: 'Adicionar este computador',

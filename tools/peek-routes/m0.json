@@ -12,9 +12,6 @@
         "expect-attr": "nav-today:aria-current=page"
       },
       {
-        "expect": "placeholder-data"
-      },
-      {
         "expect": "sync-pill"
       },
       {
@@ -45,6 +42,15 @@
       },
       {
         "click": "onboarding-name-continue"
+      },
+      {
+        "expect": "onboarding-ai"
+      },
+      {
+        "click": "onboarding-ai-skip"
+      },
+      {
+        "click": "onboarding-finish"
       },
       {
         "expect": "screen-today"
@@ -519,187 +525,119 @@
     "route": "class",
     "query": "class=law&dialog=new-class",
     "ready": "class-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-class-settings",
     "route": "class",
     "query": "class=law&dialog=class-settings",
     "ready": "class-settings",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-leave",
     "route": "class",
     "query": "class=law&dialog=leave",
     "ready": "confirm-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-invite",
     "route": "class",
     "query": "class=law&dialog=invite",
     "ready": "invite-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-join",
     "route": "class",
     "query": "class=law&dialog=join",
     "ready": "join-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-record",
     "route": "class",
     "query": "class=law&dialog=record",
     "ready": "record-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-save",
     "route": "class",
     "query": "class=law&dialog=save",
     "ready": "record-save",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-recover",
     "route": "class",
     "query": "class=law&dialog=recover",
     "ready": "record-recover",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-import",
     "route": "class",
     "query": "class=law&dialog=import",
     "ready": "import-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-model",
     "route": "class",
     "query": "class=law&dialog=model",
     "ready": "model-prompt",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-exam-date",
     "route": "class",
     "query": "class=law&dialog=exam-date",
     "ready": "exam-date-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-exam-paper",
     "route": "class",
     "query": "class=law&dialog=exam-paper",
     "ready": "exam-paper-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-answer-settings",
     "route": "class",
     "query": "class=law&dialog=answer-settings",
     "ready": "answer-settings",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-shortcuts",
     "route": "class",
     "query": "class=law&dialog=shortcuts",
     "ready": "shortcuts-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-first-share",
     "route": "class",
     "query": "class=law&dialog=first-share",
     "ready": "first-share-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-mass-delete",
     "route": "class",
     "query": "class=law&dialog=mass-delete",
     "ready": "mass-delete-dialog",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "dialog-recently-deleted",
     "route": "class",
     "query": "class=law&dialog=recently-deleted",
     "ready": "recently-deleted",
-    "steps": [
-      {
-        "expect": "placeholder-data"
-      }
-    ]
+    "steps": []
   },
   {
     "name": "record-from-header",

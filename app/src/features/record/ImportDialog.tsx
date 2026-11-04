@@ -65,7 +65,7 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
     setBusy(true);
     setError(null);
     const consent: ConsentInput | undefined = shared
-      ? { kind: 'share', scope: 'lecture', share: 'audio+transcript', textId: 'record.dialog.consentShare.v1', textLang: meta.bcp47 as Lang, text: t('record.import.permission') }
+      ? { kind: 'share', scope: 'lecture', share: 'audio+transcript', textId: 'record.import.permission.v1', textLang: meta.bcp47 as Lang, text: t('record.import.permission.v1') }
       : undefined;
     try {
       const done = services.recording.importAudio(classId, file, {
@@ -137,7 +137,7 @@ export default function ImportDialog({ props, services, close }: { props: Dialog
           <Checkbox checked={keepVideo} onChange={setKeepVideo} label={t('record.import.keepVideo', { size: file.size ? size(file.size, i18n) : '—' })} data-testid="import-keep-video" />
         ) : null}
         {subtitles ? <Notice tone="info" data-testid="import-vtt-notice">{t('record.import.vttLater', { file: subtitles.name })}</Notice> : null}
-        {shared ? <Checkbox checked={permission} onChange={setPermission} label={t('record.import.permission')} data-testid="import-permission" /> : null}
+        {shared ? <Checkbox checked={permission} onChange={setPermission} label={t('record.import.permission.v1')} data-testid="import-permission" /> : null}
         <RadioGroup
           label={t('record.save.transcript')}
           value={choice}

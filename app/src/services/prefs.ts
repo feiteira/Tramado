@@ -70,6 +70,8 @@ const jsonArray = (max: number, item: (x: unknown) => boolean) => (v: string) =>
 };
 const nonNegInt = (v: string) => /^\d{1,9}$/.test(v);
 const modelId = (v: string) => /^[a-z0-9][a-z0-9._-]*\/[A-Za-z0-9._:-]+$/.test(v) && v.length <= 120;
+/** G2 (UI-EXAMS): a custom service's model names have no provider part ("qwen3:8b", "llama3.1:8b-instruct-q4_K_M"). */
+const customModelId = (v: string) => /^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$/.test(v) && v.length <= 120;
 const RATES = ['0.5', '0.75', '1', '1.25', '1.5', '1.75', '2', '2.5', '3'];
 
 const RULES: Record<keyof typeof PREF_DEFAULTS, (v: string) => boolean> = {
@@ -86,7 +88,7 @@ const RULES: Record<keyof typeof PREF_DEFAULTS, (v: string) => boolean> = {
   'search.recent': jsonArray(5, (x) => typeof x === 'string' && x.length <= 200),
   'lecture.playbackRate': oneOf(...RATES),
   'ai.enabled': bool01,
-  'ai.model': modelId,
+  'ai.model': (v) => modelId(v) || customModelId(v),
   'ai.fallbacks': jsonArray(2, (x) => typeof x === 'string' && modelId(x)),
   'ai.customHost': (v) => v === '' || /^[A-Za-z0-9_-]{1,64}$/.test(v),
   'ai.answerLanguage': oneOf('question', 'ui'),

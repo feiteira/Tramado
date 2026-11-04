@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DateTime } from 'luxon';
 import { ChevronDown, ChevronRight, Copy, Lock, MessageSquarePlus, MoreHorizontal, MessagesSquare, NotebookPen, RefreshCw, Search, SendHorizontal, Settings2, Sparkles, Telescope } from 'lucide-react';
 import { detectLang, promptLang } from '../../core/ai/prompts';
-import type { ClassId, Ulid } from '../../core/model/ids';
+import type { ClassId, ClassPath, Ulid } from '../../core/model/ids';
 import type { SourceRef } from '../../core/model/files';
 import { globalAskFor } from '../../services/ask';
 import type { AskOptions, AskTurn } from '../../services/types/ask';
@@ -58,10 +58,12 @@ export interface AskViewProps {
   classId: ClassId | null;
   threadId?: string;
   query?: string;
+  /** G2: "This lecture" / "This document" (UX §3.11): a chip, on at first, that limits the sources to one item. */
+  focus?: { kind: 'lecture'; id: string } | { kind: 'document'; path: string };
   onThread(threadId: string | null): void;
 }
 
-export function AskView({ services, classId, threadId: routeThread, query, onThread }: AskViewProps) {
+export function AskView({ services, classId, threadId: routeThread, query, focus, onThread }: AskViewProps) {
   const i18n = useI18n();
   const { t, tp } = i18n;
   const { go } = useRouter();
@@ -87,6 +89,20 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
   const turns = useStore(current ? source.thread(current) : EMPTY_TURNS);
   const [draft, setDraft] = useState(query ?? '');
   const [scope, setScope] = useState<Scope>({ all: true, kinds: [], mine: false, classes: [] });
+  const focusKey = focus ? (focus.kind === 'lecture' ? `l:${focus.id}` : `d:${focus.path}`) : '';
+  const [focusOn, setFocusOn] = useState(!!focus);
+  useEffect(() => setFocusOn(!!focus), [focusKey]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const focusLabel = useMemo(() => {
+    if (!focus || !classId) return null;
+    if (focus.kind === 'document') return t('ask.scope.document', { name: focus.path.split('/').pop() ?? focus.path });
+    let title = '';
+    try {
+      title = services.forClass(classId).lectures.list.get().find((l) => l.id === focus.id)?.title ?? '';
+    } catch {
+      title = '';
+    }
+    return title ? t('ask.scope.lecture', { title }) : null;
+  }, [focusKey, classId, services, t]);   // eslint-disable-line react-hooks/exhaustive-deps
   const [general, setGeneral] = useState(settings.generalDefault);
   const [model, setModel] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<ModelLabel[]>([]);
@@ -123,7 +139,9 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
 
   const requestScope = (s: Scope = scope): AskTurn['scope'] => {
     const kinds: Array<SourceRef['kind']> = s.all ? [] : [...s.kinds, ...(s.mine ? (['note'] as const) : [])];
-    return classId ? { kinds } : { kinds, classes: s.classes };
+    if (!classId) return { kinds, classes: s.classes };
+    if (focus && focusOn && focusLabel) return focus.kind === 'lecture' ? { kinds, lectureId: focus.id as Ulid } : { kinds, docPath: focus.path as ClassPath };
+    return { kinds };
   };
   const send = useCallback(async (text: string, opts: AskOptions = {}, into: string | null = current) => {
     const q = text.trim();
@@ -139,7 +157,7 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
       toast.show(errorMessage(e));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, current, scope, general, model, draft]);
+  }, [source, current, scope, general, model, draft, focusOn, focusLabel]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const retry = (turn: AskTurn, opts: AskOptions = {}) => void send(turn.question, { general: turn.general ?? general, ...(turn.mode ? { mode: turn.mode } : {}), ...opts });
 
@@ -287,6 +305,7 @@ export function AskView({ services, classId, threadId: routeThread, query, onThr
           <div className="ask__composer">
             <div className="ask__scope" role="group" aria-label={t('ask.scope.label')} data-testid="ask-scope">
               <span className="ask__scope-label t-small">{t('ask.scope.label')}</span>
+              {focusLabel ? <Chip on={focusOn} onClick={() => setFocusOn((v) => !v)} testid="ask-scope-focus">{focusLabel}</Chip> : null}
               <Chip on={scope.all} onClick={() => setScope((s) => ({ ...s, all: true, kinds: [] }))} testid="ask-scope-all">{t('ask.scope.all')}</Chip>
               {KINDS.map((k) => <Chip key={k} on={!scope.all && scope.kinds.includes(k)} onClick={() => toggleKind(k)} testid={`ask-scope-${KIND_KEY[k]}`}>{t(`ask.scope.${KIND_KEY[k]}`)}</Chip>)}
               <Tooltip label={t('ask.scope.mineHint')}>

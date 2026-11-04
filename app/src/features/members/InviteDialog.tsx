@@ -17,7 +17,6 @@ import { ClassTab } from '../../ui/tramado/ClassTab';
 import { QrCode } from '../../ui/tramado/QrCode';
 import { useI18n } from '../../ui/i18n';
 import { SyncErrorCard, syncErrorOf } from '../sync/cards';
-import { downloadText } from '../sync/download';
 import './members.css';
 
 type Invite = Awaited<ReturnType<AppServices['sync']['invite']>>;
@@ -122,7 +121,7 @@ export default function InviteDialog({ props, services, close }: { props: Dialog
             />
             <div className="invite__code-actions">
               <Button icon={Copy} onClick={() => void copy(invite.code, t('members.invite.codeCopied'))} data-testid="invite-copy-code">{t('members.invite.copyCode')}</Button>
-              <Button variant="ghost" icon={Download} onClick={() => downloadText(invite.fileName, invite.fileText, 'text/x-tramado-invite')} data-testid="invite-save-file">{t('members.invite.saveFile')}</Button>
+              <Button variant="ghost" icon={Download} onClick={() => void services.ctx.platform.dialogs.saveText({ title: t('members.invite.saveFile'), defaultName: invite.fileName, filters: [{ name: 'Tramado', extensions: ['tramado-invite'] }] }, invite.fileText).catch((e: unknown) => toast.error(e))} data-testid="invite-save-file">{t('members.invite.saveFile')}</Button>
             </div>
             <p className="invite__foot">
               {t('members.invite.footer')}

@@ -125,7 +125,7 @@ export const record: Messages['record'] = {
     language: 'Língua',
     keepVideo: 'Manter também o vídeo (acrescenta cerca de {size} à disciplina)',
     useVtt: 'Este ficheiro já tem legendas: usar “{file}” como transcrição',
-    permission: 'Tenho autorização para partilhar esta gravação com a turma.',
+    permission: { v1: 'Tenho autorização para partilhar esta gravação com a turma.' },   // key = ConsentLine.textId (versioned, G2)
     confirm: 'Adicionar gravação',
     looksLikeRecording: '“{file}” parece uma gravação. Adicionar como aula?',
     asLecture: 'Adicionar como aula',

@@ -4,8 +4,12 @@
 // Recent searches, then the commands.
 import type { Command } from './commands';
 
-export interface PaletteItem { id: string; label: string; detail?: string; icon?: string; run(): void }
-export interface ResultGroup { provider: string; id: string; label: string; items: PaletteItem[] }
+export type { PaletteItem } from '../features/registry';
+import type { PaletteGroup, PaletteItem } from '../features/registry';
+/** A provider's group, tagged with the provider (`total`/`more`: the provider holds back rows beyond the first ones). */
+export type ResultGroup = PaletteGroup & { provider: string };
+/** Group kinds the frame draws itself (Recent, Recent searches, Nothing found, the Ask AI row): a provider's are dropped. */
+export const FRAME_KINDS: ReadonlySet<string> = new Set(['ask', 'none', 'recent', 'recentSearches']);
 export interface RecentEntry { key: string; label: string; detail?: string; kind: 'lecture' | 'document' | 'note' | 'exam' | 'class'; route: unknown }
 
 export type Row =
@@ -51,13 +55,16 @@ export function buildSections(p: PaletteInput): Section[] {
     if (p.commands.length) out.push({ id: 'commands', kind: 'commands', label: p.labels.commands, rows: p.commands.map((command) => ({ type: 'command', key: `cmd:${command.id}`, command })) });
     return out;
   }
-  const content = p.groups.filter((g) => g.items.length > 0);
+  const content = p.groups.filter((g) => g.items.length > 0 && !(g.kind && FRAME_KINDS.has(g.kind)));
   for (const g of content) {
     const k = groupKey(g);
-    const max = p.expanded.has(k) ? GROUP_ROWS_ALL : GROUP_ROWS;
-    const rows: Row[] = g.items.slice(0, max).map((item) => ({ type: 'result', key: `res:${k}:${item.id}`, group: k, item }));
-    if (g.items.length > max && max === GROUP_ROWS) rows.push({ type: 'more', key: `more:${k}`, group: k, n: g.items.length });
-    out.push({ id: k, kind: 'results', label: g.label, rows, total: g.items.length });
+    const expanded = p.expanded.has(k);
+    const items = expanded && g.more ? g.more() : g.items;
+    const total = Math.max(g.total ?? 0, items.length);
+    const max = expanded ? GROUP_ROWS_ALL : GROUP_ROWS;
+    const rows: Row[] = items.slice(0, max).map((item) => ({ type: 'result', key: `res:${k}:${item.id}`, group: k, item }));
+    if (!expanded && total > rows.length) rows.push({ type: 'more', key: `more:${k}`, group: k, n: total });
+    out.push({ id: k, kind: 'results', label: g.label, rows, total });
   }
   if (p.commands.length) {
     const list = content.length ? p.commands.slice(0, COMMANDS_AFTER_CONTENT) : p.commands;

@@ -7,6 +7,7 @@ import type { Citation as StorageCitation } from '../../core/model/files';
 import type { ClassId } from '../../core/model/ids';
 import type { AppServices } from '../../services/types/common';
 import type { ViewCitation } from '../../services/types/viewModels';
+import { openPalette } from '../../shell/CommandPalette';
 import type { Route } from '../../shell/routes';
 import type { I18n } from '../../ui/i18n';
 
@@ -137,22 +138,9 @@ export function useResolvedCitations(services: AppServices, citations: readonly 
   }), [citations, resolved, revKey]);
 }
 
-/** Opens the command palette (Ctrl/⌘+K) and types `query` into it. */
+/** Opens the command palette with `query` typed in (the shell's `openPalette`, G2). */
 export function openPaletteWith(query: string): void {
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true }));
-  if (!query) return;
-  let tries = 0;
-  const fill = () => {
-    const input = document.querySelector<HTMLInputElement>('[data-testid="palette"] input, [data-testid="palette-input"]');
-    if (!input) {
-      if (tries++ < 20) window.setTimeout(fill, 25);
-      return;
-    }
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-    setter?.call(input, query);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-  window.setTimeout(fill, 0);
+  openPalette(query);
 }
 
 /** A `tramado:` link of an answer or a note (UX §3.8): lecture time links and document links. */

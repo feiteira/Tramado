@@ -16,7 +16,7 @@ import { parseConflictName } from '../../core/model/paths';
 import { deviceIdChecks, verifyPersonProof, verifySig } from '../../core/model/sig';
 import { sha256Hex } from '../../core/util/sha256';
 import { resolveQuote } from '../../core/search/resolve';
-import { renderMarkdown, renderVtt } from '../../core/transcript/render';
+import { renderMarkdown, renderVtt, utcOffsetMinAt } from '../../core/transcript/render';
 import { createMemoryPlatform, type MemoryPlatform } from '../../platform/memory';
 import { deviceIdentity, poolKey } from '../../platform/memory/signer';
 import { demoRoute, parseDemoFlags } from '../boot';
@@ -456,6 +456,9 @@ describe('seedDemo (UX §7.3 as files)', async () => {
       expect(audio.bytes).toEqual(fakeAudio(key));
       expect(audio.modifiedBy).toBe(lf.recordedBy.deviceId.slice(0, 7));
       expect(lf.consent.length).toBe(2);
+      // G2 (folder spec §8.6): the recorder's offset in Lisbon (0 in winter, +60 in summer); transcript.md's date is local.
+      expect(lf.utcOffsetMin).toBe(utcOffsetMinAt(Date.parse(lf.startedAt), 'Europe/Lisbon'));
+      expect([0, 60]).toContain(lf.utcOffsetMin);
       const t = list.get(`${dir}/transcript.json`);
       expect(Boolean(t)).toBe(Boolean(lecture.transcript));
       if (t) {

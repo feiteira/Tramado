@@ -268,6 +268,22 @@ describe('TranscriptionQueue: the job and its publication (sync spec §14.5)', (
   });
 });
 
+describe('TranscriptionQueue: no feedback loop with LectureService (G2)', () => {
+  it('an evaluation that changes nothing does not notify (LectureService re-reads on every notification)', async () => {
+    const s = await setup({ shared: true });
+    await addLecture(s.platform, s.classId, s.me, { dir: 'Aulas/a' });
+    await s.queue.start();
+    await s.settle();
+    let notified = 0;
+    const off = s.queue.state.subscribe(() => void notified++);
+    await s.queue.evaluate();
+    await s.queue.evaluate();
+    await s.queue.idle();
+    off();
+    expect(notified).toBe(0);
+  });
+});
+
 describe('TranscriptionQueue: volunteering (sync spec §14.3)', () => {
   it('claims an unclaimed lecture after the capability delay, skipping probable duplicates and the recorder’s own "not now"', async () => {
     const s = await setup({ shared: true, power: { source: 'ac', percent: null } });

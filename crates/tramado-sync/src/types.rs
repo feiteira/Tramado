@@ -450,6 +450,12 @@ pub enum SyncEvent {
     ListenAddresses {
         addresses: Vec<String>,
     },
+    /// `finish_leaving` ran (§17): the folder is gone; with `KeepLocal` the class waits for the app to fork it,
+    /// with `Trash` it left the registry (G2, plan §16 item 3).
+    Left {
+        class_id: String,
+        afterwards: LeaveAfterwards,
+    },
 }
 
 /// A folder offer, as admission sees it (`decide`, architecture §5.3).

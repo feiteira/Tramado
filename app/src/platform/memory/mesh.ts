@@ -449,8 +449,8 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
         if (f.leaving.afterwards === 'trash') void d.registry.api.trash(classId).catch(() => undefined);
       }
       emit(d, { type: 'status', status: statusOf(d) });
-      // G2 (UI-GROUP): the `left` event Rust emits when finish_leaving ran (services/types/sync.ts SyncLeftEvent).
-      emit(d, { type: 'left', classId, afterwards: f.leaving.afterwards } as unknown as SyncEvent);
+      // The `left` event Rust emits when finish_leaving ran (sync spec §17).
+      emit(d, { type: 'left', classId, afterwards: f.leaving.afterwards });
     }
   }
 
