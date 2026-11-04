@@ -34,8 +34,8 @@ export const documents: Messages['documents'] = {
   adding: {
     progress: { one: 'A adicionar {n} ficheiro… A ler o texto para pesquisa e IA ({i} de {n})', other: 'A adicionar {n} ficheiros… A ler o texto para pesquisa e IA ({i} de {n})' },
     done: { one: '{n} ficheiro adicionado a {class}.', other: '{n} ficheiros adicionados a {class}.' },
-    duplicate: '{name} já adicionou “{file}” em {date}.',
-    duplicateSelf: 'Já adicionou “{file}” em {date}.',
+    duplicate: '{name} já adicionou “{file}” a {date}.',
+    duplicateSelf: 'Já adicionou “{file}” a {date}.',
     openTheirs: 'Abrir o existente',
     addAnyway: 'Adicionar mesmo assim',
     duplicateTitle: 'Já está nesta disciplina',
@@ -85,7 +85,7 @@ export const documents: Messages['documents'] = {
   },
   deleteConfirm: {
     title: 'Eliminar “{file}” para todos em {class}?',
-    body: 'É removido dos computadores de todos os colegas. Pode restaurá-lo durante 30 dias em Eliminados recentemente.',
+    body: 'É removido dos computadores de todos os colegas. Pode recuperá-lo durante 30 dias em Eliminados recentemente.',
     confirm: 'Eliminar para todos',
     local: 'Remover só deste computador',
     titleLocal: 'Eliminar “{file}”?',

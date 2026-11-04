@@ -82,7 +82,7 @@ export const members: Messages['members'] = {
       editing: 'A editar {note}',
       online: 'Online · atualizado',
       onlineSyncing: 'Online · a sincronizar {p} %',
-      lastSeen: 'Visto pela última vez {when}',
+      lastSeen: 'Última ligação {when}',
       never: 'Nunca se ligou',
     },
     device: {

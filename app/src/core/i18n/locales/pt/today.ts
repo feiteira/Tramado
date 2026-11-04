@@ -32,7 +32,7 @@ export const today: Messages['today'] = {
   unread: {
     title: 'Por ler',
     summary: { one: '{n} mensagem', other: '{n} mensagens' },
-    pins: { one: '{n} mensagem afixada nova', other: '{n} mensagens afixadas novas' },
+    pins: { one: '{n} nova mensagem afixada', other: '{n} novas mensagens afixadas' },
     mentions: { one: '{n} menção', other: '{n} menções' },
   },
   empty: {

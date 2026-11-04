@@ -20,7 +20,7 @@ export const notes: Messages['notes'] = {
   more: { toClass: 'Mover a los apuntes compartidos…', toMine: 'Hacer privado…', delete: 'Eliminar…', showInFolder: 'Mostrar en la carpeta' },
   toClass: { title: '¿Compartir este apunte con todos en {class}?', body: 'Los compañeros pueden leerlo y editarlo.', confirm: 'Compartir' },
   toMine: { title: '¿Dejar de compartir este apunte?', body: 'Se quita para todos los demás en {class}.', confirm: 'Hacer privado' },
-  deleteConfirm: { title: '¿Eliminar «{title}»?', bodyMine: 'No se puede deshacer.', bodyClass: 'Se elimina para todos en {class}. Puede restaurarlo durante 30 días desde Eliminados recientemente.' },
+  deleteConfirm: { title: '¿Eliminar «{title}»?', bodyMine: 'No se puede deshacer.', bodyClass: 'Se elimina para todos en {class}. Puede recuperarlo durante 30 días desde Eliminados recientemente.' },
   presence: '{name} está editando este apunte. Los cambios que hagan a la vez pueden entrar en conflicto.',
   conflict: {
     notice: 'Dos versiones de «{title}» se han editado a la vez. Se conservan las dos.',

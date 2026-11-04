@@ -26,7 +26,7 @@ export const speech: Messages['speech'] = {
     estimate: 'cerca de {time} para esta aula',
     free: 'Espaço livre: {size}',
     download: 'Transferir e transcrever',
-    classmate: 'Deixar um colega fazer',
+    classmate: 'Deixar para um colega',
     classmateDone: 'Os colegas que ajudam a transcrever vão vê-la.',
     cloud: 'Usar antes o OpenRouter',
     cloudOff: 'Usar o OpenRouter (ative nas Definições)',

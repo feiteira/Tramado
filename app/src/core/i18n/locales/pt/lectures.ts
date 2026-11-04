@@ -177,7 +177,7 @@ export const lectures: Messages['lectures'] = {
     duplicate: 'Provavelmente é a mesma aula que “{title}”.',
     markDuplicate: 'Marcar como duplicado',
     transcribeAnyway: 'Transcrever mesmo assim',
-    untrusted: 'Esta transcrição foi alterada por um computador que não é o seu dono. Não é mostrada.',
+    untrusted: 'Esta transcrição foi alterada por um computador que não a gere. Por isso, não é mostrada.',
     stale: '[b]{device} parou[/b] nos {percent} %, há {n} min.',
     local: 'A transcrever neste computador — {percent} % · {left}. Pode continuar a trabalhar. Ligue à corrente se puder.',
     localModel: 'A transferir primeiro o modelo de voz — {done} de {total}',

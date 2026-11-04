@@ -92,7 +92,7 @@ export const record: Messages['record'] = {
     local: 'Transcrever neste computador',
     localHint: 'Cerca de {time}.',
     localHintModel: 'Cerca de {time}; primeiro transfere o modelo de voz ({size}).',
-    classmate: 'Deixar o computador de um colega fazer',
+    classmate: 'Deixar para o computador de um colega',
     cloud: 'Com o OpenRouter',
     cloudHint: 'Pago, cerca de 2 cêntimos; o áudio é enviado para o OpenRouter.',
     cloudOff: 'Ative isto em Definições › Transcrição.',

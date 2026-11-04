@@ -70,7 +70,7 @@ export const classes: Messages['classes'] = {
     label: 'Mensajes fijados',
     by: '— {name}',
     more: { one: '{n} más', other: '{n} más' },
-    hide: 'Ocultar los fijados hasta que haya uno nuevo',
+    hide: 'Ocultar los mensajes fijados hasta que haya uno nuevo',
   },
   digest: {
     title: 'Desde su última visita',

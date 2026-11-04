@@ -33,7 +33,7 @@ export const classes: Messages['classes'] = {
     'chart-line': 'Gráfico de linhas', 'flask-conical': 'Frasco de laboratório', atom: 'Átomo', dna: 'ADN', microscope: 'Microscópio', stethoscope: 'Estetoscópio',
     'heart-pulse': 'Batimento cardíaco', brain: 'Cérebro', code: 'Código', cpu: 'Processador', palette: 'Paleta', music: 'Música',
     'drafting-compass': 'Compasso', 'pencil-ruler': 'Lápis e régua', globe: 'Globo', earth: 'Terra', languages: 'Línguas',
-    'book-open': 'Livro aberto', library: 'Biblioteca', 'book-marked': 'Livro com marcador', 'briefcase-business': 'Mala de trabalho',
+    'book-open': 'Livro aberto', library: 'Biblioteca', 'book-marked': 'Livro com marcador', 'briefcase-business': 'Pasta executiva',
     'building-2': 'Edifício', leaf: 'Folha', utensils: 'Talheres', hammer: 'Martelo', lightbulb: 'Lâmpada', 'graduation-cap': 'Capelo',
   },
   tabs: {

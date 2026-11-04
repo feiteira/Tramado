@@ -137,7 +137,7 @@ export const app: Messages['app'] = {
   },
   close: {
     recordingTitle: 'Parar e guardar a gravação primeiro?',
-    recordingBody: 'O Tramado está a gravar {class}. Se sair agora, a gravação fica guardada e pode guardá-la da próxima vez.',
+    recordingBody: 'O Tramado está a gravar {class}. Se sair agora, a gravação é mantida e pode guardá-la da próxima vez.',
     stopAndSave: 'Parar e guardar',
     keepRecording: 'Continuar a gravar',
     trayNotice: 'O Tramado continua a funcionar em segundo plano, a partilhar as suas disciplinas. Para sair, use o ícone na área de notificação.',

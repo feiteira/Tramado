@@ -65,7 +65,7 @@ export const lectures: Messages['lectures'] = {
     noAudio: {
       transcriptOnly: 'La grabación se queda en el ordenador de {name} (solo compartió la transcripción).',
       deleted: 'La grabación se eliminó el {date}; la transcripción se conserva.',
-      skipped: 'Eligió no recibir archivos de audio en esta asignatura.',
+      skipped: 'Ha elegido no recibir archivos de audio en esta asignatura.',
       getIt: 'Obtener la grabación',
       arriving: 'La grabación todavía está llegando ({percent} %).',
     },
@@ -199,7 +199,7 @@ export const lectures: Messages['lectures'] = {
     ready: 'La transcripción de «{lecture}» está lista.',
     chip: { none: 'En espera', waitingAudio: 'Llegando', claimed: '{percent} %', local: '{percent} % aquí', done: 'Transcripción', failed: 'Fallida', stale: 'Detenida', unavailable: 'Sin grabación' },
     leftUnknown: 'en curso',
-    lostRound: 'Otro ordenador empezó antes y la está transcribiendo ahora.',
+    lostRound: 'Otro ordenador ha empezado antes y la está transcribiendo ahora.',
     ineligible: 'Este ordenador no puede transcribir esta clase ahora.',
     cloudConfirm: {
       title: '¿Transcribir con OpenRouter?',
@@ -209,7 +209,7 @@ export const lectures: Messages['lectures'] = {
     left: {
       underMinute: 'queda menos de un minuto',
       minutes: { one: 'queda alrededor de {n} minuto', other: 'quedan unos {n} minutos' },
-      hours: 'quedan unas {h} h {m} min',
+      hours: 'quedan aprox. {h} h {m} min',
     },
     dockLocal: 'Transcribiendo «{lecture}» en este ordenador · {percent} % · {left}',
     dockConverting: 'Convirtiendo «{file}»… {percent} %',

@@ -96,7 +96,7 @@ export const ai: Messages['ai'] = {
     to: 'Enviado a {provider} a través de OpenRouter.',
   },
   explainFooter: { one: 'Enviado a {provider}: este fragmento y {n} fragmento relacionado.', other: 'Enviado a {provider}: este fragmento y {n} fragmentos relacionados.' },
-  models: { recommended: 'recomendado', free: 'gratuito', context: 'contexto de {n}k', vision: 'lee imágenes', updated: 'lista actualizada {when}', available: { one: '{n} modelo gratuito funciona en su nivel de privacidad', other: '{n} modelos gratuitos funcionan en su nivel de privacidad' }, gone: '{model} ya no está en OpenRouter. Se usa {replacement}.' },
+  models: { recommended: 'recomendado', free: 'gratuito', context: 'contexto de {n}k', vision: 'lee imágenes', updated: 'lista actualizada {when}', available: { one: '{n} modelo gratuito funciona en su nivel de privacidad', other: '{n} modelos gratuitos funcionan en su nivel de privacidad' }, gone: '{model} ya no está en OpenRouter. Ahora se usa {replacement}.' },
   errors: {
     AI_NO_KEY: 'La IA aún no está configurada.',
     AI_AUTH: 'OpenRouter no ha aceptado su clave. Puede que se haya eliminado o que esté mal escrita.',

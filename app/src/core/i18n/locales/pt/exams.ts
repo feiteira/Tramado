@@ -8,7 +8,7 @@ export const exams: Messages['exams'] = {
   points: { pt20: { one: '{n} valor', other: '{n} valores' }, es10: { one: '{n} punto', other: '{n} puntos' }, points: { one: '{n} ponto', other: '{n} pontos' } },
   tab: {
     add: 'Adicionar',
-    addDate: 'Um próximo teste ou exame',
+    addDate: 'A data de um teste ou exame',
     addPaper: 'Um enunciado ou perguntas de prática',
     practiseClass: 'Praticar {class} ({n})',
     comingUp: 'Próximos',

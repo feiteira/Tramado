@@ -3,7 +3,7 @@ import type { Messages } from '../en';
 
 export const speech: Messages['speech'] = {
   models: {
-    turbo: 'Recomendado', turboHint: '{size} · buena precisión, unas {speed}× más rápido que el tiempo real en este ordenador',
+    turbo: 'Recomendado', turboHint: '{size} · buena precisión, aprox. {speed}× más rápido que el tiempo real en este ordenador',
     turboHintUnknown: '{size} · buena precisión',
     small: 'Borrador', smallHint: '{size} · más rápido, pero flojo en portugués y español',
     'large-v3': 'El más preciso', 'large-v3Hint': '{size} · más lento',
@@ -48,6 +48,6 @@ export const speech: Messages['speech'] = {
   left: {
     underMinute: 'queda menos de un minuto',
     minutes: { one: 'queda alrededor de {n} minuto', other: 'quedan unos {n} minutos' },
-    hours: 'quedan unas {h} h {m} min',
+    hours: 'quedan aprox. {h} h {m} min',
   },
 };

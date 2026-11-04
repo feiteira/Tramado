@@ -11,7 +11,7 @@ export const common: Messages['common'] = {
   untitled: 'Sin título', optional: 'opcional', you: 'usted', youSuffix: '{name} (usted)', show: 'Mostrar', hide: 'Ocultar',
   dismiss: 'Descartar', showInFolder: 'Mostrar en la carpeta', openWithSystem: 'Abrir con la aplicación del sistema', paste: 'Pegar',
   chooseFile: 'Elegir un archivo…', chooseFolder: 'Elegir una carpeta…', learnMore: 'Por qué es importante',
-  onlyYou: 'Solo para usted', sharedWithClass: 'Compartido con el grupo', onlyThisComputer: 'Solo en este ordenador',
+  onlyYou: 'Solo para usted', sharedWithClass: 'Compartida', onlyThisComputer: 'Solo en este ordenador',
   arriving: 'Llegando…', arrivingPercent: 'Llegando… {percent} %',
   unknownError: 'Algo ha fallado: {message}',
   size: { b: '{n} B', kb: '{n} KB', mb: '{n} MB', gb: '{n} GB' },

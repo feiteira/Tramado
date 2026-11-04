@@ -20,7 +20,7 @@ export const notes: Messages['notes'] = {
   more: { toClass: 'Mover para os apontamentos da turma…', toMine: 'Tornar privado…', delete: 'Eliminar…', showInFolder: 'Mostrar na pasta' },
   toClass: { title: 'Partilhar este apontamento com todos em {class}?', body: 'Os colegas podem lê-lo e editá-lo.', confirm: 'Partilhar' },
   toMine: { title: 'Retirar este apontamento da turma?', body: 'É removido para todos os outros em {class}.', confirm: 'Tornar privado' },
-  deleteConfirm: { title: 'Eliminar “{title}”?', bodyMine: 'Não é possível anular.', bodyClass: 'É eliminado para todos em {class}. Pode restaurá-lo durante 30 dias em Eliminados recentemente.' },
+  deleteConfirm: { title: 'Eliminar “{title}”?', bodyMine: 'Não é possível anular.', bodyClass: 'É eliminado para todos em {class}. Pode recuperá-lo durante 30 dias em Eliminados recentemente.' },
   presence: '{name} está a editar este apontamento. As alterações que fizerem ao mesmo tempo podem entrar em conflito.',
   conflict: {
     notice: 'Duas versões de “{title}” foram editadas ao mesmo tempo. As duas foram guardadas.',

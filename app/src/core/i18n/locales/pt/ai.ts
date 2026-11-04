@@ -114,7 +114,7 @@ export const ai: Messages['ai'] = {
     AI_UNAVAILABLE: 'Não há nenhum fornecedor disponível para este modelo neste momento.',
     AI_TIMEOUT: 'O modelo demorou demasiado a responder.',
     AI_OFFLINE: 'Está sem ligação à Internet. A IA precisa de Internet, mas a pesquisa e tudo o resto continuam a funcionar.',
-    AI_LENGTH: 'O modelo não produziu uma resposta. Tente de novo ou escolha outro modelo.',
+    AI_LENGTH: 'O modelo não produziu uma resposta. Tente novamente ou escolha outro modelo.',
     AI_HOST_NOT_ALLOWED: 'O Tramado ainda não tem autorização para enviar pedidos para {host}.',
     AI_BAD_ADDRESS: 'Esse endereço não parece correto. Deve ser algo como http://localhost:11434/v1.',
   },

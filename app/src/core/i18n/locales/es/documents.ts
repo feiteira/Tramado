@@ -85,7 +85,7 @@ export const documents: Messages['documents'] = {
   },
   deleteConfirm: {
     title: '¿Eliminar «{file}» para todos en {class}?',
-    body: 'Se quita de los ordenadores de todos los compañeros. Puede restaurarlo durante 30 días desde Eliminados recientemente.',
+    body: 'Se quita de los ordenadores de todos los compañeros. Puede recuperarlo durante 30 días desde Eliminados recientemente.',
     confirm: 'Eliminar para todos',
     local: 'Quitar solo de este ordenador',
     titleLocal: '¿Eliminar «{file}»?',
