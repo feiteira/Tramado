@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use base64::Engine as _;
-use serde_json::{json, Value};
+use serde_json::json;
 use tramado_base::classfs::ClassFs;
 use tramado_base::ids;
 use tramado_base::paths::Paths;
@@ -112,9 +112,7 @@ impl Raw {
 
     /// Exit code of a stop by API (`None` = killed).
     pub fn stop(&mut self) -> Option<i32> {
-        let Some(mut child) = self.child.take() else {
-            return None;
-        };
+        let mut child = self.child.take()?;
         let _ = self.c.shutdown(Duration::from_secs(2));
         let start = Instant::now();
         loop {
@@ -424,12 +422,6 @@ impl Node {
 
     pub fn file(&self, class: &str, rel: &str) -> Option<Vec<u8>> {
         std::fs::read(self.root(class).join(rel)).ok()
-    }
-
-    pub fn config(&self) -> Value {
-        // read through the engine's own REST view
-        let diag = self.engine.snapshot().unwrap();
-        serde_json::to_value(diag).unwrap()
     }
 }
 

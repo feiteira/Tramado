@@ -70,7 +70,7 @@ fn folder_create_paused_ignores_resume() {
         &f,
         "TGDC",
         &path.to_string_lossy(),
-        &[a.id.clone()],
+        std::slice::from_ref(&a.id),
     ))
     .unwrap();
     let st = a.c.db_status(&f).unwrap();
@@ -131,7 +131,7 @@ fn post_replaces_folder_and_device() {
         &f,
         "TGDC",
         &path.to_string_lossy(),
-        &[a.id.clone()],
+        std::slice::from_ref(&a.id),
     );
     a.c.add_folder(&body2).unwrap();
     assert_eq!(
