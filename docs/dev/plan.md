@@ -1588,3 +1588,18 @@ T-DOCS); `private/<classId>/drafts/<recordingId>.json` (`tramado.recording-draft
 18. R-SPEECH gaps carried into wave 2/INT: `small`/`large-v3` (and their DTW presets) never run; the live STT check
     used a stand-in transport (the real `PipeStt` is wired now but untested live); Windows/macOS and system-audio
     capture untested; a finished, untaken result does not restart its claim heartbeat after an app restart.
+
+**Gate G1 run (2026-11-04, on `G1: contract updates`)** — all pass: `npm ci`, `typecheck`, `npm test` (136 files, 946
+tests + 3 opt-in live skipped), `test:property` (2000 runs), `build`, `check:rust:lite`, `test:rust`,
+`lint:rust:lite`, `test:contract` (18 contract + 13 two-instance tests on Syncthing v2.1.7, none left running),
+`check:leaks`, `desktop-smoke` (onboarding in the real window), `desktop-smoke --flow=g1` (all six steps; extraction and
+indexing in WebKitGTK workers), `peek-matrix` (108/108: m0 54, t-demo 54), live `core/ai/live.test.ts` (4/4, free
+models) and `tramado-net --test live` (answered by `google/gemma-4-26b-a4b-it:free`, 200 on the first attempt). Also
+run: `check:rust`, `lint:rust` (full workspace with whisper), `cargo test -p tramado-speech` (twice) and
+`-p tramado-desktop`. No paid request was sent by the integrator.
+
+**Wave-2 follow-ups found at G1** (not blocking): the §14.8 fold hand-over is never scheduled — `ClaimEngine.foldTrigger`
+/ `foldWinner` and `LectureService.fold({ takeOver: true })` exist, but nothing checks the trigger hourly and claims the
+fold (UI-LECTURES, who owns `services/{lectures,transcription}.ts` from G1); `joinStalled` counts from `join()`, not from
+the first connection (UI-GROUP); chat is not in the search index, so the palette's Chat group needs another source
+(UI-DOCS); `features/search/provider.ts` is a G1 stand-in whose rows do not navigate yet (UI-DOCS).
