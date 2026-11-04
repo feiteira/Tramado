@@ -92,6 +92,8 @@ The pictures come from the browser demo (`npm run dev:web`): the classes, people
 - The app's window has no network access at all: connections are made only by the app's own process (to OpenRouter,
   Hugging Face and AI services you approved) and by its Syncthing, and your OpenRouter key never reaches the window.
 - Settings › Privacy keeps a private list of every AI request made from your computer. It is never sent anywhere.
+- An invite link opens Tramado's join page on GitHub Pages, which sees the visit like any web page; the invite code
+  is in the part of the link after `#`, which the browser never sends.
 
 ## AI: free by default, with your own key
 

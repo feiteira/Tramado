@@ -4,11 +4,10 @@ name: Pages
 # invite link https://feiteira.github.io/Tramado/join/#<code> opens it. The page reads the code from the URL fragment
 # only and makes no request of its own.
 #
-# Pages is not switched on for this repository yet, so a push only records a skipped job. To publish:
-#   1. Settings › Pages › Build and deployment › Source: "GitHub Actions";
-#   2. Settings › Secrets and variables › Actions › Variables: PAGES_ENABLED = true (deploys on every change to site/),
-#      or start this workflow by hand: gh workflow run pages.yml
-# Then build the app with JOIN_PAGE set (app/src/core/sync/invite.ts; plan §9).
+# Pages is switched on (Settings › Pages › Source: "GitHub Actions") and the repository variable PAGES_ENABLED is
+# true, so every push to main that changes site/ deploys; `gh workflow run pages.yml` deploys by hand. Without that
+# variable a push only records a skipped job. The app's invites link here: JOIN_PAGE in app/src/core/sync/invite.ts
+# (since 0.1.0-rc.2), so the page must stay up and keep the code format of sync spec §7.2.
 on:
   push:
     branches: [main]

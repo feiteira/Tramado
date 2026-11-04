@@ -49,6 +49,9 @@ cuándo. La misma tabla está en el repositorio en [PRIVACY.es.md](../../../PRIV
 - **Transcribir con OpenRouter** envía la grabación en fragmentos de hasta 30 segundos; **leer un escaneo con IA** envía
   las imágenes de las páginas.
 - **Descargar un modelo de voz** envía una solicitud de descarga a Hugging Face.
+- **Abrir el enlace de una invitación** en un navegador (o escanear el código QR de una invitación) carga la página de
+  Tramado para unirse desde GitHub Pages, que ve su dirección IP y su navegador, como en cualquier página web. El código
+  de la invitación va en la parte del enlace que sigue a `#`, que el navegador nunca envía.
 
 La **Actividad de la IA en este ordenador** es un registro privado de todas las solicitudes a la IA hechas desde aquí
 (hora, asignatura, acción, modelo, fragmentos enviados). Nunca se envía a ningún sitio; **Vaciar el registro** lo borra.

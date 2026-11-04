@@ -46,6 +46,9 @@ The same table is in the repository as [PRIVACY.md](../../../PRIVACY.md) ([Portu
 - **Transcribing with OpenRouter** sends the recording in pieces of up to 30 seconds; **reading a scan with AI** sends
   the page images.
 - **Downloading a speech model** sends a download request to Hugging Face.
+- **Opening an invite link** in a browser (or scanning an invite's QR code) loads Tramado's join page from GitHub
+  Pages, which sees your IP address and browser, as for any web page. The invite code is in the part of the link after
+  `#`, which your browser never sends.
 
 **AI activity on this computer** is a private log of every AI request made from here (time, class, action, model,
 passages sent). It is never sent anywhere; **Clear the log** empties it.

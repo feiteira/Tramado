@@ -3217,7 +3217,8 @@ fetched files (tauri-build fails on a missing sidecar or resource, critique C4).
    `CMAKE_BUILD_PARALLEL_LEVEL=3` (8 CPUs, 11 GB RAM; at most two heavy Rust builds at once).
 7. **No StrictMode**, no DOM in `core/` and `services/`, fictional fixtures only, no network in tests (§17).
 8. **Commits**: `<work-package>: <summary>` (e.g. `R-SYNC: admission and reconciliation`), body explains why,
-   trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Milestone tags `m0`, `wave1`, `wave2`, `v0.1.0-rc.1`.
+   trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Milestone tags `m0`, `wave1`, `wave2`, `v0.1.0-rc.1`,
+   `v0.1.0-rc.2`.
 
 ---
 

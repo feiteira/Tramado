@@ -13,7 +13,8 @@ A desktop app for university students: record and transcribe lectures, keep a cl
 together, share a class with classmates peer to peer (Syncthing, no server, no account), and practise for exams with
 an AI (the student's own OpenRouter key, or a local OpenAI-compatible service) that cites its sources. Tauri 2 + React
 18 + TypeScript + Rust, MPL-2.0, built on [Trama](https://github.com/feiteira/Trama). Status: release candidate
-0.1.0-rc.1, tested on Linux (Ubuntu 24.04, WebKitGTK); the Windows and macOS builds come from CI and are untested.
+0.1.0-rc.2, tested on Linux (Ubuntu 24.04, WebKitGTK); the Windows and macOS installers are built in CI, where a
+start-up smoke runs them, and have never been used by a person.
 
 ## Commands (arch §3.4)
 
@@ -133,7 +134,8 @@ docs/               dev/ (architecture, plan, research), spec/ (folder format, s
 7. **Rust**: no `unwrap`/`expect` outside tests and `run()`; named threads; disk and network work in `blocking`.
 8. **No StrictMode**; fictional fixtures only; no network in tests (live AI tests only with `TRAMADO_AI_LIVE=1`).
 9. **Commits**: `<work-package>: <summary>`, a body that explains why, and the trailer
-   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Tags: `m0`, `wave1`, `wave2`, `v0.1.0-rc.1`.
+   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Tags: `m0`, `wave1`, `wave2`, `v0.1.0-rc.1`,
+   `v0.1.0-rc.2`.
 
 Also: the UI is plain React DOM with CSS beside each component and the tokens of `ui/tokens.css` (light and dark);
 icons from `lucide-react`; fonts self-hosted through `@fontsource` (never a font CDN). Test at 1000 × 660 and at a
