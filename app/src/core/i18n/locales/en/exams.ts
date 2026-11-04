@@ -16,6 +16,7 @@ export const exams = {
     covers: 'Covers: {text}',
     paperMeta: '{kind} · {year} · {questions} · AI answers {a}/{n} · Practised {p}',
     finding: 'finding questions…',
+    toReview: 'questions to check',
     practise: 'Practise',
     dateMenu: { edit: 'Edit…', addPaper: 'Add the paper for this exam…', delete: 'Delete for everyone…' },
     integrity: 'For practice and past papers. Using AI during an actual test or exam is usually against the rules.',
@@ -34,6 +35,13 @@ export const exams = {
     note: 'Tramado counts down on Today and in the class header.',
     shared: 'Everyone in {class} sees this date.',
     saved: 'Added {title} on {date}.',
+    // UI-EXAMS additions
+    onlyImporter: 'Only {name}’s computer can change this date',
+    titleLabel: 'Title',
+    timeHint: 'Leave empty for an all-day date.',
+    add: 'Add the date',
+    savedEdit: 'Saved {title}.',
+    dateRequired: 'Choose a date.',
   },
   paper: {
     title: 'Add an exam paper or practice questions',
@@ -47,6 +55,13 @@ export const exams = {
     cost: 'Reading this uses about {n} AI requests ({pages} to read + 1 to find the questions). You have {left} free requests left today.',
     costText: 'Finding the questions uses 1 AI request. You have {left} free requests left today.',
     noAi: 'Finding the questions needs AI. You can type them in yourself instead.',
+    // UI-EXAMS additions
+    filter: 'Exam papers',
+    check: 'Check the questions',
+    typedHint: 'Paste the whole paper. Tramado splits it into questions, and you can fix them on the next screen.',
+    files: 'Chosen files',
+    namePlaceholder: 'e.g. Midterm 2025/26',
+    accepted: 'PDF, Word or text files, or photos (JPG, PNG, WebP).',
   },
   extracting: {
     title: 'Finding the questions in “{title}”',
@@ -54,6 +69,12 @@ export const exams = {
     finding: 'Finding the questions',
     ready: 'Ready to check',
     typeInstead: 'Type the questions instead',
+    // UI-EXAMS additions
+    reading: 'Reading the file',
+    keepsGoing: 'You can leave this screen: Tramado keeps going.',
+    used: { one: '{n} AI request used so far.', other: '{n} AI requests used so far.' },
+    noPaper: 'This exam has no paper yet.',
+    noPaperBody: 'Add the paper of “{title}”, or practice questions, and Tramado finds the questions in it.',
   },
   review: {
     title: { one: 'We found {n} question.', other: 'We found {n} questions.' },
@@ -69,9 +90,24 @@ export const exams = {
     add: 'Add a question',
     dupNumber: 'Another question already has number {n}.',
     emptyText: 'Write the question’s text.',
+    emptyNumber: 'Give the question a number.',
     shared: 'Your corrections are shared with the class.',
     confirm: 'Looks right — answer them',
     save: 'Save without answers',
+    // UI-EXAMS additions
+    questions: 'Questions',
+    options: 'Options',
+    optionsHint: 'One per line, like “A) …”.',
+    steps: { split: 'Split {n}', merge: 'Merged {n} with the next question', delete: 'Deleted {n}', move: 'Moved {n}', add: 'Added a question', group: 'Grouped {n}', ungroup: 'Ungrouped {n}' },
+    onlyImporter: 'Only {name}’s computer can change these questions.',
+    saved: 'Saved the questions.',
+    resize: 'Resize the original',
+    removeRule: 'Remove the rule “{rule}”',
+    problems: { one: '{n} question needs fixing.', other: '{n} questions need fixing.' },
+    choose: 'How many to answer',
+    members: 'Questions in this group',
+    page: 'Page {n}',
+    noPreview: 'The original can’t be shown here.',
   },
   settings: {
     title: { one: 'Answer {n} question with AI', other: 'Answer {n} questions with AI' },
@@ -116,6 +152,12 @@ export const exams = {
     practisePaper: 'Practise this paper',
     more: { edit: 'Edit questions…', again: 'Answer all again…', original: 'Open the original file', copyAll: 'Copy all answers as Markdown', private: 'Keep private (only you)…', delete: 'Delete for everyone…' },
     aiOff: 'AI isn’t set up. You can still write your answers and practise.',
+    // UI-EXAMS additions
+    group: 'Answer {n} of {of}',
+    answerMissing: { one: 'Answer {n} question with AI…', other: 'Answer {n} questions with AI…' },
+    answerOne: 'Answer this question with AI',
+    revealKey: 'or {key} from your answer',
+    newer: 'Made with a newer Tramado — update to edit it.',
   },
   practice: {
     title: 'Practising {title} · {i} of {n}',
@@ -134,5 +176,20 @@ export const exams = {
     nothing: 'Nothing to practise right now.',
     nothingBody: { one: 'Next: {n} question tomorrow. You can still practise any paper.', other: 'Next: {n} questions tomorrow. You can still practise any paper.' },
     all: 'Practise all questions',
+    // UI-EXAMS additions
+    space: 'Space',
+    prev: 'Previous',
+    noAnswer: 'No answer yet. Write yours, or show the AI’s answer, in the exam paper.',
+    nothingNone: 'Questions you add to practice come back here. You can still practise any paper.',
+    noPapers: 'Nothing to practise yet.',
+    noPapersBody: 'Add a past exam paper or practice questions, then practise them here.',
   },
+  // UI-EXAMS additions (not in UX §5.11)
+  deleteConfirm: {
+    title: 'Delete “{title}” for everyone in {class}?',
+    body: 'Its questions, original files and shared AI answers are removed from every classmate’s computer.',
+    bodyLocal: 'Its questions, original files and AI answers are removed from this computer.',
+    confirm: 'Delete for everyone',
+  },
+  deleted: 'Deleted “{title}”.',
 };

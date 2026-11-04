@@ -101,6 +101,8 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   const privates = new Map<Ulid, MarksFile>();
   const drafts = new Map<string, DraftState>();
   const batches = new Map<Ulid, { ac: AbortController; progress: Store<Progress> }>();
+  const running = new Store<Ulid[]>([]);
+  const publishRunning = () => running.set([...batches.keys()]);
   const sent = new Map<string, { passages: number; chars: number }>();   // per answer id, this session
   const foldTimers = new Map<Ulid, () => void>();
   const list = new Store<{ dates: ExamDateView[]; papers: ExamPaperView[] }>({ dates: [], papers: [] });
@@ -162,9 +164,23 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
     return { raw, exam, manifest, dir, newer: loaded.newer, answers, edits };
   }
 
+  // Names of classmates (DeviceRef) come from the class info, which may load after the exams: rebuild when it changes.
+  let watchingInfo = false;
+  function watchInfo() {
+    if (watchingInfo) return;
+    try {
+      app().forClass(classId).info.detail.subscribe(() => rebuild());
+      watchingInfo = true;
+    } catch {
+      // the class service is not available yet (tests, a class being added)
+    }
+  }
+
   async function load(): Promise<void> {
     const st = store.state.get();
     if (st.status !== 'ready') return;
+    await Promise.resolve();
+    watchInfo();
     const machine = [...st.index.machine.keys()];
     const next = new Map<Ulid, Entry>();
     for (const [id, item] of st.index.exams) {
@@ -368,7 +384,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
   // ── Import pipeline (UX §3.9.4–§3.9.6) ────────────────────────────────────────────────────────────
   function patch(d: DraftState, p: Partial<ExamDraft>) {
     const cur = d.draft.get();
-    if (cur) d.draft.set({ ...cur, ...p, cost: p.cost ?? cur.cost });
+    if (cur) d.draft.set({ ...cur, ...p, cost: p.cost ?? cur.cost, files: [...d.files] });
     rebuild();
   }
   const bump = (d: DraftState) => patch(d, { cost: { requests: (d.draft.get()?.cost.requests ?? 0) + 1 } });
@@ -569,6 +585,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
     const progress = new Store<Progress>({ done: 0, total: qids.length, current: null, error: null });
     const ac = new AbortController();
     batches.set(examId, { ac, progress });
+    publishRunning();
     void (async () => {
       try {
         const e = entryOf(examId);
@@ -632,6 +649,7 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
         progress.update((p) => ({ ...p, current: null, error: errorCode(err) }));
       } finally {
         batches.delete(examId);
+        publishRunning();
         void ai().refreshQuota().catch(() => undefined);
       }
     })();
@@ -853,6 +871,46 @@ export function createExamService(ctx: AppContext, app: () => AppServices, cls: 
         const prev = m.practice[qid];
         m.practice[qid] = { last: instant(now()), result, count: (prev?.count ?? 0) + 1 };
       });
+    },
+    running,
+    raw: (examId) => entries.get(examId)?.exam ?? null,
+    importer(examId) {
+      const e = entries.get(examId);
+      if (!e) return null;
+      const by = e.raw.importedBy;
+      return ref(by.deviceId, by.memberId, by.name);
+    },
+    async remove(examId) {
+      const e = entryOf(examId);
+      if (e.raw.importedBy.deviceId !== myDevice()) throw new PlatformError('PERMISSION_DENIED', 'only the computer that added this exam can delete it in 0.1', { importer: e.raw.importedBy.name });
+      batches.get(examId)?.ac.abort();
+      foldTimers.get(examId)?.();
+      foldTimers.delete(examId);
+      if (e.dir && e.dir !== '.') await store.remove(e.dir, { recursive: true });
+      else await store.remove(e.manifest);
+      const mine = myDevice();
+      if (mine) {
+        for (const p of [`.tramado/answers/${examId}/${mine}.json`, `.tramado/exam-edits/${examId}/${mine}.jsonl`]) await store.remove(p).catch(() => undefined);
+      }
+      await platform.privateFiles.remove(classId, `exams/${examId}.json`).catch(() => undefined);
+      privates.delete(examId);
+      entries.delete(examId);
+      rebuild();
+    },
+    async saveQuestions(examId, questions, meta) {
+      const e = entryOf(examId);
+      importerOnly(e);
+      const qs = questions.map((q) => ({ ...q, number: q.number.trim(), text: q.text.trim() }));
+      const problems = reviewProblems(qs);
+      if (problems.length) throw new PlatformError('INVALID', 'the questions need fixing', { problems });
+      const who = me();
+      const t = instant(now());
+      const next: ExamFile = {
+        ...e.raw, ...meta, questions: qs, status: qs.length ? 'paper' : e.raw.status,
+        ...(meta.title !== undefined ? { title: meta.title.trim().slice(0, 200) || e.raw.title } : {}),
+        extraction: e.raw.extraction ? { ...e.raw.extraction, reviewedAt: e.raw.extraction.reviewedAt ?? t, reviewedBy: e.raw.extraction.reviewedBy ?? who.memberId } : { method: 'typed', at: t, reviewedAt: t, reviewedBy: who.memberId },
+      };
+      await writeExam(e, next);
     },
     async setInPractice(examId, qid, on) {
       await updatePrivate(examId, (m) => {

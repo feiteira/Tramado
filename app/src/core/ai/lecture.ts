@@ -78,3 +78,27 @@ export function timeLinks(markdown: string, lectureId: Ulid, startOf: (ref: stri
 }
 
 export const lectureTitle = (l: Pick<LectureFile, 'title'> | null, fallback: string): string => (l?.title?.trim() ? l.title.trim() : fallback);
+
+/** A document passage's link text: its label without brackets ("Lei Fundamental · p. 9 · art. 18.º"). */
+const linkText = (label: string) => label.replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+/** A class-relative path in a `tramado:doc/` link: every reserved character escaped, parentheses too (UX §3.8). */
+export const docHref = (path: string, page: number | null): string =>
+  `tramado:doc/${encodeURIComponent(path).replace(/[()'*!~]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}${page ? `?page=${page}` : ''}`;
+
+/**
+ * `[S#]` markers of study notes → links (UX §3.5.4, §3.8): transcript windows become `[41:12](tramado:lecture/<id>?t=<ms>)`
+ * time links and class documents `[Lei Fundamental · p. 9](tramado:doc/<path>?page=9)` document links.
+ */
+export function noteLinks(markdown: string, lectureId: Ulid, get: (ref: string) => PassageLike | null): string {
+  return markdown.replace(citeRegex(), (_m, refs: string) =>
+    refs.split(/\s*,\s*/).map((r) => {
+      const p = get(r.trim());
+      if (!p) return '';
+      if (p.source.kind === 'lecture' && p.locator.type === 'segment') return `[${clockOf(p.locator.startMs)}](tramado:lecture/${p.source.lectureId || lectureId}?t=${p.locator.startMs})`;
+      if (p.source.kind === 'document') {
+        const page = p.locator.type === 'page' ? p.locator.page : p.locator.type === 'article' ? (p.locator.pages?.[0] ?? null) : null;
+        return `[${linkText(p.label) || p.source.path}](${docHref(p.source.path, page)})`;
+      }
+      return '';
+    }).filter(Boolean).join(' '));
+}

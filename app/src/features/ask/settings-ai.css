@@ -1,0 +1,133 @@
+/* Settings › AI (UX §3.14.3). Kept with the Ask feature (UI-EXAMS) because features/settings/*.css belongs to UI-SHELL. */
+.settings-ai {
+  max-width: 900px;
+}
+.sai__rows {
+  display: flex;
+  flex-direction: column;
+}
+.sai__row {
+  display: grid;
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
+  gap: var(--s-3) var(--s-5);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.sai__label {
+  padding-top: 6px;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+.sai__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.sai__key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.sai__key-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-variant-numeric: tabular-nums;
+}
+.sai__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.sai__keyform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+.sai__keyfield {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.sai__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.sai__keyform .sai__link {
+  align-self: center;
+}
+.sai__hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.sai__quota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.sai__select {
+  min-width: 0;
+  max-width: 560px;
+}
+.sai__fallbacks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.sai__fallbacks .sai__select {
+  flex: 1 1 200px;
+}
+.sai__then {
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+.sai__reset {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+.sai__custom {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s-2);
+}
+.sai__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-top: var(--s-5);
+}
+@media (max-width: 900px) {
+  .sai__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2);
+  }
+  .sai__label {
+    padding-top: 0;
+  }
+  .sai__custom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

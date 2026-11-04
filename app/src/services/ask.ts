@@ -6,7 +6,7 @@
 import { PlatformError, errorCode, type ErrorCode } from '../core/errors';
 import { readAnswer, retrieve } from '../core/ai/answer';
 import { citeRegex } from '../core/ai/citations';
-import { lectureParts, lectureSource, lectureTitle, timeLinks, transcriptWindows } from '../core/ai/lecture';
+import { lectureParts, lectureSource, lectureTitle, noteLinks, transcriptWindows } from '../core/ai/lecture';
 import { PACKS, answerMessages, answerSystem, detectLang, languageRule, promptLang, sourcesBlock, type PromptLang } from '../core/ai/prompts';
 import { runToolLoop } from '../core/ai/toolLoop';
 import { tolerantParse } from '../core/ai/tolerantJson';
@@ -27,7 +27,8 @@ import { isPrivateSource } from './ai';
 import { Store } from './store';
 import type { AppContext } from './context';
 import type { AppServices, ClassStore } from './types/common';
-import type { AskOptions, AskService, AskTurn, ExplainStyle } from './types/ask';
+import type { AskOptions, AskService, AskTurn, ExplainStyle, GlobalAskService } from './types/ask';
+import type { LectureService } from './types/lectures';
 import type { Passage } from './types/search';
 
 const CHAT_PARSE = parserFor('tramado.chat');
@@ -36,7 +37,7 @@ const TRANSCRIPT_PARSE = parserFor('tramado.transcript');
 const TITLE_MAX = 60;
 
 interface LecturePrivate { format: 'tramado.lecture-private'; version: 1; summary: AskTurn | null; terms: AskTurn | null; removedAutoMarks: number[] }
-type Stored = AskHistoryLine & Pick<AskTurn, 'sent' | 'requestedModel' | 'general' | 'mode' | 'privacy'>;
+type Stored = AskHistoryLine & Pick<AskTurn, 'sent' | 'requestedModel' | 'general' | 'mode' | 'privacy' | 'classOf'>;
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -66,13 +67,39 @@ const toTurn = (l: Stored): AskTurn => ({
   error: (l.status === 'running' ? 'CANCELLED' : l.error) as ErrorCode | null, at: l.at,
   ...(l.sent ? { sent: l.sent } : {}), ...(l.requestedModel !== undefined ? { requestedModel: l.requestedModel } : {}),
   ...(l.general !== undefined ? { general: l.general } : {}), ...(l.mode ? { mode: l.mode } : {}), ...(l.privacy ? { privacy: l.privacy } : {}),
+  ...(l.classOf ? { classOf: l.classOf } : {}),
 });
 const toLine = (t: AskTurn): Stored => ({
   format: 'tramado.ask', version: 1, id: t.id, question: t.question, scope: t.scope, answer: t.answer, citations: t.citations, model: t.model,
   status: t.status, error: t.error, at: t.at,
   ...(t.sent ? { sent: t.sent } : {}), ...(t.requestedModel !== undefined ? { requestedModel: t.requestedModel } : {}),
   ...(t.general !== undefined ? { general: t.general } : {}), ...(t.mode ? { mode: t.mode } : {}), ...(t.privacy ? { privacy: t.privacy } : {}),
+  ...(t.classOf ? { classOf: t.classOf } : {}),
 });
+
+/** Private thread titles set with Rename (`ask/titles.json`, `ask-all/titles.json`). */
+async function readTitles(platform: AppContext['platform'], classId: ClassId, dir: string): Promise<Record<string, string>> {
+  try {
+    const b = await platform.privateFiles.read(classId, `${dir}/titles.json`);
+    if (!b) return {};
+    const j = JSON.parse(dec.decode(b)) as { format?: string; titles?: Record<string, unknown> };
+    if (j.format !== 'tramado.ask-titles' || !j.titles) return {};
+    return Object.fromEntries(Object.entries(j.titles).filter((e): e is [string, string] => typeof e[1] === 'string'));
+  } catch {
+    return {};
+  }
+}
+async function writeTitles(platform: AppContext['platform'], classId: ClassId, dir: string, titles: Record<string, string>): Promise<void> {
+  await platform.privateFiles.write(classId, `${dir}/titles.json`, enc.encode(manifestJson({ format: 'tramado.ask-titles', version: 1, titles })));
+}
+const cleanTitle = (t: string) => t.replace(/\s+/g, ' ').trim().slice(0, TITLE_MAX);
+
+/** Frequent content words of a text (study notes look up the documents a lecture talks about). */
+export function topWords(text: string, n: number): string[] {
+  const counts = new Map<string, number>();
+  for (const w of text.toLowerCase().match(/[\p{L}\p{N}º]{6,}/gu) ?? []) counts.set(w, (counts.get(w) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, n).map(([w]) => w);
+}
 
 export function createAskService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): AskService & { idle(): Promise<void> } {
   const { platform } = ctx;
@@ -90,8 +117,10 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
   };
 
   // ── Threads (private, one JSONL file per thread) ───────────────────────────────────────────────────
+  let titles: Record<string, string> = {};
   const loaded = track((async () => {
     try {
+      titles = await readTitles(platform, classId, 'ask');
       const names = await platform.privateFiles.list(classId, 'ask');
       const rows: Array<{ threadId: Ulid; title: string; at: string }> = [];
       for (const n of names.filter((x) => x.endsWith('.jsonl'))) {
@@ -99,7 +128,7 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
         const lines = parseLines(await platform.privateFiles.read(classId, `ask/${threadId}.jsonl`));
         if (!lines.length) continue;
         turns.set(threadId, new Store(lines.map(toTurn)));
-        rows.push({ threadId, title: lines[0]!.question.slice(0, TITLE_MAX), at: lines.at(-1)!.at });
+        rows.push({ threadId, title: titles[threadId] ?? lines[0]!.question.slice(0, TITLE_MAX), at: lines.at(-1)!.at });
       }
       threads.set(rows.sort((a, b) => b.at.localeCompare(a.at)));
     } catch (e) {
@@ -208,32 +237,67 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
   }
 
   // ── Lectures (summary, key terms, annotate, study notes) ───────────────────────────────────────────
+  /**
+   * The EFFECTIVE transcript (LectureService's corrected view: transcript.json + the corrections not folded yet,
+   * folder spec §8.9), so summaries, key terms, annotations and study notes read what the class corrected.
+   */
+  async function effectiveTranscript(lectureId: Ulid): Promise<TranscriptFile | null> {
+    try {
+      const lectures = app().forClass(classId).lectures as LectureService & { idle?(): Promise<void> };
+      const st = lectures.open(lectureId);
+      if (!st.get()?.transcript) await lectures.idle?.();
+      const t = st.get()?.transcript ?? null;
+      if (!t || t.lectureId !== lectureId) return null;
+      const { concurrent: _c, unfolded: _u, stale: _s, newer: _n, correctedBy: _b, ...file } = t;
+      return file;
+    } catch {
+      return null;
+    }
+  }
+
   async function lectureData(lectureId: Ulid): Promise<{ t: TranscriptFile; title: string; windows: PassageLike[] }> {
     const item = store.state.get().index.lectures.get(lectureId);
     if (!item) throw new PlatformError('NOT_FOUND', `lecture ${lectureId}`);
     const lec = await store.readJson<LectureFile>(item.manifest, LECTURE_PARSE);
-    const tr = await store.readJson<TranscriptFile>(`${item.dir}/transcript.json`, TRANSCRIPT_PARSE);
-    if (!tr || tr.value.lectureId !== lectureId) throw new PlatformError('NOT_FOUND', `no transcript for ${lectureId}`);
+    const effective = await effectiveTranscript(lectureId);
+    const tr = effective ? null : await store.readJson<TranscriptFile>(`${item.dir}/transcript.json`, TRANSCRIPT_PARSE);
+    const t = effective ?? (tr && tr.value.lectureId === lectureId ? tr.value : null);
+    if (!t) throw new PlatformError('NOT_FOUND', `no transcript for ${lectureId}`);
     const title = lectureTitle(lec?.value ?? null, item.dir.slice(item.dir.lastIndexOf('/') + 1));
-    return { t: tr.value, title, windows: transcriptWindows(tr.value, title) };
+    return { t, title, windows: transcriptWindows(t, title) };
+  }
+
+  /** Documents of the class the lecture talks about (study notes link them): top content words + the lecture title. */
+  async function relatedDocuments(title: string, t: TranscriptFile, max = 6): Promise<PassageLike[]> {
+    try {
+      const query = [title, ...topWords(t.segments.map((x) => x.text).join(' '), 12)].join(' ');
+      const ps = await app().search.passages(classId, query, { limit: 20, kinds: ['document'] });
+      return ps.filter((p) => p.source.kind === 'document' && !isPrivateSource(p.source, notesDir())).slice(0, max);
+    } catch {
+      return [];
+    }
   }
 
   /** One request per ≤ 40k-character part, plus a merge when there are several (critique G11). */
-  async function overLecture(lectureId: Ulid, role: 'summaryRole' | 'termsRole' | 'studyNotesRole', action: 'summary' | 'terms' | 'studyNotes'): Promise<{ text: string; refs: RefTable; model: string; requested: string; privacy: RunResult['privacy']; title: string; t: TranscriptFile }> {
+  async function overLecture(lectureId: Ulid, role: 'summaryRole' | 'termsRole' | 'studyNotesRole', action: 'summary' | 'terms' | 'studyNotes', opts: { documents?: boolean } = {}): Promise<{ text: string; refs: RefTable; model: string; requested: string; privacy: RunResult['privacy']; title: string; t: TranscriptFile }> {
     const { t, title, windows } = await lectureData(lectureId);
     if (!windows.length) throw new PlatformError('NOT_FOUND', 'the transcript is empty');
     const lang = promptLang(t.language);
     const p = PACKS[lang];
     const refs = new RefTable();
+    for (const w of windows) refs.add(w);   // transcript refs first: S1…Sn in time order
+    const docs = opts.documents ? await relatedDocuments(title, t) : [];
+    const docSources = docs.map((d) => ({ ref: refs.add(d), label: d.label, text: d.text.slice(0, 1200) }));
     const outs: string[] = [];
     let last: RunResult | null = null;
     for (const part of lectureParts(windows)) {
       const sources = part.map((w) => ({ ref: refs.add(w), label: w.label, text: w.text }));
+      const user = `${p.labels.transcript} — ${title}:\n\n${sourcesBlock(p, sources)}${docSources.length ? `\n\n${p.labels.documents}:\n\n${sourcesBlock(p, docSources)}` : ''}`;
       last = await ai().client.run({
-        task: 'summary', priority: 'bulk', activity: { classId, action, passages: sources.length },
+        task: 'summary', priority: 'bulk', activity: { classId, action, passages: sources.length + docSources.length },
         messages: [
-          { role: 'system', content: [p.role, p[role], p.citeRule, languageRule(p, answerLanguage())].join(' ') },
-          { role: 'user', content: `${p.labels.transcript} — ${title}:\n\n${sourcesBlock(p, sources)}` },
+          { role: 'system', content: [p.role, p[role], ...(docSources.length ? [p.studyNotesDocs] : []), p.citeRule, languageRule(p, answerLanguage())].join(' ') },
+          { role: 'user', content: user },
         ],
       });
       outs.push(last.content.trim());
@@ -300,6 +364,15 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
     const s = ai().settings.get();
     return s.customHost ? 'custom-host' : s.privacy;
   };
+  async function postTurn(turn: AskTurn): Promise<void> {
+    if (turn.status !== 'ok') throw new PlatformError('INVALID', 'only a finished answer can be posted');
+    if (turn.citations.some((c) => isPrivateSource(c.source, notesDir()))) throw new PlatformError('INVALID', 'answers that use your private notes can’t be posted', { private: true });
+    if (turn.classOf && Object.values(turn.classOf).some((c) => c !== classId)) throw new PlatformError('INVALID', 'the answer cites another class', { otherClass: true });
+    await writeAiLine({
+      question: turn.question, status: 'ok', text: turn.answer, citations: turn.citations, model: turn.model ?? '', requestedModel: turn.requestedModel ?? turn.model ?? '',
+      privacy: turn.privacy ?? settingsPrivacy(),
+    });
+  }
 
   return {
     threads,
@@ -320,7 +393,7 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
       void track((async () => {
         try {
           const a = await answer(q, scope, {
-            general, mode, sharedOnly: false, action: 'ask', ...(opts.model ? { model: opts.model } : {}), ...(opts.busyFallback ? { busyFallback: true } : {}),
+            general, mode, sharedOnly: opts.privateNotes === false, action: 'ask', ...(opts.model ? { model: opts.model } : {}), ...(opts.busyFallback ? { busyFallback: true } : {}),
             onText: (t) => setTurn(tid, (turn = { ...turn, answer: t })),
           });
           turn = { ...turn, answer: a.text, citations: a.citations, model: a.run.model, requestedModel: a.run.requestedModel, privacy: a.run.privacy, status: 'ok', sent: a.sent ?? [] };
@@ -403,13 +476,9 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
       return count;
     },
     async studyNotes(lectureId) {
-      const r = await overLecture(lectureId, 'studyNotesRole', 'studyNotes');
-      const startOf = (ref: string) => {
-        const w = r.refs.get(ref);
-        return w && w.locator.type === 'segment' ? w.locator.startMs : null;
-      };
+      const r = await overLecture(lectureId, 'studyNotesRole', 'studyNotes', { documents: true });
       const p = PACKS[promptLang(r.t.language)];
-      const body = timeLinks(r.text, lectureId, startOf).replace(citeRegex(), '');
+      const body = noteLinks(r.text, lectureId, (ref) => r.refs.get(ref)).replace(citeRegex(), '');
       const header = `<!-- ${p.labels.studyNotes} · AI · ${r.model} -->\n`;
       let names: string[] = [];
       try {
@@ -440,18 +509,28 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
       await loaded;
       const turn = threadStore(threadId).get().find((t) => t.id === turnId);
       if (!turn) throw new PlatformError('NOT_FOUND', `turn ${turnId}`);
-      if (turn.status !== 'ok') throw new PlatformError('INVALID', 'only a finished answer can be posted');
-      if (turn.citations.some((c) => isPrivateSource(c.source, notesDir()))) throw new PlatformError('INVALID', 'answers that use your private notes can’t be posted', { private: true });
-      await writeAiLine({
-        question: turn.question, status: 'ok', text: turn.answer, citations: turn.citations, model: turn.model ?? '', requestedModel: turn.requestedModel ?? turn.model ?? '',
-        privacy: turn.privacy ?? settingsPrivacy(),
-      });
+      await postTurn(turn);
+    },
+    postTurn: (turn) => postTurn(turn),
+    async renameThread(threadId, title) {
+      await loaded;
+      const clean = cleanTitle(title);
+      if (!clean) throw new PlatformError('INVALID', 'an empty title');
+      if (!threads.get().some((t) => t.threadId === threadId)) throw new PlatformError('NOT_FOUND', `thread ${threadId}`);
+      titles = { ...titles, [threadId]: clean };
+      await writeTitles(platform, classId, 'ask', titles);
+      threads.set(threads.get().map((t) => (t.threadId === threadId ? { ...t, title: clean } : t)));
     },
     async removeThread(threadId) {
       await loaded;
       await platform.privateFiles.remove(classId, `ask/${threadId}.jsonl`).catch((e: unknown) => {
         if (errorCode(e) !== 'NOT_FOUND') throw e;
       });
+      if (titles[threadId]) {
+        const { [threadId]: _gone, ...rest } = titles;
+        titles = rest;
+        await writeTitles(platform, classId, 'ask', titles).catch(() => undefined);
+      }
       turns.delete(threadId);
       threads.set(threads.get().filter((t) => t.threadId !== threadId));
     },
@@ -467,3 +546,200 @@ export function createAskService(ctx: AppContext, app: () => AppServices, cls: {
   };
 }
 
+
+// ── Ask across all classes (route `ask`, UX §3.11; UI-EXAMS) ─────────────────────────────────────────
+
+const GLOBAL_DIR = 'ask-all';
+const globals = new WeakMap<AppServices, GlobalAskService>();
+
+/** The one GlobalAskService of an AppServices (created on first use by the `ask` route). */
+export function globalAskFor(app: AppServices): GlobalAskService {
+  let g = globals.get(app);
+  if (!g) {
+    g = createGlobalAsk(app.ctx, () => app);
+    globals.set(app, g);
+  }
+  return g;
+}
+
+export function createGlobalAsk(ctx: AppContext, app: () => AppServices): GlobalAskService {
+  const { platform } = ctx;
+  type Row = { threadId: Ulid; title: string; at: string; home: ClassId };
+  const threads = new Store<Row[]>([]);
+  const turns = new Map<Ulid, Store<AskTurn[]>>();
+  const homes = new Map<Ulid, ClassId>();
+  const titles = new Map<ClassId, Record<string, string>>();
+  const pending = new Set<Promise<unknown>>();
+  const now = () => ctx.clock.now();
+  const track = <T>(p: Promise<T>): Promise<T> => {
+    pending.add(p);
+    void p.finally(() => pending.delete(p)).catch(() => undefined);
+    return p;
+  };
+  const registered = () => app().library.classes.get();
+
+  const loaded = track((async () => {
+    const rows: Row[] = [];
+    for (const c of registered()) {
+      try {
+        const t = await readTitles(platform, c.id, GLOBAL_DIR);
+        titles.set(c.id, t);
+        const names = await platform.privateFiles.list(c.id, GLOBAL_DIR);
+        for (const n of names.filter((x) => x.endsWith('.jsonl'))) {
+          const threadId = n.replace(/^.*\//, '').replace(/\.jsonl$/, '');
+          const lines = parseLines(await platform.privateFiles.read(c.id, `${GLOBAL_DIR}/${threadId}.jsonl`));
+          if (!lines.length) continue;
+          turns.set(threadId, new Store(lines.map(toTurn)));
+          homes.set(threadId, c.id);
+          rows.push({ threadId, title: t[threadId] ?? lines[0]!.question.slice(0, TITLE_MAX), at: lines.at(-1)!.at, home: c.id });
+        }
+      } catch (e) {
+        if (errorCode(e) !== 'NOT_FOUND') ctx.log('warn', 'Ask history (all classes) unreadable', { classId: c.id, error: String(e) });
+      }
+    }
+    threads.set(rows.sort((a, b) => b.at.localeCompare(a.at)));
+  })());
+
+  const threadStore = (id: Ulid): Store<AskTurn[]> => {
+    let s = turns.get(id);
+    if (!s) {
+      s = new Store<AskTurn[]>([]);
+      turns.set(id, s);
+    }
+    return s;
+  };
+  const setTurn = (threadId: Ulid, turn: AskTurn) => threadStore(threadId).update((ts) => ts.map((t) => (t.id === turn.id ? turn : t)));
+  const uiLang = (): PromptLang => promptLang(ctx.prefs.get('ui.locale') || 'en');
+  const answerLanguage = (): 'question' | PromptLang => (ctx.prefs.get('ai.answerLanguage') === 'ui' ? uiLang() : 'question');
+  const shortOf = (classId: ClassId) => registered().find((c) => c.id === classId)?.shortName ?? '';
+
+  /** Passages of the chosen classes; a private note of a class stays allowed here (the thread is private). */
+  async function find(query: string, classes: ClassId[], kinds: Array<SourceRef['kind']>, limit: number, seen: Map<string, ClassId>, privateNotes: boolean): Promise<PassageLike[]> {
+    const wanted = new Set(classes);
+    const ps = await app().search.passages(classes.length === 1 ? classes[0]! : 'all', query, { limit, ...(kinds.length ? { kinds } : {}) });
+    const notesDirOf = (c: ClassId) => {
+      try {
+        return app().forClass(c).store.dir('notes');
+      } catch {
+        return '';
+      }
+    };
+    const out = ps.filter((p) => wanted.has(p.classId) && (privateNotes || !(p.private || isPrivateSource(p.source, notesDirOf(p.classId)))));
+    for (const p of out) seen.set(p.id, p.classId);
+    return out;
+  }
+
+  async function answerAll(question: string, classes: ClassId[], kinds: Array<SourceRef['kind']>, o: { general: boolean; mode: 'quick' | 'deep'; model?: string; busyFallback?: boolean; privateNotes: boolean; onText(t: string): void }) {
+    const lang = detectLang(question) ?? uiLang();
+    const seen = new Map<string, ClassId>();
+    let streamed = '';
+    const onEvent = (e: AiEvent) => {
+      if (e.kind === 'content') {
+        streamed += e.text;
+        o.onText(streamed);
+      } else if (e.kind === 'retrying') {
+        streamed = '';
+        o.onText('');
+      }
+    };
+    const prefixed = (ref: string, label: string, id: string) => {
+      const c = seen.get(id);
+      return c && classes.length > 1 ? `${shortOf(c)} · ${label}` : label;
+    };
+    if (o.mode === 'deep') {
+      const r = await runToolLoop({
+        client: app().ai.client, lang, activity: { classId: null, action: 'deep', passages: 0 }, onEvent, ...(o.busyFallback ? { busyFallback: true } : {}),
+        messages: [{ role: 'system', content: answerSystem({ lang, answerLanguage: answerLanguage(), general: o.general, role: 'tools' }) }, { role: 'user', content: question }],
+        host: {
+          search: (q, limit) => find(q, classes, kinds, limit, seen, o.privateNotes),
+          read: async (id, offset, max) => {
+            const c = seen.get(id);
+            return c ? app().search.passage(c, id, { offset, max }) : null;
+          },
+        },
+      });
+      const a = readAnswer(r.content, r.refs, o.general);
+      const classOf = Object.fromEntries(a.citations.map((c) => [c.ref, seen.get(r.refs.get(c.ref)?.id ?? '') ?? classes[0]!]));
+      return { a, run: r as Pick<RunResult, 'model' | 'requestedModel' | 'privacy'>, classOf, sent: r.refs.entries().map(([ref, p]) => ({ ref, label: prefixed(ref, p.label, p.id), excerpt: p.text.slice(0, 200) })) };
+    }
+    const ret = retrieve(await find(question, classes, kinds, 30, seen, o.privateNotes));
+    const sources = ret.sources.map((s) => ({ ...s, label: prefixed(s.ref, s.label, ret.refs.get(s.ref)?.id ?? '') }));
+    const r = await app().ai.client.run({
+      task: 'chat', activity: { classId: null, action: 'ask', passages: sources.length }, onEvent,
+      messages: answerMessages({ lang, answerLanguage: answerLanguage(), general: o.general, role: 'ask' }, question, sources),
+      ...(o.model ? { model: o.model } : {}), ...(o.busyFallback ? { busyFallback: true } : {}),
+    });
+    const a = readAnswer(r.content, ret.refs, o.general);
+    const classOf = Object.fromEntries(a.citations.map((c) => [c.ref, seen.get(ret.refs.get(c.ref)?.id ?? '') ?? classes[0]!]));
+    return { a, run: r, classOf, sent: sources.map((s) => ({ ref: s.ref, label: s.label, excerpt: s.text.slice(0, 200) })) };
+  }
+
+  return {
+    threads,
+    thread: (threadId) => threadStore(threadId),
+    async idle() {
+      while (pending.size) await Promise.allSettled([...pending]);
+    },
+    async ask(threadId, question, scope, opts: AskOptions = {}) {
+      await loaded;
+      const q = question.trim();
+      if (!q) throw new PlatformError('INVALID', 'an empty question');
+      const live = registered().filter((c) => !c.archived);
+      const known = new Set(registered().map((c) => c.id));
+      const classes = (scope.classes?.length ? scope.classes.filter((c) => known.has(c)) : live.map((c) => c.id));
+      if (!classes.length) throw new PlatformError('NOT_FOUND', 'no class to ask about');
+      const tid = threadId ?? newUlid(now(), ctx.rand);
+      const home = homes.get(tid) ?? classes[0]!;
+      homes.set(tid, home);
+      const general = opts.general ?? ctx.prefs.get('ai.generalDefault') === '1';
+      const mode = opts.mode ?? 'quick';
+      let turn: AskTurn = { id: newUlid(now(), ctx.rand), question: q, scope: { ...scope, classes: scope.classes ?? [] }, answer: '', citations: [], model: null, status: 'running', error: null, at: instant(now()), general, mode };
+      threadStore(tid).update((ts) => [...ts, turn]);
+      const prev = threads.get().find((t) => t.threadId === tid);
+      threads.set([{ threadId: tid, title: prev?.title ?? q.slice(0, TITLE_MAX), at: turn.at, home }, ...threads.get().filter((t) => t.threadId !== tid)]);
+      void track((async () => {
+        try {
+          const r = await answerAll(q, classes, scope.kinds, {
+            general, mode, ...(opts.model ? { model: opts.model } : {}), ...(opts.busyFallback ? { busyFallback: true } : {}), privateNotes: opts.privateNotes !== false,
+            onText: (t) => setTurn(tid, (turn = { ...turn, answer: t })),
+          });
+          turn = { ...turn, answer: r.a.text, citations: r.a.citations, model: r.run.model, requestedModel: r.run.requestedModel, privacy: r.run.privacy, status: 'ok', sent: r.sent, classOf: r.classOf };
+        } catch (e) {
+          turn = { ...turn, answer: '', status: 'error', error: errorCode(e) };
+        }
+        setTurn(tid, turn);
+        await platform.privateFiles.append(home, `${GLOBAL_DIR}/${tid}.jsonl`, enc.encode(jsonlLine(toLine(turn)))).catch((e: unknown) => ctx.log('warn', 'Ask turn not saved', { error: String(e) }));
+      })());
+      return tid;
+    },
+    async removeThread(threadId) {
+      await loaded;
+      const home = homes.get(threadId);
+      if (home) {
+        await platform.privateFiles.remove(home, `${GLOBAL_DIR}/${threadId}.jsonl`).catch((e: unknown) => {
+          if (errorCode(e) !== 'NOT_FOUND') throw e;
+        });
+        const t = titles.get(home);
+        if (t?.[threadId]) {
+          const { [threadId]: _gone, ...rest } = t;
+          titles.set(home, rest);
+          await writeTitles(platform, home, GLOBAL_DIR, rest).catch(() => undefined);
+        }
+      }
+      turns.delete(threadId);
+      homes.delete(threadId);
+      threads.set(threads.get().filter((t) => t.threadId !== threadId));
+    },
+    async renameThread(threadId, title) {
+      await loaded;
+      const clean = cleanTitle(title);
+      const home = homes.get(threadId);
+      if (!clean) throw new PlatformError('INVALID', 'an empty title');
+      if (!home) throw new PlatformError('NOT_FOUND', `thread ${threadId}`);
+      const next = { ...(titles.get(home) ?? {}), [threadId]: clean };
+      titles.set(home, next);
+      await writeTitles(platform, home, GLOBAL_DIR, next);
+      threads.set(threads.get().map((t) => (t.threadId === threadId ? { ...t, title: clean } : t)));
+    },
+  };
+}

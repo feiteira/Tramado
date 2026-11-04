@@ -32,11 +32,15 @@ export interface PromptPack {
   termsRole: string;
   annotateRole: string;
   studyNotesRole: string;
+  /** Study notes with class documents among the sources (UI-EXAMS): cite the documents where the lecture refers to them. */
+  studyNotesDocs: string;
   mergeRole: string;                          // merging partial summaries of a long lecture
   labels: {
     question: string; points: string; options: string; group: (choose: number, of: string) => string; rules: string;
     sources: string; noSources: string; transcript: string; passage: string; myAnswer: string;
     summary: string; terms: string; studyNotes: string;
+    /** The heading of the class documents block of a study-notes request (UI-EXAMS). */
+    documents: string;
   };
   /** Sentence openers the model is told to use; also detected (in every language) when reading answers. */
   marks: { insufficient: string; general: string; choice: string };

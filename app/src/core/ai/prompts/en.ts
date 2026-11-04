@@ -42,11 +42,12 @@ export const en: PromptPack = {
     'Find the key terms the lecturer defines in this transcript. Return ONLY a JSON object: {"terms": [{"term": "…", "note": "the definition as the lecturer gave it, ≤ 200 characters", "ref": "S#"}]} with at most 15 terms.',
   studyNotesRole:
     'Write study notes for this lecture in Markdown: a title, then headings per topic with short bullet points. End each bullet with the ref of the transcript part [S#]. Mention the documents and articles the lecturer refers to.',
+  studyNotesDocs: 'Some sources below are passages of the class documents (readings, legislation, slides). Where the lecture refers to one of them, cite its ref too, for example "(see art. 18.º [S12])". Never cite a document for something the lecturer did not say.',
   mergeRole: 'Merge these partial results about the same lecture into one, keeping the refs [S#] exactly as they are and removing repetitions.',
   labels: {
     question: 'Question', points: 'points', options: 'Options', group: (n, of) => `Answer ${n} of: ${of}`, rules: 'Exam rules',
     sources: 'Sources', noSources: '(no sources were found in the class materials)', transcript: 'Transcript', passage: 'Passage', myAnswer: 'My answer',
-    summary: 'Summary', terms: 'Key terms', studyNotes: 'Study notes',
+    summary: 'Summary', terms: 'Key terms', studyNotes: 'Study notes', documents: 'Class documents',
   },
   marks: { insufficient: 'The materials do not cover', general: 'General knowledge', choice: 'Answer' },
 };

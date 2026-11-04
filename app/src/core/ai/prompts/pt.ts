@@ -41,11 +41,12 @@ export const pt: PromptPack = {
     'Encontra os conceitos-chave que o professor define nesta transcrição. Devolve APENAS um objeto JSON: {"terms": [{"term": "…", "note": "a definição tal como o professor a deu, ≤ 200 caracteres", "ref": "S#"}]} com no máximo 15 conceitos.',
   studyNotesRole:
     'Escreve apontamentos de estudo desta aula em Markdown: um título e depois títulos por tema com pontos curtos. Termina cada ponto com a ref da parte da transcrição [S#]. Refere os documentos e artigos que o professor menciona.',
+  studyNotesDocs: 'Algumas fontes abaixo são excertos dos documentos da cadeira (leituras, legislação, slides). Quando a aula se referir a um deles, cita também a sua ref, por exemplo "(ver art. 18.º [S12])". Nunca cites um documento para algo que o professor não disse.',
   mergeRole: 'Junta estes resultados parciais sobre a mesma aula num só, mantendo as refs [S#] exatamente como estão e retirando repetições.',
   labels: {
     question: 'Pergunta', points: 'valores', options: 'Opções', group: (n, of) => `Responda a ${n} de: ${of}`, rules: 'Regras do exame',
     sources: 'Fontes', noSources: '(não foram encontradas fontes nos materiais da cadeira)', transcript: 'Transcrição', passage: 'Excerto', myAnswer: 'A minha resposta',
-    summary: 'Resumo', terms: 'Conceitos-chave', studyNotes: 'Apontamentos',
+    summary: 'Resumo', terms: 'Conceitos-chave', studyNotes: 'Apontamentos', documents: 'Documentos da cadeira',
   },
   marks: { insufficient: 'Os materiais não cobrem', general: 'Conhecimento geral', choice: 'Resposta' },
 };
