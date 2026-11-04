@@ -42,8 +42,6 @@ export interface ClaimEngineImpl extends ClaimEngine {
   ready(): Promise<void>;
 }
 
-const dec = new TextDecoder();
-
 export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ClaimEngineImpl {
   const { platform, clock } = ctx;
   const { store, classId } = cls;
@@ -437,6 +435,5 @@ export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: 
     },
     ready: () => readyP,
   };
-  void dec;
   return engine;
 }

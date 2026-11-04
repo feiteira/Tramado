@@ -206,4 +206,47 @@ describe('mesh: transcription claims', () => {
     }
     expect(await again).toBe('lost');
   }, 120_000);
+
+  it('fold hand-over (§14.8): the owner left, a member wins the fold claim and readers accept the new writer', async () => {
+    const mesh = newMesh();
+    const [ana, bruno, carla] = [await meshApp(mesh, 'ana'), await meshApp(mesh, 'bruno'), await meshApp(mesh, 'carla')];
+    const apps = [ana, bruno, carla];
+    const classId = await sharedClass(mesh, ana, [bruno, carla]);
+    const lectureId = await lecture(ana, classId);
+    await settle(mesh, apps);
+    const ta = transcriber(ana, classId, lectureId, { jobMs: 5 * 60_000, delayMs: 60_000 });
+    const r = ta.attempt();
+    for (let i = 0; i < 6; i++) {
+      await mesh.settle();
+      await mesh.advance(SETTLE_MS);
+    }
+    expect(await r).toBe('won');
+    for (let i = 0; i < 15; i++) {
+      await mesh.settle();
+      await mesh.advance(30_000);
+    }
+    await settle(mesh, apps);
+    const engine = (a: MeshApp) => a.services.forClass(classId).claims as ClaimEngineImpl;
+    expect(await engine(bruno).foldTrigger(lectureId)).toBe(false);
+    // The owner leaves the class: its member file is deleted by itself.
+    await ana.services.sync.leave(classId, { afterwards: 'trash', deleteMyNotes: true });
+    await settle(mesh, apps, 8);
+    expect(await engine(bruno).foldTrigger(lectureId)).toBe(true);
+    const won = engine(bruno).tryClaim(lectureId, 'fold', { engine: undefined, audioSha256: null, supersedeStale: false });
+    for (let i = 0; i < 6; i++) {
+      await mesh.settle();
+      await mesh.advance(SETTLE_MS);
+    }
+    expect(await won).toBe('won');
+    const store = bruno.services.forClass(classId).store;
+    const cur = JSON.parse(dec(await store.readBytes(`${DIR}/transcript.json`) ?? undefined)) as TranscriptFile;
+    await store.writeJson(`${DIR}/transcript.json`, { ...cur, writer: { deviceId: bruno.deviceId, memberId: bruno.memberId }, revision: cur.revision + 1 }, { own: true });
+    await engine(bruno).setStatus(lectureId, 'fold', { status: 'done', transcriptRevision: cur.revision + 1 });
+    await settle(mesh, [bruno, carla]);
+    const c = carla.services.forClass(classId).store as ClassStoreImpl;
+    const loaded = await c.readJson(`${DIR}/transcript.json`, (raw) => ({ ok: true, value: raw as TranscriptFile, newer: false, unknown: [] }));
+    expect(loaded?.verdict.kind).toBe('trusted');
+    expect(loaded?.value.writer.deviceId).toBe(bruno.deviceId);
+    expect(engine(carla).winner(lectureId, 'fold')).toMatchObject({ deviceId: bruno.deviceId, status: 'done' });
+  }, 120_000);
 });

@@ -54,7 +54,6 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
   const connections = new Store<Record<DeviceId, ConnectionState>>({});
   const indexListeners = new Set<(classId: ClassId) => void>();
   const joinTimers = new Map<ClassId, () => void>();
-  let off: (() => void) | null = null;
   let booted = false;
   let addressTimer: (() => void) | null = null;
   const patch = (p: Partial<SyncUiState>) => state.set({ ...state.get(), ...p });
@@ -228,7 +227,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
     async boot() {
       if (booted) return;
       booted = true;
-      off = platform.events.onSync(route);
+      platform.events.onSync(route);
       await snapshot();
       try {
         const stats = await platform.sync.deviceStats();
@@ -474,6 +473,5 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       }
     },
   };
-  void off;
   return service;
 }

@@ -48,8 +48,8 @@ export class PresenceTracker {
     return !s || nowMono - s.at >= PRESENCE_STALE_MS;
   }
 
-  /** The device's activity when it may be used (not stale, not older than 24 h by `updatedAt`), else null. */
-  activity(deviceId: DeviceId, nowMono: number, nowWall: number): PresenceFile['activity'] | null {
+  /** The device's activity when its `updatedAt` is not older than 24 h (staleness: `stale()`), else null. */
+  activity(deviceId: DeviceId, _nowMono: number, nowWall: number): PresenceFile['activity'] | null {
     const s = this.seen.get(deviceId);
     if (!s) return null;
     const updated = parseRfc3339(s.file.updatedAt);

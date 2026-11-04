@@ -12,7 +12,7 @@ import { CLASS_COLOURS, iconOrDefault, suggestShortName } from '../core/model/ic
 import { classifyPath } from '../core/model/paths';
 import { verifySig } from '../core/model/sig';
 import { instant } from '../core/model/time';
-import { hlcNodeOf, isHlc, shortIdOf, type ClassId, type ClassPath, type DeviceId, type Hlc, type MemberId, type Ulid } from '../core/model/ids';
+import { hlcNodeOf, type ClassId, type ClassPath, type DeviceId, type Hlc, type MemberId, type Ulid } from '../core/model/ids';
 import type { BansFile, ClassFile, ConsentLine, MemberFile, MetaFile } from '../core/model/files';
 import { effectiveBans, withEntry, type BanTarget, type EffectiveBans } from '../core/sync/bans';
 import { activeConsents, consentLineOk, type ActiveConsent } from '../core/sync/consent';
@@ -265,8 +265,6 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       const deviceId = classifyPath(path).deviceId!;
       for (const line of await readSignedLines(path, 'tramado.mod', modLineOk)) modLines.push({ deviceId, line });
     }
-    const lectures = store.state.get().index.lectures;
-    void lectures;
     const mod = foldMod(modLines, bindings.personAt, organisers.isOrganiserAt, () => null);
 
     const next: ClassModel = {
@@ -647,7 +645,5 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
       // the class left the library before its services were wired
     }
   });
-  void isHlc;
-  void shortIdOf;
   return service;
 }

@@ -10,8 +10,8 @@ import { toBase64 } from '../../core/bytes';
 import { mulberry32 } from '../../core/util/prng';
 import { instant } from '../../core/model/time';
 import { classifyPath, isValidClassPath } from '../../core/model/paths';
-import { dashed, isClassId, shortIdOf, type ClassId, type ClassPath, type DeviceId, type MemberId, type ShortId } from '../../core/model/ids';
-import { deviceIdChecks, signedMessageFromCanonical } from '../../core/model/sig';
+import { dashed, shortIdOf, type ClassId, type ClassPath, type DeviceId, type MemberId, type ShortId } from '../../core/model/ids';
+import { deviceIdChecks } from '../../core/model/sig';
 import { decide } from '../../core/sync/admission';
 import { decodeInvite } from '../../core/sync/invite';
 import { blocksHash, writerOf } from '../../core/sync/trust';
@@ -106,7 +106,6 @@ interface Device {
   healOff: boolean;
 }
 
-const enc = new TextEncoder();
 const sum = (v: VV) => Object.values(v).reduce((a, b) => Math.max(a, b), 0);
 function cmpVV(a: VV, b: VV): 'equal' | 'greater' | 'less' | 'concurrent' {
   let gt = false;
@@ -460,7 +459,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       startedAt: instant(d.startedAt), restarts: 0, error: null,
     };
   }
-  function needOf(d: Device, f: Folder): { files: number; bytes: number } {
+  function needOf(f: Folder): { files: number; bytes: number } {
     let files = 0;
     let bytes = 0;
     for (const [p, g] of f.global) {
@@ -473,7 +472,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
     return { files, bytes };
   }
   function folderView(d: Device, f: Folder): FolderView {
-    const need = needOf(d, f);
+    const need = needOf(f);
     const entry = d.registry.entries.get(f.classId);
     const completion: FolderView['completion'] = {};
     for (const x of f.devices) {
@@ -911,8 +910,5 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
     }
   }
 
-  void isClassId;
-  void enc;
-  void signedMessageFromCanonical;
   return mesh;
 }

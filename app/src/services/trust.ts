@@ -11,7 +11,6 @@ import { verifySig } from '../core/model/sig';
 import { instant, parseRfc3339 } from '../core/model/time';
 import { sha256Hex } from '../core/util/sha256';
 import type { TrustCacheEntry, TrustCacheFile } from '../core/model/files';
-import type { Parsed } from '../core/model/parse';
 import {
   cacheEntry, deletionHonoured, isMachinePath, judge, KEPT_KINDS, NO_ROLLBACK_KINDS, SIGNED_FILE_KINDS, writerOf, type JudgeExtras,
   type LocalVersionInfo,
