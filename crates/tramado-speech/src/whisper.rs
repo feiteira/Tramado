@@ -188,7 +188,8 @@ impl Engine {
             if job.cancel.load(Ordering::Relaxed) {
                 return Err(stopped());
             }
-            result.map_err(|e| AppError::new(Code::IoError, format!("transcription failed: {e}")))?;
+            result
+                .map_err(|e| AppError::new(Code::IoError, format!("transcription failed: {e}")))?;
 
             // whisper.cpp counts in hundredths of a second.
             let at = |cs: i64| cs.max(0) as usize * 10 * MS;
@@ -251,7 +252,9 @@ mod tests {
     #[test]
     fn windows_hold_about_ten_minutes() {
         let s = pieces::SECOND;
-        let speech: Vec<_> = (0..200).map(|i| (i * 12 * s, i * 12 * s + 10 * s)).collect();
+        let speech: Vec<_> = (0..200)
+            .map(|i| (i * 12 * s, i * 12 * s + 10 * s))
+            .collect();
         let w = Engine::windows(&speech);
         assert!(w.len() >= 4);
         for g in &w {

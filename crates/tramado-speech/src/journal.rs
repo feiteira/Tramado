@@ -154,7 +154,10 @@ pub fn read_ogg_opus(b: &[u8]) -> AppResult<OggOpus> {
         }
     }
     if packets.len() < 2 || encode::parse_head(&packets[0]).is_none() {
-        return Err(AppError::new(Code::SpeechUnsupportedAudio, "not an Ogg Opus recording"));
+        return Err(AppError::new(
+            Code::SpeechUnsupportedAudio,
+            "not an Ogg Opus recording",
+        ));
     }
     let mut it = packets.into_iter();
     let head = it.next().unwrap_or_default();
@@ -572,7 +575,7 @@ mod tests {
         // About 5/9 of 20 s, cut on a page (about a second).
         let secs = o.samples16().unwrap() as f64 / 16_000.0;
         assert!(secs > 9.0 && secs < 12.0, "{secs}");
-        assert_eq!(o.packets.len() as u64 * 960, o.samples16().unwrap());
+        assert_eq!(o.packets.len() as u64 * 960, o.samples16().unwrap() + 104);
         // Recovering again changes nothing.
         let again = recover(&p).unwrap();
         assert_eq!(again.bytes_after, r.bytes_after);

@@ -30,7 +30,10 @@ pub const EVERY: Duration = Duration::from_secs(60);
 /// Where the job stands, as the heartbeat reports it.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Beat {
-    Working { progress: f64, eta_ms: Option<u64> },
+    Working {
+        progress: f64,
+        eta_ms: Option<u64>,
+    },
     /// Done, result untaken: `working` at `progress: 1.0`.
     Finished,
     Failed(Code),
@@ -96,7 +99,10 @@ pub fn read_state(dir: &std::path::Path, lecture_id: &str) -> Option<LectureStat
 }
 
 pub fn write_state(dir: &std::path::Path, s: &LectureState) -> AppResult<()> {
-    files::write_atomic(&state_path(dir, &s.lecture_id), &serde_json::to_vec_pretty(s)?)
+    files::write_atomic(
+        &state_path(dir, &s.lecture_id),
+        &serde_json::to_vec_pretty(s)?,
+    )
 }
 
 #[derive(Default)]

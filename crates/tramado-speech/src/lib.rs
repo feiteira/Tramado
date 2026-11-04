@@ -243,7 +243,10 @@ impl Speech {
     }
 
     pub fn models(&self) -> Vec<ModelState> {
-        registry::MODELS.iter().map(|m| self.model_state(m)).collect()
+        registry::MODELS
+            .iter()
+            .map(|m| self.model_state(m))
+            .collect()
     }
 
     fn model_by_name(id: &str) -> AppResult<&'static registry::ModelSpec> {
@@ -308,7 +311,9 @@ impl Speech {
                 let _awake = awake::Awake::hold("Tramado is downloading a speech model");
                 let r = download::fetch(&agent, &fetch, &j.cancel, &|e| {
                     match &e {
-                        ModelEvent::Progress { done, .. } => j.bytes.store(*done, Ordering::Relaxed),
+                        ModelEvent::Progress { done, .. } => {
+                            j.bytes.store(*done, Ordering::Relaxed)
+                        }
                         ModelEvent::Verifying => *lock(&j.status) = ModelStatus::Verifying,
                         _ => {}
                     }
@@ -387,7 +392,10 @@ impl Speech {
     pub fn delete_model(&self, id: &str) -> AppResult<()> {
         let spec = Self::model_by_name(id)?;
         if self.model_in_use(spec.id) {
-            return Err(AppError::new(Code::JobBusy, "a transcription uses this model"));
+            return Err(AppError::new(
+                Code::JobBusy,
+                "a transcription uses this model",
+            ));
         }
         if let Some(d) = lock(&self.downloads).remove(&spec.id) {
             d.cancel.store(true, Ordering::Relaxed);
@@ -515,7 +523,10 @@ impl Speech {
         Some(r.status())
     }
 
-    fn with_recorder<T>(&self, f: impl FnOnce(&recorder::Recorder) -> AppResult<T>) -> AppResult<T> {
+    fn with_recorder<T>(
+        &self,
+        f: impl FnOnce(&recorder::Recorder) -> AppResult<T>,
+    ) -> AppResult<T> {
         let slot = lock(&self.recorder);
         match slot.as_ref() {
             Some(r) if !r.has_stopped() => f(r),
@@ -612,7 +623,10 @@ impl Speech {
             .as_ref()
             .is_some_and(|r| !r.has_stopped() && r.recording_id() == req.recording_id)
         {
-            return Err(AppError::new(Code::JobBusy, "the recording is still running"));
+            return Err(AppError::new(
+                Code::JobBusy,
+                "the recording is still running",
+            ));
         }
         publish::publish(&self.journals, &self.cfg.fs, &req)
     }
@@ -763,8 +777,11 @@ impl Speech {
                 }
                 let spec = registry::spec(*model);
                 if !self.model_ready(spec) {
-                    return Err(AppError::new(Code::ModelNotDownloaded, "download the model first")
-                        .with_data(serde_json::json!({ "modelId": model.as_str() })));
+                    return Err(AppError::new(
+                        Code::ModelNotDownloaded,
+                        "download the model first",
+                    )
+                    .with_data(serde_json::json!({ "modelId": model.as_str() })));
                 }
                 Some(jobs::LocalEngine {
                     model: *model,
@@ -903,7 +920,9 @@ impl Speech {
                 return Ok(p);
             }
         }
-        let p = peaks::compute(decode::bytes_source(bytes), Some("webm"), buckets, &|| false)?;
+        let p = peaks::compute(decode::bytes_source(bytes), Some("webm"), buckets, &|| {
+            false
+        })?;
         if let Err(e) = peaks::write_cached(&cache, &p) {
             log::warn!("peaks not cached: {e}");
         }

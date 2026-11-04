@@ -186,8 +186,10 @@ impl Recorder {
         std::fs::create_dir_all(&journals.dir)?;
         let free = free_space(&journals.dir);
         if free.is_some_and(|f| f < START_DISK) {
-            return Err(AppError::new(Code::DiskFull, "not enough free space to record")
-                .with_data(serde_json::json!({ "needBytes": START_DISK })));
+            return Err(
+                AppError::new(Code::DiskFull, "not enough free space to record")
+                    .with_data(serde_json::json!({ "needBytes": START_DISK })),
+            );
         }
         let layout = layout(req.mode, req.include_mic);
         let spec = match req.mode {
@@ -306,7 +308,11 @@ impl Recorder {
 
     pub fn pause(&self) -> AppResult<RecorderStatus> {
         {
-            let mut c = self.shared.control.lock().unwrap_or_else(|e| e.into_inner());
+            let mut c = self
+                .shared
+                .control
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             if !c.paused {
                 c.paused = true;
                 c.pause_from = Some((self.shared.audio_ms(), time::now_ms()));
@@ -317,7 +323,11 @@ impl Recorder {
 
     pub fn resume(&self) -> AppResult<RecorderStatus> {
         let pause = {
-            let mut c = self.shared.control.lock().unwrap_or_else(|e| e.into_inner());
+            let mut c = self
+                .shared
+                .control
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             c.paused = false;
             c.pause_from.take()
         };
@@ -359,7 +369,11 @@ impl Recorder {
         }
         self.shared.stopping.store(true, Ordering::Relaxed);
         {
-            let mut c = self.shared.control.lock().unwrap_or_else(|e| e.into_inner());
+            let mut c = self
+                .shared
+                .control
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             c.stop = true;
         }
         if let Some(mut cap) = self.capture.take() {
@@ -462,11 +476,7 @@ fn run(
             mixer.push(t, &b, &sh.live[t], now_ms);
         }
         let now = Instant::now();
-        let paused = sh
-            .control
-            .lock()
-            .map(|c| c.paused)
-            .unwrap_or(false);
+        let paused = sh.control.lock().map(|c| c.paused).unwrap_or(false);
         if paused && !clock.is_paused() {
             clock.pause(now);
         } else if !paused && clock.is_paused() {
@@ -503,7 +513,9 @@ fn run(
         }
         if last_status.elapsed() >= STATUS_EVERY {
             last_status = Instant::now();
-            sh.sink.send(RecorderEvent::Status { status: sh.status() });
+            sh.sink.send(RecorderEvent::Status {
+                status: sh.status(),
+            });
             warnings(&sh, &mut warned);
         }
         if last_journal.elapsed() >= JOURNAL_EVERY {
@@ -515,7 +527,11 @@ fn run(
             if let Some(free) = free_space(&sh.journals.dir) {
                 sh.disk_free.store(free, Ordering::Relaxed);
                 if free < STOP_DISK {
-                    failure = Some((StopReason::DiskFull, Code::DiskFull, "the disk is full".into()));
+                    failure = Some((
+                        StopReason::DiskFull,
+                        Code::DiskFull,
+                        "the disk is full".into(),
+                    ));
                     break;
                 }
             }
@@ -526,11 +542,7 @@ fn run(
         }
     }
     // Close the pause in progress, if any.
-    let pause = sh
-        .control
-        .lock()
-        .ok()
-        .and_then(|mut c| c.pause_from.take());
+    let pause = sh.control.lock().ok().and_then(|mut c| c.pause_from.take());
     let now = time::now_ms();
     if let Some((at_ms, from)) = pause {
         let _ = sh.write_journal(|j| {
@@ -544,20 +556,24 @@ fn run(
     let duration_ms = match &failure {
         None => {
             let samples = enc.samples_in();
-            let closed = enc
-                .finish()
-                .and_then(|(last, _end)| ogg.finish(last));
+            let closed = enc.finish().and_then(|(last, _end)| ogg.finish(last));
             match closed {
                 Ok(()) => samples * 1000 / SAMPLE_RATE as u64,
                 Err(e) => {
                     log::warn!("recording journal not closed cleanly: {e}");
-                    recovered_ms(&ogg_path, sh.journal.lock().map(|j| j.preskip).unwrap_or(312))
+                    recovered_ms(
+                        &ogg_path,
+                        sh.journal.lock().map(|j| j.preskip).unwrap_or(312),
+                    )
                 }
             }
         }
         Some(_) => {
             drop(ogg);
-            recovered_ms(&ogg_path, sh.journal.lock().map(|j| j.preskip).unwrap_or(312))
+            recovered_ms(
+                &ogg_path,
+                sh.journal.lock().map(|j| j.preskip).unwrap_or(312),
+            )
         }
     };
     sh.frames
@@ -612,8 +628,8 @@ fn warnings(sh: &Shared, w: &mut Warned) {
     }
     w.disk = low;
     let p = tramado_base::power::system_power();
-    let low_battery = p.source == tramado_base::power::PowerSource::Battery
-        && p.percent.is_some_and(|x| x < 15);
+    let low_battery =
+        p.source == tramado_base::power::PowerSource::Battery && p.percent.is_some_and(|x| x < 15);
     if low_battery && !w.battery {
         sh.sink.send(RecorderEvent::Warning {
             code: RecorderWarning::LowBattery,

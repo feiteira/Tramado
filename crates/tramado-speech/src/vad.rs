@@ -44,7 +44,11 @@ impl Vad {
 }
 
 /// The stretches of speech of a whole track (sample ranges), found window by window.
-pub fn stretches(vad: &Vad, track: &Track16, stop: &dyn Fn() -> bool) -> AppResult<Vec<(usize, usize)>> {
+pub fn stretches(
+    vad: &Vad,
+    track: &Track16,
+    stop: &dyn Fn() -> bool,
+) -> AppResult<Vec<(usize, usize)>> {
     let mut detector = Detector::new(vad)?;
     let mut out: Vec<(usize, usize)> = Vec::new();
     let mut at = 0;
@@ -125,7 +129,11 @@ impl Detector {
                     .filter(|(a, b)| b > a)
                     .collect())
             }
-            Detector::Loudness => Ok(pieces::loud_stretches(samples, SILENT_RMS, pieces::SECOND / 2)),
+            Detector::Loudness => Ok(pieces::loud_stretches(
+                samples,
+                SILENT_RMS,
+                pieces::SECOND / 2,
+            )),
         }
     }
 }

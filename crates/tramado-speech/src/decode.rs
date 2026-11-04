@@ -241,13 +241,26 @@ fn he_aac() -> AppError {
 }
 
 fn codec_name(p: &AudioCodecParameters) -> String {
-    if p.codec == CODEC_ID_OPUS {
-        "opus".into()
-    } else if p.codec == CODEC_ID_AAC {
-        "aac".into()
+    use symphonia::core::codecs::audio::well_known::{
+        CODEC_ID_ALAC, CODEC_ID_FLAC, CODEC_ID_MP1, CODEC_ID_MP2, CODEC_ID_MP3, CODEC_ID_VORBIS,
+    };
+    let c = p.codec;
+    let name = if c == CODEC_ID_OPUS {
+        "opus"
+    } else if c == CODEC_ID_AAC {
+        "aac"
+    } else if c == CODEC_ID_MP3 || c == CODEC_ID_MP2 || c == CODEC_ID_MP1 {
+        "mp3"
+    } else if c == CODEC_ID_FLAC {
+        "flac"
+    } else if c == CODEC_ID_VORBIS {
+        "vorbis"
+    } else if c == CODEC_ID_ALAC {
+        "alac"
     } else {
-        format!("{:?}", p.codec)
-    }
+        "pcm"
+    };
+    name.into()
 }
 
 /// Splits decoded planes (one `Vec` per source channel) into the output tracks.
@@ -316,9 +329,9 @@ fn decode_opus(
     let mut dec = opusic_c::Decoder::new(ch, opusic_c::SampleRate::Hz16000)
         .map_err(|e| unsupported_audio(format!("opus: {e:?}")))?;
     // The exact length: WebM's Duration, or the Ogg end granule less the pre-skip.
-    let limit = o
-        .exact
-        .or(o.num_frames.map(|n| n.saturating_sub(head.preskip48 as u64) / 3));
+    let limit = o.exact.or(o
+        .num_frames
+        .map(|n| n.saturating_sub(head.preskip48 as u64) / 3));
     let mut skip = head.preskip48 as usize / 3;
     let mut produced: u64 = 0;
     let mut buf = vec![0f32; 5760 * nch];
@@ -427,7 +440,9 @@ fn decode_generic(
         let rs = resamplers.get_or_insert_with(|| {
             (
                 rate,
-                (0..tracks).map(|_| Resampler::new(rate, SAMPLE_RATE)).collect(),
+                (0..tracks)
+                    .map(|_| Resampler::new(rate, SAMPLE_RATE))
+                    .collect(),
             )
         });
         if rs.0 != rate {
@@ -541,8 +556,10 @@ mod tests {
         assert!(rms(&tracks[1]) < 0.001);
         // One side at a time.
         let bytes = wav(16_000, &[vec![0.0; 16_000], tone(16_000, 300.0, 1.0, 0.5)]);
-        let (one, _) =
-            decode(bytes_source(bytes), Some("wav"), Channels::One(1), &|| false).unwrap();
+        let (one, _) = decode(bytes_source(bytes), Some("wav"), Channels::One(1), &|| {
+            false
+        })
+        .unwrap();
         assert_eq!(one.len(), 1);
         assert!(rms(&one[0]) > 0.3);
     }
@@ -583,14 +600,15 @@ mod tests {
         let pcm = tone(16_000, 330.0, 7.777, 0.4);
         let n = pcm.len();
         let webm = crate::webm::encode_pcm(&pcm, 1, 24_000).unwrap();
-        let (t, info) =
-            decode(bytes_source(webm), Some("webm"), Channels::Mix, &|| false).unwrap();
+        let (t, info) = decode(bytes_source(webm), Some("webm"), Channels::Mix, &|| false).unwrap();
         assert_eq!(info.codec, "opus");
         assert_eq!(t[0].len(), n);
         // The pre-skip is gone: the decoded tone lines up with the source (no 6.5 ms shift).
         let corr = |lag: usize| -> f32 {
             let m = 16_000;
-            (0..m).map(|i| pcm[4000 + i] * t[0][4000 + i + lag]).sum::<f32>()
+            (0..m)
+                .map(|i| pcm[4000 + i] * t[0][4000 + i + lag])
+                .sum::<f32>()
         };
         assert!(corr(0) > corr(104) && corr(0) > 0.0);
         // The Ogg journal decodes to the same length.
@@ -610,8 +628,13 @@ mod tests {
         }
         w.finish(last).unwrap();
         assert_eq!(end, 312 + n as u64 * 3);
-        let (o, _) =
-            decode(file_source(&p).unwrap(), Some("ogg"), Channels::Mix, &|| false).unwrap();
+        let (o, _) = decode(
+            file_source(&p).unwrap(),
+            Some("ogg"),
+            Channels::Mix,
+            &|| false,
+        )
+        .unwrap();
         assert_eq!(o[0].len(), n);
         // Stereo keeps the two sides apart.
         let mut st = Vec::with_capacity(n * 2);

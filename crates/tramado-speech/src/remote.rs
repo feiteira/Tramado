@@ -151,11 +151,11 @@ pub fn status_error(status: u16, body: &[u8], model: &str) -> AppError {
         402 => Code::AiNoCredit,
         403 => Code::AiModelGated,
         404 if text.contains("data policy") => {
-            return AppError::new(Code::AiPrivacyBlocks, message)
-                .with_data(json!({ "stt": true }));
+            return AppError::new(Code::AiPrivacyBlocks, message).with_data(json!({ "stt": true }));
         }
         404 => {
-            return AppError::new(Code::AiModelUnknown, message).with_data(json!({ "model": model }));
+            return AppError::new(Code::AiModelUnknown, message)
+                .with_data(json!({ "model": model }));
         }
         408 => Code::AiTimeout,
         413 => {
@@ -279,12 +279,7 @@ impl Remote<'_> {
         let plain = AtomicBool::new(false);
         let results: Vec<Mutex<Option<Heard>>> = tasks.iter().map(|_| Mutex::new(None)).collect();
         let total = tasks.len().max(1);
-        let has_failed = || {
-            failed
-                .lock()
-                .map(|f| f.is_some())
-                .unwrap_or(true)
-        };
+        let has_failed = || failed.lock().map(|f| f.is_some()).unwrap_or(true);
         std::thread::scope(|scope| {
             for n in 0..WORKERS.min(tasks.len()) {
                 let worker = || loop {
@@ -418,8 +413,14 @@ mod tests {
         };
         let segs = place_heard(&heard, &pieces, audio.len());
         assert_eq!(segs.len(), 2);
-        assert!(segs[0].start_ms >= 9_800 && segs[0].start_ms <= 10_600, "{segs:?}");
-        assert!(segs[1].start_ms >= 39_800 && segs[1].start_ms <= 40_200, "{segs:?}");
+        assert!(
+            segs[0].start_ms >= 9_800 && segs[0].start_ms <= 10_600,
+            "{segs:?}"
+        );
+        assert!(
+            segs[1].start_ms >= 39_800 && segs[1].start_ms <= 40_200,
+            "{segs:?}"
+        );
         let whole = place_heard(
             &Heard {
                 text: "Olá.".into(),
@@ -449,7 +450,10 @@ mod tests {
     fn writes_a_wav_header() {
         let w = wav(&[0.0, 0.5, -1.0]);
         assert_eq!(&w[0..4], b"RIFF");
-        assert_eq!(u32::from_le_bytes(w[24..28].try_into().unwrap()), SAMPLE_RATE);
+        assert_eq!(
+            u32::from_le_bytes(w[24..28].try_into().unwrap()),
+            SAMPLE_RATE
+        );
         assert_eq!(u32::from_le_bytes(w[40..44].try_into().unwrap()), 6);
         assert_eq!(w.len(), 50);
     }
@@ -498,7 +502,10 @@ mod tests {
         let t = Track16::from_f32(&samples);
         let stt = Canned {
             answers: StdMutex::new(vec![
-                (400, r#"{"error":{"message":"verbose_json not supported"}}"#.into()),
+                (
+                    400,
+                    r#"{"error":{"message":"verbose_json not supported"}}"#.into(),
+                ),
                 (200, r#"{"text":"primeira parte"}"#.into()),
                 (200, r#"{"text":"segunda parte"}"#.into()),
             ]),
@@ -528,7 +535,9 @@ mod tests {
         assert_eq!(seen[0].1["language"], "pt");
         assert_eq!(seen[0].1["prompt"], "Código Civil");
         assert!(seen[0].1.get("provider").is_none());
-        assert!(seen[1..].iter().all(|(_, b)| b["response_format"] == "json"));
+        assert!(seen[1..]
+            .iter()
+            .all(|(_, b)| b["response_format"] == "json"));
     }
 
     #[test]
@@ -546,7 +555,12 @@ mod tests {
             backoff: Duration::from_millis(1),
         };
         let e = remote
-            .run(&[(&t, vec![(0, 20 * S)])], None, &AtomicBool::new(false), &|_| {})
+            .run(
+                &[(&t, vec![(0, 20 * S)])],
+                None,
+                &AtomicBool::new(false),
+                &|_| {},
+            )
             .unwrap_err();
         assert_eq!(e.code(), Code::AiNoCredit);
         let stt = Canned {
@@ -563,7 +577,12 @@ mod tests {
             backoff: Duration::from_millis(1),
         };
         let out = remote
-            .run(&[(&t, vec![(0, 20 * S)])], None, &AtomicBool::new(false), &|_| {})
+            .run(
+                &[(&t, vec![(0, 20 * S)])],
+                None,
+                &AtomicBool::new(false),
+                &|_| {},
+            )
             .unwrap();
         assert_eq!(out[0].0[0].text, "ok");
         assert_eq!(out[0].1.as_deref(), Some("en"));

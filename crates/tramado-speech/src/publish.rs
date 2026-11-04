@@ -33,7 +33,9 @@ pub fn audio_path(lecture_dir: &str) -> String {
 fn check_dir(lecture_dir: &str) -> AppResult<()> {
     if lecture_dir.is_empty()
         || lecture_dir.starts_with('/')
-        || lecture_dir.split('/').any(|s| s == ".." || s == "." || s.is_empty())
+        || lecture_dir
+            .split('/')
+            .any(|s| s == ".." || s == "." || s.is_empty())
         || lecture_dir.starts_with(".tramado")
     {
         return Err(AppError::invalid("not a lecture directory"));
@@ -58,18 +60,28 @@ pub fn remux(journals: &JournalPaths, id: &str) -> AppResult<Vec<u8>> {
     let b = journal::read_all(&journals.ogg(id)?)?;
     let o = journal::read_ogg_opus(&b)?;
     if o.packets.is_empty() {
-        return Err(AppError::new(Code::SpeechNoSpeech, "the recording is empty"));
+        return Err(AppError::new(
+            Code::SpeechNoSpeech,
+            "the recording is empty",
+        ));
     }
     webm::from_ogg(&o)
 }
 
-pub fn publish(journals: &JournalPaths, fs: &ClassFs, req: &PublishRequest) -> AppResult<PublishedAudio> {
+pub fn publish(
+    journals: &JournalPaths,
+    fs: &ClassFs,
+    req: &PublishRequest,
+) -> AppResult<PublishedAudio> {
     let mut j = journals
         .read(&req.recording_id)?
         .ok_or_else(|| AppError::not_found("no such recording"))?;
     match j.state {
         JournalState::Recording => {
-            return Err(AppError::new(Code::JobBusy, "the recording is still running"))
+            return Err(AppError::new(
+                Code::JobBusy,
+                "the recording is still running",
+            ))
         }
         JournalState::Published => {
             return Err(AppError::conflict("the recording was already published"))

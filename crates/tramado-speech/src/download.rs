@@ -100,8 +100,10 @@ pub fn import(from: &Path, f: &Fetch) -> AppResult<PathBuf> {
     fs::create_dir_all(&f.dir)?;
     let len = fs::metadata(from)?.len();
     if len != f.size {
-        return Err(AppError::new(Code::ModelIntegrity, "not the expected model file")
-            .with_data(json!({ "size": len })));
+        return Err(
+            AppError::new(Code::ModelIntegrity, "not the expected model file")
+                .with_data(json!({ "size": len })),
+        );
     }
     check_space(&f.dir, f.size)?;
     let part = f.part();
@@ -122,7 +124,10 @@ pub fn import(from: &Path, f: &Fetch) -> AppResult<PathBuf> {
     let digest = tramado_base::ids::hex_lower(&h.finalize());
     if digest != f.sha256 {
         let _ = fs::remove_file(&part);
-        return Err(AppError::new(Code::ModelIntegrity, "the model file's SHA-256 differs"));
+        return Err(AppError::new(
+            Code::ModelIntegrity,
+            "the model file's SHA-256 differs",
+        ));
     }
     fs::rename(&part, f.dest())?;
     Ok(f.dest())
@@ -208,7 +213,11 @@ pub fn fetch(
                 match ok {
                     Err(e) => Err(e),
                     Ok(()) => {
-                        let want = if status == 200 { f.size } else { end + 1 - have };
+                        let want = if status == 200 {
+                            f.size
+                        } else {
+                            end + 1 - have
+                        };
                         let mut got = 0u64;
                         let mut body = res.body_mut().as_reader();
                         let mut read_err: Option<AppError> = None;
@@ -313,11 +322,12 @@ mod tests {
         MockServer::with_handler(move |seen| match range(seen) {
             Some((a, b)) if !ignore_range => {
                 let b = (b as usize).min(data.len() - 1);
-                MockResponse::bytes(206, "application/octet-stream", data[a as usize..=b].to_vec())
-                    .header(
-                        "Content-Range",
-                        &format!("bytes {a}-{b}/{}", data.len()),
-                    )
+                MockResponse::bytes(
+                    206,
+                    "application/octet-stream",
+                    data[a as usize..=b].to_vec(),
+                )
+                .header("Content-Range", &format!("bytes {a}-{b}/{}", data.len()))
             }
             _ => MockResponse::bytes(200, "application/octet-stream", data.to_vec()),
         })

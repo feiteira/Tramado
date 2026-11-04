@@ -124,7 +124,7 @@ impl FrameEncoder {
     }
 
     /// Takes interleaved samples; returns the packets they complete with each packet's Ogg
-    /// granule (48 kHz samples decoded up to its end, pre-skip included).
+    /// granule.
     pub fn push(&mut self, interleaved: &[f32]) -> AppResult<Packets> {
         let ch = self.channels();
         self.samples_in += (interleaved.len() / ch) as u64;
@@ -135,15 +135,17 @@ impl FrameEncoder {
         while self.pending.len() - at >= step {
             let packet = self.enc.encode(&self.pending[at..at + step])?;
             self.samples_out += FRAME as u64;
-            out.push((packet, self.granule(self.samples_out)));
+            out.push((packet, Self::granule(self.samples_out)));
             at += step;
         }
         self.pending.drain(..at);
         Ok(out)
     }
 
-    fn granule(&self, samples16: u64) -> u64 {
-        self.preskip48() as u64 + samples16 * 3
+    /// RFC 7845 §4: a page's granule counts every sample decoded up to its end (48 kHz), the
+    /// pre-skip included; only the last page's (`finish`) trims the end.
+    fn granule(samples16: u64) -> u64 {
+        samples16 * 3
     }
 
     /// Pads the last frame with silence, then one more frame of silence (the encoder runs
@@ -166,9 +168,9 @@ impl FrameEncoder {
         for f in frames {
             let packet = self.enc.encode(&f)?;
             self.samples_out += FRAME as u64;
-            out.push((packet, self.granule(self.samples_out)));
+            out.push((packet, Self::granule(self.samples_out)));
         }
-        let end = self.granule(real);
+        let end = self.preskip48() as u64 + real * 3;
         // Granules never pass the real end (they must not decrease from page to page).
         for p in &mut out {
             p.1 = p.1.min(end);
@@ -266,9 +268,7 @@ mod tests {
     fn packets_are_sixty_milliseconds_and_end_trimmed() {
         let mut e = FrameEncoder::new(1, 24_000).unwrap();
         // 1.01 s of a tone, handed in uneven blocks.
-        let x: Vec<f32> = (0..16_160)
-            .map(|i| (i as f32 * 0.07).sin() * 0.3)
-            .collect();
+        let x: Vec<f32> = (0..16_160).map(|i| (i as f32 * 0.07).sin() * 0.3).collect();
         let mut packets = Vec::new();
         for block in x.chunks(333) {
             packets.extend(e.push(block).unwrap());
@@ -283,7 +283,7 @@ mod tests {
         }
         assert_eq!(end, 312 + 16_160 * 3);
         assert_eq!(packets.last().unwrap().1, end);
-        assert_eq!(packets[0].1, 312 + 960 * 3);
+        assert_eq!(packets[0].1, 960 * 3);
     }
 
     #[test]

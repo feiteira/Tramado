@@ -37,7 +37,11 @@ pub struct Piece {
 /// Joins the stretches of `speech` (sample ranges of `samples`, which starts at sample
 /// `offset` of the recording) into one buffer with a pause between them. The pieces are in
 /// recording samples.
-pub fn join_at(samples: &[f32], offset: usize, speech: &[(usize, usize)]) -> (Vec<f32>, Vec<Piece>) {
+pub fn join_at(
+    samples: &[f32],
+    offset: usize,
+    speech: &[(usize, usize)],
+) -> (Vec<f32>, Vec<Piece>) {
     let end = offset + samples.len();
     let mut out = vec![0.0; START];
     let mut pieces: Vec<Piece> = Vec::with_capacity(speech.len());
@@ -376,7 +380,11 @@ mod tests {
             tok(6 * S + GAP + S / 10, 6 * S + GAP + S, " What"),
             tok(6 * S + GAP + S, 6 * S + GAP + 2 * S, " made"),
             tok(6 * S + GAP + 2 * S, 6 * S + GAP + 2 * S + S / 2, " you"),
-            tok(6 * S + GAP + 2 * S + S / 2, 6 * S + GAP + 2 * S + S / 2, " st"),
+            tok(
+                6 * S + GAP + 2 * S + S / 2,
+                6 * S + GAP + 2 * S + S / 2,
+                " st",
+            ),
             tok(6 * S + GAP + 2 * S + S / 2, 6 * S + GAP + 3 * S, "ay?"),
         ];
         let out = place_words(&tokens, &pieces);

@@ -54,7 +54,8 @@ pub fn mime_for(name: &str) -> &'static str {
 }
 
 fn ext_of(path: &Path) -> Option<String> {
-    path.extension().map(|e| e.to_string_lossy().to_ascii_lowercase())
+    path.extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
 }
 
 /// Decodes `path` and encodes it to WebM Opus; `progress` gets 0..1 (when the length is known).
@@ -140,7 +141,11 @@ mod tests {
         std::fs::write(&p, b).unwrap();
         let seen = std::sync::Mutex::new(Vec::new());
         let im = to_webm(&p, &|| false, &|f| seen.lock().unwrap().push(f)).unwrap();
-        assert!((im.duration_ms as i64 - 2000).abs() <= 2, "{}", im.duration_ms);
+        assert!(
+            (im.duration_ms as i64 - 2000).abs() <= 2,
+            "{}",
+            im.duration_ms
+        );
         assert!(!im.had_video);
         assert_eq!(seen.lock().unwrap().last(), Some(&1.0));
         let (t, info) = decode::decode(

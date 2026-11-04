@@ -45,11 +45,7 @@ impl<E> SinkSlot<E> {
 
     /// False when the channel is gone; the job goes on.
     pub fn send(&self, e: E) -> bool {
-        let sink = self
-            .inner
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .clone();
+        let sink = self.inner.lock().unwrap_or_else(|e| e.into_inner()).clone();
         sink.send(e)
     }
 
@@ -458,7 +454,8 @@ fn run_inner(
                         continue;
                     }
                     job.phase(TranscribePhase::Vad);
-                    let stretches = vad::stretches(&vad, &track, &|| cancel.load(Ordering::Relaxed))?;
+                    let stretches =
+                        vad::stretches(&vad, &track, &|| cancel.load(Ordering::Relaxed))?;
                     job.phase(TranscribePhase::Transcribing);
                     transcribing_since
                         .lock()

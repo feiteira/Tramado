@@ -229,10 +229,7 @@ fn open_on(
     .map_err(|e| cpal_code(&e))?;
     stream.play().map_err(|e| cpal_code(&e))?;
     if let Ok(d) = device.description() {
-        *live[track]
-            .device
-            .lock()
-            .unwrap_or_else(|e| e.into_inner()) = Some(d.name().to_string());
+        *live[track].device.lock().unwrap_or_else(|e| e.into_inner()) = Some(d.name().to_string());
     }
     Ok((stream, rate))
 }
@@ -283,7 +280,8 @@ fn system_device(host: &cpal::Host) -> Option<(cpal::Device, bool)> {
         {
             let sink = host.default_output_device()?;
             let id = sink.id().ok()?;
-            let monitor = cpal::DeviceId::new(cpal::HostId::PulseAudio, format!("{}.monitor", id.id()));
+            let monitor =
+                cpal::DeviceId::new(cpal::HostId::PulseAudio, format!("{}.monitor", id.id()));
             return host.device_by_id(&monitor).map(|d| (d, false));
         }
     }
