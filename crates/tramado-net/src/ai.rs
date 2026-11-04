@@ -358,7 +358,8 @@ struct Slots {
     total: usize,
     blocking: usize,
     next_ticket: u64,
-    serving: u64,
+    /// Blocking callers waiting, first come first served.
+    queue: std::collections::VecDeque<u64>,
 }
 
 /// Where a request's events go (the `ai_send` channel).
@@ -778,33 +779,24 @@ impl Inner {
         })
     }
 
-    /// FIFO: a blocking caller waits for its turn, a free slot and fewer than four blocking
-    /// requests in flight.
+    /// FIFO: a blocking caller waits until it is first in the queue, a slot is free and fewer
+    /// than four blocking requests are in flight. A cancelled caller leaves the queue at once.
     fn wait_slot(self: &Arc<Self>, cancelled: &AtomicBool) -> AppResult<SlotGuard> {
         let mut s = self.slots.lock().unwrap_or_else(|e| e.into_inner());
         let ticket = s.next_ticket;
         s.next_ticket += 1;
+        s.queue.push_back(ticket);
         loop {
             if cancelled.load(Ordering::SeqCst) {
-                // Give the turn away so the queue keeps moving.
-                if s.serving == ticket {
-                    s.serving += 1;
-                } else {
-                    // Not our turn yet: wait for it, then pass it on.
-                    while s.serving != ticket {
-                        s = self
-                            .slots_cv
-                            .wait_timeout(s, Duration::from_millis(200))
-                            .map(|(g, _)| g)
-                            .unwrap_or_else(|e| e.into_inner().0);
-                    }
-                    s.serving += 1;
-                }
+                s.queue.retain(|t| *t != ticket);
                 self.slots_cv.notify_all();
                 return Err(AppError::new(Code::Cancelled, "cancelled"));
             }
-            if s.serving == ticket && s.total < MAX_IN_FLIGHT && s.blocking < MAX_BLOCKING {
-                s.serving += 1;
+            if s.queue.front() == Some(&ticket)
+                && s.total < MAX_IN_FLIGHT
+                && s.blocking < MAX_BLOCKING
+            {
+                s.queue.pop_front();
                 s.total += 1;
                 s.blocking += 1;
                 self.slots_cv.notify_all();

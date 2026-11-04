@@ -753,18 +753,35 @@ fn blocking_cancel_while_waiting() {
         }));
     }
     std::thread::sleep(Duration::from_millis(150));
+    // Two waiters; the second one is cancelled while the first is still ahead of it.
+    let mut first = req("key", Method::Get, None, false);
+    first.internal = true;
+    let r1 = r.clone();
+    let ahead = std::thread::spawn(move || r1.pipe.request_blocking(first, Duration::from_secs(5)));
+    std::thread::sleep(Duration::from_millis(50));
     let mut q = req("key", Method::Get, None, false);
     q.internal = true;
     let id = q.request_id.clone();
     let r2 = r.clone();
     let waiter = std::thread::spawn(move || r2.pipe.request_blocking(q, Duration::from_secs(5)));
     std::thread::sleep(Duration::from_millis(100));
+    let t0 = Instant::now();
     r.pipe.cancel(&id);
     assert_eq!(waiter.join().unwrap().unwrap_err().code(), Code::Cancelled);
+    assert!(
+        t0.elapsed() < Duration::from_millis(400),
+        "{:?}",
+        t0.elapsed()
+    );
+    assert_eq!(ahead.join().unwrap().unwrap().0, 200);
     for h in hold {
         assert_eq!(h.join().unwrap().unwrap(), 200);
     }
-    assert_eq!(r.mock.seen().len(), 4);
+    assert_eq!(
+        r.mock.seen().len(),
+        5,
+        "the four held and the one ahead; never the cancelled"
+    );
 }
 
 #[test]

@@ -7,10 +7,10 @@
 //! webview handles it (Trama pattern). Files dropped on the window become pick tokens and reach
 //! the webview as `app:drop` (D-4: it never gets a path it could use).
 //!
-//! E2E only (`TRAMADO_DATA_DIR` + `TRAMADO_E2E=1` + `TRAMADO_E2E_MEDIA_SELFTEST=1`): once the
-//! webview logged "webview ready", Rust runs the media self-test in it (critique R3): play
-//! `/res/selftest.webm` through `tramado-media`, seek to 252 s, and log the result as
-//! `media selftest {ok, duration, currentTime}` in `app.log`.
+//! E2E only (`TRAMADO_DATA_DIR` + `TRAMADO_E2E=1`), once the webview logged "webview ready":
+//! with `TRAMADO_E2E_MEDIA_SELFTEST=1` Rust runs the media self-test in it (critique R3; result
+//! logged as `media selftest {…}`), and with `TRAMADO_E2E_EVAL=<file>` it runs that script
+//! (≤ 256 KiB; `tools/desktop-smoke.mjs --ipc-check` uses it to call the commands for real).
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, DragDropEvent, Emitter, Manager, Window, WindowEvent};
@@ -88,18 +88,31 @@ pub fn on_webview_ready(app: &AppHandle) {
     let Some(shared) = app.try_state::<Shared>() else {
         return;
     };
-    let wanted = shared.paths.dev_isolated
-        && shared.paths.e2e
-        && std::env::var("TRAMADO_E2E_MEDIA_SELFTEST").is_ok_and(|v| v == "1");
-    if !wanted {
+    if !(shared.paths.dev_isolated && shared.paths.e2e) {
         return;
     }
     let Some(w) = app.get_webview_window(MAIN) else {
         return;
     };
-    let script = media_selftest_script(crate::commands::app::media_base());
-    if let Err(e) = w.eval(&script) {
-        log::warn!("cannot start the media self-test: {e}");
+    if std::env::var("TRAMADO_E2E_MEDIA_SELFTEST").is_ok_and(|v| v == "1") {
+        let script = media_selftest_script(crate::commands::app::media_base());
+        if let Err(e) = w.eval(&script) {
+            log::warn!("cannot start the media self-test: {e}");
+        }
+    }
+    if let Some(file) = std::env::var_os("TRAMADO_E2E_EVAL").filter(|v| !v.is_empty()) {
+        let script = std::fs::metadata(&file)
+            .ok()
+            .filter(|m| m.is_file() && m.len() <= 256 * 1024)
+            .and_then(|_| std::fs::read_to_string(&file).ok());
+        match script {
+            Some(js) => {
+                if let Err(e) = w.eval(&js) {
+                    log::warn!("cannot run the e2e script: {e}");
+                }
+            }
+            None => log::warn!("the e2e script is missing or too large"),
+        }
     }
 }
 
