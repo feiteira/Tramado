@@ -78,6 +78,16 @@ function useClassData(services: AppServices, classes: readonly ClassView[]): { d
   return state;
 }
 
+/** The time, again every minute: the greeting, "Today, 14:00" and the 21/14-day windows move with the clock. */
+function useNow(services: AppServices, everyMs = 60_000): DateTime {
+  const [ms, setMs] = useState(() => services.ctx.clock.now());
+  useEffect(() => {
+    const id = setInterval(() => setMs(services.ctx.clock.now()), everyMs);
+    return () => clearInterval(id);
+  }, [services, everyMs]);
+  return useMemo(() => DateTime.fromMillis(ms), [ms]);
+}
+
 export default function Today({ route, services }: { route: Extract<Route, { name: 'today' }>; services: AppServices }) {
   void route;
   const i18n = useI18n();
@@ -89,7 +99,7 @@ export default function Today({ route, services }: { route: Extract<Route, { nam
   const me = useStore(services.ctx.identity);
   const queue = useStore(services.transcription.state);
   const prefs = useStore(services.ctx.prefs.store);
-  const now = DateTime.fromMillis(services.ctx.clock.now());
+  const now = useNow(services);
   const first = firstName(me?.name ?? '');
   const { data, loading } = useClassData(services, classes);
   const active = classes.filter((c) => !c.archived);
@@ -98,8 +108,8 @@ export default function Today({ route, services }: { route: Extract<Route, { nam
   const ticks = checklist(data);
   const dismissed = (prefs['today.checklistDismissed'] ?? '0') === '1';
   const showChecklist = !dismissed && !(ticks.classes && ticks.lecture && ticks.document && ticks.exam);
-  const exams = useMemo(() => comingUp(data, now), [data, now.toMillis()]); // eslint-disable-line react-hooks/exhaustive-deps
-  const lectures = useMemo(() => recentLectures(data, now), [data, now.toMillis()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const exams = useMemo(() => comingUp(data, now), [data, now]);
+  const lectures = useMemo(() => recentLectures(data, now), [data, now]);
   const trans = useMemo(() => transcriptions(data), [data]);
   const unreadRows = useMemo(() => unread(data, me?.memberId ?? null), [data, me?.memberId]);
   const anyShared = active.some((c) => c.shared);

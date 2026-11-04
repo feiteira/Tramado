@@ -649,6 +649,27 @@
     "axe": true
   },
   {
+    "name": "class-more-delete",
+    "route": "class",
+    "query": "class=stats",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "click": "class-more"
+      },
+      {
+        "click": "class-more-delete"
+      },
+      {
+        "expect": "confirm-dialog"
+      },
+      {
+        "expect-text": "confirm-dialog=Estadística I"
+      }
+    ],
+    "axe": true
+  },
+  {
     "name": "class-add",
     "route": "class",
     "query": "class=law",
@@ -859,6 +880,9 @@
       },
       {
         "expect": "storage-audio-retention"
+      },
+      {
+        "expect": "storage-recently-deleted"
       }
     ],
     "axe": true
@@ -877,6 +901,24 @@
       },
       {
         "expect": "privacy-ai-log"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-privacy-clear",
+    "route": "settings",
+    "query": "section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "steps": [
+      {
+        "click": "privacy-ai-log-clear"
+      },
+      {
+        "expect": "confirm-dialog"
+      },
+      {
+        "expect-text": "confirm-dialog=Clear the AI activity log?"
       }
     ],
     "axe": true

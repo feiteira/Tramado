@@ -38,7 +38,7 @@ export default function PrivacySection({ services }: { services: AppServices }) 
     void load();
   }, [load]);
   const clear = async () => {
-    const ok = await confirm({ title: t('privacy.log.clear'), body: t('privacy.log.intro'), confirmLabel: t('privacy.log.clear'), danger: true });
+    const ok = await confirm({ title: t('privacy.log.clearConfirm.title'), body: t('privacy.log.clearConfirm.body'), confirmLabel: t('privacy.log.clear'), danger: true });
     if (!ok) return;
     try {
       await services.ai.clearActivity();

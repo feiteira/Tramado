@@ -117,6 +117,7 @@ export const app: Messages['app'] = {
     moveRows: 'Moverse entre filas',
     openRow: 'Abrir la fila seleccionada',
     notInText: 'Estas teclas funcionan cuando no está escribiendo en un campo.',
+    keySpace: 'Espacio',
   },
   crash: {
     title: 'Algo ha ido mal',

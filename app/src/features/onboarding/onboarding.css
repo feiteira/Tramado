@@ -253,6 +253,7 @@
 .onb__nav-end {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--s-2);
 }
@@ -328,7 +329,7 @@
   position: relative;
   flex: none;
   width: 520px;
-  height: 560px;
+  height: 600px;
   font-size: var(--fs-md);
 }
 
@@ -345,9 +346,10 @@
   box-shadow: var(--shadow-2);
 }
 
+/* The cards overlap only where they have no text: no word is cut by the card above it. */
 .specimen__card--1 { left: 10px; top: 40px; }
-.specimen__card--2 { left: 200px; top: 120px; }
-.specimen__card--3 { left: 40px; top: 205px; }
+.specimen__card--2 { left: 232px; top: 118px; }
+.specimen__card--3 { left: 40px; top: 238px; }
 
 .specimen__tab {
   position: absolute;
@@ -396,7 +398,7 @@
 .specimen__ai {
   position: absolute;
   left: 150px;
-  top: 330px;
+  top: 368px;
   display: flex;
   flex-direction: column;
   gap: 6px;

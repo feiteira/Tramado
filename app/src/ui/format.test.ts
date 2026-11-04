@@ -13,6 +13,10 @@ describe('formatBytes / formatDuration', () => {
     expect(formatBytes(pt.t, 'pt-PT', 1536)).toBe('1,5 KB');
     expect(formatBytes(en.t, 'en-GB', 1000 * 1024)).toBe('1 MB');
     expect(formatBytes(en.t, 'en-GB', 999)).toBe('999 B');
+    // Just under 1000 KB rounds up: never "1,000 KB".
+    expect(formatBytes(en.t, 'en-GB', 999.6 * 1024)).toBe('1 MB');
+    expect(formatBytes(en.t, 'en-GB', 1000)).toBe('1 KB');
+    expect(formatBytes(en.t, 'en-GB', 9.97 * 1024 ** 2)).toBe('10 MB');
   });
   it('durations', () => {
     expect(formatDuration(en.t, 42_000)).toBe('42 s');

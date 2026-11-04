@@ -23,6 +23,7 @@ export const privacy: Messages['privacy'] = {
     actions: { ask: 'Perguntar', chat: '@IA na conversa', explain: 'Explicar', summary: 'Resumo', terms: 'Termos-chave', annotate: 'Anotar transcrição', studyNotes: 'Apontamentos de estudo', examExtract: 'Exame: encontrar perguntas', examOcr: 'Exame: ler páginas', examAnswer: 'Exame: responder', hint: 'Pista', deep: 'Resposta aprofundada', title: 'Título da aula', describe: 'Descrever imagem', docOcr: 'Ler uma digitalização', cloudSpeech: 'Transcrição na nuvem', keyCheck: 'Verificação da chave', catalog: 'Lista de modelos' },
     clear: 'Limpar o registo',
     empty: 'Ainda não houve pedidos à IA.',
+    clearConfirm: { title: 'Limpar o registo de atividade da IA?', body: 'A lista de pedidos à IA feitos neste computador é removida. Nada mais muda: as suas respostas, apontamentos e disciplinas ficam.' },
     cleared: 'O registo de atividade da IA está vazio.',
   },
   where: { title: 'Onde estão os seus dados', classes: 'Abrir a pasta das disciplinas', private: 'Abrir a pasta dos dados privados', models: 'Abrir a pasta dos modelos', cache: 'Abrir a pasta da cache' },

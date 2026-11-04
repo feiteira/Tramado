@@ -5,7 +5,7 @@ export const onboarding: Messages['onboarding'] = {
   step: 'Paso {n} de 4',
   welcome: {
     headline: 'Sus asignaturas, [m]todo en un solo lugar[/m]',
-    lead: 'Grabe y transcriba clases, guarde juntos todos los apuntes y textos legales, compártalos con su clase y prepare los exámenes con una IA que le muestra de dónde sale cada respuesta.',
+    lead: 'Grabe y transcriba clases, guarde juntos todos los materiales y textos legales, compártalos con su clase y prepare los exámenes con una IA que le muestra de dónde sale cada respuesta.',
     start: 'Empezar',
     example: 'Probar el ejemplo',
     promise: {

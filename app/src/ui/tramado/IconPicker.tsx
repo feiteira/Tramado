@@ -27,6 +27,8 @@ export interface IconPickerProps {
 export function IconPicker({ value, onChange, suggested, color, label, columns = 11, className, ...rest }: IconPickerProps) {
   const { t } = useI18n();
   const order: ClassIconName[] = [suggested, ...CLASS_ICONS.filter((i) => i !== suggested)];
+  // One Tab stop: the checked option, or the first when the value is not in the grid (an icon from a newer Tramado).
+  const tabStop = Math.max(0, order.indexOf(value));
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const move = (from: number, delta: number) => {
     const n = order.length;
@@ -72,7 +74,7 @@ export function IconPicker({ value, onChange, suggested, color, label, columns =
             aria-checked={checked}
             aria-label={icon === suggested ? `${name} (${t('classes.dialog.iconSuggested')})` : name}
             title={name}
-            tabIndex={checked ? 0 : -1}
+            tabIndex={i === tabStop ? 0 : -1}
             className={cx('icon-picker__option', checked && 'icon-picker__option--checked', icon === suggested && 'icon-picker__option--suggested')}
             onClick={() => onChange(icon)}
             onKeyDown={(e) => onKeyDown(e, i)}

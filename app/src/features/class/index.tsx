@@ -23,7 +23,6 @@ import { NewerFormatNotice } from '../../shell/NewerFormat';
 import { classLine } from '../../shell/SyncPill';
 import { tabsOf } from '../../shell/classTabs';
 import { Button, IconButton } from '../../ui/components/Button';
-import { useConfirm } from '../../ui/components/Confirm';
 import { Badge, Spinner } from '../../ui/components/Feedback';
 import { MenuButton, type MenuEntry } from '../../ui/components/Menu';
 import { Tabs } from '../../ui/components/Tabs';
@@ -35,6 +34,7 @@ import { DropOverlay } from '../../ui/tramado/DropOverlay';
 import { Avatar } from '../../ui/tramado/Avatar';
 import { classStyle } from '../../ui/classColor';
 import { useI18n } from '../../ui/i18n';
+import { useDeleteClass } from './ClassDialog';
 import './class.css';
 
 type TabComponent = React.LazyExoticComponent<React.ComponentType<{ classId: string; services: AppServices }>>;
@@ -105,6 +105,7 @@ function ClassFrame({ cls, route, services }: { cls: ClassView; route: Extract<R
   const recordingHere = recording !== null;
   const recordingClass = recording ? services.library.classes.get().find((c) => c.id === recording.classId)?.shortName ?? '' : '';
   const missingFolder = cls.sync.kind === 'missingFolder';
+  const removeClass = useDeleteClass(services);
 
   const archive = async (on: boolean) => {
     try {
@@ -154,7 +155,7 @@ function ClassFrame({ cls, route, services }: { cls: ClassView; route: Extract<R
     { kind: 'separator' },
     cls.shared
       ? { id: 'leave', label: t('classes.header.more.leave'), icon: LogOut, danger: true, onSelect: () => dialogs.open('leave', { classId: cls.id }), testId: 'class-more-leave' }
-      : { id: 'delete', label: t('classes.header.more.delete'), icon: Trash2, danger: true, onSelect: () => dialogs.open('class-settings', { classId: cls.id }), testId: 'class-more-delete' },
+      : { id: 'delete', label: t('classes.header.more.delete'), icon: Trash2, danger: true, onSelect: () => void removeClass(cls), testId: 'class-more-delete' },
   ];
 
   const meta: React.ReactNode[] = [];
@@ -255,6 +256,7 @@ function ClassTabs({
 }) {
   const { t } = useI18n();
   const dialogs = useDialogs();
+  const toast = useToast();
   const [drag, setDrag] = useState<'documents' | 'exam' | 'lecture' | null>(null);
   const depth = useRef(0);
   const host = useRef<HTMLDivElement>(null);
@@ -277,10 +279,10 @@ function ClassTabs({
         const target = targetFor(e.picked.map((p) => p.name), []);
         if (target === 'exam') dialogs.open('exam-paper', { classId: cls.id, picked: e.picked });
         else if (target === 'lecture') dialogs.open('import', { classId: cls.id, picked: e.picked });
-        else void services.forClass(cls.id).documents.import(e.picked).catch(() => undefined);
+        else void services.forClass(cls.id).documents.import(e.picked).catch((err: unknown) => toast.error(err));
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [services, tab, cls.id, cls.archived, dialogs],
+    [services, tab, cls.id, cls.archived, dialogs, toast],
   );
   const hasFiles = (e: React.DragEvent) => [...e.dataTransfer.types].includes('Files');
   const dragHandlers = tab === 'documents' || cls.archived ? {} : {

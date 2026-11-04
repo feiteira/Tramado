@@ -4,16 +4,17 @@ import type { MessageKey } from './i18n';
 
 type T = (key: MessageKey, vars?: Record<string, string | number>) => string;
 
-/** 1536 → "1.5 KB", 812 × 2^20 → "812 MB" (base 1024; one decimal below 10). */
+/** 1536 → "1.5 KB", 812 × 2^20 → "812 MB" (base 1024; one decimal below 10; never "1,000 KB"). */
 export function formatBytes(t: T, bcp47: string, bytes: number): string {
-  const n = Math.max(0, bytes);
-  const units: Array<['b' | 'kb' | 'mb' | 'gb', number]> = [['gb', 1024 ** 3], ['mb', 1024 ** 2], ['kb', 1024], ['b', 1]];
+  const n = Math.max(0, Number.isFinite(bytes) ? bytes : 0);
+  const units: Array<['b' | 'kb' | 'mb' | 'gb', number]> = [['b', 1], ['kb', 1024], ['mb', 1024 ** 2], ['gb', 1024 ** 3]];
   for (const [unit, size] of units) {
-    // From 1000 of the smaller unit on, the larger one reads better ("1 MB", not "1,000 KB").
-    if (n >= (size * 1000) / 1024 || unit === 'b') {
-      const v = n / size;
-      const digits = unit !== 'b' && v < 10 ? 1 : 0;
-      const text = new Intl.NumberFormat(bcp47, { maximumFractionDigits: digits, minimumFractionDigits: 0 }).format(v);
+    const v = n / size;
+    const digits = unit !== 'b' && v < 10 ? 1 : 0;
+    const shown = Number(v.toFixed(digits));
+    // The smallest unit whose rounded value stays below 1000 ("1 MB", not "1,000 KB" for 999.6 KB).
+    if (shown < 1000 || unit === 'gb') {
+      const text = new Intl.NumberFormat(bcp47, { maximumFractionDigits: digits, minimumFractionDigits: 0 }).format(shown);
       return t(`common.size.${unit}`, { n: text });
     }
   }

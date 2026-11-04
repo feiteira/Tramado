@@ -54,7 +54,7 @@ export function Missing({ what, recentlyDeleted, inline }: { what: MissingWhat; 
                 </Button>
               ) : null}
               <Button onClick={() => (canGoBack ? back() : go({ name: 'today' }))} data-testid="missing-back">
-                {canGoBack ? t('common.back') : t('app.rail.today')}
+                {canGoBack ? t('common.back') : t('app.commands.goToday')}
               </Button>
             </>
           }

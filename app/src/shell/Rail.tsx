@@ -179,7 +179,7 @@ function ClassRow({ c, current, services, factories, narrow, recordingHere, inde
             className={cx('rail__item', 'rail__class', current && 'rail__item--current', c.archived && 'rail__class--archived')}
             aria-current={current ? 'page' : undefined}
             aria-label={label}
-            aria-haspopup="menu"
+            aria-keyshortcuts="Shift+F10"
             onClick={() => go({ name: 'class', classId: c.id })}
             onContextMenu={(e) => {
               e.preventDefault();

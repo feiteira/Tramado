@@ -23,6 +23,7 @@ export const privacy = {
     actions: { ask: 'Ask', chat: '@AI in chat', explain: 'Explain', summary: 'Summary', terms: 'Key terms', annotate: 'Annotate transcript', studyNotes: 'Study notes', examExtract: 'Exam: find questions', examOcr: 'Exam: read pages', examAnswer: 'Exam: answer', hint: 'Hint', deep: 'Deep answer', title: 'Lecture title', describe: 'Describe image', docOcr: 'Read a scan', cloudSpeech: 'Cloud transcription', keyCheck: 'Key check', catalog: 'Model list' },
     clear: 'Clear the log',
     empty: 'No AI requests yet.',
+    clearConfirm: { title: 'Clear the AI activity log?', body: 'The list of AI requests made from this computer is removed. Nothing else changes: your answers, notes and classes stay.' },
     cleared: 'The AI activity log is empty.',
   },
   where: { title: 'Where your data is', classes: 'Open the classes folder', private: 'Open the private data folder', models: 'Open the models folder', cache: 'Open the cache folder' },

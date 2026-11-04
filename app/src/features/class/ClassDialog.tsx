@@ -34,8 +34,6 @@ export function ClassDialog({ services, classId, close }: { services: AppService
   const app = useAppState();
   const { go } = useRouter();
   const dialogs = useDialogs();
-  const confirm = useConfirm();
-  const toast = useToast();
   const classes = useStore(services.library.classes);
   const cls = classId ? classes.find((c) => c.id === classId) ?? null : null;
   const editing = !!classId;
@@ -126,24 +124,9 @@ export function ClassDialog({ services, classId, close }: { services: AppService
     }
   };
 
+  const removeClass = useDeleteClass(services);
   const deleteClass = async () => {
-    if (!cls) return;
-    const ok = await confirm({
-      title: t('classes.delete.title', { class: cls.name }),
-      body: t('classes.delete.body'),
-      confirmLabel: t('classes.delete.confirm'),
-      danger: true,
-      typeToConfirm: cls.name,
-      typePrompt: t('classes.delete.typePrompt'),
-    });
-    if (!ok) return;
-    try {
-      await services.library.forget(cls.id, { trash: true });
-      close();
-      go({ name: 'today' });
-    } catch (e) {
-      toast.error(e);
-    }
+    if (cls && (await removeClass(cls))) close();
   };
 
   return (
@@ -274,6 +257,36 @@ export function ClassDialog({ services, classId, close }: { services: AppService
       </div>
     </Dialog>
   );
+}
+
+/**
+ * Delete a local class (UX §3.3.4): type the class name to confirm, then the folder goes to the OS trash and the app
+ * returns to Today. Resolves true when the class was deleted. Used by Class settings and the header's ⋯ menu.
+ */
+export function useDeleteClass(services: AppServices): (cls: { id: string; name: string }) => Promise<boolean> {
+  const { t } = useI18n();
+  const { go } = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
+  return async (cls) => {
+    const ok = await confirm({
+      title: t('classes.delete.title', { class: cls.name }),
+      body: t('classes.delete.body'),
+      confirmLabel: t('classes.delete.confirm'),
+      danger: true,
+      typeToConfirm: cls.name,
+      typePrompt: t('classes.delete.typePrompt'),
+    });
+    if (!ok) return false;
+    try {
+      await services.library.forget(cls.id, { trash: true });
+      go({ name: 'today' });
+      return true;
+    } catch (e) {
+      toast.error(e);
+      return false;
+    }
+  };
 }
 
 /** The class detail (organisers, me), or null for a new class. */

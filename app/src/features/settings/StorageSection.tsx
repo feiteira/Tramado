@@ -1,11 +1,13 @@
 // Settings › Storage (UX §3.14.7): where new classes go (with the cloud-folder warning), each class's size with its
 // recordings and the deleted files Syncthing keeps 30 days ([Empty class trash], Skip audio), classes still being
-// left, the speech models, the cache ([Clear cache]) and the retention of my recordings once transcribed.
-import React, { useCallback, useEffect, useState } from 'react';
-import { FolderOpen, Trash2 } from 'lucide-react';
+// left, the speech models, the cache ([Clear cache]) and the retention of my recordings once transcribed. A shared
+// class also opens its Recently deleted dialog (UI-GROUP's `recently-deleted`) from here (plan §6.1).
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FolderOpen, Trash2, Undo2 } from 'lucide-react';
 import type { ClassEntry, StorageUsage } from '../../platform/types';
 import type { AppServices } from '../../services/types/common';
 import { useAppState } from '../../shell/AppState';
+import { useDialogs } from '../../shell/useDialogs';
 import { useRouter } from '../../shell/router';
 import { useStore } from '../../shell/useStore';
 import { Button } from '../../ui/components/Button';
@@ -24,6 +26,7 @@ export default function StorageSection({ services }: { services: AppServices }) 
   const { t } = i18n;
   const app = useAppState();
   const { go } = useRouter();
+  const dialogs = useDialogs();
   const toast = useToast();
   const confirm = useConfirm();
   const { platform } = services.ctx;
@@ -35,19 +38,30 @@ export default function StorageSection({ services }: { services: AppServices }) 
   const [busy, setBusy] = useState<string | null>(null);
   const size = (n: number) => formatBytes(t, i18n.meta.bcp47, n);
 
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
   const load = useCallback(async () => {
     const [u, r, list] = await Promise.all([
       platform.storage.usage().catch(() => null),
       platform.classes.root().catch(() => null),
       platform.classes.list().catch(() => [] as ClassEntry[]),
     ]);
+    if (!live.current) return;
     setUsage(u);
     setRoot(r?.path ?? null);
     setLeaving(list.filter((e) => e.leaving));
   }, [platform]);
+  // Sizes are measured on disk (`storage_usage` walks every class folder): again only when the set of classes
+  // changes, not on every sync or unread update of the class views.
+  const classKey = classes.map((c) => c.id).join(',');
   useEffect(() => {
     void load();
-  }, [load, classes]);
+  }, [load, classKey]);
 
   const run = async (id: string, f: () => Promise<unknown>, done?: string) => {
     setBusy(id);
@@ -113,6 +127,11 @@ export default function StorageSection({ services }: { services: AppServices }) 
               hint={u ? t('settings.storage.classSize', { size: size(u.total), audio: size(u.audio), trash: size(u.trash) }) : undefined}
             >
               <div className="set-inline">
+                {c.shared ? (
+                  <Button size="sm" variant="ghost" icon={Undo2} onClick={() => dialogs.open('recently-deleted', { classId: c.id })} data-class-id={c.id} data-testid="storage-recently-deleted">
+                    {t('classes.header.more.recentlyDeleted')}
+                  </Button>
+                ) : null}
                 <Button
                   size="sm"
                   icon={Trash2}

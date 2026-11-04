@@ -117,6 +117,7 @@ export const app = {
     moveRows: 'Move between rows',
     openRow: 'Open the selected row',
     notInText: 'These keys work when you’re not typing in a field.',
+    keySpace: 'Space',
   },
   crash: {
     title: 'Something went wrong',

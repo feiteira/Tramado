@@ -19,7 +19,7 @@ interface Item { keys: string[]; what: MessageKey }
 type KeyLabel = (key: string, opts?: { shift?: boolean; alt?: boolean }) => string;
 
 /** The groups shown for a route (pure: the shortcuts the UX lists for each screen). */
-export function shortcutGroups(route: Route, recording: boolean, key: KeyLabel): Array<{ group: Group; items: Item[] }> {
+export function shortcutGroups(route: Route, recording: boolean, key: KeyLabel, space = 'Space'): Array<{ group: Group; items: Item[] }> {
   const out: Array<{ group: Group; items: Item[] }> = [
     {
       group: 'everywhere',
@@ -39,7 +39,7 @@ export function shortcutGroups(route: Route, recording: boolean, key: KeyLabel):
     },
   ];
   const lectureKeys: Item[] = [
-    { keys: ['Space'], what: 'app.shortcuts.playPause' },
+    { keys: [space], what: 'app.shortcuts.playPause' },
     { keys: ['←', '→'], what: 'app.shortcuts.skip5' },
     { keys: ['Shift+←', 'Shift+→'], what: 'app.shortcuts.skip30' },
     { keys: ['[', ']'], what: 'app.shortcuts.speed' },
@@ -79,7 +79,7 @@ export function shortcutGroups(route: Route, recording: boolean, key: KeyLabel):
       out.push({
         group: 'exam',
         items: [
-          { keys: ['Space'], what: 'app.shortcuts.reveal' },
+          { keys: [space], what: 'app.shortcuts.reveal' },
           { keys: ['1'], what: 'app.shortcuts.again' },
           { keys: ['2'], what: 'app.shortcuts.gotIt' },
           { keys: ['Alt+↑', 'Alt+↓'], what: 'app.shortcuts.nextQuestion' },
@@ -111,7 +111,7 @@ export default function ShortcutsDialog({ props, services, close }: { props: Dia
   const { route } = useRouter();
   const key = useKeyLabel();
   const recording = useStore(services.recording.state);
-  const groups = shortcutGroups(route, !!recording, key);
+  const groups = shortcutGroups(route, !!recording, key, t('app.shortcuts.keySpace'));
   return (
     <Dialog
       open
