@@ -2,14 +2,12 @@
 // windows, question down-weighting), but with the units tokenised ONCE into an inverted index so
 // each query costs milliseconds, and with caller-supplied units (pages, articles, slides,
 // transcript turns) carrying a locator for citations.
+// Tramado: units carry the folder spec's citation Locator (§8.15) instead of the lab's own shape.
+import type { Locator } from '../model/files';
 import { foldWithMap, originalSpan } from './text';
 
-export type Locator =
-  | { kind: 'page'; page: number; label?: string }
-  | { kind: 'slide'; slide: number }
-  | { kind: 'time'; ms: number }
-  | { kind: 'article'; label: string; page?: number }
-  | { kind: 'none' };
+export type { Locator };
+const WHOLE: Locator = { type: 'whole' };
 
 export interface UnitSpan { start: number; end: number; locator?: Locator }
 
@@ -72,6 +70,7 @@ export class PassageIndex {
   private units: Unit[] = [];
   private postings = new Map<string, number[]>(); // stem → [unitIndex, tf, unitIndex, tf, ...]
   private texts = new Map<string, string>();
+  private spans = new Map<string, UnitSpan[]>();
   private liveCount = 0;
   private liveLen = 0;
 
@@ -80,13 +79,14 @@ export class PassageIndex {
   add(id: string, text: string, unitSpans: UnitSpan[] = paragraphUnits(text)): void {
     if (this.texts.has(id)) this.remove(id);
     this.texts.set(id, text);
+    this.spans.set(id, unitSpans);
     for (const s of unitSpans) {
       const ws = stems(text.slice(s.start, s.end), this.stop);
       if (!ws.length) continue;
       const tf = new Map<string, number>();
       for (const w of ws) tf.set(w.stem, (tf.get(w.stem) ?? 0) + 1);
       const u = this.units.length;
-      this.units.push({ doc: id, start: s.start, end: s.end, len: ws.length, asks: /[?¿]\s*$/.test(text.slice(s.start, s.end)), locator: s.locator ?? { kind: 'none' }, live: true });
+      this.units.push({ doc: id, start: s.start, end: s.end, len: ws.length, asks: /[?¿]\s*$/.test(text.slice(s.start, s.end)), locator: s.locator ?? WHOLE, live: true });
       for (const [t, n] of tf) {
         let p = this.postings.get(t);
         if (!p) this.postings.set(t, (p = []));
@@ -97,14 +97,48 @@ export class PassageIndex {
     }
   }
 
-  /** Lazy: units are marked dead (rebuild the index when many are). */
+  /** Lazy: units are marked dead; the postings are rebuilt once more than half of the units are. */
   remove(id: string): void {
+    if (!this.texts.has(id)) return;
     this.texts.delete(id);
+    this.spans.delete(id);
     for (const u of this.units) if (u.doc === id && u.live) {
       u.live = false;
       this.liveCount--;
       this.liveLen -= u.len;
     }
+    if (this.units.length > 1000 && this.liveCount * 2 < this.units.length) this.compact();
+  }
+
+  /** Documents in the index. */
+  get size(): number {
+    return this.texts.size;
+  }
+
+  has(id: string): boolean {
+    return this.texts.has(id);
+  }
+
+  /** The text of a document as it was added. */
+  text(id: string): string | undefined {
+    return this.texts.get(id);
+  }
+
+  /** The units of a document as they were added (locators included). */
+  unitsOf(id: string): UnitSpan[] {
+    return this.spans.get(id) ?? [];
+  }
+
+  /** Re-adds every live document so the postings hold no dead units (same results, less memory). */
+  compact(): void {
+    const docs = [...this.texts].map(([id, text]) => ({ id, text, spans: this.spans.get(id) }));
+    this.units = [];
+    this.postings = new Map();
+    this.texts = new Map();
+    this.spans = new Map();
+    this.liveCount = 0;
+    this.liveLen = 0;
+    for (const d of docs) this.add(d.id, d.text, d.spans);
   }
 
   search(query: string, opts: { limit?: number; exclude?: (doc: string) => boolean } = {}): IndexedPassage[] {

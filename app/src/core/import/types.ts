@@ -4,7 +4,7 @@ import type { SyncPoint } from '../model/legacy';
 // documents service to store. Importers never touch the store.
 
 /** Lower-case format ids, the same ones DocSource.format records. */
-export const IMPORT_FORMATS = ['txt', 'md', 'docx', 'odt', 'rtf', 'html', 'pdf', 'vtt', 'srt'] as const;
+export const IMPORT_FORMATS = ['txt', 'md', 'docx', 'odt', 'rtf', 'html', 'pdf', 'pptx', 'vtt', 'srt'] as const;
 export type ImportFormat = (typeof IMPORT_FORMATS)[number];
 
 export type ImportedKind = 'text' | 'transcript' | 'pdf' | 'survey';

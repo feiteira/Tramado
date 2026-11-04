@@ -1,3 +1,4 @@
+import { PlatformError } from '../errors';
 import { canonicalize } from './text';
 import { ImportError, WARNING, warning } from './types';
 
@@ -22,6 +23,8 @@ export interface PdfJsLike {
     promise: Promise<{
       numPages: number;
       getPage(n: number): Promise<{ getTextContent(): Promise<{ items: unknown[] }>; cleanup(): unknown }>;
+      /** Printed page labels ("i", "ii", "1", …) when the PDF defines them (pdf.js), else null. */
+      getPageLabels?(): Promise<string[] | null>;
     }>;
     destroy(): Promise<void>;
   };
@@ -175,10 +178,21 @@ function pdfError(e: unknown): ImportError {
 export interface PdfOptions {
   /** For a PDF that needs a password to open. */
   password?: string;
+  /** Called after each page with (pages done, pages in all). */
+  onPage?: (done: number, total: number) => void;
+  /** Checked between pages: an aborted signal stops the extraction with CANCELLED. */
+  signal?: AbortSignal;
 }
 
-/** Extracts the text layer of a PDF. Throws ImportError ENCRYPTED_PDF or DAMAGED. */
-export async function extractPdfText(bytes: Uint8Array, pdfjs: PdfJsLike, opts: PdfOptions = {}): Promise<PdfText> {
+/** One PDF read page by page: each page's paragraphs (pages without text: none) and its labels. */
+export interface PdfPageTexts {
+  pages: string[][];
+  /** Printed page labels from the PDF (one per page), or null when it has none. */
+  labels: string[] | null;
+}
+
+/** Reads the text layer page by page. Throws ImportError ENCRYPTED_PDF or DAMAGED, PlatformError CANCELLED. */
+export async function extractPdfPageTexts(bytes: Uint8Array, pdfjs: PdfJsLike, opts: PdfOptions = {}): Promise<PdfPageTexts> {
   // pdf.js takes ownership of the buffer (it may transfer it to its worker): give it a copy.
   const task = pdfjs.getDocument({
     data: bytes.slice(),
@@ -196,9 +210,16 @@ export async function extractPdfText(bytes: Uint8Array, pdfjs: PdfJsLike, opts: 
     } catch (e) {
       throw pdfError(e);
     }
-    const pageTexts: string[] = [];
-    const imagePages: number[] = [];
+    let labels: string[] | null = null;
+    try {
+      const l = doc.getPageLabels ? await doc.getPageLabels() : null;
+      labels = Array.isArray(l) && l.length === doc.numPages ? l.map((x) => (typeof x === 'string' ? canonicalize(x).trim() : '')) : null;
+    } catch {
+      labels = null;   // a broken /PageLabels tree is not worth failing the file
+    }
+    const pages: string[][] = [];
     for (let n = 1; n <= doc.numPages; n++) {
+      if (opts.signal?.aborted) throw new PlatformError('CANCELLED', 'extraction cancelled');
       let items: unknown[];
       try {
         const page = await doc.getPage(n);
@@ -208,25 +229,39 @@ export async function extractPdfText(bytes: Uint8Array, pdfjs: PdfJsLike, opts: 
         throw pdfError(e);
       }
       const runs = items.map(toRun).filter((r): r is Run => r !== null);
-      const paras = buildParagraphs(buildLines(runs))
-        .map((p) => canonicalize(p).replace(/\u{ad}/gu, '').trim())
-        .filter(Boolean);
-      if (!paras.length) imagePages.push(n);
-      pageTexts.push(paras.join('\n'));
+      pages.push(
+        buildParagraphs(buildLines(runs))
+          .map((p) => canonicalize(p).replace(/\u{ad}/gu, '').trim())
+          .filter(Boolean),
+      );
+      opts.onPage?.(n, doc.numPages);
     }
-    // Pages are separated by a blank line; pages without text add nothing.
-    const pageStarts: number[] = [];
-    let text = '';
-    for (const t of pageTexts) {
-      if (t && text) text += '\n\n';
-      pageStarts.push(text.length);
-      text += t;
-    }
-    const warnings: string[] = [];
-    if (doc.numPages > 0 && imagePages.length === doc.numPages) warnings.push(WARNING.pdfNoText);
-    else if (imagePages.length) warnings.push(warning(WARNING.pdfImagePages, imagePages.join(',')));
-    return { text, pages: doc.numPages, pageStarts, imagePages, warnings };
+    return { pages, labels };
   } finally {
     await task.destroy().catch(() => undefined);
   }
+}
+
+/** Joins page paragraphs as extractPdfText does: pages separated by a blank line; empty pages add nothing. */
+export function joinPdfPages(pages: readonly string[][]): Omit<PdfText, 'warnings'> & { warnings: string[] } {
+  const pageStarts: number[] = [];
+  const imagePages: number[] = [];
+  let text = '';
+  pages.forEach((paras, i) => {
+    const t = paras.join('\n');
+    if (!t) imagePages.push(i + 1);
+    if (t && text) text += '\n\n';
+    pageStarts.push(text.length);
+    text += t;
+  });
+  const warnings: string[] = [];
+  if (pages.length > 0 && imagePages.length === pages.length) warnings.push(WARNING.pdfNoText);
+  else if (imagePages.length) warnings.push(warning(WARNING.pdfImagePages, imagePages.join(',')));
+  return { text, pages: pages.length, pageStarts, imagePages, warnings };
+}
+
+/** Extracts the text layer of a PDF. Throws ImportError ENCRYPTED_PDF or DAMAGED. */
+export async function extractPdfText(bytes: Uint8Array, pdfjs: PdfJsLike, opts: PdfOptions = {}): Promise<PdfText> {
+  const r = await extractPdfPageTexts(bytes, pdfjs, opts);
+  return joinPdfPages(r.pages);
 }

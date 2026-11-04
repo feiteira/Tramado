@@ -8,8 +8,12 @@ describe('markdown', () => {
       '<a id="first-run"></a>', '', '## Section', '', '![Alt text](../img/en/today.png)', '',
       '1. One', '2. Two', '   - nested', '', '| A | B |', '|---|---|', '| 1 | **2** |', '', '> Note',
     ].join('\n');
-    const b = parseMarkdown(md);
+    const b = parseMarkdown(md, { relative: true });
     expect(b.map((x) => x.t)).toEqual(['heading', 'para', 'heading', 'image', 'list', 'table', 'quote']);
+    // Untrusted text (the default): the relative image is only its alt text, the relative link only its label.
+    const u = parseMarkdown(md);
+    expect(u[3]).toEqual({ t: 'para', c: [{ t: 'text', v: 'Alt text' }] });
+    expect(JSON.stringify(u[1])).not.toContain('"link"');
     expect(b[2]).toMatchObject({ t: 'heading', level: 2, anchor: 'first-run' });
     expect(b[3]).toEqual({ t: 'image', alt: 'Alt text', src: '../img/en/today.png' });
     expect(b[4]).toMatchObject({ t: 'list', ordered: true });

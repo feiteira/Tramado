@@ -20,14 +20,19 @@ export interface TextCache {   // cache/text/<sha256>.json, format "tramado.text
 
 export interface DocumentService {
   list: ReadableStore<DocSummary[]>;
-  import(picks: Picked[], destDir?: ClassPath): Promise<Array<{ name: string; path?: ClassPath; error?: ErrorCode; duplicateOf?: ClassPath }>>;
+  import(picks: Picked[], destDir?: ClassPath, opts?: { allowDuplicate?: boolean }): Promise<Array<{ name: string; path?: ClassPath; error?: ErrorCode; duplicateOf?: ClassPath }>>;
+      // T-DOCS (additive): a file whose SHA-256 is already in the class is not added (duplicateOf set)
+      // unless opts.allowDuplicate (UX §3.7.1 [Add anyway]).
   remove(path: ClassPath, mode: 'everyone' | 'thisComputer'): Promise<void>;
   rename(path: ClassPath, name: string): Promise<ClassPath>; move(path: ClassPath, destDir: ClassPath): Promise<ClassPath>;
   text(path: ClassPath): Promise<TextCache>; url(path: ClassPath): string; reveal(path: ClassPath): Promise<void>; open(path: ClassPath): Promise<void>;
 }
 
 export interface ExtractionService {       // services/extraction.ts; writes cache/text/<sha256>.json through ctx.extractHost
-  status: ReadableStore<{ running: number; queued: number; bySha: Readonly<Record<Hex64, 'pending' | 'running' | 'ready' | 'scan' | 'failed' | 'unsupported'>> }>;
+  status: ReadableStore<{ running: number; queued: number; bySha: Readonly<Record<Hex64, 'pending' | 'running' | 'ready' | 'scan' | 'failed' | 'unsupported'>>;
+    progress?: Readonly<Record<Hex64, number>>;                      // T-DOCS (additive): 0..1 of running jobs ("Reading text… {n} %")
+    pages?: Readonly<Record<Hex64, number>>;                         // T-DOCS (additive): pages/slides of extracted files
+  }>;
   ensure(classId: ClassId, path: ClassPath): Promise<TextCache>;
   cancel(sha256: Hex64): void;
 }
