@@ -13,6 +13,9 @@ export interface AppInfo {
   startedHidden: boolean;                  // launched by autostart with --hidden
   mediaBase: string;                       // 'tramado-media://localhost' | 'http://tramado-media.localhost' | 'blob:' (demo)
   paths: { config: string; data: string; cache: string };   // display only (Storage, diagnostics)
+  mediaAudio?: 'scheme' | 'blob';          // R-SHELL addition: how <audio> plays recordings here; 'blob' on Linux
+                                           // (WebKitGTK cannot play a custom scheme; media self-test, critique R3)
+  traySupported?: boolean;                 // R-SHELL addition: false → "close to tray" must quit (no tray icon here)
 }
 export type AppFileName = 'prefs.json' | 'identity.json' | 'hlc.json';
 export type CacheKey = string;   // ^(text/[0-9a-f]{64}\.json|peaks/[0-9a-f]{64}-\d{2,5}\.json|models-catalog\.json|ocr/[0-9a-f]{64}\.json)$
