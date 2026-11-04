@@ -114,10 +114,34 @@ export const members = {
     wants: '[b]{name}[/b] (“{device}”) wants to join {class}. Check words: [b]{words}[/b]',
     several: { one: '{n} person wants to join {class}', other: '{n} people want to join {class}' },
     review: 'Review',
+    label: 'People joining your classes',   // G2 (UI-GROUP)
   },
   pair: {
     title: 'Add another computer',
     body: 'On your other computer, open Tramado → Join a class and paste this code. Your classes will appear there too. Your private notes, highlights and practice are not copied: they stay on each computer.',
   },
   checkWords: { label: 'Check words', copy: 'Copy check words', copied: 'Check words copied.' },
+  // ── G2 (UI-GROUP) ──
+  dot: { online: 'Online', syncing: 'Syncing', offline: 'Offline', recording: 'Recording', transcribing: 'Transcribing' },
+  more: {
+    askBeforeReadOnly: 'Only organisers can change this.',
+    laterDone: '{name} is still waiting. You can let them in later.',
+    menuLabel: 'Actions for {name}',
+    syncingFiles: { one: 'Syncing · {n} file left', other: 'Syncing · {n} files left' },
+    helperCloud: 'cloud transcription',
+    noHelpers: 'Nobody helps transcribe this class’s lectures yet.',
+    helperModel: { turbo: 'Recommended model', small: 'Small model', large: 'Most accurate model' },
+  },
+  joinMore: {
+    own: 'This is your own invite. Send it to your classmates instead.',
+    someone: 'A classmate',
+    openClass: 'Open the class',
+    old: 'This invite is a few weeks old. If joining doesn’t work, ask for a new one.',
+    cloudFolder: 'This folder is inside a cloud-synced folder (OneDrive, Dropbox, iCloud…). Two programs syncing the same files can damage them. Choose a folder outside it.',
+    arriving: 'Lectures and documents that are still arriving show ⟳ and open as soon as they’re here.',
+  },
+  leave: {
+    deleteNotes: 'Also delete my private notes and practice for this class',
+    leaving: 'Leaving…',
+  },
 };

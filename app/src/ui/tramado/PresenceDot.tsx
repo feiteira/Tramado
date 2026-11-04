@@ -1,6 +1,7 @@
 // PresenceDot (UX §2.11): shape + colour, role="img" with a label (never colour alone).
 import React from 'react';
 import { cx } from '../cx';
+import './group.css';
 
 export type PresenceState = 'online' | 'syncing' | 'offline' | 'recording' | 'transcribing';
 
