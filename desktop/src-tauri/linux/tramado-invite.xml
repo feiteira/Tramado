@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- INT (wave 3): the .tramado-invite file type on Linux (shared-mime-info), so the file manager opens invites with
+     Tramado (tauri.conf.json bundle.fileAssociations; the .deb's dpkg trigger runs update-mime-database). -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="text/x-tramado-invite">
+    <comment>Tramado class invite</comment>
+    <comment xml:lang="pt">Convite para uma disciplina do Tramado</comment>
+    <comment xml:lang="es">Invitación a una asignatura de Tramado</comment>
+    <sub-class-of type="text/plain"/>
+    <glob pattern="*.tramado-invite"/>
+  </mime-type>
+</mime-info>

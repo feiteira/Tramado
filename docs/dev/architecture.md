@@ -1615,6 +1615,7 @@ export interface ClassEntry {
   classId: ClassId; path: string; dirName: string;
   shared: boolean; joining: boolean; archived: boolean; skipAudio: boolean;
   aliases: ClassId[]; localIgnores: ClassPath[] /* class paths; Rust emits "(?d)/" + path */; addedAt: Instant;
+  localIncludes?: ClassPath[];             // INT: audio.webm fetched although skipAudio; Rust emits "!/" + path first
   leaving: { since: Instant; afterwards: 'keepLocal' | 'trash' } | null;   // sync spec §17 (hidden from the UI)
   available: boolean;                      // root and .tramado/class.json present (false → the folder-missing card)
 }
@@ -1818,6 +1819,7 @@ export interface Platform {
   storage: {
     usage(): Promise<StorageUsage>;
     reveal(which: 'classesRoot' | 'private' | 'models' | 'cache', classId?: ClassId): Promise<void>;
+    diskFree(): Promise<number | null>;                                              // INT: storage_free
   };
 
   classes: {                                                                         // registry (config/classes.json)
@@ -1827,7 +1829,7 @@ export interface Platform {
     create(req: { classId: ClassId; dirName: string; parent?: PickToken }): Promise<CreatedClass>;
     adopt(pick: PickToken): Promise<AdoptedClass>;
     fork(classId: ClassId, newClassId: ClassId): Promise<ClassEntry>;
-    update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[] }): Promise<ClassEntry>;
+    update(classId: ClassId, patch: { archived?: boolean; skipAudio?: boolean; localIgnores?: ClassPath[]; localIncludes?: ClassPath[] }): Promise<ClassEntry>;
     forget(classId: ClassId): Promise<void>;
     trash(classId: ClassId): Promise<void>;
     emptyTrash(classId: ClassId): Promise<void>;
@@ -1922,7 +1924,8 @@ export interface Platform {
       attach(onEvent: (e: RecorderEvent) => void): Promise<RecorderStatus | null>;
       pause(): Promise<RecorderStatus>;
       resume(): Promise<RecorderStatus>;
-      mark(kind: MarkerKind, note?: string): Promise<Marker>;
+      mark(kind: MarkerKind, note?: string, atMs?: number): Promise<Marker>;   // INT: atMs = raw audio time
+      unmark(markerId: Ulid): Promise<void>;                                     // INT: speech_recorder_unmark
       stop(): Promise<FinishedRecording>;
       pending(): Promise<FinishedRecording[]>;
       publish(req: PublishRequest): Promise<PublishedAudio>;
@@ -1968,6 +1971,7 @@ export interface Platform {
     onShortcut(cb: (e: { id: 'marker'; kind: MarkerKind }) => void): Unsubscribe;
     onTray(cb: (action: TrayAction) => void): Unsubscribe;
     onDrop(cb: (e: { picked: Picked[]; x: number; y: number }) => void): Unsubscribe;   // drag and drop (tokens, D-4)
+    onDrag(cb: (e: { state: 'enter' | 'leave'; names: string[] }) => void): Unsubscribe;   // INT: app:drag (the drop overlay)
   };
 }
 ```
