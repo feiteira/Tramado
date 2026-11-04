@@ -62,6 +62,8 @@ export interface SearchContext {
 }
 
 const RECENT_ITEMS_KEY = 'tramado.search.recentItems';
+/** How long a query waits for a class that is still reading its files. */
+const SETTLE_WAIT_MS = 1500;
 
 function readRecentItems(): RecentItem[] {
   try {
@@ -108,7 +110,7 @@ export default function provider(services: AppServices) {
       navigate(route, go);
     };
     return {
-      id: r.id, label: r.title || kindLabel, detail: [where, snippetText].filter(Boolean).join(' · '), icon: r.private ? 'lock' : GROUP_ICON[r.kind],
+      id: r.id, label: r.title || kindLabel, detail: [where, r.kind === 'chat' ? '' : snippetText].filter(Boolean).join(' · '), icon: r.private ? 'lock' : GROUP_ICON[r.kind],
       run: open(r.route), runAlt: open(r.altRoute),
       kind: r.kind, testid: 'palette-result', classId: r.classId, locator: r.locator, snippet: r.snippet, private: r.private,
       ariaLabel: t('search.result', { kind: kindLabel, title: r.title || kindLabel, where: where || '—', snippet: snippetText }),
@@ -152,7 +154,7 @@ export default function provider(services: AppServices) {
   }
 
   function chatResults(classIds: string[], q: string): ResultRow[] {
-    const { date } = i18n();
+    const { meta } = i18n();
     const zone = 'local';
     const out: ResultRow[] = [];
     for (const id of classIds) {
@@ -160,13 +162,13 @@ export default function provider(services: AppServices) {
       if (!cls?.shared) continue;
       let items: readonly ChatLike[] = [];
       try {
-        items = services.forClass(id).chat.view.get().items.map((m) => ({ id: m.id, text: m.text, kind: m.kind, deleted: m.deleted, at: m.at, author: { memberName: m.author.memberName, self: m.author.self } }));
+        items = services.forClass(id).chat.view.get().items.map((m) => ({ id: m.id, text: m.text, kind: m.kind, deleted: m.deleted, at: m.at, author: { memberName: m.author.memberName, self: m.author.self }, mentions: m.mentions }));
       } catch {
         items = [];
       }
       out.push(...chatRows(id, items, q, (m) => {
-        const dt = DateTime.fromISO(m.at, { zone });
-        return i18n().t('search.chatWhere', { name: m.author.memberName, date: dt.isValid ? date(dt, 'short') : '' });
+        const dt = DateTime.fromISO(m.at, { zone }).setLocale(meta.bcp47);
+        return i18n().t('search.chatWhere', { name: m.author.memberName, date: dt.isValid ? dt.toLocaleString({ day: 'numeric', month: 'short' }) : '' });
       }));
     }
     return out;
@@ -211,6 +213,12 @@ export default function provider(services: AppServices) {
       const classIds = scopeClasses(ctx);
       const all = (ctx.scope ?? (ctx.classId ? 'class' : 'all')) === 'all';
       const scopeArg = !all && ctx.classId ? ctx.classId : 'all';
+      // A class still reading its files: give the index a moment (the palette shows the indexing line otherwise).
+      if (indexingNotice(classIds) && services.search.settled) {
+        const wait = Promise.all((scopeArg === 'all' ? classIds : [scopeArg]).map((id) => services.search.settled!(id).catch(() => undefined)));
+        await Promise.race([wait, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
+        if (signal.aborted) return [];
+      }
       let passages: Awaited<ReturnType<AppServices['search']['passages']>> = [];
       try {
         if (scopeArg === 'all' && ctx.includeArchived) {

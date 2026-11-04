@@ -43,7 +43,7 @@ export interface ResultRow {
 }
 
 const SNIPPET_MAX = 160;
-const SNIPPET_BEFORE = 48;
+const SNIPPET_BEFORE = 36;
 const clean = (s: string) => s.replace(/\s+/g, ' ');
 
 /**
@@ -54,10 +54,10 @@ export function snippetOf(text: string, hits: ReadonlyArray<readonly [number, nu
   const sorted = [...hits].filter(([a, b]) => b > a && a >= 0 && b <= text.length).sort((x, y) => x[0] - y[0]);
   const first = sorted[0]?.[0] ?? 0;
   let start = Math.max(0, first - SNIPPET_BEFORE);
-  // Start at a word boundary when cutting.
+  // Start at a word boundary when cutting (the next one, so the hit stays near the start).
   if (start > 0) {
-    const sp = text.lastIndexOf(' ', start);
-    start = sp >= 0 && first - sp <= SNIPPET_BEFORE + 16 ? sp + 1 : start;
+    const sp = text.slice(start, first).search(/\s/);
+    start = sp >= 0 ? start + sp + 1 : first;
   }
   let end = Math.min(text.length, start + max);
   if (end < text.length) {
@@ -197,7 +197,18 @@ export function groupRows(rows: readonly ResultRow[]): Array<{ kind: ResultKind;
 }
 
 /** A chat message as the palette sees it (ChatMessageView fields). */
-export interface ChatLike { id: string; text: string; kind: string; deleted: boolean; at: string; author: { memberName: string; self: boolean } }
+export interface ChatLike {
+  id: string; text: string; kind: string; deleted: boolean; at: string; author: { memberName: string; self: boolean };
+  mentions?: ReadonlyArray<{ memberId: string; name: string }>;
+}
+
+/** Chat text with `<@member>` tokens as "@Name" (the palette shows plain text). */
+export function chatText(m: Pick<ChatLike, 'text' | 'mentions'>): string {
+  return m.text.replace(/<@([^>\s]+)>/g, (_, id: string) => {
+    const hit = m.mentions?.find((x) => x.memberId === id);
+    return `@${hit?.name ?? (id === 'ai' ? 'AI' : id === 'everyone' ? 'everyone' : id)}`;
+  });
+}
 
 /** Chat messages matching every query word, newest first (chat is not in the passage index, UX §3.13 "Chat"). */
 export function chatRows(classId: string, items: readonly ChatLike[], q: string, where: (m: ChatLike) => string): ResultRow[] {
@@ -205,11 +216,13 @@ export function chatRows(classId: string, items: readonly ChatLike[], q: string,
   for (let i = items.length - 1; i >= 0; i--) {
     const m = items[i]!;
     if (m.deleted || m.kind === 'system' || m.kind === 'thanks' || !m.text.trim()) continue;
-    if (!matchesAll(m.text, q)) continue;
+    const text = chatText(m);
+    if (!matchesAll(text, q)) continue;
     const route: Route = { name: 'class', classId, tab: 'chat', messageId: m.id };
+    const snippet = snippetOf(text, findHits(text, q), 120);
     out.push({
-      id: `chat:${classId}:${m.id}`, kind: 'chat', classId, title: m.author.memberName, locator: where(m),
-      snippet: snippetOf(m.text, findHits(m.text, q)), private: false, route, altRoute: route,
+      id: `chat:${classId}:${m.id}`, kind: 'chat', classId, title: snippet.text, locator: where(m),
+      snippet, private: false, route, altRoute: route,
     });
     if (out.length >= MAX_PER_GROUP) break;
   }

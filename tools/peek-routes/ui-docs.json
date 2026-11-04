@@ -1,6 +1,7 @@
 [
-  { "name": "documents", "query": "route=class&class=law&tab=documents&sync=fake", "ready": "doc-list", "steps": [{ "expect": "doc-item" }] },
-  { "name": "document-pdf", "query": "route=document&class=law&doc=lf&page=9&quote=nunca%20podem%20atingir", "ready": "doc-pdf-page", "steps": [{ "expect": "doc-pdf-page" }] },
-  { "name": "document-pptx", "query": "route=document&doc=slides6", "ready": "doc-slide", "steps": [] },
-  { "name": "document-docx", "query": "route=document&doc=resumo", "ready": "doc-text", "steps": [] }
+  { "name": "notes", "query": "route=class&class=law&tab=notes&sync=fake", "ready": "note-list", "steps": [{ "expect": "note-item:2" }] },
+  { "name": "note", "query": "route=note&note=class8&sync=fake", "ready": "note-editor", "steps": [{ "expect": "note-presence" }] },
+  { "name": "note-conflict", "query": "route=note&note=class8&conflict=1", "ready": "note-conflict", "steps": [{ "click": "note-compare" }, { "expect": "conflict-dialog" }] },
+  { "name": "note-mine", "query": "route=note&note=mine6", "ready": "note-editor", "steps": [{ "click": "note-preview" }, { "expect": "note-preview-view" }] },
+  { "name": "palette", "query": "route=class&class=law", "ready": "screen-class", "steps": [{ "press": "Control+K" }, { "type": "palette-input=conteúdo essencial" }, { "expect": "palette-result" }] }
 ]
