@@ -1,0 +1,48 @@
+/* The keyboard shortcuts overlay (UX §2.10). */
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.shortcuts__title {
+  margin-bottom: var(--s-2);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.shortcuts__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.shortcuts__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-height: 32px;
+  padding: var(--s-1) 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+
+.shortcuts__what {
+  min-width: 0;
+}
+
+.shortcuts__keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0;
+}
+
+.shortcuts__or {
+  color: var(--ink-4);
+}

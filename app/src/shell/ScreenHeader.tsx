@@ -33,16 +33,21 @@ export interface ScreenHeaderProps {
   undo?: boolean;
   /** Where Back goes, for its label ("Back to Lectures"). */
   backTo?: string;
-  /** The h1 is elsewhere (the class header IS the title on the class screen). */
+  /** The h1 is elsewhere (a screen that draws its own title). */
   hideTitle?: boolean;
+  /** Before the titles: the class mark on the class screen (UX §3.3.2). */
+  leading?: ReactNode;
+  /** Extra class names (the class screen's taller header). */
+  className?: string;
 }
 
 const TAB_OF: Partial<Record<Route['name'], ClassTabId>> = { lecture: 'lectures', document: 'documents', note: 'notes', exam: 'exams', practice: 'exams' };
 const NO_CLASSES = new Store<Array<{ id: string; shortName: string }>>([]);
 
-export function ScreenHeader({ title, subtitle, actions, more, undo = false, backTo, hideTitle }: ScreenHeaderProps) {
-  const { t } = useI18n();
-  const { route, go, back, canGoBack } = useRouter();
+export function ScreenHeader({ title, subtitle, actions, more, undo = false, backTo, hideTitle, leading, className }: ScreenHeaderProps) {
+  const i18n = useI18n();
+  const { t } = i18n;
+  const { route, go, back, canGoBack, previous } = useRouter();
   const dialogs = useDialogs();
   const { phase } = useAppState();
   const classes = useStore(phase.name === 'ready' ? phase.services.library.classes : NO_CLASSES);
@@ -51,12 +56,14 @@ export function ScreenHeader({ title, subtitle, actions, more, undo = false, bac
   const tab = TAB_OF[route.name];
   const classId = 'classId' in route ? route.classId : null;
   const cls = classId ? classes.find((c) => c.id === classId) : undefined;
+  const place = backTo ?? (previous ? placeName(previous, i18n, classes) : undefined);
   return (
-    <header className="screen-header" data-testid="header">
+    <header className={className ? `screen-header ${className}` : 'screen-header'} data-testid="header">
       <div className="screen-header__start">
         {canGoBack ? (
-          <IconButton icon={ArrowLeft} label={backTo ? t('app.header.backTo', { place: backTo }) : t('app.header.back')} onClick={back} data-testid="header-back" />
+          <IconButton icon={ArrowLeft} label={place ? t('app.header.backTo', { place }) : t('app.header.back')} shortcut="Alt+←" onClick={back} data-testid="header-back" />
         ) : null}
+        {leading ? <span className="screen-header__leading">{leading}</span> : null}
         <div className="screen-header__titles">
           {cls && tab ? (
             <nav className="screen-header__crumbs" aria-label={t('app.header.breadcrumb')} data-testid="breadcrumb">
@@ -87,6 +94,22 @@ export function ScreenHeader({ title, subtitle, actions, more, undo = false, bac
       </div>
     </header>
   );
+}
+
+/** The words for a place Back returns to: "Today", "Settings", "Lectures" (a class's tab), "DC I" (its first tab). */
+function placeName(r: Route, { t }: Pick<ReturnType<typeof useI18n>, 't'>, classes: ReadonlyArray<{ id: string; shortName: string }>): string {
+  switch (r.name) {
+    case 'today':
+      return t('app.rail.today');
+    case 'settings':
+      return t('settings.title');
+    case 'ask':
+      return t('classes.tabs.ask');
+    case 'class':
+      return r.tab ? t(`classes.tabs.${r.tab}`) : classes.find((c) => c.id === r.classId)?.shortName ?? t('classes.tabs.lectures');
+    default:
+      return t(`classes.tabs.${TAB_OF[r.name] ?? 'lectures'}`);
+  }
 }
 
 function UndoRedo() {

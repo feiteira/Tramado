@@ -11,7 +11,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: var(--tabs-h);
   padding: 0 2px;
   border: 0;
   background: transparent;
@@ -28,14 +28,18 @@
   color: var(--ink);
 }
 
+.tabs__tab svg {
+  flex: none;
+}
+
 .tabs__tab--selected::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
   background: var(--c-bar, var(--ink)); /* Tramado: the class colour underline (UX §2.11) */
 }
 

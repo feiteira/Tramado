@@ -1,6 +1,8 @@
 // Top-level state (architecture §11.4, UX §2.1): the platform, the preferences, and the phase — loading,
-// welcome (identity.json has no name: onboarding), or ready with the services. M0 implements it;
-// UI-SHELL owns it in wave 2. Never StrictMode (D49): services are created once per phase.
+// welcome (identity.json has no name: onboarding), or ready with the services. Never StrictMode (D49):
+// services are created once per phase. Onboarding steps 1–2 run in the welcome phase (no services yet);
+// once the name is given the services start and steps 3–4 (AI key, ready) run in the ready phase with
+// `onboarding` set, so the key test goes through AiService (UX §3.1).
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { detectUiLocale, isUiLocale, type UiLocale } from '../core/i18n/languages';
 import { hlcNodeOf, shortIdOf } from '../core/model/ids';
@@ -60,9 +62,26 @@ export interface AppStateValue {
   locale: UiLocale;
   /** Validates and saves one preference; a failure is logged, not thrown. */
   setPref: (key: PrefKey, value: string) => Promise<void>;
-  /** Onboarding: creates the person key and identity.json, then enters the ready phase. */
+  /**
+   * Onboarding step 2: creates this computer's sharing identity (`platform.sync.identity()`, no daemon, no port),
+   * the person key and identity.json, then enters the ready phase with `onboarding` still on (steps 3–4).
+   * Rejects with the PlatformError of the failed step (SYNC_UNAVAILABLE: the sharing component is missing).
+   */
   finishOnboarding: (input: { name: string; deviceName?: string; colour?: string | null }) => Promise<void>;
+  /** True between onboarding step 2 and its last step: the ready phase shows the rest of onboarding. */
+  onboarding: boolean;
+  /** Leaves onboarding for the shell (Today). */
+  endOnboarding: () => void;
+  /** Settings › Profile (and onboarding's Back): name, computer name, colour in identity.json. */
+  updateIdentity: (patch: { name?: string; deviceName?: string; colour?: string | null }) => Promise<void>;
+  /** Onboarding's [Try the example]: the in-memory example library with the ribbon (UX §3.1). */
+  startExample: () => Promise<void>;
   example: { leave(): void } | null;
+  /**
+   * The ready phase's say on closing the window (UX §3.15.1, D48): called after the savers with what Tramado would
+   * do by itself ('hide' to the tray when sharing, else 'quit'); may answer 'stay' (a question is shown instead).
+   */
+  setCloseHook: (hook: ((decision: 'hide' | 'quit') => Promise<'hide' | 'quit' | 'stay'>) | null) => void;
   initialDialog: InitialDialog | null;
   registerSaver: (fn: Saver, opts?: SaverOptions) => () => void;
   runSavers: () => Promise<void>;
@@ -89,12 +108,19 @@ export function uiPrefsOf(map: Readonly<Record<string, string>>): UiPrefs {
 
 const EMPTY_PREFS = new Store<Readonly<Record<string, string>>>({});
 
-export function AppStateProvider({ platform, options = {}, children }: { platform: Platform; options?: AppStateOptions; children: ReactNode }) {
+export function AppStateProvider({ platform: basePlatform, options: baseOptions = {}, children }: { platform: Platform; options?: AppStateOptions; children: ReactNode }) {
+  // [Try the example] swaps in the demo's memory platform for the rest of the session (desktop; UX §3.1).
+  const [exampleSession, setExampleSession] = useState<{ platform: Platform; options: AppStateOptions } | null>(null);
+  const platform = exampleSession?.platform ?? basePlatform;
+  const options = exampleSession?.options ?? baseOptions;
   const [phase, setPhase] = useState<Phase>({ name: 'loading' });
+  const [onboarding, setOnboarding] = useState(false);
+  const closeHook = useRef<((decision: 'hide' | 'quit') => Promise<'hide' | 'quit' | 'stay'>) | null>(null);
   const [prefsStore, setPrefsStore] = useState<PrefsStore | null>(null);
   const [initialDialog, setInitialDialog] = useState<InitialDialog | null>(null);
   const identityRef = useRef<IdentityService | null>(null);
   const optionsRef = useRef(options);
+  optionsRef.current = options;
   const [savers] = useState(() => new Savers());
   const prefMap = useStore(prefsStore?.store ?? EMPTY_PREFS);
   const prefs = useMemo(() => uiPrefsOf(prefMap), [prefMap]);
@@ -138,9 +164,10 @@ export function AppStateProvider({ platform, options = {}, children }: { platfor
     [platform],
   );
 
-  // Discovery: prefs, identity, then the phase.
+  // Discovery: prefs, identity, then the phase (again when the example session replaces the platform).
   useEffect(() => {
     let live = true;
+    setPhase({ name: 'loading' });
     void (async () => {
       try {
         const store = await createPrefsStore(platform);
@@ -186,22 +213,75 @@ export function AppStateProvider({ platform, options = {}, children }: { platfor
       const ids = identityRef.current;
       if (!ids || !prefsStore) return;
       const name = input.name.trim();
-      await ids.create({ name, deviceName: input.deviceName ?? name, colour: input.colour ?? null }, Date.now());
+      // This computer's sharing identity first: without it no class can be created (UX §3.1).
+      await platform.sync.identity();
+      await ids.create({ name, deviceName: input.deviceName?.trim() || name, colour: input.colour ?? null }, Date.now());
+      setOnboarding(true);
       await enter(prefsStore, ids);
     },
-    [enter, prefsStore],
+    [enter, platform, prefsStore],
   );
 
-  // Window close (architecture §11.4): savers, then hide to the tray when sharing, else quit.
+  const endOnboarding = useCallback(() => setOnboarding(false), []);
+
+  const updateIdentity = useCallback(
+    async (patch: { name?: string; deviceName?: string; colour?: string | null }) => {
+      const ids = identityRef.current;
+      if (!ids) return;
+      await ids.update(patch);
+      // Classmates see the change through my member file in every class (UX §3.14.1).
+      if (phase.name === 'ready') {
+        const { services } = phase;
+        await Promise.all(
+          services.library.classes.get().map((c) =>
+            Promise.resolve()
+              .then(() => services.forClass(c.id).info.refreshOwnMemberFile())
+              .catch((e: unknown) => platform.log('warn', 'member file not refreshed', { classId: c.id, error: String(e) })),
+          ),
+        );
+      }
+    },
+    [phase, platform],
+  );
+
+  const startExample = useCallback(async () => {
+    const info = await basePlatform.info().catch(() => null);
+    const lang = prefsStore?.get('ui.locale') || detectUiLocale(systemLocale());
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    if (basePlatform.kind === 'demo' || info?.os === 'web') {
+      // The browser demo: the example is the demo without `demo=empty` (a shareable address).
+      const q = new URLSearchParams(window.location.search);
+      q.delete('demo');
+      q.set('lang', lang);
+      q.set('theme', theme);
+      window.location.assign(`${window.location.pathname}?${q.toString()}`);
+      return;
+    }
+    // The desktop: the same fictional library, in memory, beside the real (still empty) one. Leaving reloads the window.
+    const { bootDemo } = await import('../demo/boot');
+    const props = await bootDemo(`?lang=${lang}&theme=${theme}`);
+    setExampleSession({
+      platform: props.platform,
+      options: { ...props.options, example: { leave: () => window.location.reload() } },
+    });
+  }, [basePlatform, prefsStore]);
+
+  // Window close (architecture §11.4): savers, then hide to the tray when sharing, else quit; the ready phase may
+  // ask first (the first close with a shared class, a recording running).
   useEffect(
     () =>
       platform.window.onCloseRequested(async () => {
         await savers.run();
         const shared = phase.name === 'ready' ? phase.services.library.classes.get().filter((c) => c.shared).length : 0;
-        return prefsStore?.get('app.trayOnClose') === '1' && shared > 0 ? 'hide' : 'quit';
+        const decision = prefsStore?.get('app.trayOnClose') === '1' && shared > 0 ? 'hide' : 'quit';
+        const hook = phase.name === 'ready' ? closeHook.current : null;
+        return hook ? hook(decision).catch(() => decision) : decision;
       }),
     [platform, savers, phase, prefsStore],
   );
+  const setCloseHook = useCallback((hook: ((decision: 'hide' | 'quit') => Promise<'hide' | 'quit' | 'stay'>) | null) => {
+    closeHook.current = hook;
+  }, []);
 
   const registerSaver = useCallback((fn: Saver, opts?: SaverOptions) => savers.register(fn, opts), [savers]);
   const runSavers = useCallback(() => savers.run(), [savers]);
@@ -215,12 +295,17 @@ export function AppStateProvider({ platform, options = {}, children }: { platfor
       locale: prefs.locale,
       setPref,
       finishOnboarding,
+      onboarding: onboarding && phase.name === 'ready',
+      endOnboarding,
+      updateIdentity,
+      startExample,
       example: options.example ?? null,
       initialDialog,
       registerSaver,
       runSavers,
+      setCloseHook,
     }),
-    [platform, phase, prefsStore, prefs, setPref, finishOnboarding, options.example, initialDialog, registerSaver, runSavers],
+    [platform, phase, prefsStore, prefs, setPref, finishOnboarding, onboarding, endOnboarding, updateIdentity, startExample, options.example, initialDialog, registerSaver, runSavers, setCloseHook],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

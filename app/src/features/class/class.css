@@ -1,0 +1,232 @@
+/* The class screen frame (UX §3.3.2) and the class dialog (§3.3.1). Class colours only in divider roles. */
+
+.class-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The class header is the top bar here (UX §3.3.2): the 40 px class mark, the h1, the meta line, the actions. */
+.screen-header.class-header {
+  min-height: 76px;
+  padding-top: var(--s-3);
+  padding-bottom: var(--s-3);
+  border-bottom: 0;
+}
+
+.screen-header__leading {
+  flex: none;
+  display: inline-flex;
+}
+
+.class-header .screen-header__titles {
+  gap: 4px;
+}
+
+/* The name and its line keep room; the actions wrap below them before the name gives way. */
+.class-header .screen-header__start {
+  flex-basis: 30rem;
+}
+
+.class-header .screen-header__subtitle {
+  white-space: normal;
+}
+
+.class-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.class-header__dot {
+  color: var(--ink-4);
+}
+
+.class-header__members {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.class-header__avatars {
+  display: inline-flex;
+}
+
+.class-header__avatars > .avatar + .avatar {
+  margin-left: -6px;
+}
+
+.class-header__avatars > .avatar {
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.class-header__busy {
+  display: inline-flex;
+  border-radius: var(--r-md);
+}
+
+.class-header__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: 0 var(--s-6) var(--s-3) calc(var(--s-6) + 40px + var(--s-2));
+}
+
+.class-screen > .newer-format {
+  margin: 0 var(--s-6) var(--s-3);
+}
+
+.class-tabs-host {
+  container-type: inline-size;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 var(--s-6) var(--s-6);
+}
+
+.class-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.class-tabs > .tabs__list {
+  background: var(--paper);
+}
+
+/* Narrow main column: the tab icons give way so every tab stays visible. */
+@container (max-width: 820px) {
+  .class-tabs .tabs__tab > svg {
+    display: none;
+  }
+  .class-tabs > .tabs__list {
+    gap: var(--s-3);
+  }
+}
+
+.class-tabs > .tabs__panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  min-height: 0;
+}
+
+.class-tabs .tabs__badge .badge {
+  margin-left: 2px;
+}
+
+.class-tabs-host__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-7);
+  color: var(--ink-3);
+}
+
+.class-missing {
+  padding: var(--s-4) var(--s-6);
+}
+
+.class-drop {
+  position: absolute;
+  inset: 0 var(--s-6) var(--s-6);
+  z-index: 6;
+}
+
+/* "Invite your classmates" */
+.invite-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-1);
+}
+
+.invite-card__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--c-soft);
+  color: var(--c-text);
+}
+
+.invite-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-card__title {
+  font-size: var(--fs-md);
+  font-weight: 620;
+}
+
+.invite-card__body {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* The Share tab */
+.class-share-tab {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--s-5);
+}
+
+.class-share-tab > .empty {
+  width: min(560px, 100%);
+}
+
+/* ── New class / Class settings ──────────────────────────────────────────────────────── */
+
+.class-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.class-form__short {
+  max-width: 360px;
+}
+
+.class-form__icons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.class-form__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-3);
+}
+
+.class-form__danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.class-form__danger-title {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  color: var(--danger-text);
+}

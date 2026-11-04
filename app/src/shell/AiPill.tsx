@@ -1,7 +1,10 @@
-// The AI pill (UX §2.5): the model and today's remaining requests; click → Settings › AI. M0 shows the
-// placeholder states of the AiService stub; UI-SHELL owns this file in wave 2.
-import React from 'react';
+// The AI pill (UX §2.5): the model and today's free requests left; "AI: check key" after OpenRouter refused the key;
+// click → Settings › AI. The quota is read with `GET key` (the key only; no model call, no content) when a key is
+// set and AI is on: once at start, and again when the window comes back after 15 minutes or more. Nothing is sent
+// when AI is off or has no key (core/privacy/flows.ts `keyCheck`).
+import React, { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import { errorCode } from '../core/errors';
 import type { AppServices } from '../services/types/common';
 import { Tooltip } from '../ui/components/Tooltip';
 import { useI18n, type I18n } from '../ui/i18n';
@@ -9,6 +12,8 @@ import { cx } from '../ui/cx';
 import { useRouter } from './router';
 import { useStore } from './useStore';
 import { aiPillState, type AiPillState } from './pills';
+
+const QUOTA_AGAIN_MS = 15 * 60_000;
 
 export function aiPillLabel(s: AiPillState, { t }: Pick<I18n, 't'>): string {
   switch (s.id) {
@@ -29,7 +34,34 @@ export function AiPill({ services, compact }: { services: AppServices; compact?:
   const i18n = useI18n();
   const { go } = useRouter();
   const settings = useStore(services.ai.settings);
-  const state = aiPillState(settings);
+  const [lastCode, setLastCode] = useState<string | null>(null);
+  const wantsQuota = settings.enabled && settings.key.set && !settings.customHost;
+  const keyId = `${settings.key.set}:${settings.key.last4 ?? ''}`;
+  useEffect(() => {
+    setLastCode(null);
+    if (!wantsQuota) return undefined;
+    let live = true;
+    let last = 0;
+    const check = () => {
+      last = Date.now();
+      void services.ai.refreshQuota().then(
+        () => live && setLastCode(null),
+        (e: unknown) => live && setLastCode(errorCode(e) ?? null),
+      );
+    };
+    check();
+    const onFocus = () => {
+      if (document.visibilityState === 'visible' && Date.now() - last >= QUOTA_AGAIN_MS) check();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      live = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [services, wantsQuota, keyId]);
+  const state = aiPillState(settings, lastCode);
   const label = aiPillLabel(state, i18n);
   const tone = state.id === 'off' ? 'muted' : state.id === 'checkKey' ? 'warning' : 'ai';
   return (

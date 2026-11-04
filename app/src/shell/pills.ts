@@ -10,8 +10,12 @@ export type SyncPillState =
 
 const ERROR_CODES = new Set(['SYNC_UNAVAILABLE', 'SYNC_LOCKED', 'SYNC_PORT']);
 
-/** The first row of UX §2.4's table that applies. `online` is navigator.onLine. */
-export function syncPillState(sync: SyncUiState, classes: readonly ClassView[], online: boolean): SyncPillState {
+/**
+ * The first row of UX §2.4's table that applies. `online` is navigator.onLine. `facts` (shell/syncFacts.ts): the
+ * distinct classmates online over every shared class (UX: "n = distinct members online, me excluded") and the
+ * unresolved conflict copies; without it, the most classmates online in one class.
+ */
+export function syncPillState(sync: SyncUiState, classes: readonly ClassView[], online: boolean, facts?: { online: number; conflicts: number }): SyncPillState {
   const shared = classes.filter((c) => c.shared && !c.archived);
   if (!classes.some((c) => c.shared)) return { id: 'local' };
   const st = sync.status;
@@ -20,9 +24,9 @@ export function syncPillState(sync: SyncUiState, classes: readonly ClassView[], 
   if (st?.paused) return { id: 'paused' };
   const folderErrors = Object.values(sync.folders).filter((f) => f.error || f.pullErrors > 0).length;
   const problems = shared.reduce((n, c) => n + (c.sync.kind === 'problems' ? c.sync.count : 0), 0);
-  const attention = sync.massDelete.length + sync.massDeleteRemote.length + folderErrors + problems;
+  const attention = sync.massDelete.length + sync.massDeleteRemote.length + folderErrors + problems + (facts?.conflicts ?? 0);
   if (attention > 0) return { id: 'attention', n: attention };
-  const peers = shared.reduce((n, c) => Math.max(n, c.onlineMembers), 0);
+  const peers = facts ? facts.online : shared.reduce((n, c) => Math.max(n, c.onlineMembers), 0);
   if (!online && peers === 0) return { id: 'offline' };
   const syncing = shared.filter((c) => c.sync.kind === 'syncing');
   if (syncing.length > 0) {

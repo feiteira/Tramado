@@ -13,3 +13,11 @@ export async function loadFontPreference(pref: FontPreference): Promise<void> {
   if (pref === 'default') delete document.documentElement.dataset.font;
   else document.documentElement.dataset.font = pref;
 }
+
+/** Loads both accessibility fonts' faces without choosing either, so Settings can show each option in its own font. */
+export async function preloadFontPreviews(): Promise<void> {
+  await Promise.all([
+    import('@fontsource-variable/atkinson-hyperlegible-next/wght.css'),
+    import('@fontsource/opendyslexic/400.css'),
+  ]);
+}

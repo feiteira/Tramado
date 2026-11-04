@@ -4,6 +4,7 @@ import React, { Suspense, lazy } from 'react';
 import type { AppServices } from '../services/types/common';
 import { DOCK_ROWS } from '../features/registry';
 import { useI18n } from '../ui/i18n';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const ROWS = DOCK_ROWS.map((l) => lazy(l));
 
@@ -11,11 +12,14 @@ export function Dock({ services }: { services: AppServices }) {
   const { t } = useI18n();
   return (
     <section className="dock" aria-label={t('app.dock.label')} data-testid="dock">
-      <Suspense fallback={null}>
-        {ROWS.map((Row, i) => (
-          <Row key={i} services={services} />
-        ))}
-      </Suspense>
+      {ROWS.map((Row, i) => (
+        // A failing row (another package's) leaves the dock; it never takes the screen down with it.
+        <ErrorBoundary key={i} quiet>
+          <Suspense fallback={null}>
+            <Row services={services} />
+          </Suspense>
+        </ErrorBoundary>
+      ))}
     </section>
   );
 }

@@ -80,6 +80,7 @@ export const app = {
     shortcuts: 'Keyboard shortcuts',
     diagnosticsCopy: 'Copy diagnostics',
     exampleLeave: 'Leave the example',
+    language: 'Language: {language}',
   },
   shortcuts: {
     title: 'Keyboard shortcuts',
@@ -113,7 +114,10 @@ export const app = {
     gotIt: 'Got it',
     nextQuestion: 'Next or previous question',
     newline: 'New line',
+    moveRows: 'Move between rows',
+    openRow: 'Open the selected row',
     notInText: 'These keys work when you’re not typing in a field.',
+    keySpace: 'Space',
   },
   crash: {
     title: 'Something went wrong',
@@ -139,5 +143,11 @@ export const app = {
     trayNotice: 'Tramado is still running in the background, sharing your classes. Quit from the tray icon.',
     trayNoticeRecording: 'Still recording {class} in the background.',
   },
+  external: {
+    title: 'Open this link in your browser?',
+    body: '{host} opens in your web browser, outside Tramado.',
+    open: 'Open link',
+  },
+  newerFormat: 'Made with a newer Tramado — update to edit it.',
   // notification texts are in the `notify` namespace (§5.22)
 };

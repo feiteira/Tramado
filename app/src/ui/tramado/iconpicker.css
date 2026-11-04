@@ -1,0 +1,54 @@
+/* IconPicker (UX §3.3.1): 33 class icons in an 11 × 3 grid, previewed in the class colour. */
+.icon-picker {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.icon-picker__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--paper-raised);
+  color: var(--ink-2);
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+
+.icon-picker__option:hover {
+  background: var(--c-soft);
+  color: var(--c-text);
+}
+
+.icon-picker__option--checked,
+.icon-picker__option--checked:hover {
+  border-color: var(--c-bar);
+  background: var(--c);
+  color: var(--c-on);
+  box-shadow: 0 0 0 1px var(--c-bar);
+}
+
+/* The suggested icon: a small accent pip in the corner (its name says "Suggested" to screen readers). */
+.icon-picker__suggested {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  overflow: hidden;
+  border: 2px solid var(--paper-raised);
+  border-radius: 50%;
+  background: var(--mark-strong);
+  color: transparent;
+  font-size: 0;
+}
+
+@media (forced-colors: active) {
+  .icon-picker__option--checked {
+    outline: 2px solid Highlight;
+  }
+}

@@ -1,0 +1,997 @@
+[
+  {
+    "name": "welcome",
+    "query": "demo=empty",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "expect-not": "rail"
+      },
+      {
+        "expect": "onboarding-language"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "welcome-pt-dark",
+    "query": "demo=empty",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "expect-text": "onboarding-welcome=Começar"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "welcome-es-125",
+    "query": "demo=empty",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "expect-text": "onboarding-welcome=Empezar"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "welcome-1000",
+    "query": "demo=empty",
+    "size": "1000x660",
+    "ready": "onboarding-welcome",
+    "axe": true
+  },
+  {
+    "name": "onboarding-name",
+    "query": "demo=empty",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "expect": "onboarding-name"
+      },
+      {
+        "expect-attr": "onboarding-name-continue:disabled="
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "onboarding-ai",
+    "query": "demo=empty&ai=fake",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "expect": "onboarding-ai"
+      },
+      {
+        "expect": "onboarding-ai-skip"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "onboarding-ai-ok-pt-dark",
+    "query": "demo=empty&ai=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana Ribeiro"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "type": "onboarding-ai-key=fictional-demo-key"
+      },
+      {
+        "click": "onboarding-ai-test"
+      },
+      {
+        "expect": "onboarding-ai-continue"
+      },
+      {
+        "expect-text": "onboarding-ai-result=Funciona"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "onboarding-ai-badkey",
+    "query": "demo=empty&ai=badkey",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "type": "onboarding-ai-key=fictional-demo-key"
+      },
+      {
+        "click": "onboarding-ai-test"
+      },
+      {
+        "expect-text": "onboarding-ai-result=sk-or-"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "onboarding-ready-es-125",
+    "query": "demo=empty&ai=fake",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "click": "onboarding-ai-skip"
+      },
+      {
+        "expect": "onboarding-ready"
+      },
+      {
+        "expect": "onboarding-create"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "today-empty",
+    "query": "demo=empty&ai=fake",
+    "ready": "onboarding-welcome",
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "click": "onboarding-ai-skip"
+      },
+      {
+        "click": "onboarding-finish"
+      },
+      {
+        "expect": "today-empty"
+      },
+      {
+        "expect": "rail"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "today-checklist",
+    "query": "demo=empty&ai=fake",
+    "ready": "onboarding-welcome",
+    "axe": true,
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "click": "onboarding-ai-skip"
+      },
+      {
+        "click": "onboarding-finish"
+      },
+      {
+        "click": "today-empty-create"
+      },
+      {
+        "expect": "class-dialog"
+      },
+      {
+        "type": "class-name=Teoria Geral do Direito Civil"
+      },
+      {
+        "click": "class-share"
+      },
+      {
+        "click": "class-dialog-save"
+      },
+      {
+        "expect": "screen-class"
+      },
+      {
+        "expect-text": "rail-classes=Teoria Geral"
+      },
+      {
+        "click": "nav-today"
+      },
+      {
+        "expect": "today-checklist"
+      },
+      {
+        "expect-attr": "today-check:data-done=true"
+      }
+    ]
+  },
+  {
+    "name": "class-created-shared",
+    "query": "demo=empty&ai=fake&sync=fake",
+    "ready": "onboarding-welcome",
+    "axe": true,
+    "steps": [
+      {
+        "click": "onboarding-start"
+      },
+      {
+        "type": "onboarding-name-input=Ana"
+      },
+      {
+        "click": "onboarding-name-continue"
+      },
+      {
+        "click": "onboarding-ai-skip"
+      },
+      {
+        "click": "onboarding-finish"
+      },
+      {
+        "click": "today-empty-create"
+      },
+      {
+        "expect": "class-dialog"
+      },
+      {
+        "type": "class-name=Teoria Geral do Direito Civil"
+      },
+      {
+        "click": "class-dialog-save"
+      },
+      {
+        "expect": "class-invite-card"
+      },
+      {
+        "expect": "class-tabs-chat"
+      },
+      {
+        "expect": "class-invite"
+      }
+    ]
+  },
+  {
+    "name": "today",
+    "route": "today",
+    "query": "sync=fake&ai=fake",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect": "today-exams"
+      },
+      {
+        "expect": "today-exam:3"
+      },
+      {
+        "expect": "today-lectures"
+      },
+      {
+        "expect": "today-transcriptions"
+      },
+      {
+        "expect": "today-unread-class:1"
+      },
+      {
+        "expect-text": "sync-pill=2 online"
+      },
+      {
+        "expect-attr": "nav-today:aria-current=page"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "today-pt-dark",
+    "route": "today",
+    "query": "sync=fake&ai=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect-text": "screen-today=Em breve"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "today-es-125",
+    "route": "today",
+    "query": "sync=fake&ai=fake",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect-text": "screen-today=Próximamente"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "today-1000",
+    "route": "today",
+    "query": "sync=fake&ai=fake",
+    "size": "1000x660",
+    "ready": "screen-today",
+    "axe": true
+  },
+  {
+    "name": "palette",
+    "route": "class",
+    "query": "class=law",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "press": "Control+k"
+      },
+      {
+        "expect": "palette"
+      },
+      {
+        "expect-attr": "palette-scope:data-scope=class"
+      },
+      {
+        "expect": "command-go-today"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "palette-query",
+    "route": "class",
+    "query": "class=law&ai=fake",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "press": "Control+k"
+      },
+      {
+        "type": "palette-input=settings"
+      },
+      {
+        "expect": "command-go-settings"
+      },
+      {
+        "expect": "palette-ask"
+      },
+      {
+        "press": "Tab"
+      },
+      {
+        "expect-attr": "palette-scope:data-scope=all"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "palette-empty",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "press": "Control+k"
+      },
+      {
+        "type": "palette-input=zzqqxx"
+      },
+      {
+        "expect": "palette-empty"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "sync-popover",
+    "route": "today",
+    "query": "sync=fake",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "sync-pill"
+      },
+      {
+        "expect": "sync-popover"
+      },
+      {
+        "expect": "sync-popover-class:2"
+      },
+      {
+        "expect": "sync-pause"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "ai-badkey",
+    "route": "today",
+    "query": "ai=badkey",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect-attr": "ai-pill:data-state=checkKey"
+      },
+      {
+        "expect-text": "ai-pill=check key"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "ai-off",
+    "route": "today",
+    "query": "ai=off",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect-attr": "ai-pill:data-state=off"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "sync-local",
+    "route": "today",
+    "query": "sync=local",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "expect": "sync-pill"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "rail-collapsed",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "rail-collapse"
+      },
+      {
+        "expect": "rail-class:3"
+      },
+      {
+        "expect-attr": "rail-collapse:aria-label=Expand sidebar"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "rail-menu",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "rail-class"
+      },
+      {
+        "press": "Shift+F10"
+      },
+      {
+        "expect": "rail-class-menu"
+      },
+      {
+        "expect": "rail-class-menu-settings"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "rail-archive",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "click": "rail-archive"
+      },
+      {
+        "expect": "rail-archive-list"
+      },
+      {
+        "expect": "rail-class:4"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "missing",
+    "route": "lecture",
+    "query": "class=law&lecture=zz",
+    "ready": "missing-item",
+    "axe": true
+  },
+  {
+    "name": "class-law",
+    "route": "class",
+    "query": "class=law&sync=fake",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "expect": "class-tabs-members"
+      },
+      {
+        "expect": "class-countdown:2"
+      },
+      {
+        "expect": "class-invite"
+      },
+      {
+        "expect": "record-class"
+      },
+      {
+        "expect-attr": "rail-class:aria-current=page"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-law-pt-dark",
+    "route": "class",
+    "query": "class=law&sync=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "expect-text": "class-tabs=Apontamentos"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-law-es-125",
+    "route": "class",
+    "query": "class=law&sync=fake",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "screen-class",
+    "steps": [
+      {
+        "expect-text": "class-tabs=Apuntes"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-law-1000",
+    "route": "class",
+    "query": "class=law&sync=fake",
+    "size": "1000x660",
+    "ready": "screen-class",
+    "axe": true
+  },
+  {
+    "name": "class-share-tab",
+    "route": "class",
+    "query": "class=stats&tab=share",
+    "ready": "class-share-tab",
+    "steps": [
+      {
+        "expect": "class-share-start"
+      },
+      {
+        "expect-not": "class-tabs-chat"
+      },
+      {
+        "expect": "class-share-open"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-more",
+    "route": "class",
+    "query": "class=law",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "click": "class-more"
+      },
+      {
+        "expect": "class-open-settings"
+      },
+      {
+        "expect": "class-recently-deleted"
+      },
+      {
+        "expect": "class-archive"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-more-delete",
+    "route": "class",
+    "query": "class=stats",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "click": "class-more"
+      },
+      {
+        "click": "class-more-delete"
+      },
+      {
+        "expect": "confirm-dialog"
+      },
+      {
+        "expect-text": "confirm-dialog=Estadística I"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-add",
+    "route": "class",
+    "query": "class=law",
+    "ready": "screen-class",
+    "steps": [
+      {
+        "click": "class-add"
+      },
+      {
+        "expect": "class-add-documents"
+      },
+      {
+        "expect": "class-add-exam-paper"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-dialog",
+    "route": "today",
+    "query": "dialog=new-class",
+    "ready": "class-dialog",
+    "steps": [
+      {
+        "type": "class-name=Teoria Geral do Direito Civil"
+      },
+      {
+        "expect-attr": "class-icon-scale:aria-checked=true"
+      },
+      {
+        "expect": "class-share"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-dialog-pt-dark",
+    "route": "today",
+    "query": "dialog=new-class",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "class-dialog",
+    "axe": true
+  },
+  {
+    "name": "class-dialog-taken",
+    "route": "today",
+    "query": "dialog=new-class",
+    "ready": "class-dialog",
+    "steps": [
+      {
+        "type": "class-name=Biology 101"
+      },
+      {
+        "click": "class-dialog-save"
+      },
+      {
+        "expect": "class-dialog"
+      },
+      {
+        "expect-text": "class-dialog=already have a class"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-settings",
+    "route": "class",
+    "query": "class=law&dialog=class-settings",
+    "ready": "class-settings",
+    "steps": [
+      {
+        "expect": "class-vocabulary"
+      },
+      {
+        "expect": "class-ask-before-join"
+      },
+      {
+        "expect": "class-skip-audio"
+      },
+      {
+        "expect": "class-notify"
+      },
+      {
+        "expect": "class-leave"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "class-settings-local-es-125",
+    "route": "class",
+    "query": "class=stats&dialog=class-settings",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "class-settings",
+    "steps": [
+      {
+        "expect": "class-delete"
+      },
+      {
+        "expect": "class-share"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "shortcuts",
+    "route": "class",
+    "query": "class=law&dialog=shortcuts",
+    "ready": "shortcuts-dialog",
+    "steps": [
+      {
+        "expect": "shortcuts-group:2"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "shortcuts-escape",
+    "route": "class",
+    "query": "class=law&dialog=shortcuts",
+    "ready": "shortcuts-dialog",
+    "steps": [
+      {
+        "press": "Escape"
+      },
+      {
+        "expect-not": "shortcuts-dialog"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "shortcuts-f1",
+    "route": "today",
+    "ready": "screen-today",
+    "steps": [
+      {
+        "press": "F1"
+      },
+      {
+        "expect": "shortcuts-dialog"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-profile",
+    "route": "settings",
+    "query": "section=profile",
+    "ready": "settings-profile",
+    "steps": [
+      {
+        "expect": "profile-name"
+      },
+      {
+        "expect": "profile-colour"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-appearance",
+    "route": "settings",
+    "query": "section=appearance",
+    "ready": "settings-appearance",
+    "axe": true
+  },
+  {
+    "name": "settings-appearance-zoom",
+    "route": "settings",
+    "query": "section=appearance",
+    "ready": "settings-appearance",
+    "steps": [
+      {
+        "click": "appearance-text-size"
+      },
+      {
+        "press": "ArrowDown,ArrowDown,Enter"
+      },
+      {
+        "expect-attr": "screen-settings:data-zoom=1.25"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-notifications",
+    "route": "settings",
+    "query": "section=notifications",
+    "ready": "settings-notifications",
+    "steps": [
+      {
+        "expect": "notify-class:3"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-storage",
+    "route": "settings",
+    "query": "section=storage",
+    "ready": "settings-storage",
+    "steps": [
+      {
+        "expect": "storage-class:4"
+      },
+      {
+        "expect": "storage-audio-retention"
+      },
+      {
+        "expect": "storage-recently-deleted"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-privacy",
+    "route": "settings",
+    "query": "section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "steps": [
+      {
+        "expect": "privacy-table"
+      },
+      {
+        "expect": "privacy-flow:9"
+      },
+      {
+        "expect": "privacy-ai-log"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-privacy-clear",
+    "route": "settings",
+    "query": "section=privacy&ai=fake",
+    "ready": "settings-privacy",
+    "steps": [
+      {
+        "click": "privacy-ai-log-clear"
+      },
+      {
+        "expect": "confirm-dialog"
+      },
+      {
+        "expect-text": "confirm-dialog=Clear the AI activity log?"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-about",
+    "route": "settings",
+    "query": "section=about",
+    "ready": "settings-about",
+    "steps": [
+      {
+        "expect": "about-licences"
+      },
+      {
+        "click": "about-media-test"
+      },
+      {
+        "expect": "about-media-result"
+      }
+    ],
+    "axe": true
+  },
+  {
+    "name": "settings-profile-pt-dark",
+    "route": "settings",
+    "query": "section=profile",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "settings-profile",
+    "axe": true
+  },
+  {
+    "name": "settings-privacy-pt-dark",
+    "route": "settings",
+    "query": "section=privacy&ai=fake",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "settings-privacy",
+    "axe": true
+  },
+  {
+    "name": "settings-storage-es-125",
+    "route": "settings",
+    "query": "section=storage",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "settings-storage",
+    "axe": true
+  },
+  {
+    "name": "settings-notifications-es-125",
+    "route": "settings",
+    "query": "section=notifications",
+    "lang": "es",
+    "scale": 1.25,
+    "ready": "settings-notifications",
+    "axe": true
+  },
+  {
+    "name": "settings-about-pt-dark",
+    "route": "settings",
+    "query": "section=about",
+    "lang": "pt",
+    "theme": "dark",
+    "ready": "settings-about",
+    "axe": true
+  },
+  {
+    "name": "settings-appearance-1000",
+    "route": "settings",
+    "query": "section=appearance",
+    "size": "1000x660",
+    "ready": "settings-appearance",
+    "axe": true
+  }
+]
