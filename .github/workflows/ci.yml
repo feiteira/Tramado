@@ -9,7 +9,9 @@ name: CI
 #   rust-speech   the heavy speech crate (whisper.cpp, libopus) and the full workspace lint: nightly, by hand, or when
 #                 the speech crate, the lockfile or the toolchain change
 #   supply-chain  cargo deny with advisories, npm audit of the shipped packages: nightly and by hand
-#   release       installers for Linux, Windows and macOS (unsigned; macOS signed ad hoc), started by hand from main:
+#   release       installers for Linux, Windows and macOS (unsigned; macOS signed ad hoc), each checked (a pre-release
+#                 .deb gets a Debian version that sorts before the final one; the Mac app's Info.plist, signature and
+#                 architectures; a start-up smoke on Windows and macOS), started by hand from main:
 #                   gh workflow run ci.yml --ref main -f release=build     the installers, as workflow artifacts
 #                   gh workflow run ci.yml --ref main -f release=publish   the same, then a draft GitHub release
 #                 It needs every check above plus `npm run check:versions` (no locked version younger than 14 days),
@@ -89,6 +91,20 @@ jobs:
         run: node tools/check-leaks.mjs
       - name: Every relative link and picture of the README, manual and release notes resolves
         run: node .github/scripts/check-links.mjs
+      - name: No two paths differ only in letter case (Windows and macOS file systems ignore it)
+        # Also module files whose names differ only in case (Review.tsx and review.ts): `./review` would resolve to
+        # either one there, and the Windows and Mac builds would fail where Linux passes.
+        run: |
+          clashes=$(git ls-files | awk '
+            { if (++full[tolower($0)] == 2) print $0 }
+            /\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|json)$/ {
+              stem = $0; sub(/\.[^.\/]*$/, "", stem)
+              if (!((tolower(stem), stem) in seen)) { seen[tolower(stem), stem] = 1; if (++n[tolower(stem)] == 2) print stem ".*" }
+            }')
+          if [ -n "$clashes" ]; then
+            while IFS= read -r c; do echo "::error::differs from another path only in letter case: $c"; done <<< "$clashes"
+            exit 1
+          fi
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -266,6 +282,33 @@ jobs:
       - name: Build the installers (AppImage, deb)
         if: runner.os == 'Linux'
         run: npm run tauri --workspace @tramado/desktop -- build --config src-tauri/tauri.sidecar.conf.json --bundles appimage,deb
+      - name: Debian version of a pre-release (0.1.0-rc.2 becomes 0.1.0~rc.2)
+        if: runner.os == 'Linux'
+        # Tauri writes the version as it is, and Debian reads "0.1.0-rc.2" as 0.1.0, revision rc.2: newer than the final
+        # 0.1.0, which would then install as a downgrade. "~" sorts before everything, so 0.1.0~rc.2 < 0.1.0. Only the
+        # control file changes (the files, their modes and sizes are compared); the file name keeps the version.
+        run: |
+          shopt -s nullglob
+          debs=(target/release/bundle/deb/*.deb)
+          test ${#debs[@]} -eq 1 || { echo "::error::expected one .deb, found ${#debs[@]}"; exit 1; }
+          deb=${debs[0]}
+          v=$(dpkg-deb -f "$deb" Version)
+          case "$v" in
+            *-*) ;;
+            *) echo "Version $v is not a pre-release: kept"; exit 0 ;;
+          esac
+          dv="${v%%-*}~${v#*-}"
+          work="$RUNNER_TEMP/deb-version"
+          rm -rf "$work" && mkdir -p "$work"
+          dpkg-deb -R "$deb" "$work/root"
+          sed -i "s/^Version: .*/Version: $dv/" "$work/root/DEBIAN/control"
+          dpkg-deb --root-owner-group -Zgzip -b "$work/root" "$work/new.deb"
+          list() { dpkg-deb -c "$1" | awk '{ print $1, $3, $6 }' | sort; }
+          diff <(list "$deb") <(list "$work/new.deb")
+          dpkg --compare-versions "$dv" lt "${v%%-*}"
+          mv "$work/new.deb" "$deb"
+          rm -rf "$work"
+          echo "$(basename "$deb"): Version $v → $(dpkg-deb -f "$deb" Version)"
       - name: Build the installer (NSIS)
         if: runner.os == 'Windows'
         env:
@@ -288,6 +331,11 @@ jobs:
           for c in target/release/build/opusic-sys-*/out/build/CMakeCache.txt; do
             echo "libopus: $(grep -E '^CMAKE_C_FLAGS_RELEASE' "$c" || echo 'no CMAKE_C_FLAGS_RELEASE')"
           done
+      - name: Start-up smoke (the app's webview loads, the Syncthing sidecar answers)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        # The binary and sidecar the installer packs, in a throwaway TRAMADO_DATA_DIR (tools/desktop-e2e/startup.mjs).
+        run: node tools/desktop-e2e/startup.mjs --app=target/release/tramado-desktop.exe
       - name: Build the Mac app (signed ad hoc)
         if: runner.os == 'macOS'
         env:
@@ -310,6 +358,46 @@ jobs:
           avx2=$(grep -cE 'vpmaddubsw.*%ymm' "$RUNNER_TEMP/tramado-x86_64.s" || true)
           echo "FMA (ymm): $fma, AVX2 vpmaddubsw (ymm): $avx2"
           test "$fma" -gt 0 && test "$avx2" -gt 0
+      - name: Check the Mac app (Info.plist, signature, entitlements, both architectures)
+        if: runner.os == 'macOS'
+        # Without NSMicrophoneUsageDescription macOS ends the app when it asks for the microphone; without the
+        # audio-input entitlement the hardened runtime refuses it.
+        run: |
+          app=target/universal-apple-darwin/release/bundle/macos/Tramado.app
+          python3 - "$app/Contents/Info.plist" <<'EOF'
+          import plistlib, sys
+          p = plistlib.load(open(sys.argv[1], 'rb'))
+          for k in ('CFBundleIdentifier', 'CFBundleShortVersionString', 'CFBundleVersion', 'LSMinimumSystemVersion', 'CFBundleLocalizations'):
+              print(f'{k} = {p.get(k)}')
+          problems = [f'{k} is missing' for k in ('NSMicrophoneUsageDescription', 'NSAudioCaptureUsageDescription') if not p.get(k)]
+          if p.get('LSMinimumSystemVersion') != '14.2':
+              problems.append(f"LSMinimumSystemVersion is {p.get('LSMinimumSystemVersion')!r}, not 14.2")
+          schemes = [s for t in p.get('CFBundleURLTypes', []) for s in t.get('CFBundleURLSchemes', [])]
+          if 'tramado' not in schemes:
+              problems.append(f'no tramado:// URL type (schemes: {schemes})')
+          uti = 'eu.thehumanloop.tramado.invite'
+          if not any('tramado-invite' in d.get('CFBundleTypeExtensions', []) or uti in d.get('LSItemContentTypes', []) for d in p.get('CFBundleDocumentTypes', [])):
+              problems.append('no .tramado-invite document type')
+          if uti not in [t.get('UTTypeIdentifier') for t in p.get('UTExportedTypeDeclarations', [])]:
+              problems.append(f'{uti} is not an exported type')
+          for x in problems:
+              print(f'::error::Info.plist: {x}')
+          sys.exit(1 if problems else 0)
+          EOF
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -d --entitlements - "$app" 2>/dev/null | grep -q 'com.apple.security.device.audio-input' \
+            || { echo "::error::the app is not signed with the audio-input entitlement"; exit 1; }
+          for f in "$app"/Contents/MacOS/*; do
+            archs=$(lipo -archs "$f")
+            echo "$(basename "$f"): $archs"
+            case " $archs " in *" x86_64 "*) ;; *) echo "::error::$(basename "$f") has no x86_64 slice"; exit 1 ;; esac
+            case " $archs " in *" arm64 "*) ;; *) echo "::error::$(basename "$f") has no arm64 slice"; exit 1 ;; esac
+          done
+      - name: Start-up smoke (the app's webview loads, the Syncthing sidecar answers)
+        if: runner.os == 'macOS'
+        timeout-minutes: 5
+        # The app bundle the dmg packs, in a throwaway TRAMADO_DATA_DIR (tools/desktop-e2e/startup.mjs).
+        run: node tools/desktop-e2e/startup.mjs --app=target/universal-apple-darwin/release/bundle/macos/Tramado.app
       - name: Installer sizes (critique R19)
         shell: bash
         run: |

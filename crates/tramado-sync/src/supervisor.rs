@@ -4,7 +4,8 @@
 
 //! The supervisor (sync spec §2.4–§2.8): one long-lived thread named `tramado-syncthing` spawns
 //! **and waits on** the child (Linux: `PR_SET_PDEATHSIG` follows the forking thread; Windows: a
-//! Job Object that kills the child when Tramado dies; macOS: orphan clean-up at the next start),
+//! Job Object that kills the child when Tramado dies; macOS: orphan clean-up at the next start;
+//! Windows children never open a console window, `init::command`),
 //! rotates the log, cleans up orphans through `runtime.json`, and restarts by the exit-code
 //! table with backoff. Stopping: API shutdown → 3 s → SIGTERM → kill at the deadline.
 
@@ -83,13 +84,14 @@ pub fn pid_alive(pid: u32) -> bool {
         let r = unsafe { libc::kill(pid as libc::pid_t, 0) };
         r == 0 || std::io::Error::last_os_error().raw_os_error() == Some(libc::EPERM)
     }
-    #[cfg(not(unix))]
+    #[cfg(windows)]
     {
-        let out = init::command(Path::new("tasklist"))
-            .args(["/FI", &format!("PID eq {pid}"), "/NH"])
-            .output();
-        out.map(|o| String::from_utf8_lossy(&o.stdout).contains(&pid.to_string()))
-            .unwrap_or(false)
+        win::pid_alive(pid)
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = pid;
+        false
     }
 }
 
@@ -108,10 +110,76 @@ fn exe_of(pid: u32) -> Option<PathBuf> {
         let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
         (!s.is_empty()).then(|| PathBuf::from(s))
     }
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    #[cfg(windows)]
+    {
+        win::exe_of(pid)
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
     {
         let _ = pid;
         None
+    }
+}
+
+/// Windows: the process checks through the Win32 API (no `tasklist` child, nothing to parse,
+/// no localised output), so a PID that Windows reused for another program is never taken for
+/// our sidecar.
+#[cfg(windows)]
+mod win {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+    use std::path::PathBuf;
+    use windows_sys::Win32::Foundation::{
+        CloseHandle, GetLastError, ERROR_ACCESS_DENIED, HANDLE, WAIT_TIMEOUT,
+    };
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, QueryFullProcessImageNameW, WaitForSingleObject, PROCESS_NAME_WIN32,
+        PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SYNCHRONIZE,
+    };
+
+    struct Process(HANDLE);
+
+    impl Drop for Process {
+        fn drop(&mut self) {
+            // SAFETY: a handle OpenProcess returned, closed once.
+            unsafe {
+                CloseHandle(self.0);
+            }
+        }
+    }
+
+    fn open(pid: u32, access: u32) -> Result<Process, u32> {
+        // SAFETY: OpenProcess has no preconditions; a null handle is an error.
+        let h = unsafe { OpenProcess(access, 0, pid) };
+        if h.is_null() {
+            // SAFETY: reads the calling thread's last error.
+            Err(unsafe { GetLastError() })
+        } else {
+            Ok(Process(h))
+        }
+    }
+
+    pub fn pid_alive(pid: u32) -> bool {
+        match open(pid, PROCESS_SYNCHRONIZE) {
+            Ok(p) => {
+                // SAFETY: a live handle with SYNCHRONIZE access; a zero timeout only polls.
+                let r = unsafe { WaitForSingleObject(p.0, 0) };
+                r == WAIT_TIMEOUT
+            }
+            // It exists but belongs to someone else (or is protected).
+            Err(e) => e == ERROR_ACCESS_DENIED,
+        }
+    }
+
+    pub fn exe_of(pid: u32) -> Option<PathBuf> {
+        let p = open(pid, PROCESS_QUERY_LIMITED_INFORMATION).ok()?;
+        let mut buf = vec![0u16; 32_768];
+        let mut len = buf.len() as u32;
+        // SAFETY: `buf` holds `len` u16s; the call writes at most that many and updates `len`.
+        let ok = unsafe {
+            QueryFullProcessImageNameW(p.0, PROCESS_NAME_WIN32, buf.as_mut_ptr(), &mut len)
+        };
+        (ok != 0).then(|| PathBuf::from(OsString::from_wide(&buf[..len as usize])))
     }
 }
 
@@ -161,8 +229,8 @@ pub fn orphan_cleanup(home: &Path, bin: &Path) {
         std::thread::sleep(Duration::from_millis(100));
     }
     if pid_alive(rt.pid) {
-        let ours = exe_of(rt.pid).is_some_and(|e| same_file(&e, bin))
-            || (exe_of(rt.pid).is_none() && Path::new(&rt.exe) == bin && cfg!(windows));
+        // Only a process that runs our sidecar binary: the PID may belong to another program now.
+        let ours = exe_of(rt.pid).is_some_and(|e| same_file(&e, bin));
         if ours {
             log::warn!("sync: killing an orphaned Syncthing (pid {})", rt.pid);
             kill_pid(rt.pid, true);

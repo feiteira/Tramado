@@ -60,6 +60,32 @@ fn sync_dir(dir: &Path) {
 #[cfg(not(unix))]
 fn sync_dir(_dir: &Path) {}
 
+/// `fs::rename` over an existing file. On Windows the target can be open for a moment in a
+/// process that did not allow deletion (Syncthing hashing it, a virus scanner, a preview): the
+/// rename then fails with a sharing violation or access denied, so it is retried for about a
+/// second before the error is returned.
+fn rename_replacing(from: &Path, to: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        // ERROR_ACCESS_DENIED (5), ERROR_SHARING_VIOLATION (32), ERROR_LOCK_VIOLATION (33).
+        const BUSY: [i32; 3] = [5, 32, 33];
+        let mut wait_ms = 10;
+        loop {
+            match fs::rename(from, to) {
+                Err(e) if wait_ms <= 320 && e.raw_os_error().is_some_and(|c| BUSY.contains(&c)) => {
+                    std::thread::sleep(std::time::Duration::from_millis(wait_ms));
+                    wait_ms *= 2;
+                }
+                other => return other,
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        fs::rename(from, to)
+    }
+}
+
 fn parent_and_name(path: &Path) -> AppResult<(&Path, String)> {
     let parent = path
         .parent()
@@ -112,7 +138,7 @@ fn write_atomic_with(
         f.sync_all()?;
         drop(f);
         // Rust's rename replaces an existing file on Windows too (MOVEFILE_REPLACE_EXISTING).
-        fs::rename(&tmp, path)?;
+        rename_replacing(&tmp, path)?;
         Ok(())
     })();
     if let Err(e) = written {
