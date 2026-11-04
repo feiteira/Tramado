@@ -332,4 +332,75 @@ describe('ExamService: dates, private state, edits', () => {
   });
 });
 
+describe('ExamService: UI-EXAMS additions (wave 2)', () => {
+  async function paper(b: Bed) {
+    const id = await b.exams.startTyped(TYPED, { type: 'midterm' });
+    return b.exams.saveReview(id, b.exams.draft(id).get()!.questions, { title: 'Frequência' });
+  }
+
+  it('importer() and raw(): who added the exam and its stored questions (containers included)', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    expect(b.exams.importer(examId)).toMatchObject({ deviceId: b.platform.mem.deviceId, self: true });
+    expect(b.exams.raw(examId)!.questions.map((q) => q.number)).toEqual(['1', '2', '3']);
+    expect(b.exams.importer('01JBX0000000000000000NOPE0')).toBeNull();
+    b.s.dispose();
+  });
+
+  it('saveQuestions(): the Review screen saves a reviewed paper in one write; duplicates and empty texts are refused', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    const raw = b.exams.raw(examId)!;
+    const qs = raw.questions.map((q, i) => (i === 0 ? { ...q, text: 'Texto corrigido.' } : q));
+    await b.exams.saveQuestions(examId, qs, { title: 'Frequência (corrigida)', rules: ['Sem consulta'] });
+    await b.idle();
+    const v = b.exams.list.get().papers.find((p) => p.examId === examId)!;
+    expect(v).toMatchObject({ title: 'Frequência (corrigida)', rules: ['Sem consulta'], state: 'ready' });
+    expect(v.questions[0]!.text).toBe('Texto corrigido.');
+    await expect(b.exams.saveQuestions(examId, qs.map((q) => ({ ...q, number: '1' })), {})).rejects.toMatchObject({ code: 'INVALID' });
+    await expect(b.exams.saveQuestions(examId, qs.map((q, i) => (i === 1 ? { ...q, text: ' ' } : q)), {})).rejects.toMatchObject({ code: 'INVALID' });
+    b.s.dispose();
+  });
+
+  it('running: the exam ids with a batch running (the answers view follows a batch started elsewhere)', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    const qids = b.exams.list.get().papers[0]!.questions.map((q) => q.id);
+    const p = b.exams.answer(examId, qids, 'quick', 'materials');
+    expect(b.exams.running.get()).toEqual([examId]);
+    expect(b.exams.progress(examId)).toBe(p);
+    await until(p, (v) => v.current === null && v.done === v.total);
+    await until(b.exams.running, (v) => v.length === 0);
+    b.s.dispose();
+  });
+
+  it('remove(): "Delete for everyone" deletes the folder, my answers and the private marks (importer only)', async () => {
+    const b = await bed();
+    const examId = await paper(b);
+    const qid = b.exams.list.get().papers[0]!.questions[0]!.id;
+    await b.exams.setMark(examId, qid, 'right');
+    const p = b.exams.answer(examId, [qid], 'quick', 'materials');
+    await until(p, (v) => v.current === null && v.done === v.total);
+    await b.idle();
+    expect([...b.platform.mem.list(b.classId).keys()].some((k) => k.startsWith(`.tramado/answers/${examId}/`))).toBe(true);
+    await b.exams.remove(examId);
+    await b.idle();
+    const keys = [...b.platform.mem.list(b.classId).keys()];
+    expect(keys.some((k) => k.endsWith('/exam.json'))).toBe(false);
+    expect(keys.some((k) => k.startsWith(`.tramado/answers/${examId}/`))).toBe(false);
+    expect(await b.platform.privateFiles.read(b.classId, `exams/${examId}.json`)).toBeNull();
+    expect(b.exams.list.get().papers).toHaveLength(0);
+    // A classmate's exam: refused.
+    const other: ExamFile = { ...b.exams.raw(await paper(b))! };
+    await b.idle();
+    const theirs = { ...other, importedBy: { memberId: 'k3q7mzx2v4hbtnw5r6yjc2aefg', deviceId: OTHER, name: 'Bruno' } };
+    const path = [...b.platform.mem.list(b.classId).keys()].find((k) => k.endsWith('/exam.json'))!;
+    b.platform.mem.applyRemote(b.classId, path, enc.encode(manifestJson(theirs)), { modifiedBy: 'BBBBBBB', mtimeMs: 3 });
+    await b.idle();
+    const id2 = b.exams.list.get().papers[0]?.examId;
+    if (id2 && b.exams.importer(id2)?.deviceId === OTHER) await expect(b.exams.remove(id2)).rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
+    b.s.dispose();
+  });
+});
+
 void manifestJson;

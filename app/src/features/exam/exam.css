@@ -678,3 +678,23 @@
   flex-basis: 100%;
   color: var(--ink-2);
 }
+
+/* ── Dock row (needs its DOCK_ROWS entry) ──────────────────────────────────────────────── */
+.dock-job {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--dock-h);
+  padding: 0 var(--s-6);
+  border-top: 1px solid var(--rule);
+  background: var(--paper-raised);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+.dock-job__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

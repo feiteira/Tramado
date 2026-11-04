@@ -4,7 +4,7 @@ import { createTestContext } from './testing/context';
 import { createFakeSearch, testPassage, type FakeSearch } from './testing/fakeSearch';
 import { createFakeAi, type FakeAi } from '../platform/memory/ai';
 import { bodyOf } from '../core/ai/fake';
-import { chatMonthPath, createAskService } from './ask';
+import { chatMonthPath, createAskService, createGlobalAsk } from './ask';
 import { manifestJson } from '../core/json';
 import type { AskService, AskTurn } from './types/ask';
 import type { AnnotationLine, ChatAi, ChatMessage, LectureFile, TranscriptFile } from '../core/model/files';
@@ -205,6 +205,114 @@ describe('AskService: lectures (UX §3.5.4)', () => {
     const md = dec.decode((await b.platform.privateFiles.read(b.classId, path))!);
     expect(md).toMatch(new RegExp(`\\(tramado:lecture/${LECTURE}\\?t=\\d+\\)`));
     expect(md).not.toMatch(/\[S\d+\]/);
+    b.s.dispose();
+  });
+});
+
+describe('AskService: UI-EXAMS additions (wave 2)', () => {
+  it('lecture AI reads the EFFECTIVE transcript: a correction not folded yet is what the summary sees', async () => {
+    const b = await bed();
+    await addLecture(b);
+    const lectures = b.s.forClass(b.classId).lectures as unknown as { edit: { setText(id: string, seg: string, t: string): Promise<void> }; idle(): Promise<void> };
+    await lectures.edit.setText(LECTURE, 's_l6a02', 'O núcleo intocável é o limite dos limites: nenhuma restrição o pode atingir.');
+    await b.idle();
+    await lectures.idle();
+    await b.ask.summarize(LECTURE);
+    const body = JSON.stringify(bodyOf(chat(b.ai).at(-1)! as never).messages);
+    expect(body).toContain('O núcleo intocável é o limite dos limites');
+    expect(body).not.toContain('O conteúdo essencial é o limite dos limites');
+    b.s.dispose();
+  });
+
+  it('study notes link the class documents they cite (tramado:doc) as well as transcript times', async () => {
+    const b = await bed();
+    await addLecture(b);
+    b.ai.controls.next((req) => {
+      const user = String(((req as { messages: Array<{ role: string; content: string }> }).messages.at(-1) ?? { content: '' }).content);
+      const doc = /\[(S\d+)\] \(Lei Fundamental/.exec(user)?.[1] ?? 'S9';
+      return `# Aula 6\n\n## Restrições\n\n- O conteúdo essencial é o limite dos limites [S3] (ver art. 18.º [${doc}]).`;
+    });
+    const path = await b.ask.studyNotes(LECTURE);
+    const md = dec.decode((await b.platform.privateFiles.read(b.classId, path))!);
+    expect(md).toMatch(new RegExp(`\\(tramado:lecture/${LECTURE}\\?t=\\d+\\)`));
+    expect(md).toContain('(tramado:doc/Documents%2FLF.pdf?page=9)');
+    expect(md).not.toMatch(/\[S\d+\]/);
+    const sys = String(bodyOf(chat(b.ai).at(-1)! as never).messages?.[0]?.content);
+    expect(sys).toMatch(/documentos da cadeira|class documents/i);
+    b.s.dispose();
+  });
+
+  it('renameThread keeps a private title across restarts; removeThread forgets it', async () => {
+    const b = await bed();
+    const tid = await b.ask.ask(null, 'O que diz o artigo 18 sobre as restrições?', { kinds: [] });
+    await settle(b, tid);
+    await b.ask.renameThread(tid, '  Artigo   18  ');
+    expect(b.ask.threads.get()[0]!.title).toBe('Artigo 18');
+    const again = createAskService(b.ctx, () => b.s, { store: b.s.forClass(b.classId).store, classId: b.classId }) as AskService & { idle(): Promise<void> };
+    await again.idle();
+    expect(again.threads.get()[0]!.title).toBe('Artigo 18');
+    await expect(b.ask.renameThread(tid, '   ')).rejects.toMatchObject({ code: 'INVALID' });
+    await b.ask.removeThread(tid);
+    const titles = JSON.parse(dec.decode((await b.platform.privateFiles.read(b.classId, 'ask/titles.json'))!)) as { titles: Record<string, string> };
+    expect(titles.titles[tid]).toBeUndefined();
+    b.s.dispose();
+  });
+
+  it('the "My notes" chip off (privateNotes: false) keeps private notes out of what is sent', async () => {
+    const b = await bed();
+    const tid = await b.ask.ask(null, 'O artigo 18 e as restrições nos meus apontamentos', { kinds: [] }, { privateNotes: false });
+    await settle(b, tid);
+    expect(JSON.stringify(chat(b.ai).map((r) => r.body))).not.toContain('apontamentos privados');
+    const t2 = await b.ask.ask(null, 'O artigo 18 e as restrições nos meus apontamentos', { kinds: [] });
+    await settle(b, t2);
+    expect(JSON.stringify(chat(b.ai).at(-1)!.body)).toContain('apontamentos privados');
+    b.s.dispose();
+  });
+
+  it('postTurn posts a finished turn of another thread store; refuses private sources and other classes', async () => {
+    const b = await bed();
+    b.search.setPassages(CORPUS.slice(0, 2));
+    const tid = await b.ask.ask(null, 'O que diz o artigo 18?', { kinds: [] });
+    const [turn] = await settle(b, tid);
+    await expect(b.ask.postTurn({ ...turn!, classOf: { S1: 'zzzzzzzzzzzzzzzzzzzzzzzzzz' } })).rejects.toMatchObject({ code: 'INVALID' });
+    await b.ask.postTurn(turn!);
+    expect([...b.platform.mem.list(b.classId).keys()].some((p) => p.startsWith(`.tramado/chat/${b.platform.mem.deviceId}/`))).toBe(true);
+    b.s.dispose();
+  });
+});
+
+describe('GlobalAskService: Ask across all classes (route ask)', () => {
+  it('searches every class, records the class of each citation, keeps threads in the home class, survives a restart', async () => {
+    const b = await bed();
+    const other = await b.s.library.create({ name: 'Biology 101', colour: '#30a46c', icon: 'dna', language: 'en', share: false });
+    await b.idle();
+    const bio = testPassage({ id: 'primer#4', label: 'Cell Biology Primer · p. 4', source: { kind: 'document', path: 'Readings/Primer.pdf', sha256: 'd'.repeat(64) }, locator: { type: 'page', page: 4 }, text: 'Small non-polar molecules diffuse directly across the lipid bilayer, artigo 18 restrições.' });
+    b.search.setPassages([...CORPUS.slice(0, 2), { ...bio, classId: other }]);
+    const g = createGlobalAsk(b.ctx, () => b.s);
+    const tid = await g.ask(null, 'O artigo 18 e as restrições', { kinds: [] });
+    await g.idle();
+    const [turn] = g.thread(tid).get();
+    expect(turn).toMatchObject({ status: 'ok', scope: { classes: [] } });
+    expect(Object.keys(turn!.classOf ?? {}).length).toBe(turn!.citations.length);
+    expect(Object.values(turn!.classOf ?? {})).toContain(other);
+    expect(chat(b.ai).at(-1)!.activity).toMatchObject({ action: 'ask', classId: null });
+    const home = g.threads.get()[0]!.home;
+    expect(await b.platform.privateFiles.read(home, `ask-all/${tid}.jsonl`)).not.toBeNull();
+    // The class's own Ask tab does not list it.
+    await b.ask.idle();
+    expect(b.ask.threads.get().map((t) => t.threadId)).not.toContain(tid);
+    const again = createGlobalAsk(b.ctx, () => b.s);
+    await again.idle();
+    await again.renameThread(tid, 'Restrições');
+    expect(again.threads.get()[0]).toMatchObject({ threadId: tid, title: 'Restrições', home });
+    expect(again.thread(tid).get()[0]!.classOf).toEqual(turn!.classOf);
+    // Narrowed to one class: only its passages are sent.
+    const t2 = await again.ask(null, 'non-polar molecules bilayer', { kinds: [], classes: [other] });
+    await again.idle();
+    expect(Object.values(again.thread(t2).get()[0]!.classOf ?? {})).toEqual([other]);
+    await again.removeThread(tid);
+    expect(again.threads.get().map((t) => t.threadId)).toEqual([t2]);
+    expect(await b.platform.privateFiles.read(home, `ask-all/${tid}.jsonl`)).toBeNull();
     b.s.dispose();
   });
 });
