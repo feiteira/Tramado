@@ -29,7 +29,7 @@ import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { TrustServiceImpl } from './trust';
 import type { AppServices, ClassStore } from './types/common';
-import type { ClassDetail, ClassService, ConsentInput, EffectiveMeta, Person } from './types/class';
+import type { ClassDetail, ClassModel, ClassService, ConsentInput, EffectiveMeta, Person } from './types/class';
 import type { DeviceRef } from './types/viewModels';
 
 export function emptyClassDetail(classId: ClassId, me: { deviceId: string; memberId: string } = { deviceId: '', memberId: '' }): ClassDetail {
@@ -43,51 +43,10 @@ export function emptyClassDetail(classId: ClassId, me: { deviceId: string; membe
   };
 }
 
-/** Everything the other services of a class need from its trusted machine files. */
-export interface ClassModel {
-  revision: number;
-  loaded: boolean;
-  classFile: ClassFile | null;
-  folded: FoldedMeta;
-  meta: EffectiveMeta;
-  organisers: OrganiserReplay;
-  bindings: Bindings;
-  bans: EffectiveBans;
-  members: ReadonlyMap<DeviceId, { file: MemberFile; check: MemberCheck }>;
-  consents: ActiveConsent[];
-  mod: ModState;
-  me: { deviceId: DeviceId; memberId: MemberId };
-  /** Records of a newer format seen (G14). */
-  newer: number;
-  /** Devices that left, with the names of their last member file (attribution of their older records). */
-  former: ReadonlyMap<DeviceId, { memberId: MemberId; name: string; deviceName: string }>;
-}
 
-/** What the other services of the class reach behind ClassService (additive, T-SYNC). */
-export interface ClassServiceImpl extends ClassService {
-  model: ReadableStore<ClassModel>;
-  /** Resolves after the first full load of the class files. */
-  ready(): Promise<void>;
-  /** Re-reads every class file now. */
-  reload(): Promise<void>;
-  personAt(deviceId: DeviceId, hlc?: Hlc): MemberId | null;
-  isOrganiserAt(memberId: MemberId | null, hlc: Hlc): boolean;
-  /** UX DeviceRef of a device: the bound person (or the device's own claim when unbound). */
-  deviceRef(deviceId: DeviceId): DeviceRef;
-  /** "Ana Ribeiro" (bound person) or the device name. */
-  nameOf(deviceId: DeviceId): string;
-  /** The policy last computed (null before the first load). */
-  policy(): ClassPolicy | null;
-  /** Writes a ban/unban entry into my signed bans file (organisers only count, folder spec §8.19). */
-  writeBan(target: BanTarget, state: 'banned' | 'unbanned', reason?: string): Promise<void>;
-  /** Removes my member and presence files (leaving, sync spec §17). */
-  removeOwnFiles(): Promise<void>;
-  /** Writes my class.json, meta and member file again for a fork (sync spec §17). */
-  writeFork(newClassId: ClassId, nonce: string): Promise<void>;
-  /** Private UI state of the class (architecture §13.2 ui-state.json). */
-  uiState(): Promise<Record<string, unknown>>;
-  setUiState(patch: Record<string, unknown>): Promise<void>;
-}
+/** What the other services of the class reach behind ClassService (T-SYNC; part of ClassService since G1). */
+export type ClassServiceImpl = ClassService;
+export type { ClassModel };
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -421,7 +380,7 @@ export function createClassService(ctx: AppContext, app: () => AppServices, cls:
         const pref = (ctx.prefs.get('speech.volunteer') || 'plugged') as 'off' | 'plugged' | 'always';
         caps = {
           cpuOk: s.cpuOk && s.localWhisper, localModel: ready ? { id: ready.id, speedRT: ready.speedRT ?? 1 } : null, cloud,
-          volunteer: effectiveVolunteer(pref, !!ready && s.cpuOk, cloudAuto),
+          volunteer: effectiveVolunteer(pref, !!ready && s.cpuOk && s.localWhisper, cloudAuto),   // as the TranscriptionQueue decides (G1)
         };
       }
     } catch {

@@ -27,20 +27,7 @@ import type { ClaimEngine, ClaimView } from './types/sync';
 interface Obs { claim: ClaimFile; trusted: boolean; changedAt: number; sha: string; newer: boolean; lectureId: Ulid; kind: ClaimKind }
 
 /** Additive (T-SYNC): what TrustService, the transcription queue and SyncService.leave use. */
-export interface ClaimEngineImpl extends ClaimEngine {
-  /** A trusted claim of a device, or null. */
-  trustedClaim(lectureId: Ulid, kind: ClaimKind, deviceId: DeviceId): Promise<ClaimFile | null>;
-  /** The device whose fold claim wins (§14.8), or null. */
-  foldWinner(lectureId: Ulid): Promise<DeviceId | null>;
-  /** §14.8 trigger: the transcript owner has no member file or was last seen more than 7 days ago. */
-  foldTrigger(lectureId: Ulid): Promise<boolean>;
-  /** Fires when a winner's claim goes stale (volunteers restart their delays, §14.3). */
-  onReevaluate(cb: (lectureId: Ulid, kind: ClaimKind) => void): () => void;
-  /** Sets every claimed/working claim of mine to `released` (leaving, §17; "Stop and let someone else do it", §14.8). */
-  releaseAll(): Promise<void>;
-  /** Resolves once the first load of the claim files finished. */
-  ready(): Promise<void>;
-}
+export type ClaimEngineImpl = ClaimEngine;   // T-SYNC's extras are part of ClaimEngine since G1
 
 export function createClaimEngine(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): ClaimEngineImpl {
   const { platform, clock } = ctx;

@@ -118,6 +118,22 @@ export function createFakeClaims(opts: FakeClaimsOptions | 'won' | 'lost' = 'won
       publish(id, kind);
     },
     sweep: async () => undefined,
+    // G1: the members ClaimEngine gained at the API freeze (the fake holds no other devices' claim files).
+    trustedClaim: async (id, kind, deviceId) => {
+      const own = mine.get(key(id, kind));
+      return own && own.file.deviceId === deviceId ? own.file : null;
+    },
+    foldWinner: async (id) => fake.winner(id, 'fold')?.deviceId ?? null,
+    foldTrigger: async () => false,
+    onReevaluate: () => () => undefined,
+    async releaseAll() {
+      for (const [k, own] of mine) {
+        if (own.file.status !== 'claimed' && own.file.status !== 'working') continue;
+        const [id, kind] = k.split('/') as [Ulid, Kind];
+        await fake.setStatus(id, kind, { status: 'released' });
+      }
+    },
+    ready: async () => undefined,
     setOthers(id, kind, views) {
       others.set(key(id, kind), views.map((v) => ({ ...v, mine: false })));
       publish(id, kind);
@@ -168,11 +184,15 @@ export function installClassFakes(
     revoke: async () => undefined,
     active: () => [],
   };
+  let current: NonNullable<Parameters<ClassServices['presence']['setActivity']>[0]> = {};
   (cs as { presence: ClassServices['presence'] }).presence = {
     async setActivity(a) {
       activities.push(a);
+      current = a === null ? {} : { ...current, ...a };
     },
     others: new Store({}),
+    activityOf: () => null,
+    mine: () => ({ ...current }) as ReturnType<ClassServices['presence']['mine']>,
   };
   return { claims, consent, activities };
 }

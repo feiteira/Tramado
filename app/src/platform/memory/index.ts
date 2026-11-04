@@ -38,6 +38,10 @@ export interface MemoryPlatform extends Platform {
     addFile(classId: ClassId, path: ClassPath, bytes: Uint8Array): void;   // demo hook (DemoControls.files.addFile)
     queueDialog(a: DialogAnswer): void;
     setClock(c: MemoryClock): void;
+    /** G1: the private ("transcript only") WebM of a recording, as Rust keeps it under data/recordings (null removes it). */
+    putRecording(recordingId: string, bytes: Uint8Array | null): void;
+    /** G1: a stored secret's value (the demo's `?ai=real` reads the session-only key; the real platform never returns it). */
+    peekSecret(name: Parameters<Platform['secrets']['status']>[0]): string | null;
   };
 }
 
@@ -176,6 +180,11 @@ export function createMemoryPlatform(opts: MemoryPlatformOptions = {}): MemoryPl
       queueDialog: (a) => dialogs.queue(a),
       setClock(c) {
         clock = c;
+      },
+      peekSecret: (name) => secrets.peek(name),
+      putRecording(recordingId, bytes) {
+        if (bytes) recordings.set(recordingId, bytes);
+        else recordings.delete(recordingId);
       },
     },
   };

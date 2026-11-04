@@ -7,16 +7,19 @@ import { mulberry32 } from '../core/util/prng';
 import { DIALOG_IDS, type DialogId, type DialogPropsMap } from '../features/registry';
 import { createMemoryPlatform, type MemoryPlatform } from '../platform/memory';
 import { createFakeAi } from '../platform/memory/ai';
-import { createFakeSpeech } from '../platform/memory/speech';
+import { createFakeSpeech, type FakeSpeech } from '../platform/memory/speech';
+import { createDemoSyncControls } from '../platform/memory/sync';
 import type { AppProps } from '../App';
 import type { AppServicesImpl } from '../services/index';
 import { systemClock } from '../services/context';
 import type { InitialDialog } from '../shell/AppState';
 import { CLASS_TABS, ROUTE_NAMES, SETTINGS_SECTIONS, type ClassTabId, type Route, type SettingsSection } from '../shell/routes';
-import { createWorkerExtractHost, createWorkerHost } from '../workers/hosts';
+import { createWorkerExtractHost, createWorkerHost, createWorkerImagePrep, createWorkerPdfRender } from '../workers/hosts';
 import type { DemoControls } from './controls';
 import { freeze } from './freeze';
 import { installHooks } from './hooks';
+import { demoTranscript } from './example';
+import { tickFakeMedia } from './fakeMedia';
 import { MISSING_ID, type DemoKeys } from './keys';
 import { seedDemo } from './seed';
 
@@ -42,7 +45,8 @@ export interface DemoFlags {
   q: string | null;
   mode: 'extracting' | 'review' | 'answers' | 'practice' | null;
   section: SettingsSection | null;
-  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey';
+  /** `real` (architecture §10): OpenRouter from the browser with the key typed in Settings, kept for the session only. */
+  ai: 'fake' | 'off' | 'busy' | 'quota' | 'badkey' | 'real';
   speech: 'fake' | null;
   model: 'ready' | 'missing' | 'downloading';
   sync: 'fake' | 'offline' | 'error' | 'local';
@@ -82,7 +86,7 @@ export function parseDemoFlags(search: string): DemoFlags {
     q: str(q.get('q')),
     mode: maybe(q.get('mode'), ['extracting', 'review', 'answers', 'practice'] as const),
     section: maybe(q.get('section'), SETTINGS_SECTIONS),
-    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey'] as const, 'fake'),
+    ai: oneOf(q.get('ai'), ['fake', 'off', 'busy', 'quota', 'badkey', 'real'] as const, 'fake'),
     speech: q.get('speech') === 'fake' ? 'fake' : null,
     model: oneOf(q.get('model'), ['ready', 'missing', 'downloading'] as const, 'ready'),
     sync: oneOf(q.get('sync'), ['fake', 'offline', 'error', 'local'] as const, 'fake'),
@@ -165,8 +169,8 @@ export function demoDialog(f: DemoFlags, keys: DemoKeys, nowMs: number): Initial
   return { id: f.dialog, props: props[f.dialog] } as InitialDialog;
 }
 
-/** The parts of DemoControls the memory platform provides itself; the fakes add theirs (wave 1). */
-function controlsFor(platform: MemoryPlatform, keys: DemoKeys): DemoControls {
+/** DemoControls: the memory platform's own parts plus the fakes' (G1: sync, AI, speech, media). */
+function controlsFor(platform: MemoryPlatform, keys: DemoKeys, fakes: { flags: DemoFlags; ai: ReturnType<typeof createFakeAi>; speech: FakeSpeech | null }): DemoControls {
   return {
     files: {
       async addFile(classKey, relPath, base64) {
@@ -176,32 +180,67 @@ function controlsFor(platform: MemoryPlatform, keys: DemoKeys): DemoControls {
       },
       queueAnswer: (a) => platform.mem.queueDialog(a),
     },
+    ai: fakes.ai.controls,
+    sync: createDemoSyncControls(platform, keys, { mode: fakes.flags.sync, now: () => Date.now(), join: fakes.flags.join }),
+    ...(fakes.speech ? { speech: fakes.speech.controls(keys) } : {}),
+    media: { tick: tickFakeMedia },
   };
+}
+
+/** The transcripts the speech fake hands back for the demo lectures that have none yet (`l8`, `b4`). */
+function scriptDemoTranscripts(speech: FakeSpeech, keys: DemoKeys) {
+  for (const key of ['l8', 'b4']) {
+    const lecture = keys.lectures[key];
+    const t = demoTranscript(key);
+    if (!lecture || !t) continue;
+    const durationMs = t.segments.reduce((m, s) => Math.max(m, s.endMs), 0);
+    speech.script(lecture.lectureId, {
+      durationMs, language: t.language, engine: { kind: 'local', name: 'whisper.cpp', model: 'small' },
+      tracks: [{ speaker: 'lecture', segments: t.segments.map((s) => ({ startMs: s.startMs, endMs: s.endMs, text: s.text })) }],
+    });
+  }
 }
 
 export async function bootDemo(search: string = window.location.search): Promise<AppProps> {
   const flags = parseDemoFlags(search);
   freeze(flags.clock);
   const nowMs = Date.now();
-  const platform = createMemoryPlatform({
+  // `?ai=real` reads the key typed in Settings → AI from the session-only memory secrets.
+  // eslint-disable-next-line prefer-const
+  let platform: MemoryPlatform;
+  const ai = createFakeAi({ mode: flags.ai, ...(flags.ai === 'real' ? { key: () => platform.mem.peekSecret('openrouter') } : {}) });
+  const speech = flags.speech === 'fake' ? createFakeSpeech({ model: flags.model, recording: flags.recording }) : null;
+  platform = createMemoryPlatform({
     kind: 'demo',
     clock: { now: () => Date.now() },
     rand: mulberry32(0x7a3a),
     syncMode: flags.sync,
-    ai: createFakeAi({ mode: flags.ai }),
-    ...(flags.speech === 'fake' ? { speech: createFakeSpeech({ model: flags.model, recording: flags.recording }) } : {}),
+    ai,
+    ...(speech ? { speech } : {}),
     power: { source: 'battery', percent: 64 },
     selftestUrl: '/demo/lecture.webm',
   });
-  const keys = await seedDemo(platform, { lang: flags.lang, theme: flags.theme, name: flags.name, nowMs, empty: flags.empty });
-  const hooks = installHooks(controlsFor(platform, keys));
-  // Worker-backed hosts (architecture §11.7); the workers are stubs until T-DOCS.
+  const keys = await seedDemo(platform, {
+    lang: flags.lang, theme: flags.theme, name: flags.name, nowMs, empty: flags.empty,
+    // `ai=real` stores no fictional key: the student types theirs.
+    join: flags.join, unverified: flags.unverified, conflict: flags.conflict, ai: flags.ai === 'real' ? 'off' : flags.ai,
+  });
+  if (speech) {
+    speech.bind(platform, { ...(keys.classes.law ? { recordingClassId: keys.classes.law } : {}) });
+    scriptDemoTranscripts(speech, keys);
+  }
+  const hooks = installHooks(controlsFor(platform, keys, { flags, ai, speech }));
+  // Worker-backed hosts (architecture §11.7).
   const indexHost = createWorkerHost(new Worker(new URL('../workers/search.worker.ts', import.meta.url), { type: 'module' }));
   const extractHost = createWorkerExtractHost(new Worker(new URL('../workers/extract.worker.ts', import.meta.url), { type: 'module' }));
+  const imageWorker = new Worker(new URL('../workers/image.worker.ts', import.meta.url), { type: 'module' });
   return {
     platform,
     options: {
-      context: { clock: systemClock, rand: mulberry32(0x5eed1), indexHost, extractHost },
+      context: {
+        clock: systemClock, rand: mulberry32(0x5eed1), indexHost, extractHost,
+        imagePrep: createWorkerImagePrep(imageWorker), pdfRender: createWorkerPdfRender(imageWorker),
+      },
       initialRoute: () => demoRoute(flags, keys),
       initialDialog: () => demoDialog(flags, keys, nowMs),
       example: { leave: () => window.location.assign(`${window.location.pathname}?demo=empty&lang=${flags.lang}&theme=${flags.theme}`) },

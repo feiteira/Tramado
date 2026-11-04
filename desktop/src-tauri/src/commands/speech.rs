@@ -81,8 +81,8 @@ impl SttTransport for PipeStt {
     }
 }
 
-/// Until the desktop crate hands the AI pipe to speech (gate G2: R-SHELL's `AiState` owns the
-/// `AiPipe`; `init` then passes `PipeStt::new(pipe)`), cloud transcription answers
+/// Used only when the AI domain did not manage an `Arc<AiPipe>` (it always does, since G1:
+/// `commands::ai::init` runs before `speech::init`); cloud transcription then answers
 /// `NOT_IMPLEMENTED`.
 struct PipeNotWired;
 
@@ -95,13 +95,18 @@ impl SttTransport for PipeNotWired {
 }
 
 pub fn init(app: &AppHandle, shared: &Shared) -> AppResult<()> {
-    let stt: Arc<dyn SttTransport> = Arc::new(PipeNotWired);
+    let stt: Arc<dyn SttTransport> = match app.try_state::<Arc<AiPipe>>() {
+        Some(pipe) => Arc::new(PipeStt::new(pipe.inner().clone())),
+        None => Arc::new(PipeNotWired),
+    };
     let speech = Arc::new(Speech::new(SpeechConfig {
         paths: shared.paths.clone(),
         fs: shared.fs.clone(),
         stt,
         version: shared.version.clone(),
     }));
+    // `diag_collect` (commands/app.rs) reads the engine through its own handle.
+    app.manage(speech.clone());
     app.manage(SpeechState {
         speech,
         picks: shared.picks.clone(),

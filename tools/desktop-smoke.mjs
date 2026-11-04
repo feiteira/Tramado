@@ -21,6 +21,12 @@
 //                       as the bindings do) and check their answers: class files, private data, cache, media over the
 //                       scheme, class:changed, dialogs and confirmations through the e2e answer queue, secrets, AI
 //                       refusals, registry operations (create, update, fork, forget)
+//   --flow=g1           gate G1 (plan §5): drive the real app through onboarding (clicks and typing in the welcome
+//                       and name steps), create a local class, import a PDF (a fictional regulation, through the e2e
+//                       dialog queue), wait for extraction and indexing in the webview's workers, then open the
+//                       palette (Ctrl+K), type a word of the PDF and wait for a `palette-result`; the screenshot is
+//                       taken with the palette open. The class and import go through the services (window.__tramadoE2E,
+//                       set only when AppInfo.e2e) because their screens are wave-2 placeholders.
 //   --skip-build        do not build the frontend nor the app (use what is there)
 //   --skip-frontend     do not run `npm run build` (the app is still built)
 //   --timeout=<s>       how long to wait for "webview ready" (default 30)
@@ -29,7 +35,7 @@
 // The app runs with TRAMADO_DATA_DIR=.tramado-dev/smoke (wiped first), TRAMADO_E2E=1 and the fetched Syncthing
 // sidecar; nothing touches the developer's own Tramado data, keychain or autostart.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -49,6 +55,12 @@ const OUT = resolve(opts.out ?? resolve(DATA, 'smoke.png'));
 const TIMEOUT_S = Number(opts.timeout) || 30;
 const MEDIA = opts['media-selftest'] === 'true';
 const IPC = opts['ipc-check'] === 'true';
+const FLOW = opts.flow ?? null;
+if (FLOW !== null && FLOW !== 'g1') {
+  console.error(`desktop-smoke: unknown flow ${FLOW}`);
+  process.exit(2);
+}
+const FLOW_QUERY = 'fraude académica';
 const BIN = resolve(ROOT, 'target/debug/tramado-desktop');
 const TRIPLE = 'x86_64-unknown-linux-gnu';
 const SIDECAR = resolve(ROOT, `desktop/src-tauri/binaries/tramado-syncthing-${process.arch === 'arm64' ? 'aarch64-unknown-linux-gnu' : TRIPLE}`);
@@ -236,6 +248,79 @@ const IPC_SCRIPT = String.raw`(async () => {
   await call('app_log', { level: 'info', message: 'ipc check', data: { ok: failed.length === 0, steps: steps.length, failed } });
 })();`;
 
+// The G1 flow (plan §5), run in the webview by the app (TRAMADO_E2E_EVAL). Logged as `g1 flow {ok, steps, …}`.
+const FLOW_SCRIPT = String.raw`(async () => {
+  const T = window.__TAURI_INTERNALS__;
+  const log = (data) => T.invoke('app_log', { level: 'info', message: 'g1 flow', data });
+  const steps = [];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const until = async (what, fn, ms = 30000) => {
+    const end = Date.now() + ms;
+    for (;;) {
+      const v = await fn();
+      if (v) return v;
+      if (Date.now() > end) throw new Error('timed out waiting for ' + what);
+      await sleep(100);
+    }
+  };
+  const el = (id) => document.querySelector('[data-testid="' + id + '"]');
+  const type = (input, text) => {
+    const proto = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, 'value').set.call(input, text);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  const step = async (name, fn) => {
+    const t0 = Date.now();
+    try {
+      const detail = await fn();
+      steps.push({ step: name, ok: true, ms: Date.now() - t0, ...(detail === undefined ? {} : { detail }) });
+    } catch (e) {
+      steps.push({ step: name, ok: false, ms: Date.now() - t0, error: e && e.code ? e.code + ': ' + e.message : String(e) });
+      throw e;
+    }
+  };
+  let s, classId;
+  try {
+    await step('onboarding: welcome', async () => (await until('onboarding-start', () => el('onboarding-start'))).click());
+    await step('onboarding: name', async () => {
+      type(await until('onboarding-name-input', () => el('onboarding-name-input')), 'Ana Ribeiro');
+      await sleep(50);
+      (await until('enabled continue', () => { const b = el('onboarding-name-continue'); return b && !b.disabled ? b : null; })).click();
+      s = await until('the ready phase', () => window.__tramadoE2E);
+      return { identity: !!s.ctx.identity.get() };
+    });
+    await step('create a local class', async () => {
+      classId = await s.library.create({ name: 'Regulamento de Avaliação', colour: '#12a594', icon: 'scale', language: 'pt-PT', share: false });
+      await until('the class in the library', () => s.library.classes.get().some((c) => c.id === classId));
+      return { classId };
+    });
+    await step('import the PDF', async () => {
+      const picks = await s.ctx.platform.dialogs.pickFiles({ title: 'Add documents', filters: [{ name: 'PDF', extensions: ['pdf'] }], multiple: true });
+      const res = await s.forClass(classId).documents.import(picks);
+      if (res.length !== 1 || !res[0].path || res[0].error) throw new Error('import: ' + JSON.stringify(res));
+      return { path: res[0].path };
+    });
+    await step('extract and index (webview workers)', async () => {
+      const st = await until('index settled', async () => {
+        const v = await s.search.settled(classId);
+        return v.docs >= 1 && v.pending === 0 ? v : null;
+      }, 60000);
+      const hits = await s.search.passages(classId, ${JSON.stringify(FLOW_QUERY)}, { limit: 5 });
+      if (!hits.length) throw new Error('no passage for the query');
+      return { docs: st.docs, chars: st.chars, first: hits[0].label };
+    });
+    await step('palette search hit', async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true }));
+      type(await until('palette-input', () => el('palette-input')), ${JSON.stringify(FLOW_QUERY)});
+      const row = await until('palette-result', () => el('palette-result'), 15000);
+      return { label: row.textContent.slice(0, 160) };
+    });
+    await log({ ok: true, steps });
+  } catch (e) {
+    await log({ ok: false, steps, error: String(e) });
+  }
+})();`;
+
 // ── Inner part: runs inside xvfb-run + dbus-run-session ────────────────────────────────────────────────────────
 async function inner() {
   rmSync(DATA, { recursive: true, force: true });
@@ -265,6 +350,16 @@ async function inner() {
     env.TRAMADO_E2E_DIALOGS = resolve(DATA, 'dialogs.json');
     env.TRAMADO_E2E_EVAL = resolve(DATA, 'ipc-check.js');
   }
+  if (FLOW === 'g1') {
+    const fixtures = resolve(DATA, 'fixtures');
+    mkdirSync(fixtures, { recursive: true });
+    const pdf = resolve(fixtures, 'Regulamento de Avaliação.pdf');
+    copyFileSync(resolve(ROOT, 'app/test-fixtures/tramado/docs/law.pdf'), pdf);
+    writeFileSync(resolve(DATA, 'dialogs.json'), JSON.stringify([{ paths: [pdf] }]));
+    writeFileSync(resolve(DATA, 'flow-g1.js'), FLOW_SCRIPT);
+    env.TRAMADO_E2E_DIALOGS = resolve(DATA, 'dialogs.json');
+    env.TRAMADO_E2E_EVAL = resolve(DATA, 'flow-g1.js');
+  }
   const app = spawn(BIN, [], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '';
   app.stdout.on('data', (d) => (output += d));
@@ -280,6 +375,13 @@ async function inner() {
       break;
     }
     await sleep(250);
+  }
+  if (report.webviewReady && FLOW) {
+    // The flow first; the picture shows where it ended (the palette with the hit).
+    const flowDeadline = Date.now() + 120_000;
+    let r = null;
+    while (Date.now() < flowDeadline && exited === null && !(r = logged(logText(), 'g1 flow'))) await sleep(250);
+    report.flow = r ?? { ok: false, error: 'no result within 120 s' };
   }
   if (report.webviewReady) {
     // Let fonts and styles settle before the picture.
@@ -309,7 +411,8 @@ async function inner() {
     report.webviewReady &&
     report.png !== null &&
     (!MEDIA || report.mediaSelftest?.ok === true) &&
-    (!IPC || (report.ipcCheck?.ok === true && report.ipcCheck?.exported === true));
+    (!IPC || (report.ipcCheck?.ok === true && report.ipcCheck?.exported === true)) &&
+    (!FLOW || report.flow?.ok === true);
   report.logTail = logText().split('\n').filter(Boolean).slice(-15);
   if (!report.ok) report.appOutput = output.split('\n').filter(Boolean).slice(-30);
   if (exited !== null && !report.webviewReady) report.exited = exited;

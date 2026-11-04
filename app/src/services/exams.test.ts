@@ -30,13 +30,14 @@ GRUPO II (12 valores)
 
 interface Bed { s: AppServicesImpl; classId: ClassId; exams: ExamService & { idle(): Promise<void> }; ai: FakeAi; search: FakeSearch; platform: MemoryPlatform; clock: { advance(ms: number): void }; idle(): Promise<void> }
 
-async function bed(opts: { ai?: FakeAi; key?: boolean } = {}): Promise<Bed> {
+async function bed(opts: { ai?: FakeAi; key?: boolean; realSearch?: boolean } = {}): Promise<Bed> {
   const ai = opts.ai ?? createFakeAi({ mode: 'fake' });
   const { ctx, platform, clock } = await createTestContext({ name: 'Ana Ribeiro', ai });
   if (opts.key !== false) await platform.secrets.set('openrouter', 'test-key-0001');
   const s = createServices(ctx);
   const search = createFakeSearch(CORPUS);
-  (s as { search: unknown }).search = search;
+  // G1: `realSearch` keeps T-DOCS' SearchService (inline index and extraction hosts) instead of the fake.
+  if (!opts.realSearch) (s as { search: unknown }).search = search;
   await s.ai.ready();
   const classId = await s.library.create({ name: 'Direito Constitucional I', colour: '#12a594', icon: 'scale', language: 'en', share: false });
   const cls = s.forClass(classId);
@@ -221,6 +222,50 @@ describe('ExamService: answers (critique C17)', () => {
     expect(last.overrideText?.title).toBe('Use NVIDIA free models for this request');
     const file = JSON.parse(dec.decode(await b.platform.fs.read(b.classId, `.tramado/answers/${examId}/${b.platform.mem.deviceId}.json`))) as AnswersFile;
     expect(file.answers[0]).toMatchObject({ model: 'nvidia/nemotron-3.5-super-vl:free', privacy: 'standard' });
+    b.s.dispose();
+  });
+});
+
+describe('ExamService over the real SearchService (G1)', () => {
+  const LAW = [
+    '# Lei Fundamental de Exemplo',
+    '',
+    '## Artigo 18.º (Força jurídica)',
+    '',
+    '2. A lei só pode restringir os direitos, liberdades e garantias nos casos expressamente previstos nesta Lei Fundamental.',
+    '3. As leis restritivas têm de revestir caráter geral e abstrato e não podem diminuir a extensão e o alcance do conteúdo essencial dos preceitos.',
+    '',
+    '## Artigo 19.º (Suspensão do exercício de direitos)',
+    '',
+    '1. Os órgãos de soberania não podem suspender o exercício dos direitos, salvo em caso de estado de sítio ou de estado de emergência.',
+  ].join('\n');
+
+  it('Quick answer cites the class document the index found, never the private note', async () => {
+    const b = await bed({ realSearch: true });
+    const cls = b.s.forClass(b.classId);
+    await cls.store.writeBytes('Documents/Lei Fundamental de Exemplo.md', enc.encode(LAW), { own: true });
+    const note = await cls.notes.create('private', 'Restrições');
+    await cls.notes.save('private', note, 'SEGREDO PRIVADO: as leis restritivas e o conteúdo essencial, os meus apontamentos.');
+    await b.idle();
+    b.s.search.refresh?.(b.classId);
+    const status = await b.s.search.settled!(b.classId);
+    expect(status.docs).toBeGreaterThanOrEqual(1);
+    const hits = await b.s.search.passages(b.classId, 'leis restritivas conteúdo essencial', { limit: 5 });
+    // The student's own search finds both; the private note is flagged (never cited in shared content).
+    expect(hits.some((h) => h.source.kind === 'document' && 'path' in h.source && h.source.path === 'Documents/Lei Fundamental de Exemplo.md')).toBe(true);
+    expect(hits.filter((h) => h.source.kind === 'note').every((h) => h.private === true)).toBe(true);
+
+    const id = await b.exams.startTyped(TYPED, { type: 'midterm' });
+    const examId = await b.exams.saveReview(id, b.exams.draft(id).get()!.questions, { title: 'Frequência' });
+    const qid = b.exams.list.get().papers[0]!.questions[0]!.id;
+    const done = await until(b.exams.answer(examId, [qid], 'quick', 'materials'), (v) => v.done === 1 || v.error !== null);
+    expect(done.error).toBeNull();
+    expect(JSON.stringify(chatRequests(b.ai).map((r) => r.body))).not.toContain('SEGREDO PRIVADO');
+    expect(JSON.stringify(chatRequests(b.ai).map((r) => r.body))).toContain('Artigo 18.º');
+    const file = JSON.parse(dec.decode(await b.platform.fs.read(b.classId, `.tramado/answers/${examId}/${b.platform.mem.deviceId}.json`))) as AnswersFile;
+    const cites = file.answers[0]!.citations;
+    expect(cites.length).toBeGreaterThan(0);
+    expect(cites.every((c) => c.source.kind === 'document' && 'path' in c.source && c.source.path === 'Documents/Lei Fundamental de Exemplo.md')).toBe(true);
     b.s.dispose();
   });
 });

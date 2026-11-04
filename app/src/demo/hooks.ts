@@ -42,7 +42,10 @@ export function makeHooks(c: DemoControls): TramadoDemoHooks {
     aiNext: (x) => (c.ai ? c.ai.next(x) : missing('aiNext')),
     aiFail: (code) => (c.ai ? c.ai.fail(code) : missing('aiFail')),
     setOnline: (m, on) => (c.sync ? c.sync.setOnline(m, on) : missing('setOnline')),
-    tick: (ms) => (c.speech ? c.speech.tick(ms) : undefined),
+    tick: (ms) => {
+      c.media?.tick(ms);
+      c.speech?.tick(ms);
+    },
     ready: false,
   };
 }

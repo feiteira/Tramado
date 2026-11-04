@@ -1438,3 +1438,153 @@ the lead decides; nothing was changed for them.
     until T-DOCS.
 21. `check-leaks.mjs` also scans `docs/` for `sk-or-v1-` keys and compares against the local key file's value without
     printing it.
+
+---
+
+## 14. G1 integration log (gate G1 integrator, 2026-11-04)
+
+Merged in this order, each with `git merge --no-ff` and the quick check after it: R-SHELL (`beeedac`), R-SYNC
+(`72aa367`), R-SPEECH (`40d260a`; merged at G1 instead of G2 because its acceptance passed), T-SYNC (`682f599`),
+T-DOCS (`e5dc258`), T-LECTURES (`1f12077`), T-AI (`68b427f`), T-DEMO (`c7b834e`). No branch touched `Cargo.lock`,
+`package-lock.json` or a manifest; every changed path was inside the package's owned paths (§10; `tauri.test.ts`,
+`library.test.ts`, `annotations.test.ts` are tests of owned modules). R-SHELL's `target/` became the main one.
+
+Integration fixes (each found by the quick check or by the gate):
+1. **tramado-speech import race** (`import_mp3_to_webm` failed under load): the import thread sent `Done` before it
+   set its `done` flag, so `pending_recordings()` called on `Done` still skipped the import. The flag is now set
+   first (`crates/tramado-speech/src/lib.rs`).
+2. **Stale registry entry in class stores** (`recording.test.ts`, 2 tests, after T-LECTURES on top of T-SYNC): a
+   class's `ClassStore` kept the `ClassEntry` it was created with, so `entry.shared` stayed false after sharing and
+   RecordingService skipped the `share` consent line. `ClassStoreImpl.setEntry` is new; `services/index.ts` hands each
+   live store the reloaded entry whenever the library publishes, sets the trust gate when a class becomes shared, and
+   calls `lectures.dispose()` when a class leaves the library or the services are disposed (T-LECTURES request 6).
+   T-SYNC's `liveEntry()` workarounds stay correct and are now redundant.
+3. **API freeze fallout**: `services/testing/fakeClaims.ts` implements the ClaimEngine/PresenceService members that
+   moved into `services/types` (below).
+4. **Desktop wiring**: `commands/sync.rs` and `commands/speech.rs` also `manage` `Arc<SyncEngine>` / `Arc<Speech>`,
+   which `diag_collect` reads (R-SHELL's convention); `speech::init` passes `PipeStt::new(Arc<AiPipe>)` (R-SHELL
+   manages the pipe and `ai::init` runs first), so cloud transcription no longer answers `NOT_IMPLEMENTED`.
+5. **check-leaks**: the fixed fictional `user_id` that `redact-fixtures.mjs` writes is exempt (T-AI request 6); any
+   other 20+ character `user_id` still fails.
+6. **One volunteering rule**: `core/sync/claims.ts` `autoDelayMs` and `effectiveVolunteer` delegate to
+   `core/speech/volunteer.ts` (the TranscriptionQueue's); the member file's `caps.volunteer` counts a local model only
+   with `cpuOk && localWhisper`, as the queue does (T-LECTURES request 8).
+7. **Shell start-up** (T-LECTURES request 5): `AppState.enter` calls `recording.recover()` after `library.load()` and
+   `transcription.start()` once `sync.boot()` settled.
+8. **Demo boot** (T-SYNC 4, T-DEMO 1, T-LECTURES 4, T-AI 5, T-DOCS 6): `DemoControls.{ai,sync,speech,media}` are
+   wired; `seedDemo` gets `join`, `unverified`, `conflict`, `ai`; the speech fake is bound to the platform with
+   `recordingClassId = law` and scripted with `demoTranscript('l8' | 'b4')`; `tick` also advances `tickFakeMedia`;
+   `?ai=real` reads the key typed in Settings from the memory secrets (`mem.peekSecret`) and seeds no fictional key.
+   `main.tsx` and the demo wire `imagePrep`/`pdfRender` over `workers/image.worker.ts`.
+9. **Memory platform**: `mem.putRecording` lets the speech fake's private ("transcript only") audio reach
+   `media.url({kind:'private'})` (T-LECTURES request 9); `MemoryMesh.device(name, { speech })` takes a fake speech.
+10. **Peek routes**: the four `*-missing` entries of `m0.json` use the unknown key `zz` (T-DEMO request 3).
+11. **Plan §5.1 integration tests**: `services/mesh/transcription.test.ts` (real TranscriptionQueue over the real
+    ClaimEngine, two devices: volunteering and simultaneous manual claims each end with exactly one transcript, one
+    `done` claim, no conflict copy); `exams.test.ts` "over the real SearchService" (T-DOCS' index: citations point
+    to the class document, the private note never leaves); `demo/seed.ts` writes `transcript.md`/`.vtt` with T-LECTURES'
+    renderer and `example.test.ts` asserts byte equality.
+12. **G1 flow** (`desktop-smoke.mjs --flow=g1`): onboarding is driven through its DOM; class creation and the PDF
+    import go through the services (`window.__tramadoE2E`, set only when `AppInfo.e2e`), because those screens are
+    wave-2 placeholders; extraction runs in the webview's pdf.js worker (WebKitGTK) and `features/search/provider.ts`
+    is a minimal palette provider over `SearchService.passages` (UI-DOCS replaces it).
+
+## 15. G1 contract changes (gate G1 integrator, 2026-11-04)
+
+As in §13: the documents above are not rewritten; this list overrides them where they differ. **Open** items are for
+the lead; nothing was changed for them.
+
+**Applied by the integrator (TypeScript)**
+1. API freeze (arch §11.2): T-SYNC's `*Impl` extras are now members of the frozen interfaces, and the `*Impl` names
+   are aliases (`export type ClassServiceImpl = ClassService`, likewise Sync/Trust/ClaimEngine/Presence/Notification):
+   - `ClassService` + `model: ReadableStore<ClassModel>`, `ready()`, `reload()`, `personAt(deviceId, hlc?)`,
+     `isOrganiserAt(memberId | null, hlc)`, `deviceRef(deviceId): DeviceRef`, `nameOf(deviceId)`,
+     `policy(): ClassPolicy | null`, `writeBan(target, state, reason?)`, `removeOwnFiles()`,
+     `writeFork(newClassId, nonce)`, `uiState()`, `setUiState(patch)`; `ClassModel` moved to `types/class.ts`.
+   - `SyncService` + `connections: ReadableStore<Record<DeviceId, ConnectionState>>`, `connectionOf(deviceId)`,
+     `onIndexUpdated(cb)`, `noteForeignWrite(classId, path)`, `fork(classId): Promise<ClassId>`, `completeForks()`;
+     `ConnectionState` moved to `types/sync.ts`.
+   - `TrustService` + `ready`, `keptPaths`, `kept`, `deletionHonoured`, `dropKept`, `left(): ReadonlyMap<DeviceId,
+     FormerEntry>`, `noteLeft`, `vacated`, `addVacated`, `pinnedWriter`, `foreignWrites`, `recentRemote`, `flush`;
+     `FormerEntry` moved to `types/sync.ts`.
+   - `ClaimEngine` + `trustedClaim(lectureId, kind, deviceId)`, `foldWinner(lectureId)`, `foldTrigger(lectureId)`,
+     `onReevaluate(cb)`, `releaseAll()`, `ready()`.
+   - `PresenceService` + `activityOf(deviceId)`, `mine()`; `NotificationService` + `recent()`.
+   - `MemoryMesh`'s additive members and `MeshOptions.startMs` were already in T-SYNC's own file; G1 adds
+     `device(name, { speech? })`.
+2. `ChatMessageView` + `thanks?: { to: { memberId; name }; lectureId } | null` (T-SYNC 6). For `kind: 'thanks'`,
+   `text` is now `''` (was: the lecture id) and `mentions` still names the thanked person.
+3. i18n `members.invite.fileSentence` (EN/PT-PT/ES); the `.tramado-invite` second line uses it in the inviter's UI
+   language (was an English constant) (T-SYNC 5).
+4. `ClassStoreImpl.setEntry(entry)` (services-internal, fix 2 above).
+5. `MemoryPlatform.mem` + `putRecording(recordingId, bytes | null)`, `peekSecret(name)`; `DemoControls` +
+   `media?: { tick(ms) }`; `DemoFlags.ai` + `'real'`.
+6. `window.__tramadoE2E` (the AppServices) exists only when `AppInfo.e2e` (desktop, `TRAMADO_E2E=1` +
+   `TRAMADO_DATA_DIR`).
+
+**Accepted as delivered by the packages (already in their owned files)**
+7. R-SHELL: `AppInfo` + `mediaAudio?: 'scheme' | 'blob'`, `traySupported?: boolean`; e2e dialog queue entries
+   `{confirm: bool}`; env `TRAMADO_E2E_EVAL`, `TRAMADO_E2E_MEDIA_SELFTEST` (only with `TRAMADO_DATA_DIR` +
+   `TRAMADO_E2E=1`); `Secrets::get` is `pub`; stricter: `models/<id>/endpoints` refuses empty/`.`/`..` segments,
+   `class_open` refuses programs and launchers (`INVALID`), `service-hosts.json` stores `{id, base, label}`,
+   `app_take_pending_links` returns an opened invite file's text. **Arch §8: on Linux (WebKitGTK) audio plays from a
+   Blob URL** (`<audio>` refuses the custom scheme; the self-test passes on the Blob path: duration 300.008, seek 252).
+8. R-SYNC: `SyncSink::trash` (default `IO_ERROR`), `SyncEngine::set_pick_resolver`, `has_shared_class`, `new`
+   registers its own `WriteObserver`; threads `tramado-sync-{work,discovery,ready,boot,stop}` and a re-entrant config
+   lock instead of a `tramado-sync-config` thread (arch §4.2); `appdata.json` + `userPaused`, `settings`,
+   `lostIdentity`; `sync_join_class` on a class already here → `CONFLICT` with `data.classId`; `sync_admit` unknown or
+   unshared class → `NOT_FOUND`, no offer or banned device → `PERMISSION_DENIED`; diagnostics `status.deviceId` is a
+   ShortId; Syncthing also starts at launch when the only shared class is still leaving.
+   Spec errata accepted: sync spec §6.1 (a folder created paused has no directory or marker until the ignores POST and
+   resume); §22.2 counts deletions only (Syncthing reports new and modified files alike); §3.6 converts separators
+   only (no NFC crate; Syncthing keeps NFC).
+9. R-SPEECH: `FinishedRecording` + `audio?: PublishedAudio`, `import?: ImportInfo` and `ImportInfo { fileName, mime,
+   hadVideo, lectureDir }` (TS and Rust); `speech_recording_publish` also fails with `JOB_BUSY` (still recording) and
+   `NOT_FOUND`, a second publish → `CONFLICT`; journal page every 17 packets (≈ 1 s), not 50 (arch §5.4);
+   audio-pipeline §2.7 erratum: intermediate Ogg granules are samples × 3, only the last page is `preskip + real × 3`
+   (RFC 7845 §4); local jobs report `checking → vad → transcribing` (no `decoding`); `auto` with no detection → `und`;
+   peaks scale the loudest bucket to 255; new modules `recorder`, `pieces`, `samples`, `langs`.
+10. T-SYNC: sync spec §14.5 — a new claim starts at `heartbeat: firstHeartbeat(observations, me)` (1 + the largest
+    heartbeat of a `supersedes` entry naming me, else 0; was `0`) — the 2000-run property test found two `working`
+    devices otherwise. Folder spec §6.2 rule 3 — a writer change in the same round is also accepted when the new
+    writer's `done` claim wins that round (also T-LECTURES 10; without it readers pinned to a partition's losing side
+    refuse the winner's transcript forever).
+11. T-AI: `services/types/{ai,exams,ask}.ts` additions as reported (`AiClient` re-exported from `core/ai/client`,
+    `AiService.label/ready`, `AiSettingsExtra`, `AnswerOptions`, `startTyped`, `cancelDraft`, `retryDraft`,
+    `cancelAnswers`, `progress`, `AskOptions`, `ExplainStyle` + `'detail' | 'exam'`, `removeThread`, `lectureNotes`,
+    optional `AskTurn` fields); `createFakeAi()` returns `FakeAi` and defaults to mode `off`.
+12. T-DOCS: `DocumentService.import(picks, destDir?, opts?: { allowDuplicate?: boolean })`; `ExtractionService.status`
+    + `progress?`, `pages?`; `Passage` + `title?`, `private?`; `resolve` result + `path?`; `SearchService` +
+    `settled?(classId)`, `refresh?(classId)`; Markdown `Inline` + `cite`, `mention`, `MarkdownOptions` + `citations`,
+    `mentions`, `relative`, `parseInline(s, options?)`, `MarkdownViewProps` + `citations`, `renderCite`, `mentions`,
+    `renderMention`; `ImportFormat` + `'pptx'`. Private notes are `SourceRef {kind:'note', path:'notes/<name>.md'}`
+    with `Passage.private: true`, and are never cited in shared content.
+    Spec over plan: annotations are private only in 0.1 (`visibility:'class'` → `NOT_IMPLEMENTED`, folder spec §8.17,
+    arch §1.1); "Keep both" names the copy `<base> (2).md` (sync spec §16.3–4) — **UX §3.8's "(Bruno's copy)" is
+    superseded; UI-DOCS uses the spec's name**.
+13. T-LECTURES: `LectureDetail.canEdit: boolean` (was `false`, the scope change), `EffectiveTranscript.correctedBy`,
+    `LectureService.edit: TranscriptEditor`, `fold(id, opts?: { takeOver?: boolean })`; `RecordingState.warnings`,
+    `RecordingService.imports`, `share(recordingId, mode)`, `importAudio` options `language`, `transcribe`, `consent`;
+    `TranscriptionQueue` job `phase`/`engine`, `volunteerNotice`, `notify`, `start()`, `ackVolunteerNotice(turnOff)`,
+    `notifyWhenReady(classId, lectureId, on)`; `ModelsService.info`, `downloads`, `refresh()`.
+14. T-DEMO: `SeedOptions` + optional `join`, `unverified`, `conflict`, `ai`, `assets`; `PlayerHandle` is exported from
+    `demo/fakeMedia.ts` (UI-LECTURES uses it); `l6` has one pending correction (corrections are in 0.1).
+
+New private files (arch §13.2): `data/recordings/<id>.{ogg,json,webm}`, `data/transcribe/<lectureId>.{json,partial.json,
+result.json}`, `data/transcribe/speed.json` (R-SPEECH); `private/<classId>/fork.json` and `trust.json` `left` entries
+with `memberId`, `name`, `deviceName` (T-SYNC); `private/<classId>/notes-index.json` (`tramado.notes-private` v1,
+T-DOCS); `private/<classId>/drafts/<recordingId>.json` (`tramado.recording-draft`) and `lectures/<id>.json` +
+`noAutoClaim`, `nudgedAt` (T-LECTURES).
+
+**Deferred / open**
+15. R-SYNC 5 — `SyncEvent {type:'left'; classId; afterwards}`: not applied (needs Rust emission, the TS type and
+    SyncService handling). Until then `SyncService.completeForks()` notices `leftClasses` itself. Wave 2: UI-GROUP
+    with the integrator at G2.
+16. **Open** — T-SYNC 3, folder spec §8.2 vacancy: the replay uses the reader's current `vacated` set, so a self-add
+    made before the organisers left becomes valid afterwards; T-SYNC suggests evaluating `vacated` as of each op's
+    HLC. A spec change for the lead.
+17. **Open** — T-LECTURES 10: `label_speaker` lines have no timestamp (a late, older label can override a folded one);
+    the `.md` date is the UTC date; the merge text is `a + " " + b`. Folder spec wording for the lead.
+18. R-SPEECH gaps carried into wave 2/INT: `small`/`large-v3` (and their DTW presets) never run; the live STT check
+    used a stand-in transport (the real `PipeStt` is wired now but untested live); Windows/macOS and system-audio
+    capture untested; a finished, untaken result does not restart its claim heartbeat after an app restart.

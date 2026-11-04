@@ -124,7 +124,13 @@ export function AppStateProvider({ platform, options = {}, children }: { platfor
       };
       const services = createServices(ctx);
       await services.library.load();
-      void services.sync.boot().catch((e: unknown) => platform.log('warn', 'sync boot failed', { error: String(e) }));
+      const booted = services.sync.boot().catch((e: unknown) => platform.log('warn', 'sync boot failed', { error: String(e) }));
+      // G1 (T-LECTURES): re-attach to recordings and imports left from before a reload, and start volunteering
+      // once sync has booted (claims read the folders' state).
+      void services.recording.recover().catch((e: unknown) => platform.log('warn', 'recording recovery failed', { error: String(e) }));
+      void booted
+        .then(() => services.transcription.start())
+        .catch((e: unknown) => platform.log('warn', 'transcription queue failed to start', { error: String(e) }));
       opts.onReady?.(services);
       setInitialDialog(opts.initialDialog?.(services) ?? null);
       setPhase({ name: 'ready', services, initialRoute: opts.initialRoute?.(services) });

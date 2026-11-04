@@ -94,6 +94,7 @@ export interface ChatMessageView {
   ai?: AiAnswerView;                                                     // kind 'ai': answer, asker = author
   edited: boolean; deleted: boolean; hiddenBy: string | null; pinned: boolean;   // hiddenBy null and pinned false in 0.1 (v1.1)
   delivery: 'local' | 'sent';                                            // local = no other member device has it yet
+  thanks?: { to: { memberId: string; name: string }; lectureId: string } | null;   // G1 (T-SYNC): kind 'thanks' — who was thanked, for which lecture
   examDate?: { kind: ExamKind; at: string } | null;                      // detected "Add to Exams?" chip (v1.1; null in 0.1)
   unverified: boolean;                                                   // the line's memberId is not the writer's person (folder spec §6.2 rule 6)
 }

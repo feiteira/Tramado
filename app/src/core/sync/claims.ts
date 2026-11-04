@@ -3,6 +3,7 @@
 // delays with the overlap rule, and `claimedAt`. Pure: every input is what one reader observes.
 import { isDeviceId, isUlid, type DeviceId } from '../model/ids';
 import type { ClaimFile } from '../model/files';
+import { effectiveVolunteer as speechEffectiveVolunteer, volunteerDelayMs } from '../speech/volunteer';
 
 export const SETTLE_MS = 12_000;
 export const COMPLETION_WAIT_MAX_MS = 60_000;
@@ -152,20 +153,17 @@ export interface DelayInput {
  * Unknown power counts as mains (desktops report no battery).
  */
 export function autoDelayMs(d: DelayInput): number | null {
-  if (d.volunteer === 'off') return null;
-  const onAc = d.power !== 'battery';
-  if (d.volunteer === 'plugged' && !onAc) return null;
-  let base: number;
-  if (d.localModel) base = d.localModel.speedRT >= 1.5 ? 60_000 : 180_000;
-  else if (d.cloud && d.cloudAuto) base = 60_000 + 120_000;
-  else return null;
-  if (!onAc) base += 600_000;
-  return base + Math.floor(Math.max(0, Math.min(1, d.jitter)) * JITTER_MAX_MS);
+  // G1: one implementation of the §14.3 delays — core/speech/volunteer.ts (the TranscriptionQueue's), plus the jitter.
+  const base = volunteerDelayMs({ volunteer: d.volunteer, power: d.power, localModel: d.localModel, cloud: d.cloud, cloudAuto: d.cloudAuto });
+  return base === null ? null : base + Math.floor(Math.max(0, Math.min(1, d.jitter)) * JITTER_MAX_MS);
 }
 
-/** The effective `caps.volunteer` the member file reports (§14.3 "Default volunteering"). */
+/**
+ * The effective `caps.volunteer` the member file reports (§14.3 "Default volunteering"); `cloudAuto` means cloud on
+ * and automatic. G1: delegates to core/speech/volunteer.ts, the rule the TranscriptionQueue applies.
+ */
 export function effectiveVolunteer(pref: 'off' | 'plugged' | 'always', localModelReady: boolean, cloudAuto: boolean): 'off' | 'plugged' | 'always' {
-  return localModelReady || cloudAuto ? pref : 'off';
+  return speechEffectiveVolunteer(pref, { localModel: localModelReady, cloud: cloudAuto, cloudAuto });
 }
 
 /** Fraction of `a`'s time range covered by `b` (§14.3 duplicates: > 0.5 = probably the same lecture). */

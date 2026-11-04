@@ -19,6 +19,7 @@ export const members = {
     footer: 'People join through your computer, or any member’s that is online. If nobody is online, they wait.',
     footerAsk: 'To approve each person first, turn on “Ask before letting people in” in Members.',
     message: 'Join “{class}” on Tramado: {link}\nOr open Tramado → Join a class and paste this code:\n{code}',
+    fileSentence: 'Open this file with Tramado to join {class}.',
   },
   join: {
     title: 'Join a class',

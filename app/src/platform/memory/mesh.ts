@@ -30,7 +30,7 @@ export interface MeshOptions { seed: number; clockSkewMs?: Record<string, number
 export interface MeshClock { now(): number; mono(): number; setTimeout(f: () => void, ms: number): () => void }
 
 export interface MemoryMesh {
-  device(name: string, opts?: { deviceId?: DeviceId; memberId?: MemberId }): MemoryPlatform;   // creates a device
+  device(name: string, opts?: { deviceId?: DeviceId; memberId?: MemberId; speech?: Platform['speech'] }): MemoryPlatform;   // creates a device (G1: `speech`, a fake speech platform)
   flush(): Promise<void>;              // propagate every pending change between connected devices sharing a folder (one round)
   settle(maxRounds?: number): Promise<void>;   // flush until quiescent
   partition(...groups: string[][]): void;      // devices in different groups cannot exchange
@@ -746,7 +746,7 @@ export function createMemoryMesh(opts: MeshOptions): MemoryMesh {
       const d = { name, index, up: true, group: 0, skew: opts.clockSkewMs?.[name] ?? 0, seq: 0, folders: new Map(), policies: new Map(), leftClasses: new Set(),
         offers: new Map(), lastSeen: new Map(), pendingEvents: [], waiters: new Set(), paused: false, startedAt: startMs, applying: false, mirror: new Map(), healOff: false } as unknown as Device;
       devices.set(name, d);
-      const platform = createMemoryPlatform({ kind: 'test', deviceIndex: index, clock: { now: () => wall(d) }, rand: mulberry32(opts.seed * 31 + index), root: `/home/${name}/Tramado` });
+      const platform = createMemoryPlatform({ kind: 'test', deviceIndex: index, clock: { now: () => wall(d) }, rand: mulberry32(opts.seed * 31 + index), root: `/home/${name}/Tramado`, ...(o.speech ? { speech: o.speech } : {}) });
       const internals = localSyncInternals(platform.sync);
       if (!internals) throw new Error('mesh: the memory platform has no local sync');
       Object.assign(d, { platform, registry: internals.deps.registry, deviceId: platform.mem.deviceId, short: shortIdOf(platform.mem.deviceId) });

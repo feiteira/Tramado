@@ -3,6 +3,9 @@
 // background state and the fork (§17), admission answers (§9.3), bans (§18.1), folder offers, settings, "Recently
 // deleted" (§22.1), the mass-delete guards (§22.2) and diagnostics. No rotation, pairing or relocate (v1.1).
 import { PlatformError, toPlatformError } from '../core/errors';
+import { catalogs } from '../core/i18n/catalogs';
+import { isUiLocale } from '../core/i18n/languages';
+import { translate } from '../core/i18n/translate';
 import { classIdOf, newNonce } from '../core/model/derive';
 import { classifyPath } from '../core/model/paths';
 import { sanitize, unique } from '../core/model/sanitize';
@@ -18,35 +21,25 @@ import type { AppContext } from './context';
 import { Store, type ReadableStore } from './store';
 import type { TrustServiceImpl } from './trust';
 import type { AppServices } from './types/common';
-import type { InvitePreview, SyncService, SyncUiState } from './types/sync';
+import type { ConnectionState, InvitePreview, SyncService, SyncUiState } from './types/sync';
 
 export const EMPTY_SYNC_STATE: SyncUiState = {
   status: null, folders: {}, joinRequests: [], offers: [], massDelete: [], massDeleteRemote: [], foreignWrites: 0, markerMissing: [],
   identityCopied: false, joinStalled: [],
 };
 
-export interface ConnectionState { connected: boolean; relay: boolean; lastSeen: string | null }
+export type { ConnectionState };
 
 /** What other services reach behind SyncService (additive, T-SYNC). */
-export interface SyncServiceImpl extends SyncService {
-  /** Peer devices: connected, relay, last seen (from the snapshot, `connection` events and deviceStats). */
-  connections: ReadableStore<Record<DeviceId, ConnectionState>>;
-  connectionOf(deviceId: DeviceId): ConnectionState | null;
-  /** `indexUpdated` events per class (chat delivery ticks, sync spec §15). */
-  onIndexUpdated(cb: (classId: ClassId) => void): () => void;
-  noteForeignWrite(classId: ClassId, path: ClassPath): void;
-  /** Forks a class kept after leaving or adopted with foreign member files (sync spec §17). */
-  fork(classId: ClassId): Promise<ClassId>;
-  /** Finishes the forks of classes left with "keep a copy" once Rust finished leaving them. */
-  completeForks(): Promise<void>;
-}
+export type SyncServiceImpl = SyncService;   // T-SYNC's extras are part of SyncService since G1
 
 const JOIN_STALL_MS = 90_000;
 const ADDRESS_REFRESH_MS = 5 * 60_000;
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-/** The second line of a .tramado-invite file (UX §3.12.2). Requested catalog key: members.invite.fileSentence. */
-const FILE_SENTENCE = 'Open this file with Tramado to join {class}.';
+/** The second line of a .tramado-invite file (UX §3.12.2), in the inviter's UI language (G1: members.invite.fileSentence). */
+const fileSentence = (locale: string, className: string): string =>
+  translate(catalogs[isUiLocale(locale) ? locale : 'en'], catalogs.en, 'members.invite.fileSentence', { class: className });
 
 export function createSyncService(ctx: AppContext, app: () => AppServices): SyncServiceImpl {
   const { platform, clock } = ctx;
@@ -291,7 +284,7 @@ export function createSyncService(ctx: AppContext, app: () => AppServices): Sync
       const link = inviteLink(code);
       return {
         code, link, web: inviteWeb(code), qrText: qrText(reduced), fileName: sanitize(inviteFileName(reduced), 'invite.tramado-invite'),
-        fileText: `${link}\n${FILE_SENTENCE.replace('{class}', d.meta.name)}`,
+        fileText: `${link}\n${fileSentence(ctx.prefs.get('ui.locale'), d.meta.name)}`,
       };
     },
     async parseCode(text) {

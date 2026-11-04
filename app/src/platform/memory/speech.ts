@@ -37,7 +37,7 @@ export interface FakeSpeechOptions {
 }
 
 /** The part of the memory platform the fake writes through (publish, import, Rust's claim heartbeats, demo peers). */
-export type FakeSpeechHost = Pick<MemoryPlatform, 'fs'> & { mem: Pick<MemoryPlatform['mem'], 'applyRemote' | 'deviceId'> };
+export type FakeSpeechHost = Pick<MemoryPlatform, 'fs'> & { mem: Pick<MemoryPlatform['mem'], 'applyRemote' | 'deviceId'> & Partial<Pick<MemoryPlatform['mem'], 'putRecording'>> };
 
 /** The demo keys the controls resolve (a structural subset of demo/keys.ts DemoKeys). */
 export interface FakeSpeechKeys {
@@ -483,6 +483,7 @@ export function createFakeSpeech(opts: FakeSpeechOptions = {}): FakeSpeech {
           source = { kind: 'class', classId: req.classId, path };
         } else {
           privateAudio.set(r.recordingId, webm);
+          host?.mem.putRecording?.(r.recordingId, webm);   // G1: media.url({ kind: 'private' }) serves it
           source = { kind: 'private', recordingId: r.recordingId };
         }
         pending.splice(i, 1);
@@ -492,6 +493,7 @@ export function createFakeSpeech(opts: FakeSpeechOptions = {}): FakeSpeech {
         const i = pending.findIndex((p) => p.recordingId === recordingId);
         if (i >= 0) pending.splice(i, 1);
         privateAudio.delete(recordingId);
+        host?.mem.putRecording?.(recordingId, null);
       },
     },
     async importAudio(req, onEvent) {

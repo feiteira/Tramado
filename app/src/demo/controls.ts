@@ -13,4 +13,6 @@ export interface DemoControls {
            setOnline(memberKey: string, online: boolean): void };
   speech?: { claimTranscription(lectureKey: string, memberKey: string, percent: number): Promise<void>;
              finishTranscription(lectureKey: string): Promise<void>; tick(ms: number): void };
+  /** G1: the fake media element clock (demo/fakeMedia.ts), advanced by the `tick` hook too. */
+  media?: { tick(ms: number): void };
 }

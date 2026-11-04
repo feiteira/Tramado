@@ -29,7 +29,10 @@ const add = (what, lines) => {
   for (const l of lines) findings.push(`${what}: ${l.length > 200 ? `${l.slice(0, 200)}…` : l}`);
 };
 
-add('OpenRouter user_id', grep(['-E', '"user_id"[[:space:]]*:[[:space:]]*"[A-Za-z0-9_]{20,}"'], OUTSIDE_DOCS));
+// The fixed fictional id that redact-fixtures.mjs writes is not an account id (G1).
+const FICTIONAL_USER_ID = 'user_2demoFixtureFictional000000';
+add('OpenRouter user_id', grep(['-E', '"user_id"[[:space:]]*:[[:space:]]*"[A-Za-z0-9_]{20,}"'], OUTSIDE_DOCS)
+  .filter((l) => !(l.match(/"user_id"\s*:\s*"[A-Za-z0-9_]{20,}"/g) ?? []).every((m) => m.includes(`"${FICTIONAL_USER_ID}"`))));
 add('OpenRouter key', grep(['-E', 'sk-or-v1-[0-9a-f]+'], OUTSIDE_DOCS));
 add('API key assignment', grep(['-E', 'OPENROUTER_API_KEY=[^[:space:]…<$"\'`]+'], OUTSIDE_DOCS));
 add('OpenRouter key (docs)', grep(['-E', 'sk-or-v1-[0-9a-f]{16,}'], EVERYWHERE));

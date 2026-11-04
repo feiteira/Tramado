@@ -18,7 +18,7 @@ import {
 import type { FileSyncInfo } from '../platform/types';
 import type { AppContext } from './context';
 import type { AppServices, ClassStore, TrustVerdict } from './types/common';
-import type { TrustService } from './types/sync';
+import type { FormerEntry, TrustService } from './types/sync';
 
 export const PENDING_RETRY_MS = 200;
 export const PENDING_MAX_MS = 3000;
@@ -26,34 +26,10 @@ const REMOTE_MEMORY_MS = 10 * 60_000;
 const KEEP_DELETED_MS = 31 * 86_400_000;
 const KEPT_MAX_BYTES = 64 * 1024;
 
-export interface FormerEntry { memberId: MemberId; leftHlc: Hlc; name: string; deviceName: string }
+export type { FormerEntry };
 
 /** What other services of the class reach behind the TrustGate (additive, T-SYNC). */
-export interface TrustServiceImpl extends TrustService {
-  /** Resolves once the trust cache is loaded. */
-  ready(): Promise<void>;
-  /** Paths whose last trusted bytes are kept (signed records that may now be deleted or untrusted). */
-  keptPaths(): ClassPath[];
-  /** The kept last trusted bytes of a path, or null. */
-  kept(path: ClassPath): Promise<Uint8Array | null>;
-  /** Whether a missing machine file's deletion counts (folder spec §6.2 rule 4). */
-  deletionHonoured(path: ClassPath, writer: DeviceId | null): Promise<boolean>;
-  /** Forget the kept copy of a path whose deletion counted. */
-  dropKept(path: ClassPath): Promise<void>;
-  /** Devices that left (sync spec §10 `left()`), with their last binding (folder spec §8.3.1). */
-  left(): ReadonlyMap<DeviceId, FormerEntry>;
-  noteLeft(deviceId: DeviceId, memberId: MemberId, hlc: Hlc, names?: { name: string; deviceName: string }): void;
-  /** The monotonic set of vacated memberIds (folder spec §8.2). */
-  vacated(): ReadonlySet<MemberId>;
-  addVacated(ids: Iterable<MemberId>): void;
-  /** The pinned transcript writer of a lecture (folder spec §6.2 rule 3). */
-  pinnedWriter(lectureId: Ulid): { deviceId: DeviceId; round: number } | null;
-  /** Untrusted versions seen (diagnostics `foreignWrites`). */
-  foreignWrites(): number;
-  /** The recent `remoteChange` hints (path → modifiedBy), for diagnostics. */
-  recentRemote(path: ClassPath): ShortId | null;
-  flush(): Promise<void>;
-}
+export type TrustServiceImpl = TrustService;   // T-SYNC's extras are part of TrustService since G1
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();

@@ -337,7 +337,7 @@
   {
     "name": "lecture-missing",
     "route": "lecture",
-    "query": "class=law&lecture=l6",
+    "query": "class=law&lecture=zz",
     "ready": "missing-item",
     "steps": [
       {
@@ -348,19 +348,19 @@
   {
     "name": "document-missing",
     "route": "document",
-    "query": "doc=lf",
+    "query": "doc=zz",
     "ready": "missing-item"
   },
   {
     "name": "note-missing",
     "route": "note",
-    "query": "note=mine6",
+    "query": "note=zz",
     "ready": "missing-item"
   },
   {
     "name": "exam-missing",
     "route": "exam",
-    "query": "exam=freq",
+    "query": "exam=zz",
     "ready": "missing-item",
     "steps": [
       {

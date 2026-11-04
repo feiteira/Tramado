@@ -88,6 +88,8 @@ pub fn init(app: &AppHandle, shared: &Shared) -> AppResult<()> {
                 }
             });
     }
+    // `diag_collect` (commands/app.rs) reads the engine through its own handle.
+    app.manage(engine.clone());
     app.manage(SyncState { engine });
     Ok(())
 }

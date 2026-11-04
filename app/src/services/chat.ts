@@ -219,9 +219,12 @@ export function createChatService(ctx: AppContext, app: () => AppServices, cls: 
       delivery: x.ref.deviceId === me() ? (isSent(x) ? 'sent' : 'local') : 'sent', examDate: null, unverified: x.unverified,
     };
     if (line.type === 'thanks') {
-      // ChatMessageView has no thanks fields (frozen): the lecture id travels in `text`, the thanked person in `mentions`.
-      v.text = line.lectureId;
-      v.mentions = [{ memberId: line.to, name: nameOfMember(line.to) }];
+      // G1: `thanks` carries the thanked person and the lecture; `mentions` still names the person (notifications),
+      // and `text` is empty (the UI renders the thanks sentence from `thanks`).
+      const to = { memberId: line.to, name: nameOfMember(line.to) };
+      v.thanks = { to, lectureId: line.lectureId };
+      v.text = '';
+      v.mentions = [to];
     }
     if (line.type === 'ai' && !x.deleted) v.ai = aiView(line, author, ci);
     return v;

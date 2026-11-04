@@ -16,6 +16,7 @@ import { hlcNodeOf, shortIdOf, type ClassId, type DeviceId, type Hex64, type Mem
 import { lectureDirName, sanitize } from '../core/model/sanitize';
 import { canonicalBytes, personProofMessage, signedMessageFromCanonical, toBase64Url } from '../core/model/sig';
 import { instant } from '../core/model/time';
+import { renderMarkdown, renderVtt } from '../core/transcript/render';
 import type {
   AnswersFile, Answer, AskHistoryLine, AnnotationLine, ChatLine, Citation, ClaimFile, ClassFile, ConsentLine, ExamFile, IdentityFile,
   LectureFile, MarkersFile, MarksFile, MemberFile, MetaFile, ModLine, PresenceFile, Question, Sig, TranscriptEditLine, TranscriptFile,
@@ -330,6 +331,9 @@ export async function seedDemo(platform: MemoryPlatform, opts: SeedOptions): Pro
           folded: {}, updatedAt: instant(atMs),
         };
         put(classId, `${dir}/transcript.json`, compact(transcript), owner, atMs);
+        // G1: the owner's renderings next to it (folder spec §8.8), byte-equal to what LectureService writes.
+        put(classId, `${dir}/transcript.md`, enc.encode(renderMarkdown(transcript, lectureFile)), owner, atMs);
+        put(classId, `${dir}/transcript.vtt`, enc.encode(renderVtt(transcript)), owner, atMs);
       }
       if (l.claim) {
         const c = l.claim;

@@ -1,6 +1,7 @@
 // Architecture §11.2 (verbatim declarations): service contracts of the `sync` domain.
 // Signature-frozen at gate G1: later packages may add members, never rename, remove or retype them.
-import type { ClassId, ClassPath, DeviceId, EpochMs, Hex64, MemberId, ShortId, Ulid } from '../../core/model/ids';
+import type { ClassId, ClassPath, DeviceId, EpochMs, Hex64, Hlc, MemberId, ShortId, Ulid } from '../../core/model/ids';
+import type { ClaimKind } from '../../core/sync/claims';
 import type { ClaimFile, InviteV1, PresenceFile } from '../../core/model/files';
 import type { DeviceSpec, FolderOfferView, FolderView, JoinRequestView, Picked, RestoreItem, SyncSettings, SyncStatus, VersionEntry } from '../../platform/types';
 import type { ReadableStore } from '../store';
@@ -40,17 +41,62 @@ export interface SyncService {
   resolveRemoteMassDelete(classId: ClassId, by: ShortId, action: 'restore' | 'keep'): Promise<void>;   // restore from the local trashcan
   resolveCopiedIdentity(action: 'new' | 'same'): Promise<void>;
   diagnosticsText(): Promise<string>;
+  // ── G1 (T-SYNC, additive) ──
+  /** Peer devices: connected, relay, last seen (from the snapshot, `connection` events and deviceStats). */
+  connections: ReadableStore<Record<DeviceId, ConnectionState>>;
+  connectionOf(deviceId: DeviceId): ConnectionState | null;
+  /** `indexUpdated` events per class (chat delivery ticks, sync spec §15). */
+  onIndexUpdated(cb: (classId: ClassId) => void): () => void;
+  noteForeignWrite(classId: ClassId, path: ClassPath): void;
+  /** Forks a class kept after leaving or adopted with foreign member files (sync spec §17). */
+  fork(classId: ClassId): Promise<ClassId>;
+  /** Finishes the forks of classes left with "keep a copy" once Rust finished leaving them. */
+  completeForks(): Promise<void>;
 }
+
+/** A peer device's connection (G1: moved from services/sync.ts). */
+export interface ConnectionState { connected: boolean; relay: boolean; lastSeen: string | null }
 
 export interface PresenceService {
   setActivity(a: Partial<PresenceFile['activity']> | null): Promise<void>;   // writes on change; 60 s heartbeat while non-empty
   others: ReadableStore<Record<DeviceId, { activity: PresenceFile['activity']; stale: boolean; power: PresenceFile['power'] }>>;
+  // ── G1 (T-SYNC, additive) ──
+  activityOf(deviceId: DeviceId): { activity: PresenceFile['activity'] | null; stale: boolean } | null;
+  /** My current activity. */
+  mine(): PresenceFile['activity'];
 }
 
 export interface TrustService extends TrustGate {
   pass(): Promise<{ checked: number; untrusted: number }>;            // start-up pass, sync spec §12.1
   noteRemote(path: ClassPath, modifiedBy: ShortId, mono: number): void;   // from sync:event remoteChange (kept 10 min)
+  // ── G1 (T-SYNC, additive) ──
+  /** Resolves once the trust cache is loaded. */
+  ready(): Promise<void>;
+  /** Paths whose last trusted bytes are kept (signed records that may now be deleted or untrusted). */
+  keptPaths(): ClassPath[];
+  /** The kept last trusted bytes of a path, or null. */
+  kept(path: ClassPath): Promise<Uint8Array | null>;
+  /** Whether a missing machine file's deletion counts (folder spec §6.2 rule 4). */
+  deletionHonoured(path: ClassPath, writer: DeviceId | null): Promise<boolean>;
+  /** Forget the kept copy of a path whose deletion counted. */
+  dropKept(path: ClassPath): Promise<void>;
+  /** Devices that left (sync spec §10 `left()`), with their last binding (folder spec §8.3.1). */
+  left(): ReadonlyMap<DeviceId, FormerEntry>;
+  noteLeft(deviceId: DeviceId, memberId: MemberId, hlc: Hlc, names?: { name: string; deviceName: string }): void;
+  /** The monotonic set of vacated memberIds (folder spec §8.2). */
+  vacated(): ReadonlySet<MemberId>;
+  addVacated(ids: Iterable<MemberId>): void;
+  /** The pinned transcript writer of a lecture (folder spec §6.2 rule 3). */
+  pinnedWriter(lectureId: Ulid): { deviceId: DeviceId; round: number } | null;
+  /** Untrusted versions seen (diagnostics `foreignWrites`). */
+  foreignWrites(): number;
+  /** The recent `remoteChange` hints (path → modifiedBy), for diagnostics. */
+  recentRemote(path: ClassPath): ShortId | null;
+  flush(): Promise<void>;
 }
+
+/** A device that left a class, with its last binding (G1: moved from services/trust.ts). */
+export interface FormerEntry { memberId: MemberId; leftHlc: Hlc; name: string; deviceName: string }
 
 export interface ClaimView { deviceId: DeviceId; who: string; status: ClaimFile['status']; progress: number | null; etaMs: number | null; health: 'healthy' | 'slow' | 'stale'; sinceMs: number; mine: boolean }
 
@@ -62,4 +108,17 @@ export interface ClaimEngine {          // per class; owns claims/<lectureId>/<m
   setStatus(lectureId: Ulid, kind: 'transcribe' | 'fold', patch: Partial<Pick<ClaimFile, 'status' | 'progress' | 'etaMs' | 'error' | 'finishedAt' | 'transcriptRevision'>>): Promise<void>;
   remove(lectureId: Ulid, kind: 'transcribe' | 'fold'): Promise<void>;
   sweep(): Promise<void>;                                     // retention rules folder spec §8.10
+  // ── G1 (T-SYNC, additive) ──
+  /** A trusted claim of a device, or null. */
+  trustedClaim(lectureId: Ulid, kind: ClaimKind, deviceId: DeviceId): Promise<ClaimFile | null>;
+  /** The device whose fold claim wins (§14.8), or null. */
+  foldWinner(lectureId: Ulid): Promise<DeviceId | null>;
+  /** §14.8 trigger: the transcript owner has no member file or was last seen more than 7 days ago. */
+  foldTrigger(lectureId: Ulid): Promise<boolean>;
+  /** Fires when a winner's claim goes stale (volunteers restart their delays, §14.3). */
+  onReevaluate(cb: (lectureId: Ulid, kind: ClaimKind) => void): () => void;
+  /** Sets every claimed/working claim of mine to `released` (leaving, §17; "Stop and let someone else do it", §14.8). */
+  releaseAll(): Promise<void>;
+  /** Resolves once the first load of the claim files finished. */
+  ready(): Promise<void>;
 }

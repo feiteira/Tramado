@@ -17,11 +17,7 @@ import type { PresenceService } from './types/sync';
 type Others = Record<DeviceId, { activity: PresenceFile['activity']; stale: boolean; power: PresenceFile['power'] }>;
 
 /** Additive (T-SYNC): what ClassService and the library read. */
-export interface PresenceServiceImpl extends PresenceService {
-  activityOf(deviceId: DeviceId): { activity: PresenceFile['activity'] | null; stale: boolean } | null;
-  /** My current activity. */
-  mine(): PresenceFile['activity'];
-}
+export type PresenceServiceImpl = PresenceService;   // T-SYNC's extras are part of PresenceService since G1
 
 export function createPresenceService(ctx: AppContext, app: () => AppServices, cls: { store: ClassStore; classId: ClassId }): PresenceServiceImpl {
   const { platform, clock } = ctx;

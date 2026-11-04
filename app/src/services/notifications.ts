@@ -27,10 +27,7 @@ export function allowed(prefs: { get(k: string): string }, kind: Kind, classId: 
   return true;
 }
 
-export interface NotificationServiceImpl extends NotificationService {
-  /** The last notifications shown (diagnostics and tests). */
-  recent(): Array<{ kind: Kind; key: string; text: string; tag?: string }>;
-}
+export type NotificationServiceImpl = NotificationService;   // T-SYNC's extras are part of NotificationService since G1
 
 export function createNotificationService(ctx: AppContext, app: () => AppServices): NotificationServiceImpl {
   void app;
