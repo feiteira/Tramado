@@ -43,14 +43,83 @@ impl Vad {
     }
 }
 
+/// A stretch of continuous speech longer than this is cut at its quietest moment (local
+/// windows hold whole stretches).
+const MAX_STRETCH: usize = 5 * 60 * pieces::SECOND;
+const CUT_WINDOW: usize = 20 * pieces::SECOND;
+
+/// Finds speech while a track is decoded: samples are buffered up to one window, so no more
+/// than 30 minutes of `f32` are held at once, whatever the length of the lecture.
+pub struct StreamVad {
+    detector: Detector,
+    buf: Vec<f32>,
+    /// Recording sample of `buf[0]`.
+    at: usize,
+    out: Vec<(usize, usize)>,
+}
+
+impl StreamVad {
+    pub fn new(vad: &Vad) -> AppResult<Self> {
+        Ok(StreamVad {
+            detector: Detector::new(vad)?,
+            buf: Vec::new(),
+            at: 0,
+            out: Vec::new(),
+        })
+    }
+
+    pub fn push(&mut self, x: &[f32]) -> AppResult<()> {
+        let mut x = x;
+        while !x.is_empty() {
+            let room = WINDOW - self.buf.len();
+            let take = room.min(x.len());
+            self.buf.extend_from_slice(&x[..take]);
+            x = &x[take..];
+            if self.buf.len() == WINDOW {
+                self.flush()?;
+            }
+        }
+        Ok(())
+    }
+
+    fn flush(&mut self) -> AppResult<()> {
+        let end = self.at + self.buf.len();
+        let found: Vec<(usize, usize)> = self
+            .detector
+            .find(&self.buf)?
+            .into_iter()
+            .map(|(a, b)| (a + self.at, (b + self.at).min(end)))
+            .collect();
+        let found = pieces::split_long(&self.buf, self.at, &found, MAX_STRETCH, CUT_WINDOW);
+        for (a, b) in found {
+            match self.out.last_mut() {
+                Some(last) if a <= last.1 + BRIDGE && b.saturating_sub(last.0) <= MAX_STRETCH => {
+                    last.1 = last.1.max(b)
+                }
+                _ => self.out.push((a, b)),
+            }
+        }
+        self.at = end;
+        self.buf.clear();
+        Ok(())
+    }
+
+    /// The stretches found, and the track's length in samples.
+    pub fn finish(mut self) -> AppResult<(Vec<(usize, usize)>, usize)> {
+        if !self.buf.is_empty() {
+            self.flush()?;
+        }
+        Ok((self.out, self.at))
+    }
+}
+
 /// The stretches of speech of a whole track (sample ranges), found window by window.
 pub fn stretches(
     vad: &Vad,
     track: &Track16,
     stop: &dyn Fn() -> bool,
 ) -> AppResult<Vec<(usize, usize)>> {
-    let mut detector = Detector::new(vad)?;
-    let mut out: Vec<(usize, usize)> = Vec::new();
+    let mut sv = StreamVad::new(vad)?;
     let mut at = 0;
     while at < track.len() {
         if stop() {
@@ -60,17 +129,10 @@ pub fn stretches(
             ));
         }
         let end = (at + WINDOW).min(track.len());
-        let window = track.to_f32(at, end);
-        for (a, b) in detector.find(&window)? {
-            let (a, b) = (a + at, (b + at).min(end));
-            match out.last_mut() {
-                Some(last) if a <= last.1 + BRIDGE => last.1 = last.1.max(b),
-                _ => out.push((a, b)),
-            }
-        }
+        sv.push(&track.to_f32(at, end))?;
         at = end;
     }
-    Ok(out)
+    Ok(sv.finish()?.0)
 }
 
 enum Detector {
@@ -155,5 +217,28 @@ mod tests {
         assert!((found[0].0 as i64 - (3 * s) as i64).abs() <= (s / 20) as i64);
         assert!((found[0].1 as i64 - (5 * s) as i64).abs() <= (s / 20) as i64);
         assert_eq!(Vad::Loudness.name(), None);
+    }
+
+    #[test]
+    fn streaming_finds_the_same_speech_in_any_block_size() {
+        let s = pieces::SECOND;
+        let mut x = vec![0.0f32; 20 * s];
+        for v in &mut x[2 * s..4 * s] {
+            *v = 0.3;
+        }
+        for v in &mut x[15 * s..16 * s] {
+            *v = 0.3;
+        }
+        let mut sv = StreamVad::new(&Vad::Loudness).unwrap();
+        for block in x.chunks(1013) {
+            sv.push(block).unwrap();
+        }
+        let (found, len) = sv.finish().unwrap();
+        assert_eq!(len, 20 * s);
+        assert_eq!(found.len(), 2);
+        assert_eq!(
+            found,
+            stretches(&Vad::Loudness, &Track16::from_f32(&x), &|| false).unwrap()
+        );
     }
 }

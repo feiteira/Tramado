@@ -442,49 +442,81 @@ fn run_inner(
                 let spec = crate::registry::spec(*model);
                 job.phase(TranscribePhase::Checking);
                 let whisper = crate::whisper::Engine::load(&local.path, spec.dtw)?;
+                let mut runner =
+                    whisper.runner(language.as_deref(), req.initial_prompt.as_deref(), &cancel)?;
                 for i in 0..n {
                     if cancel.load(Ordering::Relaxed) {
                         return Err(AppError::new(Code::Cancelled, "stopped"));
                     }
-                    job.phase(TranscribePhase::Decoding);
-                    let track = decode_track(&bytes, channel_of(i), &cancel)?;
-                    duration_ms = duration_ms.max(track.duration_ms());
+                    // Pass 1: decode and find the speech, holding at most one VAD window.
+                    job.phase(TranscribePhase::Vad);
+                    let mut sv = vad::StreamVad::new(&vad)?;
+                    decode::decode_stream(
+                        decode::bytes_source(bytes.clone()),
+                        Some("webm"),
+                        channel_of(i),
+                        &|| cancel.load(Ordering::Relaxed),
+                        &mut |c| sv.push(&c[0]),
+                    )?;
+                    let (stretches, len) = sv.finish()?;
+                    duration_ms = duration_ms.max(len as u64 * 1000 / SAMPLE_RATE as u64);
                     if partial.tracks[i].done {
                         report((i + 1) as f64 / n as f64);
                         continue;
                     }
-                    job.phase(TranscribePhase::Vad);
-                    let stretches =
-                        vad::stretches(&vad, &track, &|| cancel.load(Ordering::Relaxed))?;
+                    // Pass 2: decode again and transcribe each window as soon as its samples
+                    // are in; only the current window's span is held (critique G22).
                     job.phase(TranscribePhase::Transcribing);
                     transcribing_since
                         .lock()
                         .unwrap_or_else(|e| e.into_inner())
                         .get_or_insert_with(Instant::now);
-                    let tj = crate::whisper::TrackJob {
-                        track: &track,
-                        stretches: &stretches,
-                        language: language.as_deref(),
-                        initial_prompt: req.initial_prompt.as_deref(),
-                        cancel: &cancel,
-                        resume_after: partial.tracks[i].until as usize,
+                    let since = *transcribing_since.lock().unwrap_or_else(|e| e.into_inner());
+                    let wins = crate::whisper::windows(&stretches, len);
+                    let total = wins.iter().map(|w| w.cost).sum::<usize>().max(1) as f64;
+                    let resume_after = partial.tracks[i].until as usize;
+                    let mut done_cost = 0usize;
+                    let mut next = 0usize;
+                    while next < wins.len() && wins[next].until <= resume_after {
+                        done_cost += wins[next].cost;
+                        next += 1;
+                    }
+                    let (base, nn) = (i as f64, n as f64);
+                    report((base + done_cost as f64 / total) / nn);
+                    let mut feeder = Feeder::new(&wins, next);
+                    let mut step = |f: &mut Feeder<'_>, last: bool| -> AppResult<()> {
+                        while let Some(k) = f.ready(last) {
+                            let w = &wins[k];
+                            let j = job.clone();
+                            let (dc, wc) = (done_cost as f64, w.cost as f64);
+                            let progress: Arc<dyn Fn(f64) + Send + Sync> = Arc::new(move |p| {
+                                j.report((base + (dc + wc * p) / total) / nn, since)
+                            });
+                            let out = runner.window(w, f.audio(k), progress)?;
+                            done_cost += w.cost;
+                            report((base + done_cost as f64 / total) / nn);
+                            let t = &mut partial.tracks[i];
+                            t.segments.extend(out.segments);
+                            t.until = out.until as u64;
+                            t.languages.extend(out.language);
+                            files::write_atomic(partial_file, &serde_json::to_vec(&partial)?)?;
+                            f.advance();
+                        }
+                        Ok(())
                     };
-                    let progress: Arc<dyn Fn(f64) + Send + Sync> = {
-                        let base = i as f64;
-                        let nn = n as f64;
-                        let since = *transcribing_since.lock().unwrap_or_else(|e| e.into_inner());
-                        let j = job.clone();
-                        Arc::new(move |p: f64| j.report((base + p) / nn, since))
-                    };
-                    whisper.run(&tj, progress, &mut |w| {
-                        let t = &mut partial.tracks[i];
-                        t.segments.extend(w.segments);
-                        t.until = w.until as u64;
-                        t.languages.extend(w.language);
-                        files::write_atomic(partial_file, &serde_json::to_vec(&partial)?)
-                    })?;
+                    decode::decode_stream(
+                        decode::bytes_source(bytes.clone()),
+                        Some("webm"),
+                        channel_of(i),
+                        &|| cancel.load(Ordering::Relaxed),
+                        &mut |c| {
+                            feeder.push(&c[0]);
+                            step(&mut feeder, false)
+                        },
+                    )?;
+                    step(&mut feeder, true)?;
                     partial.tracks[i].done = true;
-                    partial.tracks[i].until = track.len() as u64;
+                    partial.tracks[i].until = len as u64;
                     files::write_atomic(partial_file, &serde_json::to_vec(&partial)?)?;
                 }
                 let elapsed = started.elapsed().as_millis().max(1) as f64;
@@ -580,6 +612,72 @@ fn run_inner(
     )?;
     let _ = files::remove_file_if_exists(partial_file);
     Ok(())
+}
+
+/// Holds the decoded samples the next windows need, and says when a window is complete.
+#[cfg(feature = "local-whisper")]
+struct Feeder<'w> {
+    wins: &'w [crate::whisper::Window],
+    next: usize,
+    buf: Vec<f32>,
+    /// Recording sample of `buf[0]`.
+    buf_at: usize,
+    /// Samples decoded so far.
+    pos: usize,
+}
+
+#[cfg(feature = "local-whisper")]
+impl<'w> Feeder<'w> {
+    fn new(wins: &'w [crate::whisper::Window], next: usize) -> Self {
+        Feeder {
+            wins,
+            next,
+            buf: Vec::new(),
+            buf_at: 0,
+            pos: 0,
+        }
+    }
+
+    fn push(&mut self, x: &[f32]) {
+        let start = self.pos;
+        self.pos += x.len();
+        let Some(w) = self.wins.get(self.next) else {
+            return;
+        };
+        if self.buf.is_empty() {
+            self.buf_at = w.lo.max(start);
+        }
+        let have_to = self.buf_at + self.buf.len();
+        if self.pos > have_to && have_to >= start {
+            self.buf.extend_from_slice(&x[have_to - start..]);
+        }
+    }
+
+    /// The next window, once all its samples are in (any remaining one when `last`).
+    fn ready(&self, last: bool) -> Option<usize> {
+        let w = self.wins.get(self.next)?;
+        (w.until <= self.pos || last).then_some(self.next)
+    }
+
+    fn audio(&self, k: usize) -> &[f32] {
+        let w = &self.wins[k];
+        let a = w.lo.saturating_sub(self.buf_at).min(self.buf.len());
+        let b = w
+            .until
+            .saturating_sub(self.buf_at)
+            .min(self.buf.len())
+            .max(a);
+        &self.buf[a..b]
+    }
+
+    /// Done with the current window: drop what no later window needs.
+    fn advance(&mut self) {
+        self.next += 1;
+        let keep_from = self.wins.get(self.next).map_or(self.pos, |w| w.lo);
+        let drop = keep_from.saturating_sub(self.buf_at).min(self.buf.len());
+        self.buf.drain(..drop);
+        self.buf_at += drop;
+    }
 }
 
 /// Removes result files taken more than 7 days ago (and their state files).
