@@ -88,6 +88,12 @@ for (const file of docs) {
   }
 }
 
+// The homepage (site/index.html, assembled by tools/build-site.mjs) shows some of the pictures too, in all three
+// languages: data-img="<name>" is docs/manual/img/<lang>/<name>.webp.
+for (const m of readFileSync(join(ROOT, 'site/index.html'), 'utf8').matchAll(/\sdata-img="([a-z0-9-]+)"/g)) {
+  for (const lang of ['en', 'pt', 'es']) usedImages.add(join(IMG_DIR, lang, `${m[1]}.webp`));
+}
+
 /** Width of a PNG or WebP picture, or null when the format is not recognised. */
 function widthOf(file) {
   const b = readFileSync(file);

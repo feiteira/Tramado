@@ -6,7 +6,8 @@
 Record and transcribe lectures, keep every handout and law text together, share them with your class without a
 server, and practise for exams with an AI that shows where each answer comes from.</p>
 
-<p align="center"><a href="https://github.com/feiteira/Tramado/releases"><b>Download</b></a> ·
+<p align="center"><a href="https://feiteira.github.io/Tramado/"><b>Website</b></a> ·
+<a href="https://github.com/feiteira/Tramado/releases"><b>Download</b></a> ·
 <a href="docs/manual/en/index.md">Manual</a> ·
 <a href="docs/manual/pt/index.md">Manual (Português)</a> ·
 <a href="docs/manual/es/index.md">Manual (Español)</a> ·
@@ -71,7 +72,7 @@ and Ask conversations stay on your computer.
 <td width="50%" valign="top"><img src="docs/manual/img/en/chat.webp" alt="The class chat: an answer by the AI that cites a lecture at 41:12 and an article of law, followed by classmates' messages, one of them a mention"><br><b>Class chat.</b> Replies, mentions, and an <code>@AI</code> that cites the class's sources.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="docs/manual/img/en/invite.webp" alt="The invite dialog: Copy invite, a QR code to scan with a phone, the invite code, Copy code and Save as a file"><br><b>Invite.</b> One message, a QR code or a file; the link opens a join page in the browser.</td>
+<td width="50%" valign="top"><img src="docs/manual/img/en/invite.webp" alt="The invite dialog: Copy invite, a QR code to scan with a phone, and the start of the invite code"><br><b>Invite.</b> One message, a QR code or a file; the link opens a join page in the browser.</td>
 <td width="50%" valign="top"><img src="docs/manual/img/en/members.webp" alt="The Members tab: a newcomer waiting to join, with their check words and the buttons Let in, Not now and Decline, above the class's three members and whether they are online"><br><b>Members.</b> Compare check words, then let newcomers in.</td>
 </tr>
 <tr>

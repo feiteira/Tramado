@@ -49,6 +49,7 @@ npm run peek -- --route=<r> --query='…' --ready=<testid> --axe [--lang=pt] [--
      [--expect-text=<id>=<s>] [--expect-attr=<id>:<attr>=<v|null>] --out=<png>
 node tools/peek-matrix.mjs [--only=m0] [--name=<entry>,…] [--axe] [--jobs=N] [--lang=pt|es]   # every entry of tools/peek-routes/*.json
 npm run screenshots              # the manual's pictures, en/pt/es (see "Manual screenshots")
+node tools/build-site.mjs --out=<new dir> [--release=<gh release view --json … file>]   # the website, checked (pages.yml)
 node tools/desktop-smoke.mjs [--flow=g1] [--media-selftest]             # the real debug app under Xvfb
 ```
 
@@ -105,7 +106,8 @@ crates/             tramado-base (paths, registry, confined class FS, picks, wat
                     whisper.cpp, cloud STT, models)
 test-vectors/       JSON vectors read by both Vitest and cargo test
 tools/              fetch scripts, peek, screenshots, desktop smoke and e2e, leak and version checks, lab sources
-site/join/          the static join page (GitHub Pages, .github/workflows/pages.yml)
+site/               the website (GitHub Pages, .github/workflows/pages.yml, built by tools/build-site.mjs): the homepage
+                    index.html (EN/PT/ES, screenshots from docs/manual/img, downloads of the newest release) and join/
 docs/               dev/ (architecture, plan, research), spec/ (folder format, sync protocol, check words),
                     design/ (UX), manual/{en,pt,es}/, release-notes/
 .github/            workflows ci.yml, canary.yml, pages.yml; scripts/ (canary, link check)
@@ -270,6 +272,9 @@ done
 node .github/scripts/check-links.mjs     # links resolve, every picture is used, size and width limits hold
 ```
 
+The homepage (`site/index.html`) shows some of the same pictures (its `data-img` names); `tools/build-site.mjs` fails
+when one of them is missing in a language.
+
 ## Releases
 
 Bump the version in `desktop/src-tauri/tauri.conf.json`, `Cargo.toml` (`[workspace.package]`), `app/package.json` and
@@ -277,7 +282,8 @@ Bump the version in `desktop/src-tauri/tauri.conf.json`, `Cargo.toml` (`[workspa
 pre-release `x.y.z-rc.n` uses `vx.y.z.md`). Before tagging: `npm run check:versions`, `cargo deny check`,
 `npm audit --omit=dev`, `npm run check:leaks`, `npm run gen:privacy && git diff --exit-code PRIVACY.md`. Installers for
 the three systems come from CI, only when asked: `gh workflow run ci.yml --ref main -f release=build` (artifacts) or
-`-f release=publish` (also a draft GitHub release). Never trigger the Windows or macOS builds otherwise.
+`-f release=publish` (also a draft GitHub release). Never trigger the Windows or macOS builds otherwise. Publishing the
+draft also refreshes the homepage's download buttons (`pages.yml` runs on release events).
 
 - **14-day rule (D59) and reviewed exceptions.** `npm run check:versions` refuses a locked crate or npm package
   younger than 14 days. First look for an older version that satisfies the constraints (and, for a security fix, is

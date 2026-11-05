@@ -12,9 +12,9 @@
     The Tramado join page (sync spec §7.2, UX §3.12.2), https://feiteira.github.io/Tramado/join/: an invite link is
     {this page}#tri1_…. The code lives only in the URL fragment, which browsers never send to a server; this page reads
     it locally, shows which class it is for, and offers [Open in Tramado] (tramado://join/<code>, tramado://pair/ for a
-    trp code; not on phones, where Tramado does not run) and [Copy code], with a link to the GitHub Releases page to get
-    Tramado. Static: no third-party scripts, no network (the CSP above forbids it; the icon is inline so the browser
-    fetches no favicon), no cookies, no storage. EN, PT-PT and ES from the browser's language.
+    trp code; not on phones, where Tramado does not run) and [Copy code], with a link to the homepage's download section
+    (../#download, site/index.html) to get Tramado. Static: no third-party scripts, no network (the CSP above forbids
+    it; the icon is inline so the browser fetches no favicon), no cookies, no storage. EN, PT-PT and ES from the browser's language.
   -->
   <style>
     :root {
@@ -122,7 +122,7 @@
     </noscript>
 
     <p class="muted get"><span id="getNote">Don’t have Tramado yet? It is free and open source, for Windows, macOS and Linux.</span>
-      <a id="get" data-testid="join-page-get" href="https://github.com/feiteira/Tramado/releases" target="_blank" rel="noopener noreferrer">Get Tramado</a></p>
+      <a id="get" data-testid="join-page-get" href="../#download" target="_blank" rel="noopener noreferrer">Get Tramado</a></p>
   </main>
 
   <script>

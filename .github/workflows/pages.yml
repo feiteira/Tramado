@@ -1,19 +1,30 @@
 name: Pages
 
-# Publishes site/ (the static join page, site/join/index.html: sync spec §7.2, UX §3.12.2) to GitHub Pages, so an
-# invite link https://feiteira.github.io/Tramado/join/#<code> opens it. The page reads the code from the URL fragment
-# only and makes no request of its own.
+# Publishes the website to GitHub Pages (https://feiteira.github.io/Tramado/): the homepage site/index.html, with the
+# manual's screenshots and download buttons for the newest published release, and the static join page
+# site/join/index.html (sync spec §7.2, UX §3.12.2), so an invite link https://feiteira.github.io/Tramado/join/#<code>
+# opens it. tools/build-site.mjs assembles the folder Pages serves. Neither page makes a request to another site.
 #
 # Pages is switched on (Settings › Pages › Source: "GitHub Actions") and the repository variable PAGES_ENABLED is
-# true, so every push to main that changes site/ deploys; `gh workflow run pages.yml` deploys by hand. Without that
-# variable a push only records a skipped job. The app's invites link here: JOIN_PAGE in app/src/core/sync/invite.ts
-# (since 0.1.0-rc.2), so the page must stay up and keep the code format of sync spec §7.2.
+# true, so every push to main that changes the site deploys; `gh workflow run pages.yml` deploys by hand. Without that
+# variable a push only records a skipped job. The app's invites link to the join page: JOIN_PAGE in
+# app/src/core/sync/invite.ts (since 0.1.0-rc.2), so it must stay up and keep the code format of sync spec §7.2.
+#
+# Publishing, editing (pre-release or not, "Set as latest"), unpublishing or deleting a release refreshes the download
+# buttons. A release event runs on the tag, and the github-pages environment deploys only from main, so the `release`
+# job starts this workflow again on main (GITHUB_TOKEN may start a workflow_dispatch run). The event runs the
+# pages.yml of the tagged commit: tags made before this job existed (v0.1.0-rc.1, v0.1.0-rc.2) have none, so after
+# unpublishing or deleting one of those, run `gh workflow run pages.yml` by hand.
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
+      - 'tools/build-site.mjs'
+      - 'docs/manual/img/**'
       - '.github/workflows/pages.yml'
+  release:
+    types: [published, unpublished, deleted, edited]
   workflow_dispatch:
 
 permissions:
@@ -24,8 +35,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release:
+    if: github.event_name == 'release' && vars.PAGES_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Deploy again from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}"
+
   deploy:
-    if: github.event_name == 'workflow_dispatch' || vars.PAGES_ENABLED == 'true'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && vars.PAGES_ENABLED == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -37,9 +60,29 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Newest published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The release GitHub marks Latest (the newest full release); without one, the newest pre-release; never a
+          # draft. No release at all: the download buttons open the Releases page.
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 30 --json tagName,isLatest \
+            --jq '(map(select(.isLatest)) + .)[0].tagName // empty')
+          if [ -n "$tag" ]; then
+            gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,publishedAt,url,assets > "$RUNNER_TEMP/release.json"
+            echo "RELEASE_ARG=--release=$RUNNER_TEMP/release.json" >> "$GITHUB_ENV"
+            echo "Download buttons: $tag"
+          else
+            echo "No published release yet"
+          fi
+      - name: Build the site
+        run: node tools/build-site.mjs --out=_site ${RELEASE_ARG:+"$RELEASE_ARG"}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v5

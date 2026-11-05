@@ -91,6 +91,8 @@ jobs:
         run: node tools/check-leaks.mjs
       - name: Every relative link and picture of the README, manual and release notes resolves
         run: node .github/scripts/check-links.mjs
+      - name: The website builds (its strings in three languages, its screenshots, nothing loaded from other sites)
+        run: node tools/build-site.mjs --out="$RUNNER_TEMP/site"
       - name: No two paths differ only in letter case (Windows and macOS file systems ignore it)
         # Also module files whose names differ only in case (Review.tsx and review.ts): `./review` would resolve to
         # either one there, and the Windows and Mac builds would fail where Linux passes.

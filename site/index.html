@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Tramado · Your classes, all in one place</title>
+  <meta name="description" content="A free, open-source desktop app for university students: record and transcribe lectures, keep documents together, share a class without a server, and practise for exams with an AI that cites its sources.">
+  <meta property="og:title" content="Tramado">
+  <meta property="og:description" content="Your classes, all in one place: lectures recorded and transcribed on your computer, documents you can search, exams practised with an AI that cites your sources, and class groups without a server.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://feiteira.github.io/Tramado/">
+  <link rel="alternate" hreflang="en" href="https://feiteira.github.io/Tramado/?lang=en">
+  <link rel="alternate" hreflang="pt-PT" href="https://feiteira.github.io/Tramado/?lang=pt">
+  <link rel="alternate" hreflang="es-ES" href="https://feiteira.github.io/Tramado/?lang=es">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <noscript><style>.shot img[data-img] { display: none; } .shot:not(.hero__shot) { display: none; }</style></noscript>
+  <!--
+    The Tramado homepage, https://feiteira.github.io/Tramado/ (the join page is join/). Static and self-contained: the
+    CSP above allows only this site's own files, so no font CDN, analytics or third-party script can creep in; no
+    cookies, no storage. tools/build-site.mjs assembles what GitHub Pages serves (.github/workflows/pages.yml): this
+    folder, the manual's screenshots named by data-img (img/<lang>/<name>.webp; the script sets each src, so a reader
+    downloads each picture once, in their language) and release.js, which sets
+    window.TRAMADO_RELEASE to the newest published release so the download buttons point at its files (null without
+    one: the buttons then open the Releases page). English is in the markup, so the page reads without JavaScript;
+    the script switches to Portuguese or Spanish from ?lang= or the browser's languages, with the strings of the
+    #i18n block (the build checks that every key exists in all three). Icons: Lucide (ISC). Fonts: Figtree and
+    Bricolage Grotesque (SIL OFL 1.1, fonts/).
+  -->
+  <style>
+    @font-face {
+      font-family: 'Figtree Variable'; font-style: normal; font-display: swap; font-weight: 300 900;
+      src: url(fonts/figtree-latin-wght-normal.woff2) format('woff2-variations');
+    }
+    @font-face {
+      font-family: 'Bricolage Grotesque Variable'; font-style: normal; font-display: swap; font-weight: 200 800;
+      src: url(fonts/bricolage-grotesque-latin-wght-normal.woff2) format('woff2-variations');
+    }
+    :root {
+      color-scheme: light dark;
+      --paper: #f3f5f8; --paper-raised: #ffffff; --paper-sunk: #e8ecf2; --rule: #dce1e9;
+      --ink: #181d29; --ink-2: #434a5b; --ink-3: #545b6c;
+      --accent: #2f4fd6; --accent-hover: #2440b8; --accent-ink: #ffffff; --accent-soft: #e6ebff; --focus: #3d5cf0;
+      --gold: #f5c518; --gold-ink: #6b5200; --gold-soft: #fff6d1;
+      --glow-1: rgba(47, 79, 214, .16); --glow-2: rgba(245, 197, 24, .18);
+      --shadow: 0 1px 2px rgba(20, 30, 60, .06), 0 12px 32px rgba(20, 30, 60, .12);
+      --shadow-big: 0 2px 6px rgba(20, 30, 60, .06), 0 30px 80px rgba(20, 30, 60, .20);
+      --font-ui: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+      --radius: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #14171d; --paper-raised: #1c2028; --paper-sunk: #101318; --rule: #2b303b;
+        --ink: #e8ebf1; --ink-2: #c3c8d2; --ink-3: #a1a8b5;
+        --accent: #8ea5ff; --accent-hover: #a8baff; --accent-ink: #0f1430; --accent-soft: #232b48; --focus: #8ea5ff;
+        --gold: #f5c518; --gold-ink: #f5d867; --gold-soft: #2e2810;
+        --glow-1: rgba(142, 165, 255, .14); --glow-2: rgba(245, 197, 24, .08);
+        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+        --shadow-big: 0 2px 6px rgba(0, 0, 0, .3), 0 30px 80px rgba(0, 0, 0, .5);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; -webkit-text-size-adjust: 100%; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    body {
+      margin: 0; background: var(--paper); color: var(--ink);
+      font: 17px/1.6 var(--font-ui); font-optical-sizing: auto; overflow-x: hidden;
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:hover { color: var(--accent-hover); }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -.02em; line-height: 1.1; margin: 0; text-wrap: balance; }
+    p, li, figcaption { text-wrap: pretty; }
+    p { margin: 0 0 1em; }
+    .wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 640px) { .wrap { padding: 0 24px; } }
+    .icon { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .skip { position: absolute; left: 16px; top: -48px; z-index: 20; padding: 8px 12px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); }
+    .skip:focus { top: 12px; color: var(--accent-ink); }
+    [hidden] { display: none !important; }
+
+    /* Header */
+    .top {
+      position: sticky; top: 0; z-index: 10; border-bottom: 1px solid transparent;
+      background: color-mix(in oklab, var(--paper) 82%, transparent);
+      -webkit-backdrop-filter: saturate(1.4) blur(12px); backdrop-filter: saturate(1.4) blur(12px);
+    }
+    .top.is-scrolled { border-bottom-color: var(--rule); }
+    .top__in { display: flex; align-items: center; gap: 12px; min-height: 60px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 700 20px/1 var(--font-display); letter-spacing: -.02em; }
+    .brand:hover { color: var(--ink); }
+    .brand svg { width: 30px; height: 30px; flex: none; }
+    .nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .nav a { padding: 8px 10px; border-radius: 8px; color: var(--ink-2); font-size: 15px; font-weight: 600; text-decoration: none; }
+    .nav a:hover { background: var(--paper-sunk); color: var(--ink); }
+    .nav .nav__wide { display: none; }
+    @media (min-width: 760px) { .nav .nav__wide { display: inline-block; } }
+    .langs { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-raised); }
+    .langs a { padding: 4px 8px; border-radius: 7px; color: var(--ink-3); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-decoration: none; }
+    .langs a:hover { color: var(--ink); background: var(--paper-sunk); }
+    .langs a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+    @media (max-width: 400px) { .nav { display: none; } .langs { margin-left: auto; } }
+
+    /* Buttons */
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px;
+      border: 1px solid var(--rule); border-radius: 12px; background: var(--paper-raised); color: var(--ink);
+      font: 650 16px/1.2 var(--font-ui); text-decoration: none; cursor: pointer; text-align: center;
+    }
+    .button:hover { color: var(--ink); border-color: color-mix(in oklab, var(--ink) 25%, var(--rule)); }
+    .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 18px color-mix(in oklab, var(--accent) 30%, transparent); }
+    .button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-ink); }
+    .button.small { min-height: 40px; padding: 0 14px; font-size: 15px; border-radius: 10px; }
+    .button .size { font-weight: 500; opacity: .8; }
+    @media (prefers-reduced-motion: no-preference) {
+      .button { transition: background-color .16s, border-color .16s, transform .16s; }
+      .button:active { transform: translateY(1px); }
+    }
+
+    /* Hero */
+    .hero { position: relative; padding: 56px 0 24px; text-align: center; isolation: isolate; }
+    .hero::before {
+      content: ''; position: absolute; inset: -60px 0 auto; height: 720px; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(600px 320px at 20% 30%, var(--glow-1), transparent 70%),
+        radial-gradient(520px 300px at 82% 18%, var(--glow-2), transparent 70%);
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; margin: 0 0 20px; padding: 6px 12px; border: 1px solid var(--rule);
+      border-radius: 999px; background: var(--paper-raised); color: var(--ink-2); font-size: 14px; font-weight: 600;
+    }
+    .eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+    .hero h1 { max-width: 15ch; margin: 0 auto; font-size: clamp(40px, 7.4vw, 76px); font-weight: 750; }
+    /* The gold underline of the brand mark, behind the second half of the title; it follows the text when it wraps. */
+    .hero h1 .mark {
+      background: linear-gradient(var(--gold), var(--gold)) 0 88% / 100% .13em no-repeat;
+      -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    }
+    .lede { max-width: 640px; margin: 22px auto 0; color: var(--ink-2); font-size: clamp(17px, 2.2vw, 20px); line-height: 1.55; }
+    .cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 32px 0 14px; }
+    .release-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 26px; color: var(--ink-3); font-size: 14px; }
+    .chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; background: var(--gold-soft); color: var(--gold-ink); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+    .chip.accent { background: var(--accent-soft); color: var(--accent); }
+
+    /* Screenshots in a window frame */
+    .shot { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper-raised); box-shadow: var(--shadow); overflow: hidden; }
+    .shot__bar { display: flex; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--rule); background: var(--paper-sunk); }
+    .shot__bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
+    .shot img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; background: var(--paper-sunk); }
+    .hero__shot { max-width: 1080px; margin: 44px auto 0; box-shadow: var(--shadow-big); }
+
+    /* Sections */
+    section { padding: 72px 0; }
+    .section-head { max-width: 680px; margin: 0 auto 40px; text-align: center; }
+    .section-head h2 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 720; }
+    .section-head p { margin: 14px 0 0; color: var(--ink-2); font-size: 18px; }
+
+    .pillars { display: grid; gap: 16px; padding: 24px 0 8px; }
+    @media (min-width: 760px) { .pillars { grid-template-columns: repeat(3, 1fr); } }
+    .pillar { padding: 22px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper-raised); }
+    .pillar h2 { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+    .pillar h2 .icon { width: 22px; height: 22px; color: var(--accent); }
+    .pillar p { margin: 0; color: var(--ink-2); font-size: 16px; }
+
+    .feature { display: grid; gap: 28px; align-items: center; padding: 36px 0; }
+    @media (min-width: 900px) {
+      .feature { grid-template-columns: 5fr 7fr; gap: 56px; padding: 48px 0; }
+      .feature:nth-child(even) .feature__text { order: 2; }
+    }
+    .kicker { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--accent); font-size: 14px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+    .kicker .icon { width: 18px; height: 18px; }
+    .feature h3 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 720; margin-bottom: 14px; }
+    .feature p { color: var(--ink-2); }
+    .points { margin: 0; padding: 0; list-style: none; }
+    .points li { display: flex; gap: 10px; margin: 8px 0; color: var(--ink-2); font-size: 16px; }
+    .points .icon { width: 18px; height: 18px; margin-top: 4px; color: var(--accent); }
+
+    .gallery { display: grid; gap: 24px; }
+    @media (min-width: 760px) { .gallery { grid-template-columns: 1fr 1fr; } }
+    .gallery figure { margin: 0; }
+    .gallery figcaption { margin-top: 12px; color: var(--ink-2); font-size: 16px; }
+    .gallery figcaption b { color: var(--ink); }
+
+    .privacy { background: var(--paper-sunk); border-block: 1px solid var(--rule); }
+    .privacy__grid { display: grid; gap: 32px; align-items: start; }
+    @media (min-width: 900px) { .privacy__grid { grid-template-columns: 5fr 6fr; gap: 56px; } }
+    .privacy h2 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 720; }
+    .privacy__big { margin-top: 16px; color: var(--ink-2); font-size: 18px; }
+    .privacy__list { display: grid; gap: 14px; }
+    .privacy__item { display: flex; gap: 14px; padding: 18px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper-raised); }
+    .privacy__item .icon { width: 22px; height: 22px; margin-top: 2px; color: var(--accent); }
+    .privacy__item p { margin: 0; color: var(--ink-2); font-size: 16px; }
+    .privacy__more { font-weight: 650; }
+
+    .downloads { display: grid; gap: 16px; }
+    @media (min-width: 900px) { .downloads { grid-template-columns: repeat(3, 1fr); } }
+    .card {
+      position: relative; display: flex; flex-direction: column; gap: 12px; padding: 24px; border: 1px solid var(--rule);
+      border-radius: var(--radius); background: var(--paper-raised);
+    }
+    .card.is-yours { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+    .card h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 26px; font-weight: 720; }
+    .card .req { margin: 0; color: var(--ink-3); font-size: 15px; }
+    .card .buttons { display: flex; flex-direction: column; gap: 8px; }
+    .card .note { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
+    .notice {
+      display: flex; gap: 12px; max-width: 820px; margin: 0 auto 28px; padding: 14px 16px; border: 1px solid color-mix(in oklab, var(--gold) 50%, var(--rule));
+      border-radius: 12px; background: var(--gold-soft); color: var(--ink); font-size: 15px;
+    }
+    .notice p { margin: 0; }
+    .notice p + p { margin-top: 6px; }
+    .after { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; margin-top: 24px; font-weight: 650; }
+    .fine { max-width: 760px; margin: 18px auto 0; color: var(--ink-3); font-size: 14px; text-align: center; }
+
+    footer { padding: 40px 0 56px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 14px; }
+    .foot { display: grid; gap: 18px; }
+    @media (min-width: 760px) { .foot { grid-template-columns: 1fr auto; align-items: start; } }
+    .foot p { margin: 0 0 6px; max-width: 62ch; }
+    .foot nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+    .foot nav a { color: var(--ink-2); font-weight: 600; }
+
+    @media (max-width: 480px) {
+      .hero { padding-top: 36px; }
+      .eyebrow { font-size: 13px; }
+      .cta .button { width: 100%; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-server-off" viewBox="0 0 24 24"><path d="M7 2h13a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5"/><path d="M10 10 2.5 2.5C2 2 2 2.5 2 5v3a2 2 0 0 0 2 2h6z"/><path d="M22 17v-1a2 2 0 0 0-2-2h-1"/><path d="M4 14a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16.5l1-.5.5.5-8-8H4z"/><path d="M6 18h.01"/><path d="m2 2 20 20"/></symbol>
+    <symbol id="i-user-x" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></symbol>
+    <symbol id="i-file-search" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="M13.3 16.3 15 18"/></symbol>
+    <symbol id="i-clipboard-check" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></symbol>
+    <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  </svg>
+
+  <a class="skip" href="#main" data-i18n="skip">Skip to the content</a>
+
+  <header class="top" id="top">
+    <div class="wrap top__in">
+      <a class="brand" href="./" aria-label="Tramado">
+        <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="0.5" y="0.5" width="27" height="27" rx="8" fill="#2f4fd6"/><path d="M10 5v.6M10 10.4v7.2M10 22.4v.6M18 5v6.6M18 16.4V23" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".55" fill="none"/><path d="M5 8h10.6M20.4 8H23M5 14h2.6M12.4 14H23" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M5 20h10.6M20.4 20H23" stroke="#f5c518" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+        <span>Tramado</span>
+      </a>
+      <nav class="nav" data-i18n-aria="nav.label" aria-label="Main">
+        <a class="nav__wide" href="#features" data-i18n="nav.features">Features</a>
+        <a class="nav__wide" href="#privacy" data-i18n="nav.privacy">Privacy</a>
+        <a class="nav__wide" href="https://github.com/feiteira/Tramado/blob/main/docs/manual/en/index.md" data-link="manual" data-i18n="nav.manual">Manual</a>
+        <a href="#download" data-i18n="nav.download">Download</a>
+      </nav>
+      <div class="langs" role="group" data-i18n-aria="lang.label" aria-label="Language">
+        <a href="?lang=en" hreflang="en" lang="en" data-lang="en" title="English">EN</a>
+        <a href="?lang=pt" hreflang="pt-PT" lang="pt-PT" data-lang="pt" title="Português">PT</a>
+        <a href="?lang=es" hreflang="es-ES" lang="es-ES" data-lang="es" title="Español">ES</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="hero">
+      <div class="wrap">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Free and open source · Windows, macOS and Linux</p>
+        <h1><span data-i18n="hero.title1">Your classes,</span> <span class="mark" data-i18n="hero.title2">all in one place.</span></h1>
+        <p class="lede" data-i18n="hero.lede">Record and transcribe lectures, keep every handout and law text together, share them with your class without a server, and practise for exams with an AI that shows where each answer comes from.</p>
+        <div class="cta">
+          <a class="button primary" id="heroDownload" href="#download" data-testid="site-hero-download">
+            <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>
+            <span id="heroDownloadText" data-i18n="hero.download">Download</span>
+            <span class="size" id="heroDownloadSize" hidden></span>
+          </a>
+          <a class="button" id="heroOther" href="#download" data-i18n="hero.other" hidden>Other systems</a>
+          <a class="button" id="heroSource" href="https://github.com/feiteira/Tramado" data-i18n="hero.source">Source code on GitHub</a>
+        </div>
+        <p class="release-line" id="releaseLine" hidden>
+          <span id="releaseText"></span>
+          <span class="chip" id="releasePre" data-i18n="release.pre" hidden>Pre-release</span>
+        </p>
+        <figure class="shot hero__shot">
+          <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <img data-img="lecture" width="1440" height="900" fetchpriority="high" data-i18n-alt="hero.alt" alt="Tramado showing a lecture: the player with its waveform and markers, the transcript following the recording, and a note at a timestamp">
+          <noscript><img src="img/en/lecture.webp" width="1440" height="900" alt="Tramado showing a lecture: the player with its waveform and markers, the transcript following the recording, and a note at a timestamp"></noscript>
+        </figure>
+        <div class="pillars">
+          <div class="pillar">
+            <h2><svg class="icon" aria-hidden="true"><use href="#i-server-off"/></svg><span data-i18n="pillar.server.title">No server</span></h2>
+            <p data-i18n="pillar.server.body">Your class is shared directly between your classmates’ computers, encrypted, through Syncthing.</p>
+          </div>
+          <div class="pillar">
+            <h2><svg class="icon" aria-hidden="true"><use href="#i-user-x"/></svg><span data-i18n="pillar.account.title">No account</span></h2>
+            <p data-i18n="pillar.account.body">Nothing to sign up for. Each class is an ordinary folder on your computer.</p>
+          </div>
+          <div class="pillar">
+            <h2><svg class="icon" aria-hidden="true"><use href="#i-eye-off"/></svg><span data-i18n="pillar.tracking.title">No tracking</span></h2>
+            <p data-i18n="pillar.tracking.body">Tramado collects nothing about you. AI is optional and uses your own key.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 data-i18n="features.title">Everything for your classes, in one app</h2>
+          <p data-i18n="features.lede">Lectures, documents, notes, exams and your class group live together, so what you need for a test is one search away.</p>
+        </div>
+
+        <div class="features">
+          <article class="feature">
+            <div class="feature__text">
+              <div class="kicker"><svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg><span data-i18n="f.lectures.kicker">Lectures</span></div>
+              <h3 data-i18n="f.lectures.title">Recorded and transcribed on your computer</h3>
+              <p data-i18n="f.lectures.body">Record in the room or an online class, or add a recording you already have. Transcription runs on your computer with whisper.cpp: the speech model downloads once, then works offline. In a shared class, one computer transcribes each lecture and everyone gets the transcript.</p>
+              <ul class="points">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.lectures.p1">Mark moments with the keys 1–4 and take notes at a timestamp</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.lectures.p2">Follow the transcript as the recording plays, and correct it together</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.lectures.p3">Export it as Markdown, subtitles or plain text</span></li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <img data-img="recording" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="f.lectures.alt" alt="Recording a lecture: the recording bar at the bottom with the time, the microphone level and the marker buttons">
+            </figure>
+          </article>
+
+          <article class="feature">
+            <div class="feature__text">
+              <div class="kicker"><svg class="icon" aria-hidden="true"><use href="#i-file-search"/></svg><span data-i18n="f.docs.kicker">Documents</span></div>
+              <h3 data-i18n="f.docs.title">Every handout, searchable</h3>
+              <p data-i18n="f.docs.body">Add slides, readings and legislation: PDF, Word (.docx), PowerPoint (.pptx), OpenDocument text, images and more. Ctrl+K finds a phrase across lectures, documents, exams and chat, and opens the PDF on the right page with the passage marked.</p>
+              <ul class="points">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.docs.p1">Laws list their articles</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.docs.p2">Class notes are shared; your own notes stay on your computer</span></li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <img data-img="document-pdf" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="f.docs.alt" alt="A PDF of a fictional law open at article 18, with a passage marked and the law’s articles listed beside it">
+            </figure>
+          </article>
+
+          <article class="feature">
+            <div class="feature__text">
+              <div class="kicker"><svg class="icon" aria-hidden="true"><use href="#i-clipboard-check"/></svg><span data-i18n="f.exams.kicker">Exams</span></div>
+              <h3 data-i18n="f.exams.title">Practise with answers that cite your sources</h3>
+              <p data-i18n="f.exams.body">Add a past exam paper: a PDF, a Word file, a photo, or typed in. The AI finds the questions, you check them, and then it drafts answers from your own class material, citing the page, the article of law or the minute of the lecture each claim comes from.</p>
+              <ul class="points">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.exams.p1">A “grounded” score for every answer</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.exams.p2">Practise question by question; the ones you missed come back</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.exams.p3">A countdown to your next test</span></li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <img data-img="exam-answers" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="f.exams.alt" alt="A past exam question answered from the class’s own material, with numbered citations to an article of law and a lecture moment, and a grounded score of 100 %">
+            </figure>
+          </article>
+
+          <article class="feature">
+            <div class="feature__text">
+              <div class="kicker"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span data-i18n="f.groups.kicker">Class groups</span></div>
+              <h3 data-i18n="f.groups.title">Share a class with one message</h3>
+              <p data-i18n="f.groups.body">Invite classmates with a link, a code, a QR code or a file. They get the lectures, transcripts, documents, class notes and a class chat with an @AI that answers from the class’s sources.</p>
+              <ul class="points">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.groups.p1">Compare check words to be sure who you let in</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.groups.p2">Organisers can require each newcomer to be let in by a member</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.groups.p3">Your own notes, highlights and practice stay private</span></li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <img data-img="chat" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="f.groups.alt" alt="The class chat: an answer by the AI that cites a lecture at 41:12 and an article of law, followed by classmates’ messages">
+            </figure>
+          </article>
+
+          <article class="feature">
+            <div class="feature__text">
+              <div class="kicker"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span data-i18n="f.ask.kicker">Ask</span></div>
+              <h3 data-i18n="f.ask.title">Ask your class material</h3>
+              <p data-i18n="f.ask.body">Ask a question and get an answer from the class’s lectures and documents, with each source one click away. Post a good answer to the class chat, or save it as a note.</p>
+              <ul class="points">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.ask.p1">Free models with your own OpenRouter key, or a service that you or your school run (Ollama, LM Studio, a school server)</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="f.ask.p2">You choose what AI providers may do with what you send</span></li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <div class="shot__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <img data-img="ask" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="f.ask.alt" alt="The Ask tab: a question about article 18 and an answer with two numbered sources, an article of law and a lecture moment">
+            </figure>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tour" aria-labelledby="tourTitle">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="tourTitle" data-i18n="tour.title">A closer look</h2>
+        </div>
+        <div class="gallery">
+          <figure>
+            <div class="shot"><img data-img="palette" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="tour.palette.alt" alt="The search palette: a phrase found in two lectures, three documents, an exam and the class chat, with the matching words highlighted"></div>
+            <figcaption><b data-i18n="tour.palette.title">Search everything.</b> <span data-i18n="tour.palette.body">Ctrl+K finds a phrase in lectures, documents, exams and chat.</span></figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img data-img="today" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="tour.today.alt" alt="The Today screen: upcoming tests with Practise buttons, a lecture being transcribed on a classmate’s laptop, recent lectures and an unread mention"></div>
+            <figcaption><b data-i18n="tour.today.title">Today.</b> <span data-i18n="tour.today.body">Tests coming up, transcriptions, recent lectures and unread messages.</span></figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img data-img="invite" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="tour.invite.alt" alt="The invite dialog: Copy invite, a QR code to scan with a phone, and the start of the invite code"></div>
+            <figcaption><b data-i18n="tour.invite.title">Invite.</b> <span data-i18n="tour.invite.body">A link, a QR code or a file. The link opens a page that reads the invite in the browser and sends it nowhere.</span></figcaption>
+          </figure>
+          <figure>
+            <div class="shot"><img data-img="members" width="1440" height="900" loading="lazy" decoding="async" data-i18n-alt="tour.members.alt" alt="The Members tab: a newcomer waiting to join with their check words and the buttons Let in, Not now and Decline, above the class’s members"></div>
+            <figcaption><b data-i18n="tour.members.title">Members.</b> <span data-i18n="tour.members.body">Compare check words, then let newcomers in.</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="privacy" class="privacy">
+      <div class="wrap privacy__grid">
+        <div>
+          <h2 data-i18n="privacy.title">Your work stays yours</h2>
+          <p class="privacy__big" data-i18n="privacy.lede">Tramado has no server, no account and no telemetry.</p>
+          <a class="privacy__more" href="https://github.com/feiteira/Tramado/blob/main/PRIVACY.md" data-link="privacy" data-i18n="privacy.more">Everything that leaves your computer, listed</a>
+        </div>
+        <div class="privacy__list">
+          <div class="privacy__item">
+            <svg class="icon" aria-hidden="true"><use href="#i-folder-open"/></svg>
+            <p data-i18n="privacy.folders">Each class is an ordinary folder on your computer that you can open, copy and back up. Files travel encrypted between your class’s computers, directly or through a public Syncthing relay when a network blocks direct connections.</p>
+          </div>
+          <div class="privacy__item">
+            <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>
+            <p data-i18n="privacy.ai">AI is optional and uses your own OpenRouter key, asking for free models by default. You choose what providers may do with what you send (by default, no training), and Tramado never relaxes that choice without asking you.</p>
+          </div>
+          <div class="privacy__item">
+            <svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg>
+            <p data-i18n="privacy.age">OpenRouter is for people aged 18 or over. If you are younger, skip AI, or connect an AI service that you or your school run.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 data-i18n="dl.title">Download Tramado</h2>
+          <p data-i18n="dl.lede">Free, for Windows, macOS and Linux. The installer includes the app and Syncthing; the speech model downloads the first time you transcribe.</p>
+        </div>
+        <div class="notice" id="preNotice">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg>
+          <div>
+            <p data-i18n="dl.pre">This is a pre-release: keep copies of anything you cannot afford to lose, and please report problems.</p>
+            <p><span data-i18n="dl.new">The Windows and macOS installers are new and nobody has used them yet, and recording an online class (what your computer plays) has not been tested yet. If you try them, please tell us how it went:</span>
+              <a href="https://github.com/feiteira/Tramado/issues" data-i18n="dl.report">report a problem or a success</a>.</p>
+          </div>
+        </div>
+        <div class="downloads">
+          <article class="card" data-os="windows" data-testid="site-card-windows">
+            <h3>Windows <span class="chip accent" data-i18n="dl.yours" hidden>Your system</span></h3>
+            <p class="req" data-i18n="dl.win.req">Windows 10 or 11, 64-bit (x64)</p>
+            <div class="buttons">
+              <a class="button primary small" data-file="windows" href="https://github.com/feiteira/Tramado/releases"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="dl.win.button">Download the installer</span><span class="size" data-size="windows"></span></a>
+            </div>
+            <p class="note" data-i18n="dl.win.note">Not code-signed yet: if SmartScreen says “Windows protected your PC”, choose More info, then Run anyway. If the computer lacks Microsoft Edge WebView2, the installer downloads it.</p>
+          </article>
+          <article class="card" data-os="macos" data-testid="site-card-macos">
+            <h3>macOS <span class="chip accent" data-i18n="dl.yours" hidden>Your system</span></h3>
+            <p class="req" data-i18n="dl.mac.req">macOS 14.2 or later, Apple silicon or Intel</p>
+            <div class="buttons">
+              <a class="button primary small" data-file="macos" href="https://github.com/feiteira/Tramado/releases"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="dl.mac.button">Download the disk image</span><span class="size" data-size="macos"></span></a>
+            </div>
+            <p class="note" data-i18n="dl.mac.note">Drag Tramado to Applications. The first time, macOS refuses to open it: close the message, then choose System Settings › Privacy &amp; Security › Open Anyway.</p>
+          </article>
+          <article class="card" data-os="linux" data-testid="site-card-linux">
+            <h3>Linux <span class="chip accent" data-i18n="dl.yours" hidden>Your system</span></h3>
+            <p class="req" data-i18n="dl.linux.req">x86-64; tested on Ubuntu 24.04</p>
+            <div class="buttons">
+              <a class="button primary small" data-file="appimage" href="https://github.com/feiteira/Tramado/releases"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="dl.linux.appimage">Download the AppImage</span><span class="size" data-size="appimage"></span></a>
+              <a class="button small" data-file="deb" href="https://github.com/feiteira/Tramado/releases"><span data-i18n="dl.linux.deb">Download the .deb</span><span class="size" data-size="deb"></span></a>
+            </div>
+            <p class="note" data-i18n="dl.linux.note">Make the AppImage executable and open it; if it does not start, install FUSE 2 (libfuse2t64 on Ubuntu 24.04). On Debian and Ubuntu you can install the .deb instead.</p>
+          </article>
+        </div>
+        <p class="fine" data-i18n="dl.cpu">Local transcription needs a processor with AVX2 (most Intel and AMD processors from about 2013 on, but not some Celeron, Pentium and Atom models) or Apple silicon. Otherwise a classmate’s computer can transcribe for you, or OpenRouter (paid, about 2 cents per lecture).</p>
+        <div class="after">
+          <a id="allFiles" href="https://github.com/feiteira/Tramado/releases" data-i18n="dl.all">All files and release notes</a>
+          <a href="https://github.com/feiteira/Tramado#build-from-source" data-i18n="dl.source">Build from source</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div>
+        <p data-i18n="foot.license">Free and open source under the Mozilla Public License 2.0. Built on Trama, Syncthing, whisper.cpp, Tauri and many other open-source projects.</p>
+        <p data-i18n="foot.page">This page is hosted by GitHub Pages. It sets no cookies and loads nothing from other sites.</p>
+      </div>
+      <nav data-i18n-aria="foot.label" aria-label="More">
+        <a href="https://github.com/feiteira/Tramado/blob/main/docs/manual/en/index.md" data-link="manual" data-i18n="nav.manual">Manual</a>
+        <a href="https://github.com/feiteira/Tramado/blob/main/PRIVACY.md" data-link="privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="https://github.com/feiteira/Tramado/blob/main/SECURITY.md" data-i18n="foot.security">Security</a>
+        <a href="https://github.com/feiteira/Tramado/issues" data-i18n="foot.report">Report a problem</a>
+        <a href="https://github.com/feiteira/Tramado" data-i18n="foot.source">Source code</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script type="application/json" id="i18n">
+{
+  "en": {
+    "meta.title": "Tramado · Your classes, all in one place",
+    "meta.description": "A free, open-source desktop app for university students: record and transcribe lectures, keep documents together, share a class without a server, and practise for exams with an AI that cites its sources.",
+    "skip": "Skip to the content",
+    "nav.label": "Main",
+    "nav.features": "Features",
+    "nav.privacy": "Privacy",
+    "nav.manual": "Manual",
+    "nav.download": "Download",
+    "lang.label": "Language",
+    "hero.eyebrow": "Free and open source · Windows, macOS and Linux",
+    "hero.title1": "Your classes,",
+    "hero.title2": "all in one place.",
+    "hero.lede": "Record and transcribe lectures, keep every handout and law text together, share them with your class without a server, and practise for exams with an AI that shows where each answer comes from.",
+    "hero.download": "Download",
+    "hero.downloadFor": "Download for {os}",
+    "hero.other": "Other systems",
+    "hero.source": "Source code on GitHub",
+    "hero.alt": "Tramado showing a lecture: the player with its waveform and markers, the transcript following the recording, and a note at a timestamp",
+    "release.version": "Version {version} · {date}",
+    "release.pre": "Pre-release",
+    "pillar.server.title": "No server",
+    "pillar.server.body": "Your class is shared directly between your classmates’ computers, encrypted, through Syncthing.",
+    "pillar.account.title": "No account",
+    "pillar.account.body": "Nothing to sign up for. Each class is an ordinary folder on your computer.",
+    "pillar.tracking.title": "No tracking",
+    "pillar.tracking.body": "Tramado collects nothing about you. AI is optional and uses your own key.",
+    "features.title": "Everything for your classes, in one app",
+    "features.lede": "Lectures, documents, notes, exams and your class group live together, so what you need for a test is one search away.",
+    "f.lectures.kicker": "Lectures",
+    "f.lectures.title": "Recorded and transcribed on your computer",
+    "f.lectures.body": "Record in the room or an online class, or add a recording you already have. Transcription runs on your computer with whisper.cpp: the speech model downloads once, then works offline. In a shared class, one computer transcribes each lecture and everyone gets the transcript.",
+    "f.lectures.p1": "Mark moments with the keys 1–4 and take notes at a timestamp",
+    "f.lectures.p2": "Follow the transcript as the recording plays, and correct it together",
+    "f.lectures.p3": "Export it as Markdown, subtitles or plain text",
+    "f.lectures.alt": "Recording a lecture: the recording bar at the bottom with the time, the microphone level and the marker buttons",
+    "f.docs.kicker": "Documents",
+    "f.docs.title": "Every handout, searchable",
+    "f.docs.body": "Add slides, readings and legislation: PDF, Word (.docx), PowerPoint (.pptx), OpenDocument text, images and more. Ctrl+K finds a phrase across lectures, documents, exams and chat, and opens the PDF on the right page with the passage marked.",
+    "f.docs.p1": "Laws list their articles",
+    "f.docs.p2": "Class notes are shared; your own notes stay on your computer",
+    "f.docs.alt": "A PDF of a fictional law open at article 18, with a passage marked and the law’s articles listed beside it",
+    "f.exams.kicker": "Exams",
+    "f.exams.title": "Practise with answers that cite your sources",
+    "f.exams.body": "Add a past exam paper: a PDF, a Word file, a photo, or typed in. The AI finds the questions, you check them, and then it drafts answers from your own class material, citing the page, the article of law or the minute of the lecture each claim comes from.",
+    "f.exams.p1": "A “grounded” score for every answer",
+    "f.exams.p2": "Practise question by question; the ones you missed come back",
+    "f.exams.p3": "A countdown to your next test",
+    "f.exams.alt": "A past exam question answered from the class’s own material, with numbered citations to an article of law and a lecture moment, and a grounded score of 100 %",
+    "f.groups.kicker": "Class groups",
+    "f.groups.title": "Share a class with one message",
+    "f.groups.body": "Invite classmates with a link, a code, a QR code or a file. They get the lectures, transcripts, documents, class notes and a class chat with an @AI that answers from the class’s sources.",
+    "f.groups.p1": "Compare check words to be sure who you let in",
+    "f.groups.p2": "Organisers can require each newcomer to be let in by a member",
+    "f.groups.p3": "Your own notes, highlights and practice stay private",
+    "f.groups.alt": "The class chat: an answer by the AI that cites a lecture at 41:12 and an article of law, followed by classmates’ messages",
+    "f.ask.kicker": "Ask",
+    "f.ask.title": "Ask your class material",
+    "f.ask.body": "Ask a question and get an answer from the class’s lectures and documents, with each source one click away. Post a good answer to the class chat, or save it as a note.",
+    "f.ask.p1": "Free models with your own OpenRouter key, or a service that you or your school run (Ollama, LM Studio, a school server)",
+    "f.ask.p2": "You choose what AI providers may do with what you send",
+    "f.ask.alt": "The Ask tab: a question about article 18 and an answer with two numbered sources, an article of law and a lecture moment",
+    "tour.title": "A closer look",
+    "tour.palette.title": "Search everything.",
+    "tour.palette.body": "Ctrl+K finds a phrase in lectures, documents, exams and chat.",
+    "tour.palette.alt": "The search palette: a phrase found in two lectures, three documents, an exam and the class chat, with the matching words highlighted",
+    "tour.today.title": "Today.",
+    "tour.today.body": "Tests coming up, transcriptions, recent lectures and unread messages.",
+    "tour.today.alt": "The Today screen: upcoming tests with Practise buttons, a lecture being transcribed on a classmate’s laptop, recent lectures and an unread mention",
+    "tour.invite.title": "Invite.",
+    "tour.invite.body": "A link, a QR code or a file. The link opens a page that reads the invite in the browser and sends it nowhere.",
+    "tour.invite.alt": "The invite dialog: Copy invite, a QR code to scan with a phone, and the start of the invite code",
+    "tour.members.title": "Members.",
+    "tour.members.body": "Compare check words, then let newcomers in.",
+    "tour.members.alt": "The Members tab: a newcomer waiting to join with their check words and the buttons Let in, Not now and Decline, above the class’s members",
+    "privacy.title": "Your work stays yours",
+    "privacy.lede": "Tramado has no server, no account and no telemetry.",
+    "privacy.more": "Everything that leaves your computer, listed",
+    "privacy.folders": "Each class is an ordinary folder on your computer that you can open, copy and back up. Files travel encrypted between your class’s computers, directly or through a public Syncthing relay when a network blocks direct connections.",
+    "privacy.ai": "AI is optional and uses your own OpenRouter key, asking for free models by default. You choose what providers may do with what you send (by default, no training), and Tramado never relaxes that choice without asking you.",
+    "privacy.age": "OpenRouter is for people aged 18 or over. If you are younger, skip AI, or connect an AI service that you or your school run.",
+    "dl.title": "Download Tramado",
+    "dl.lede": "Free, for Windows, macOS and Linux. The installer includes the app and Syncthing; the speech model downloads the first time you transcribe.",
+    "dl.pre": "This is a pre-release: keep copies of anything you cannot afford to lose, and please report problems.",
+    "dl.new": "The Windows and macOS installers are new and nobody has used them yet, and recording an online class (what your computer plays) has not been tested yet. If you try them, please tell us how it went:",
+    "dl.report": "report a problem or a success",
+    "dl.yours": "Your system",
+    "dl.win.req": "Windows 10 or 11, 64-bit (x64)",
+    "dl.win.button": "Download the installer",
+    "dl.win.note": "Not code-signed yet: if SmartScreen says “Windows protected your PC”, choose More info, then Run anyway. If the computer lacks Microsoft Edge WebView2, the installer downloads it.",
+    "dl.mac.req": "macOS 14.2 or later, Apple silicon or Intel",
+    "dl.mac.button": "Download the disk image",
+    "dl.mac.note": "Drag Tramado to Applications. The first time, macOS refuses to open it: close the message, then choose System Settings › Privacy & Security › Open Anyway.",
+    "dl.linux.req": "x86-64; tested on Ubuntu 24.04",
+    "dl.linux.appimage": "Download the AppImage",
+    "dl.linux.deb": "Download the .deb",
+    "dl.linux.note": "Make the AppImage executable and open it; if it does not start, install FUSE 2 (libfuse2t64 on Ubuntu 24.04). On Debian and Ubuntu you can install the .deb instead.",
+    "dl.cpu": "Local transcription needs a processor with AVX2 (most Intel and AMD processors from about 2013 on, but not some Celeron, Pentium and Atom models) or Apple silicon. Otherwise a classmate’s computer can transcribe for you, or OpenRouter (paid, about 2 cents per lecture).",
+    "dl.all": "All files and release notes",
+    "dl.source": "Build from source",
+    "foot.label": "More",
+    "foot.license": "Free and open source under the Mozilla Public License 2.0. Built on Trama, Syncthing, whisper.cpp, Tauri and many other open-source projects.",
+    "foot.page": "This page is hosted by GitHub Pages. It sets no cookies and loads nothing from other sites.",
+    "foot.security": "Security",
+    "foot.report": "Report a problem",
+    "foot.source": "Source code"
+  },
+  "pt": {
+    "meta.title": "Tramado · As suas disciplinas, todas num só lugar",
+    "meta.description": "Uma aplicação de computador gratuita e de código aberto para estudantes universitários: grave e transcreva aulas, reúna os seus documentos, partilhe uma disciplina sem servidor e pratique para os exames com uma IA que cita as fontes.",
+    "skip": "Saltar para o conteúdo",
+    "nav.label": "Principal",
+    "nav.features": "Funcionalidades",
+    "nav.privacy": "Privacidade",
+    "nav.manual": "Manual",
+    "nav.download": "Transferir",
+    "lang.label": "Idioma",
+    "hero.eyebrow": "Gratuito e de código aberto · Windows, macOS e Linux",
+    "hero.title1": "As suas disciplinas,",
+    "hero.title2": "todas num só lugar.",
+    "hero.lede": "Grave e transcreva as aulas, guarde juntos todos os materiais e textos de lei, partilhe-os com a turma sem servidor e pratique para os exames com uma IA que mostra de onde vem cada resposta.",
+    "hero.download": "Transferir",
+    "hero.downloadFor": "Transferir para {os}",
+    "hero.other": "Outros sistemas",
+    "hero.source": "Código-fonte no GitHub",
+    "hero.alt": "O Tramado a mostrar uma aula: o leitor com a forma de onda e os marcadores, a transcrição a acompanhar a gravação e uma nota ligada a um instante da gravação",
+    "release.version": "Versão {version} · {date}",
+    "release.pre": "Pré-lançamento",
+    "pillar.server.title": "Sem servidor",
+    "pillar.server.body": "A disciplina é partilhada diretamente entre os computadores dos seus colegas, de forma cifrada, através do Syncthing.",
+    "pillar.account.title": "Sem conta",
+    "pillar.account.body": "Não precisa de se registar. Cada disciplina é uma pasta normal no seu computador.",
+    "pillar.tracking.title": "Sem rastreio",
+    "pillar.tracking.body": "O Tramado não recolhe nada sobre si. A IA é opcional e funciona com uma chave sua.",
+    "features.title": "Tudo para as suas disciplinas, numa só aplicação",
+    "features.lede": "Aulas, documentos, apontamentos, exames e a sua turma ficam juntos, por isso aquilo de que precisa para um teste está à distância de uma pesquisa.",
+    "f.lectures.kicker": "Aulas",
+    "f.lectures.title": "Gravadas e transcritas no seu computador",
+    "f.lectures.body": "Grave na sala de aula ou numa aula online, ou adicione uma gravação que já tenha. A transcrição corre no seu computador com o whisper.cpp: o modelo de voz é transferido uma vez e depois funciona sem ligação à Internet. Numa disciplina partilhada, um só computador transcreve cada aula e todos recebem a transcrição.",
+    "f.lectures.p1": "Marque momentos com as teclas 1–4 e tome notas ligadas a um instante da gravação",
+    "f.lectures.p2": "Acompanhe a transcrição enquanto a gravação toca e corrija-a em conjunto",
+    "f.lectures.p3": "Exporte-a em Markdown, legendas ou texto simples",
+    "f.lectures.alt": "A gravar uma aula: a barra de gravação em baixo, com o tempo, o nível do microfone e os botões dos marcadores",
+    "f.docs.kicker": "Documentos",
+    "f.docs.title": "Todos os materiais, pesquisáveis",
+    "f.docs.body": "Adicione diapositivos, leituras e legislação: PDF, Word (.docx), PowerPoint (.pptx), texto OpenDocument, imagens e outros formatos. Ctrl+K encontra uma frase nas aulas, nos documentos, nos exames e na conversa, e abre o PDF na página certa com o excerto assinalado.",
+    "f.docs.p1": "As leis mostram a lista dos seus artigos",
+    "f.docs.p2": "Os apontamentos da turma são partilhados; os seus ficam no seu computador",
+    "f.docs.alt": "O PDF de uma lei fictícia aberto no artigo 18.º, com um excerto assinalado e os artigos da lei listados ao lado",
+    "f.exams.kicker": "Exames",
+    "f.exams.title": "Pratique com respostas que citam as suas fontes",
+    "f.exams.body": "Adicione o enunciado de um exame anterior: um PDF, um ficheiro Word, uma fotografia ou o texto, escrito ou colado. A IA encontra as perguntas, você verifica-as e depois a IA redige respostas a partir dos materiais da sua disciplina, citando a página, o artigo da lei ou o minuto da aula de onde vem cada afirmação.",
+    "f.exams.p1": "Uma indicação de quão fundamentada está cada resposta",
+    "f.exams.p2": "Pratique pergunta a pergunta; as que errou voltam a aparecer",
+    "f.exams.p3": "Uma contagem decrescente para o próximo teste",
+    "f.exams.alt": "Uma pergunta de um exame anterior respondida a partir dos materiais da disciplina, com citações numeradas de um artigo de lei e de um momento de uma aula, fundamentada a 100 %",
+    "f.groups.kicker": "Turmas",
+    "f.groups.title": "Partilhe uma disciplina com uma só mensagem",
+    "f.groups.body": "Convide os colegas com uma ligação, um código, um código QR ou um ficheiro. Recebem as aulas, as transcrições, os documentos, os apontamentos da turma e a conversa da disciplina, com uma @IA que responde a partir das fontes da disciplina.",
+    "f.groups.p1": "Compare as palavras de verificação para ter a certeza de quem deixa entrar",
+    "f.groups.p2": "Os organizadores podem exigir que cada pessoa nova seja aceite por um membro",
+    "f.groups.p3": "Os seus apontamentos, destaques e prática ficam privados",
+    "f.groups.alt": "A conversa da disciplina: uma resposta da IA que cita uma aula aos 41:12 e um artigo de lei, seguida de mensagens dos colegas",
+    "f.ask.kicker": "Perguntar",
+    "f.ask.title": "Pergunte aos materiais da disciplina",
+    "f.ask.body": "Faça uma pergunta e receba uma resposta a partir das aulas e dos documentos da disciplina, com cada fonte à distância de um clique. Publique uma boa resposta na conversa da disciplina ou guarde-a como apontamento.",
+    "f.ask.p1": "Modelos gratuitos com a sua própria chave do OpenRouter, ou um serviço gerido por si ou pela sua escola (Ollama, LM Studio, um servidor da escola)",
+    "f.ask.p2": "É você quem escolhe o que os fornecedores de IA podem fazer com o que envia",
+    "f.ask.alt": "O separador Perguntar: uma pergunta sobre o artigo 18.º e uma resposta com duas fontes numeradas, um artigo de lei e um momento de uma aula",
+    "tour.title": "Mais de perto",
+    "tour.palette.title": "Pesquise tudo.",
+    "tour.palette.body": "Ctrl+K encontra uma frase nas aulas, nos documentos, nos exames e na conversa.",
+    "tour.palette.alt": "A paleta de pesquisa: uma frase encontrada em duas aulas, em três documentos, num exame e na conversa da disciplina, com as palavras correspondentes destacadas",
+    "tour.today.title": "Hoje.",
+    "tour.today.body": "Os próximos testes, as transcrições, as aulas recentes e as mensagens por ler.",
+    "tour.today.alt": "O ecrã Hoje: os próximos testes com botões para praticar, uma aula a ser transcrita no portátil de um colega, as aulas recentes e uma menção por ler",
+    "tour.invite.title": "Convidar.",
+    "tour.invite.body": "Uma ligação, um código QR ou um ficheiro. A ligação abre uma página que lê o convite no navegador e não o envia para lado nenhum.",
+    "tour.invite.alt": "A janela de convite: Copiar o convite, um código QR para ler com o telemóvel e o início do código do convite",
+    "tour.members.title": "Membros.",
+    "tour.members.body": "Compare as palavras de verificação e depois deixe entrar quem chega.",
+    "tour.members.alt": "O separador Membros: uma pessoa à espera de entrar, com as respetivas palavras de verificação e os botões Deixar entrar, Agora não e Recusar, por cima dos membros da turma",
+    "privacy.title": "O seu trabalho continua a ser seu",
+    "privacy.lede": "O Tramado não tem servidor, nem conta, nem telemetria.",
+    "privacy.more": "A lista de tudo o que sai do seu computador",
+    "privacy.folders": "Cada disciplina é uma pasta normal no seu computador, que pode abrir, copiar e incluir nas suas cópias de segurança. Os ficheiros viajam cifrados entre os computadores da turma, diretamente ou através de um servidor público de retransmissão do Syncthing quando uma rede bloqueia as ligações diretas.",
+    "privacy.ai": "A IA é opcional: usa a chave do OpenRouter que você indicar e pede modelos gratuitos por omissão. É você quem escolhe o que os fornecedores podem fazer com o que envia (por omissão, não podem treinar IA com isso) e o Tramado nunca torna essa escolha menos restritiva sem lhe perguntar.",
+    "privacy.age": "O OpenRouter destina-se a maiores de 18 anos. Se tiver menos de 18 anos, dispense a IA ou use um serviço de IA gerido por si ou pela sua escola.",
+    "dl.title": "Transferir o Tramado",
+    "dl.lede": "Gratuito, para Windows, macOS e Linux. O instalador inclui a aplicação e o Syncthing; o modelo de voz é transferido da primeira vez que transcrever.",
+    "dl.pre": "Esta é uma versão de pré-lançamento: guarde cópias de tudo o que não pode perder e, por favor, comunique os problemas.",
+    "dl.new": "Os instaladores para Windows e macOS são novos e ainda ninguém os usou, e a gravação de uma aula online (o som do computador) ainda não foi testada. Se os experimentar, diga-nos como correu:",
+    "dl.report": "comunique um problema ou um sucesso",
+    "dl.yours": "O seu sistema",
+    "dl.win.req": "Windows 10 ou 11, 64 bits (x64)",
+    "dl.win.button": "Transferir o instalador",
+    "dl.win.note": "Ainda sem assinatura de código: se o SmartScreen disser “O Windows protegeu o seu PC”, escolha Mais informações e depois Executar mesmo assim. Se o computador não tiver o Microsoft Edge WebView2, o instalador transfere-o.",
+    "dl.mac.req": "macOS 14.2 ou posterior, Apple silicon ou Intel",
+    "dl.mac.button": "Transferir a imagem de disco",
+    "dl.mac.note": "Arraste o Tramado para Aplicações. Da primeira vez, o macOS recusa abri-lo: feche o aviso e escolha Definições do Sistema › Privacidade e segurança › Abrir mesmo assim.",
+    "dl.linux.req": "x86-64; testado no Ubuntu 24.04",
+    "dl.linux.appimage": "Transferir o AppImage",
+    "dl.linux.deb": "Transferir o .deb",
+    "dl.linux.note": "Torne o AppImage executável e abra-o; se não arrancar, instale o FUSE 2 (libfuse2t64 no Ubuntu 24.04). No Debian e no Ubuntu pode, em alternativa, instalar o .deb.",
+    "dl.cpu": "A transcrição local precisa de um processador com AVX2 (a maioria dos processadores Intel e AMD desde cerca de 2013, mas não alguns Celeron, Pentium e Atom) ou de Apple silicon. Caso contrário, o computador de um colega pode transcrever por si, ou o OpenRouter (pago, cerca de 2 cêntimos por aula).",
+    "dl.all": "Todos os ficheiros e as notas da versão",
+    "dl.source": "Compilar a partir do código-fonte",
+    "foot.label": "Mais",
+    "foot.license": "Gratuito e de código aberto, sob a Mozilla Public License 2.0. Construído sobre o Trama, o Syncthing, o whisper.cpp, o Tauri e muitos outros projetos de código aberto.",
+    "foot.page": "Esta página está alojada no GitHub Pages. Não usa cookies nem carrega nada de outros sites.",
+    "foot.security": "Segurança",
+    "foot.report": "Comunicar um problema",
+    "foot.source": "Código-fonte"
+  },
+  "es": {
+    "meta.title": "Tramado · Todas sus asignaturas en un solo lugar",
+    "meta.description": "Una aplicación de escritorio gratuita y de código abierto para estudiantes universitarios: grabe y transcriba clases, reúna sus documentos, comparta una asignatura sin servidor y practique para los exámenes con una IA que cita sus fuentes.",
+    "skip": "Saltar al contenido",
+    "nav.label": "Principal",
+    "nav.features": "Funciones",
+    "nav.privacy": "Privacidad",
+    "nav.manual": "Manual",
+    "nav.download": "Descargar",
+    "lang.label": "Idioma",
+    "hero.eyebrow": "Gratuito y de código abierto · Windows, macOS y Linux",
+    "hero.title1": "Todas sus asignaturas,",
+    "hero.title2": "en un solo lugar.",
+    "hero.lede": "Grabe y transcriba las clases, reúna todos los materiales y textos legales, compártalos con su grupo de clase sin servidor y practique para los exámenes con una IA que muestra de dónde sale cada respuesta.",
+    "hero.download": "Descargar",
+    "hero.downloadFor": "Descargar para {os}",
+    "hero.other": "Otros sistemas",
+    "hero.source": "Código fuente en GitHub",
+    "hero.alt": "Tramado mostrando una clase: el reproductor con la forma de onda y los marcadores, la transcripción que sigue la grabación y una nota vinculada a un momento de la clase",
+    "release.version": "Versión {version} · {date}",
+    "release.pre": "Versión preliminar",
+    "pillar.server.title": "Sin servidor",
+    "pillar.server.body": "La asignatura se comparte directamente entre los ordenadores de sus compañeros, cifrada, mediante Syncthing.",
+    "pillar.account.title": "Sin cuenta",
+    "pillar.account.body": "No hay que registrarse. Cada asignatura es una carpeta normal en su ordenador.",
+    "pillar.tracking.title": "Sin rastreo",
+    "pillar.tracking.body": "Tramado no recoge nada sobre usted. La IA es opcional y usted pone su propia clave.",
+    "features.title": "Todo para sus asignaturas, en una sola aplicación",
+    "features.lede": "Clases, documentos, apuntes, exámenes y su grupo de clase están juntos, así que lo que necesita para una prueba está a una búsqueda de distancia.",
+    "f.lectures.kicker": "Clases",
+    "f.lectures.title": "Grabadas y transcritas en su ordenador",
+    "f.lectures.body": "Grabe en el aula o en una clase en línea, o añada una grabación que ya tenga. La transcripción se hace en su ordenador con whisper.cpp: el modelo de voz se descarga una vez y después funciona sin conexión. En una asignatura compartida, un solo ordenador transcribe cada clase y todos reciben la transcripción.",
+    "f.lectures.p1": "Marque momentos con las teclas 1–4 y tome notas vinculadas a un momento de la grabación",
+    "f.lectures.p2": "Siga la transcripción mientras suena la grabación y corríjala entre todos",
+    "f.lectures.p3": "Expórtela en Markdown, subtítulos o texto sin formato",
+    "f.lectures.alt": "Grabando una clase: la barra de grabación abajo, con el tiempo, el nivel del micrófono y los botones de los marcadores",
+    "f.docs.kicker": "Documentos",
+    "f.docs.title": "Todos sus materiales, fáciles de buscar",
+    "f.docs.body": "Añada diapositivas, lecturas y legislación: PDF, Word (.docx), PowerPoint (.pptx), texto OpenDocument, imágenes y más. Ctrl+K encuentra una frase en las clases, los documentos, los exámenes y el chat, y abre el PDF en la página correcta con el pasaje marcado.",
+    "f.docs.p1": "Las leyes muestran la lista de sus artículos",
+    "f.docs.p2": "Los apuntes compartidos son de todo el grupo; los suyos se quedan en su ordenador",
+    "f.docs.alt": "El PDF de una ley ficticia abierto en el artículo 18, con un pasaje resaltado y la lista de artículos de la ley al lado",
+    "f.exams.kicker": "Exámenes",
+    "f.exams.title": "Practique con respuestas que citan sus fuentes",
+    "f.exams.body": "Añada el enunciado de un examen anterior: un PDF, un archivo de Word, una foto o el texto escrito directamente en Tramado. La IA encuentra las preguntas, usted las revisa y después la IA redacta respuestas a partir del material de su asignatura, citando la página, el artículo de la ley o el minuto de la clase del que sale cada afirmación.",
+    "f.exams.p1": "Una indicación de lo fundamentada que está cada respuesta",
+    "f.exams.p2": "Practique pregunta a pregunta; las que falló vuelven a aparecer",
+    "f.exams.p3": "Una cuenta atrás hasta su próxima prueba",
+    "f.exams.alt": "Una pregunta de un examen anterior respondida a partir del material de la asignatura, con citas numeradas a un artículo de ley y a un momento de una clase; la respuesta está fundamentada al 100 %",
+    "f.groups.kicker": "Grupos de clase",
+    "f.groups.title": "Comparta una asignatura con un solo mensaje",
+    "f.groups.body": "Invite a sus compañeros con un enlace, un código, un código QR o un archivo. Recibirán las clases, las transcripciones, los documentos, los apuntes compartidos y un chat del grupo con una @IA que responde a partir de las fuentes de la asignatura.",
+    "f.groups.p1": "Compare las palabras de verificación para saber con seguridad a quién deja entrar",
+    "f.groups.p2": "Los organizadores pueden exigir que un miembro acepte a cada persona nueva",
+    "f.groups.p3": "Sus propios apuntes, resaltados y práctica siguen siendo privados",
+    "f.groups.alt": "El chat del grupo: una respuesta de la IA que cita una clase en el minuto 41:12 y un artículo de ley, seguida de mensajes de los compañeros",
+    "f.ask.kicker": "Preguntar",
+    "f.ask.title": "Pregunte al material de la asignatura",
+    "f.ask.body": "Haga una pregunta y reciba una respuesta a partir de las clases y los documentos de la asignatura, con cada fuente a un clic. Publique una buena respuesta en el chat del grupo o guárdela como apunte.",
+    "f.ask.p1": "Modelos gratuitos con su propia clave de OpenRouter, o un servicio gestionado por usted o por su centro (Ollama, LM Studio, un servidor de su centro)",
+    "f.ask.p2": "Usted decide qué pueden hacer los proveedores de IA con lo que envía",
+    "f.ask.alt": "La pestaña Preguntar: una pregunta sobre el artículo 18 y una respuesta con dos fuentes numeradas, un artículo de ley y un momento de una clase",
+    "tour.title": "Más de cerca",
+    "tour.palette.title": "Busque en todo.",
+    "tour.palette.body": "Ctrl+K encuentra una frase en las clases, los documentos, los exámenes y el chat.",
+    "tour.palette.alt": "La búsqueda: una frase encontrada en dos clases, tres documentos, un examen y el chat del grupo, con las palabras coincidentes resaltadas",
+    "tour.today.title": "Hoy.",
+    "tour.today.body": "Las próximas pruebas, las transcripciones, las clases recientes y los mensajes sin leer.",
+    "tour.today.alt": "La pantalla Hoy: las próximas pruebas con botones para practicar, una clase que se está transcribiendo en el portátil de un compañero, las clases recientes y una mención sin leer",
+    "tour.invite.title": "Invitar.",
+    "tour.invite.body": "Un enlace, un código QR o un archivo. El enlace abre una página que lee la invitación en el navegador y no la envía a ninguna parte.",
+    "tour.invite.alt": "La ventana de invitación: Copiar la invitación, un código QR para escanear con el móvil y el comienzo del código de invitación",
+    "tour.members.title": "Miembros.",
+    "tour.members.body": "Compare las palabras de verificación y después deje entrar a quien llega.",
+    "tour.members.alt": "La pestaña Miembros: una persona que espera para entrar, con sus palabras de verificación y los botones Dejar entrar, Ahora no y Rechazar, encima de los miembros del grupo",
+    "privacy.title": "Su trabajo sigue siendo suyo",
+    "privacy.lede": "Tramado no tiene servidor, ni cuenta, ni telemetría.",
+    "privacy.more": "La lista de todo lo que sale de su ordenador",
+    "privacy.folders": "Cada asignatura es una carpeta normal en su ordenador, que puede abrir, copiar e incluir en sus copias de seguridad. Los archivos viajan cifrados entre los ordenadores del grupo, directamente o a través de un servidor público de retransmisión de Syncthing cuando una red bloquea las conexiones directas.",
+    "privacy.ai": "La IA es opcional: usted pone su propia clave de OpenRouter y, de forma predeterminada, Tramado pide modelos gratuitos. Usted elige qué pueden hacer los proveedores con lo que envía (de forma predeterminada, sin entrenamiento) y Tramado nunca hace menos estricta esa elección sin preguntarle.",
+    "privacy.age": "OpenRouter es solo para mayores de 18 años. Si es menor de edad, prescinda de la IA o conecte un servicio de IA gestionado por usted o por su centro.",
+    "dl.title": "Descargar Tramado",
+    "dl.lede": "Gratuito, para Windows, macOS y Linux. El instalador incluye la aplicación y Syncthing; el modelo de voz se descarga la primera vez que transcriba.",
+    "dl.pre": "Esta es una versión preliminar: guarde copias de todo lo que no pueda perder y, por favor, informe de los problemas.",
+    "dl.new": "Los instaladores para Windows y macOS son nuevos y todavía nadie los ha usado, y la grabación de una clase en línea (lo que suena en el ordenador) aún no se ha probado. Si los prueba, cuéntenos cómo le ha ido:",
+    "dl.report": "informe de un problema o de un éxito",
+    "dl.yours": "Su sistema",
+    "dl.win.req": "Windows 10 u 11, 64 bits (x64)",
+    "dl.win.button": "Descargar el instalador",
+    "dl.win.note": "Todavía sin firma de código: si SmartScreen dice «Windows protegió su PC», elija Más información y después Ejecutar de todas formas. Si el ordenador no tiene Microsoft Edge WebView2, el instalador lo descarga.",
+    "dl.mac.req": "macOS 14.2 o posterior, Apple silicon o Intel",
+    "dl.mac.button": "Descargar la imagen de disco",
+    "dl.mac.note": "Arrastre Tramado a Aplicaciones. La primera vez, macOS se niega a abrirlo: cierre el aviso y elija Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente.",
+    "dl.linux.req": "x86-64; probado en Ubuntu 24.04",
+    "dl.linux.appimage": "Descargar el AppImage",
+    "dl.linux.deb": "Descargar el .deb",
+    "dl.linux.note": "Haga ejecutable el AppImage y ábralo; si no arranca, instale FUSE 2 (libfuse2t64 en Ubuntu 24.04). En Debian y Ubuntu puede instalar el .deb en su lugar.",
+    "dl.cpu": "La transcripción local necesita un procesador con AVX2 (la mayoría de los procesadores Intel y AMD desde 2013 aproximadamente, pero no algunos Celeron, Pentium y Atom) o Apple silicon. Si no lo tiene, el ordenador de un compañero puede transcribir por usted, u OpenRouter (de pago, unos 2 céntimos por clase).",
+    "dl.all": "Todos los archivos y las notas de la versión",
+    "dl.source": "Compilar desde el código fuente",
+    "foot.label": "Más",
+    "foot.license": "Gratuito y de código abierto, bajo la Mozilla Public License 2.0. Basado en Trama, Syncthing, whisper.cpp, Tauri y muchos otros proyectos de código abierto.",
+    "foot.page": "Esta página está alojada en GitHub Pages. No usa cookies ni carga nada de otros sitios.",
+    "foot.security": "Seguridad",
+    "foot.report": "Informar de un problema",
+    "foot.source": "Código fuente"
+  }
+}
+  </script>
+  <script>
+    // Language, strings and pictures. Runs before release.js so that the screenshots start loading at once.
+    (function () {
+      'use strict';
+      var I = JSON.parse(document.getElementById('i18n').textContent);
+      var REPO = 'https://github.com/feiteira/Tramado';
+      // ?lang= first, then the browser's list; English otherwise.
+      var lang = 'en';
+      var q = /[?&]lang=(en|pt|es)(?:&|$)/.exec(location.search);
+      if (q) lang = q[1];
+      else {
+        var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+        for (var i = 0; i < list.length; i++) {
+          var l = String(list[i]).toLowerCase().slice(0, 2);
+          if (l === 'en' || l === 'pt' || l === 'es') { lang = l; break; }
+        }
+      }
+      var tag = { en: 'en', pt: 'pt-PT', es: 'es-ES' }[lang];
+      var t = I[lang];
+      var s = function (key) { return t[key] != null ? t[key] : I.en[key]; };
+      var each = function (sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); };
+      document.documentElement.lang = tag;
+      each('[data-img]', function (el) { el.src = 'img/' + lang + '/' + el.getAttribute('data-img') + '.webp'; });
+      if (lang !== 'en') {
+        document.title = s('meta.title');
+        document.querySelector('meta[name="description"]').setAttribute('content', s('meta.description'));
+        each('[data-i18n]', function (el) { el.textContent = s(el.getAttribute('data-i18n')); });
+        each('[data-i18n-alt]', function (el) { el.alt = s(el.getAttribute('data-i18n-alt')); });
+        each('[data-i18n-aria]', function (el) { el.setAttribute('aria-label', s(el.getAttribute('data-i18n-aria'))); });
+        each('[data-link="manual"]', function (el) { el.href = REPO + '/blob/main/docs/manual/' + lang + '/index.md'; });
+        each('[data-link="privacy"]', function (el) { el.href = REPO + '/blob/main/PRIVACY.' + lang + '.md'; });
+      }
+      each('[data-lang]', function (el) { if (el.getAttribute('data-lang') === lang) el.setAttribute('aria-current', 'true'); });
+      window.TramadoSite = { tag: tag, s: s, each: each };
+    })();
+  </script>
+  <script src="release.js"></script>
+  <script>
+    // Downloads: the newest release's files (release.js), the button for this computer's system, the release line.
+    (function () {
+      'use strict';
+      var site = window.TramadoSite;
+      if (!site) return;
+      var s = site.s, each = site.each, tag = site.tag;
+      var RELEASES = 'https://github.com/feiteira/Tramado/releases';
+      var fill = function (str, vars) { return str.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; }); };
+
+      // Tramado runs on Windows, macOS and Linux (x86-64) only. A phone, a tablet (an iPad reports itself as a Mac but
+      // has a touch screen), a Chromebook, or Linux on ARM or 32-bit x86 gets no system-specific button. Chrome's
+      // reduced user agent always says "Linux x86_64"; navigator.platform keeps the real architecture.
+      var ua = navigator.userAgent || '';
+      var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+      var mobile = (navigator.userAgentData && navigator.userAgentData.mobile === true) ||
+        /Android|iPhone|iPad|iPod|Windows Phone|CrOS|Chrome OS/i.test(ua + ' ' + plat) ||
+        (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      var os = mobile ? null : /Win/i.test(plat) || /Windows NT/.test(ua) ? 'windows'
+        : /Mac/i.test(plat) || /Macintosh/.test(ua) ? 'macos' : /Linux|X11/i.test(plat + ' ' + ua) ? 'linux' : null;
+      if (os === 'linux' && /arm|aarch64|i[3-6]86/i.test((navigator.platform || '') + ' ' + ua)) os = null;
+      var OS_NAME = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
+
+      var R = window.TRAMADO_RELEASE;
+      if (!R || typeof R !== 'object' || !Array.isArray(R.assets)) R = null;
+      var PATTERNS = { windows: /_x64-setup\.exe$/, macos: /_universal\.dmg$/, appimage: /_amd64\.AppImage$/, deb: /_amd64\.deb$/ };
+      var find = function (kind) {
+        if (!R) return null;
+        for (var k = 0; k < R.assets.length; k++) if (PATTERNS[kind].test(R.assets[k].name)) return R.assets[k];
+        return null;
+      };
+      var mb = function (bytes) { return new Intl.NumberFormat(tag, { maximumFractionDigits: 0 }).format(bytes / 1048576) + ' MB'; };
+      // A release without one of the files sends that button to the release's page.
+      each('[data-file]', function (el) { var a = find(el.getAttribute('data-file')); el.href = a ? a.url : (R && R.url) || RELEASES; });
+      each('[data-size]', function (el) { var a = find(el.getAttribute('data-size')); el.textContent = a ? '· ' + mb(a.size) : ''; });
+      document.getElementById('preNotice').hidden = !(R && R.prerelease);
+      if (R) {
+        var version = String(R.tag || '').replace(/^v/, '');
+        var date = '';
+        if (R.date) { try { date = new Intl.DateTimeFormat(tag, { dateStyle: 'long' }).format(new Date(R.date)); } catch (e) { date = ''; } }
+        document.getElementById('releaseText').textContent = fill(s('release.version'), { version: version, date: date }).replace(/ · $/, '');
+        document.getElementById('releasePre').hidden = !R.prerelease;
+        document.getElementById('releaseLine').hidden = false;
+        if (R.url) document.getElementById('allFiles').href = R.url;
+      }
+
+      // The hero button downloads the file for this system; "Other systems" leads to the cards.
+      var file = os ? find(os === 'linux' ? 'appimage' : os) : null;
+      if (file) {
+        document.getElementById('heroDownload').href = file.url;
+        document.getElementById('heroDownloadText').textContent = fill(s('hero.downloadFor'), { os: OS_NAME[os] });
+        var size = document.getElementById('heroDownloadSize');
+        size.textContent = '· ' + mb(file.size);
+        size.hidden = false;
+        document.getElementById('heroOther').hidden = false;
+        document.getElementById('heroSource').hidden = true;
+      }
+      if (os) {
+        var card = document.querySelector('.card[data-os="' + os + '"]');
+        card.classList.add('is-yours');
+        card.querySelector('[data-i18n="dl.yours"]').hidden = false;
+      }
+
+      var top = document.getElementById('top');
+      var onScroll = function () { top.classList.toggle('is-scrolled', window.scrollY > 8); };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

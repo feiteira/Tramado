@@ -91,7 +91,7 @@ describe('invites (sync spec §7)', () => {
     expect(html).toContain('<meta name="referrer" content="no-referrer">');
     expect(html).not.toMatch(/\s(src|srcset|action|poster)=/i);                    // no subresources, no forms
     const hrefs = [...html.matchAll(/\shref="([^"]*)"/g)].map((m) => m[1]!);
-    expect(hrefs.filter((h) => !h.startsWith('data:'))).toEqual(['https://github.com/feiteira/Tramado/releases']);
+    expect(hrefs.filter((h) => !h.startsWith('data:'))).toEqual(['../#download']);   // the homepage's downloads (site/index.html)
     expect(html).toContain("'tramado://' + (m[1] === 'p' ? 'pair/' : 'join/') + code");
   });
 

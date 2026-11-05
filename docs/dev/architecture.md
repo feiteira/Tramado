@@ -197,6 +197,7 @@ Tramado/
 │   ├── redact-fixtures.mjs  check-leaks.mjs     fixture redaction; secret/user_id leak check before every push
 │   ├── lab/                                     research lab sources copied by M0 (no outputs with user ids)
 │   └── keys/syncthing-release.asc               Syncthing release signing key (GPG check, optional)
+├── site/index.html                              the homepage: https://feiteira.github.io/Tramado/ (downloads, screenshots; EN/PT/ES)
 ├── site/join/index.html                         static join page: https://feiteira.github.io/Tramado/join/ (UX §8 OQ1, `JOIN_PAGE`)
 ├── docs/
 │   ├── spec/   class-folder-v1.md  sync-protocol-v1.md  check-words-v1.txt (M0)
@@ -3395,8 +3396,12 @@ both published crates were diffed against their previous releases).
   the data-policy refusal the app classifies as `AI_PRIVACY_BLOCKS`). It prints models, statuses and error classes
   only. After three failing days it opens an issue (or comments on the open one) and closes it when the canary passes
   again.
-- **`.github/workflows/pages.yml`** deploys `site/` to GitHub Pages only by hand or when the repository variable
-  `PAGES_ENABLED` is `true`, so pushes never fail while Pages is off.
+- **`.github/workflows/pages.yml`** deploys the website to GitHub Pages only by hand or when the repository variable
+  `PAGES_ENABLED` is `true`, so pushes never fail while Pages is off. `tools/build-site.mjs` assembles it: `site/` (the
+  homepage and the join page), the manual's screenshots the homepage names, and `release.js` with the newest published
+  release, so the download buttons point at its files. Publishing, unpublishing or deleting a release runs the
+  workflow again on main (the `github-pages` environment deploys only from main). The `web` job of `ci.yml` runs the
+  same build as a check: the homepage's strings in all three languages, its screenshots, nothing from other origins.
 - **Manual and links**: `docs/manual/{en,pt,es}/` (8 chapters each) with lossless WebP pictures taken by
   `npm run screenshots`; `.github/scripts/check-links.mjs` (in CI) checks every relative link and heading anchor of
   the README, the root documents, the manual and the release notes, that every picture is used, at most 1440 px wide,
